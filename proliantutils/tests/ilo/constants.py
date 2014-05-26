@@ -1,0 +1,512 @@
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+"""Test Utils for iLO test modules."""
+
+GET_VM_STATUS_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+   <GET_VM_STATUS VM_APPLET="DISCONNECTED" DEVICE="FLOPPY"
+        BOOT_OPTION="BOOT_ALWAYS" WRITE_PROTECT="NO"
+        IMAGE_INSERTED="YES"
+        IMAGE_URL="http://1.2.3.4/floppy.img" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+GET_VM_STATUS_CDROM_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+   <GET_VM_STATUS VM_APPLET="DISCONNECTED" DEVICE="CDROM"
+        BOOT_OPTION="BOOT_ONCE" WRITE_PROTECT="YES"
+        IMAGE_INSERTED="NO" IMAGE_URL="" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+GET_VM_STATUS_ERROR_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0035"
+             MESSAGE="An invalid Virtual Media option has been given" />
+</RIBCL>
+'''
+
+GET_ALL_LICENSES_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+   <GET_ALL_LICENSES>
+      <LICENSE>
+         <LICENSE_TYPE VALUE="iLO 3 Advanced" />
+         <LICENSE_KEY VALUE="XXXXX-XXXXX-XXXXX-XXXXX" />
+         <LICENSE_INSTALL_DATE VALUE="Mon Dec  2 15:25:28 2013" />
+         <LICENSE_CLASS VALUE="FQL" />
+      </LICENSE>
+   </GET_ALL_LICENSES>
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+GET_ONE_TIME_BOOT_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+   <ONE_TIME_BOOT>
+      <BOOT_TYPE VALUE="Normal" />
+   </ONE_TIME_BOOT>
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+GET_HOST_POWER_STATUS_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+   <GET_HOST_POWER HOST_POWER="ON" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+RESET_SERVER_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="Server being reset." />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+PRESS_POWER_BTN_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+SET_ONE_TIME_BOOT_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+SET_VM_STATUS_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+INSERT_VIRTUAL_MEDIA_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+EJECT_VIRTUAL_MEDIA_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0039"
+             MESSAGE="No image present in the Virtual Media drive" />
+</RIBCL>
+'''
+
+SET_HOST_POWER_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="Host power is already ON." />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
+
+LOGIN_FAIL_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x005F" MESSAGE="Login failed." />
+</RIBCL>
+'''
+
+HOLD_PWR_BTN_XML = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="Host power is already OFF." />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RIBCL VERSION="2.23">
+   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+</RIBCL>
+'''
