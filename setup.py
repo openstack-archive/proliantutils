@@ -1,13 +1,7 @@
-from distutils.core import setup
+#!/usr/bin/env python
 
-setup(
-    name='ProliantUtils',
-    version='0.1.0',
-    author='Hewlett Packard',
-    packages=['proliantutils', 
-              'proliantutils/ilo', 'proliantutils/tests/ilo'],
-    license='LICENSE.txt',
-    description='A set of libraries for interfacing various devices in '
-                'Proliant servers.',
-    long_description=open('README.md').read(),
-)
+import setuptools
+
+setuptools.setup(
+    setup_requires=['pbr'],
+    pbr=True)
