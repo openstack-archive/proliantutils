@@ -33,6 +33,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+.testrepository/
 
 # Translations
 *.mo
@@ -51,4 +52,5 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
 
