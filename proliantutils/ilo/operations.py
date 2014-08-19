@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 
 ERRMSG = "The specified operation is not supported on current platform."
 

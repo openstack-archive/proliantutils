@@ -20,7 +20,7 @@ import unittest
 import constants
 import mock
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import ribcl
 
 

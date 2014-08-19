@@ -22,7 +22,7 @@ import json
 import StringIO
 import urlparse
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import operations
 
 """ Currently this class supports only secure boot and firmware settings

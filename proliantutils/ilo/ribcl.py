@@ -23,7 +23,7 @@ import xml.etree.ElementTree as etree
 
 import six
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import operations
 
 
