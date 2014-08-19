@@ -1,0 +1,67 @@
+{
+    "title": "raid configuration json schema",
+    "type": "object",
+    "properties": {
+        "logical_disks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "raid_level": {
+                        "type": "string",
+                        "enum": [ "0", "1", "2", "5", "6", "1+0" ],
+                        "description": "RAID level for the logical disk. Required."
+                    },
+                    "size_gb": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "description": "Size (Integer) for the logical disk. Required."
+                    },
+                    "volume_name": {
+                        "type": "string",
+                        "description": "Name of the volume to be created. Optional."
+                    },
+                    "is_root_volume": {
+                        "type": "boolean",
+                        "description": "Specifies whether this disk is a root volume. Optional."
+                    },
+                    "share_physical_disks": {
+                        "type": "boolean",
+                        "description": "Specifies whether other logical disks can share physical disks with this logical disk. Optional."
+                    },
+                    "disk_type": {
+                        "type": "string",
+                        "enum": [ "hdd", "ssd" ],
+                        "description": "Specifies the type of disk preferred. Valid values are 'hdd' and 'ssd'. Optional."
+                    },
+                    "interface_type": {
+                        "type": "string",
+                        "enum": [ "sata", "scsi", "sas" ],
+                        "description": "Specifies the interface type of disk. Valid values are 'sata', 'scsi' and 'sas'. Optional."
+                    },
+                    "number_of_physical_disks": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "description": "Number of physical disks to use for this logical disk. Optional."
+                    },
+                    "controller": {
+                        "type": "string",
+                        "description": "Controller to use for this logical disk. Optional."
+                    },
+                    "physical_disks": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "The physical disks to use for this logical disk. Optional"
+                    }
+                },
+                "required": ["raid_level", "size_gb"],
+                "additionalProperties": false
+            },
+            "minItems": 1
+        }
+    },
+    "required": ["logical_disks"],
+    "additionalProperties": false
+}

@@ -23,7 +23,7 @@ import xml.etree.ElementTree as etree
 
 import six
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import operations
 
 
@@ -302,7 +302,7 @@ class RIBCLOperations(operations.IloOperations):
                 'SET_HOST_POWER', 'SERVER_INFO', 'write', dic)
             return data
         else:
-            raise exception.IloInvalidInputError(
+            raise exception.InvalidInputError(
                 "Invalid input. The expected input is ON or OFF.")
 
     def set_one_time_boot(self, value):
@@ -501,4 +501,4 @@ IloClientInternalError = exception.IloClientInternalError
 IloCommandNotSupportedError = exception.IloCommandNotSupportedError
 IloLoginFailError = exception.IloLoginFailError
 IloConnectionError = exception.IloConnectionError
-IloInvalidInputError = exception.IloInvalidInputError
+IloInvalidInputError = exception.InvalidInputError

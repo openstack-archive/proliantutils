@@ -12,10 +12,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""Exception Class for iLO"""
+"""Exception Class for proliantutils module."""
 
 
-class IloError(Exception):
+class ProliantUtilsException(Exception):
+    """Parent class for all Proliantutils exceptions."""
+    pass
+
+
+class InvalidInputError(Exception):
+
+    message = "Invalid Input: %(reason)s"
+
+
+class IloError(ProliantUtilsException):
     """Base Exception.
 
     This exception is used when a problem is encountered in
@@ -69,6 +79,11 @@ class IloConnectionError(IloError):
     def __init__(self, message):
         super(IloConnectionError, self).__init__(message)
 
+# This is not merged with generic InvalidInputError because
+# of backward-compatibility reasons. If we changed this,
+# use-cases of excepting 'IloError' to catch 'IloInvalidInputError'
+# will be broken.
+
 
 class IloInvalidInputError(IloError):
     """Invalid Input passed.
@@ -78,3 +93,27 @@ class IloInvalidInputError(IloError):
     """
     def __init__(self, message):
         super(IloInvalidInputError, self).__init__(message)
+
+
+class HPSSAException(ProliantUtilsException):
+
+    message = "An exception occured in hpssa module"
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message
+
+        message = message % kwargs
+        super(HPSSAException, self).__init__(message)
+
+
+class PhysicalDisksNotFoundError(HPSSAException):
+
+    message = ("Not enough physical disks were found to create logical disk "
+               "of size %(size_gb)s GB and raid level %(raid_level)s")
+
+
+class HPSSAOperationError(HPSSAException):
+
+    message = ("An error was encountered while doing hpssa configuration: "
+               "%(reason)s.")

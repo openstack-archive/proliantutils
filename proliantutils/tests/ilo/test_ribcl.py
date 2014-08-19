@@ -20,7 +20,7 @@ import unittest
 import constants
 import mock
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import ribcl
 
 
@@ -116,7 +116,7 @@ class IloRibclTestCase(unittest.TestCase):
         request_ilo_mock.return_value = constants.SET_HOST_POWER_XML
         result = self.ilo.set_host_power('ON')
         self.assertIn('Host power is already ON.', result)
-        self.assertRaises(exception.IloInvalidInputError,
+        self.assertRaises(exception.InvalidInputError,
                           self.ilo.set_host_power, 'ErrorCase')
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')

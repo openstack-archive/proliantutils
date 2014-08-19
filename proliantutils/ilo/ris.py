@@ -22,7 +22,7 @@ import json
 import StringIO
 import urlparse
 
-from proliantutils.ilo import exception
+from proliantutils import exception
 from proliantutils.ilo import operations
 
 """ Currently this class supports only secure boot and firmware settings
@@ -469,14 +469,14 @@ class RISOperations(operations.IloOperations):
         """Sets the boot mode of the system for next boot.
 
         :param boot_mode: either 'uefi' or 'bios'.
-        :raises: IloInvalidInputError, on an invalid input.
+        :raises: InvalidInputError, on an invalid input.
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
         if boot_mode not in ['uefi', 'bios']:
             msg = 'Invalid Boot mode specified'
-            raise exception.IloInvalidInputError(msg)
+            raise exception.InvalidInputError(msg)
 
         boot_properties = {'BootMode': boot_mode}
 
