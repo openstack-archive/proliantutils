@@ -28,6 +28,12 @@ POWER_STATE = {
     'OFF': 'No',
 }
 
+BOOT_MODE_CMDS = [
+    'GET_CURRENT_BOOT_MODE',
+    'GET_PENDING_BOOT_MODE',
+    'GET_SUPPORTED_BOOT_MODE',
+    'SET_PENDING_BOOT_MODE'
+]
 
 class IloError(Exception):
     """This exception is used when a problem is encountered in
@@ -38,6 +44,13 @@ class IloError(Exception):
 
 
 class IloClientInternalError(IloError):
+    """This exception is raised when iLO client library fails to
+    communicate properly with the iLO
+    """
+    def __init__(self, message, errorcode=None):
+        super(IloError, self).__init__(message)
+
+class IloCommandNotSupportedError(IloError):
     """This exception is raised when iLO client library fails to
     communicate properly with the iLO
     """
@@ -236,7 +249,12 @@ class IloClient:
                 return msg
             if status != 0:
                 if 'syntax error' in msg:
-                    raise IloClientInternalError(msg, status)
+                    for cmd in BOOT_MODE_CMDS:
+                        if cmd in msg:
+                            msg="%s not supported on this platform." % cmd
+                            raise IloCommandNotSupportedError(msg, status)
+                    else:
+                        raise IloClientInternalError(msg, status)
                 if status in IloLoginFailError.statuses or \
                         msg in IloLoginFailError.messages:
                     raise IloLoginFailError(msg, status)
@@ -357,6 +375,57 @@ class IloClient:
                 etree.SubElement(
                    child, 'VM_WRITE_PROTECT', VALUE=write_protect.upper())
 
+        d = self._request_ilo(xml)
+        data = self._parse_output(d)
+        return data
+
+    def get_current_boot_mode(self):
+        """Retrieves the current boot mode settings."""
+        data = self._execute_command(
+            'GET_CURRENT_BOOT_MODE', 'SERVER_INFO', 'read')
+        return data['GET_CURRENT_BOOT_MODE']['BOOT_MODE']['VALUE']
+
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode settings."""
+        data = self._execute_command(
+            'GET_PENDING_BOOT_MODE', 'SERVER_INFO', 'read')
+        return data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE']
+
+    def get_supported_boot_mode(self):
+        """Retrieves the supported boot mode."""
+        data = self._execute_command(
+            'GET_SUPPORTED_BOOT_MODE', 'SERVER_INFO', 'read')
+        return data['GET_SUPPORTED_BOOT_MODE']['SUPPORTED_BOOT_MODE']['VALUE']
+
+    def set_pending_boot_mode(self, value):
+        """Configures the boot mode of the system from a specific boot mode."""
+        dic = {'value': value}
+        data = self._execute_command(
+            'SET_PENDING_BOOT_MODE', 'SERVER_INFO', 'write', dic)
+        return data
+
+    def get_persistent_boot(self):
+        """Retrieves the current boot mode settings."""
+        data = self._execute_command(
+            'GET_PERSISTENT_BOOT', 'SERVER_INFO', 'read')
+        if data is not None:
+            return data['PERSISTENT_BOOT']['DEVICE']
+
+    def set_persistent_boot(self, value):
+        """Configures a boot from a specific device."""
+
+        xml = self._create_dynamic_xml(
+            'SET_PERSISTENT_BOOT', 'SERVER_INFO', 'write')
+
+        if six.PY2:
+            child_iterator = xml.getiterator()
+        else:
+            child_iterator = xml.iter()
+
+        for child in child_iterator:
+            if child.tag == 'SET_PERSISTENT_BOOT':
+                etree.SubElement(
+                   child, 'DEVICE', VALUE=value)
         d = self._request_ilo(xml)
         data = self._parse_output(d)
         return data
