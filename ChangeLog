@@ -1,9 +1,15 @@
 CHANGES
 =======
 
-0.1.0
------
+v0.1.2
+------
 
+* added update_persistent_mode and other helper functions
+
+v1.1
+----
+
+* new commands added
 * Add support for pbr
 * Adding Documentation to ribcl module
 * Submit ribcl ilo module
