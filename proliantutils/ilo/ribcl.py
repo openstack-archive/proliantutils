@@ -464,7 +464,7 @@ class IloClient:
             for key, val in item.iteritems():
                 if key in key_list:
                     boot_mode = 'uefi'
-                    return boot_mode 
+                    return boot_mode
                 else:
                     boot_mode = 'bios'
         return boot_mode
