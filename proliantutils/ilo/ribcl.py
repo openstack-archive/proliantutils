@@ -457,9 +457,6 @@ class IloClient:
         
         boot_mode = None
         key_list = ['DESCRIPTION']
-        val_list = ['CDROM', 'FlexibleLOM', 'EmbeddedLOM',
-                    'NIC', 'HDD', 'SA_HDD', 'USB_HDD',
-                    'PCI']
         for item in result:
             for key, val in item.iteritems():
                 if key in key_list:
