@@ -15,6 +15,7 @@
 import time
 
 from oslo.concurrency import processutils
+from oslo.utils import strutils
 
 from proliantutils import exception
 from proliantutils.hpssa import constants
@@ -385,8 +386,21 @@ class LogicalDrive(object):
         self.parent = parent
         self.properties = properties
 
-        # TODO(rameshg87): Check if size is always reported in GB
-        self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
+        # 'string_to_bytes' takes care of converting any returned
+        # (like 500MB, 25GB) unit of storage space to bytes (Integer value).
+        # It requires space to be stripped.
+        size = self.properties['Size'].replace(' ', '')
+        try:
+            self.size_gb = (strutils.string_to_bytes(size, return_int=True) /
+                            (1024*1024*1024))
+        except ValueError:
+            msg = ("hpssacli returned unknown size '%(size)s' for logical "
+                   "disk '%(logical_disk)s' of RAID array '%(array)s' in "
+                   "controller '%(controller)s'." %
+                   {'size': size, 'logical_disk': self.id,
+                    'array': self.parent.id,
+                    'controller': self.parent.parent.id})
+            raise exception.HPSSAOperationError(reason=msg)
 
         self.raid_level = self.properties.get('Fault Tolerance')
         # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
@@ -432,8 +446,20 @@ class PhysicalDrive:
         # Strip off physicaldrive before storing it in id
         self.id = id[14:]
 
-        # TODO(rameshg87): Check if size is always reported in GB
-        self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
+        size = self.properties['Size'].replace(' ', '')
+        # 'string_to_bytes' takes care of converting any returned
+        # (like 500MB, 25GB) unit of storage space to bytes (Integer value).
+        # It requires space to be stripped.
+        try:
+            self.size_gb = (strutils.string_to_bytes(size, return_int=True) /
+                            (1024*1024*1024))
+        except ValueError:
+            msg = ("hpssacli returned unknown size '%(size)s' for physical "
+                   "disk '%(physical_disk)s' of controller "
+                   "'%(controller)s'." %
+                   {'size': size, 'physical_disk': self.id,
+                    'controller': self.parent.id})
+            raise exception.HPSSAOperationError(reason=msg)
 
         ssa_interface = self.properties['Interface Type']
         self.interface_type = constants.get_interface_type(ssa_interface)
