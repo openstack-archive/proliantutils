@@ -30,6 +30,9 @@ RAID_60 = '6+0'
 RAID_1_ADM = '1ADM'
 RAID_10_ADM = '10ADM'
 
+RAID_LEVEL_INPUT_TO_HPSSA_MAPPING = {RAID_50: '50', RAID_60: '60'}
+RAID_LEVEL_HPSSA_TO_INPUT_MAPPING = {
+    v: k for k, v in RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.iteritems()}
 
 INTERFACE_TYPE_MAP = {'SCSI': INTERFACE_TYPE_SCSI,
                       'SAS': INTERFACE_TYPE_SAS,
@@ -49,7 +52,8 @@ RAID_LEVEL_MIN_DISKS = {RAID_0: 2,
                         RAID_5: 3,
                         RAID_6: 4,
                         RAID_10: 4,
-                        RAID_50: 6}
+                        RAID_50: 6,
+                        RAID_60: 8}
 
 
 def get_interface_type(ssa_interface):
