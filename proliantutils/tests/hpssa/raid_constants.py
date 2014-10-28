@@ -1174,3 +1174,240 @@ Smart Array P822 in Slot 2
       Vendor ID: PMCSIERA
       Model: SRCv24x6G
 '''
+
+HPSSA_BAD_SIZE_PHYSICAL_DRIVE = '''
+
+Smart Array P822 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDVTF0BRH5T0MO
+   Cache Serial Number: PBKUD0BRH5T3I6
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.68
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 15 secs
+   Cache Board Present: True
+   Cache Status: OK
+   Drive Write Cache: Disabled
+   Total Cache Size: 2.0 GB
+   Total Cache Memory Available: 1.8 GB
+   No-Battery Write Cache: Disabled
+   Cache Backup Power Source: Capacitors
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 88
+   Cache Module Temperature (C): 37
+   Capacitor Temperature  (C): 21
+   Number of Ports: 6 (2 Internal / 4 External )
+   Driver Name: hpsa
+   Driver Version: 3.4.4
+   Driver Supports HP SSD Smart Path: True
+
+
+
+   unassigned
+
+      physicaldrive 5I:1:1
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 500foo
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+'''
+
+
+HPSSA_BAD_SIZE_LOGICAL_DRIVE = '''
+
+Smart Array P822 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDVTF0BRH5T0MO
+   Cache Serial Number: PBKUD0BRH5T3I6
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.68
+   Rebuild Priority: Medium
+   Expand Priority: Medium
+   Surface Scan Delay: 3 secs
+   Surface Scan Mode: Idle
+   Queue Depth: Automatic
+   Monitor and Performance Delay: 60  min
+   Elevator Sort: Enabled
+   Degraded Performance Optimization: Disabled
+   Inconsistency Repair Policy: Disabled
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 15 secs
+   Cache Board Present: True
+   Cache Status: OK
+   Cache Ratio: 10% Read / 90% Write
+   Drive Write Cache: Disabled
+   Total Cache Size: 2.0 GB
+   Total Cache Memory Available: 1.8 GB
+   No-Battery Write Cache: Disabled
+   Cache Backup Power Source: Capacitors
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 88
+   Cache Module Temperature (C): 37
+   Capacitor Temperature  (C): 22
+   Number of Ports: 6 (2 Internal / 4 External )
+   Driver Name: hpsa
+   Driver Version: 3.4.4
+   Driver Supports HP SSD Smart Path: True
+
+   Array: A
+      Interface Type: SAS
+      Unused Space: 0  MB
+      Status: OK
+      MultiDomain Status: OK
+      Array Type: Data
+      HP SSD Smart Path: disable
+
+
+
+      Logical Drive: 1
+         Size: 558.9foo
+         Fault Tolerance: 1
+         Heads: 255
+         Sectors Per Track: 32
+         Cylinders: 65535
+         Strip Size: 256 KB
+         Full Stripe Size: 256 KB
+         Status: OK
+         MultiDomain Status: OK
+         Caching:  Enabled
+         Unique Identifier: 600508B1001C321CCA06EB7CD847939D
+         Disk Name: /dev/sda
+         Mount Points: None
+         Logical Drive Label: 01F42227PDVTF0BRH5T0MOAB64
+         Mirror Group 0:
+            physicaldrive 5I:1:1 (port 5I:box 1:bay 1, SAS, 600 GB, OK)
+         Mirror Group 1:
+            physicaldrive 5I:1:2 (port 5I:box 1:bay 2, SAS, 600 GB, OK)
+         Drive Type: Data
+         LD Acceleration Method: Controller Cache
+
+      physicaldrive 5I:1:1
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 500 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+      physicaldrive 5I:1:2
+         Port: 5I
+         Box: 1
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 500 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7H2DM0000B41800Y0
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+'''
+
+HPSSA_SMALL_SIZE_PHYSICAL_DRIVE = '''
+
+Smart Array P822 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDVTF0BRH5T0MO
+   Cache Serial Number: PBKUD0BRH5T3I6
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.68
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 15 secs
+   Cache Board Present: True
+   Cache Status: OK
+   Drive Write Cache: Disabled
+   Total Cache Size: 2.0 GB
+   Total Cache Memory Available: 1.8 GB
+   No-Battery Write Cache: Disabled
+   Cache Backup Power Source: Capacitors
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 88
+   Cache Module Temperature (C): 37
+   Capacitor Temperature  (C): 21
+   Number of Ports: 6 (2 Internal / 4 External )
+   Driver Name: hpsa
+   Driver Version: 3.4.4
+   Driver Supports HP SSD Smart Path: True
+
+
+
+   unassigned
+
+      physicaldrive 5I:1:1
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 2048 MB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+'''

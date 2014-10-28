@@ -304,3 +304,35 @@ class LogicalDriveTest(testtools.TestCase):
                          sorted(ret['physical_disks']))
         self.assertEqual('01F42227PDVTF0BRH5T0MOAB64',
                          ret['volume_name'])
+
+    def test___init__bad_size_logical_drive(self, get_all_details_mock):
+
+        ret = raid_constants.HPSSA_BAD_SIZE_LOGICAL_DRIVE
+        get_all_details_mock.return_value = ret
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               objects.Server)
+        msg = ("unknown size '558.9foo' for logical disk '1' of RAID array "
+               "'A' in controller 'Smart Array P822 in Slot 2'")
+        self.assertIn(msg, str(ex))
+
+
+@mock.patch.object(objects.Server, '_get_all_details')
+class PhysicalDriveTest(testtools.TestCase):
+
+    def test___init__bad_size_logical_drive(self, get_all_details_mock):
+
+        ret = raid_constants.HPSSA_BAD_SIZE_PHYSICAL_DRIVE
+        get_all_details_mock.return_value = ret
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               objects.Server)
+        msg = ("unknown size '500foo' for physical disk '5I:1:1' of "
+               "controller 'Smart Array P822 in Slot 2'")
+        self.assertIn(msg, str(ex))
+
+    def test___init__physical_disk_size_mb(self, get_all_details_mock):
+
+        ret = raid_constants.HPSSA_SMALL_SIZE_PHYSICAL_DRIVE
+        get_all_details_mock.return_value = ret
+        server = objects.Server()
+        self.assertEqual(
+            2, server.controllers[0].unassigned_physical_drives[0].size_gb)
