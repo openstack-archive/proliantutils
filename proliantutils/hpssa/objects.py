@@ -383,8 +383,14 @@ class LogicalDrive(object):
         # TODO(rameshg87): Check if size is always reported in GB
         self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
         self.raid_level = self.properties.get('Fault Tolerance')
-        self.wwn = self.properties.get('Unique Identifier')
         self.volume_name = self.properties.get('Logical Drive Label')
+
+        # Trim down the WWN to 16 digits (8 bytes) so that it matches
+        # lsblk output in Linux.
+        wwn = self.properties.get('Unique Identifier')
+        if wwn:
+            wwn = '0x' + wwn[:16].lower()
+            self.wwn = wwn
 
     def get_property(self, prop):
         if not self.properties:

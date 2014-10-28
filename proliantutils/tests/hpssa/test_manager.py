@@ -129,9 +129,9 @@ class ManagerTestCases(testtools.TestCase):
                    if x['raid_level'] == '1'][0]
         ld2_ret = [x for x in current_config['logical_disks']
                    if x['raid_level'] == '5'][0]
-        self.assertEqual('600508B1001CC42CDF101F06E5563967',
+        self.assertEqual('0x600508b1001cc42c',
                          ld2_ret['root_device_hint']['wwn'])
-        self.assertEqual('600508B1001CE1E18302A8702C6AB008',
+        self.assertEqual('0x600508b1001ce1e1',
                          ld1_ret['root_device_hint']['wwn'])
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
@@ -165,6 +165,15 @@ class ManagerTestCases(testtools.TestCase):
                                                     "delete",
                                                     "forced")
 
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_delete_configuration_no_arrays(self, controller_exec_cmd_mock,
+                                  get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+
+        manager.delete_configuration()
+        self.assertFalse(controller_exec_cmd_mock.called)
+
     def test_get_configuration(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
@@ -178,7 +187,7 @@ class ManagerTestCases(testtools.TestCase):
                                            '5I:1:2'],
                         'volume_name': '01F42227PDVTF0BRH5T0MOAB64',
                         'root_device_hint': {
-                            'wwn': '600508B1001C321CCA06EB7CD847939D'}}
+                            'wwn': '0x600508b1001c321c'}}
 
         # NOTE(rameshg87: Cannot directly compare because
         # of 'physical_disks' key.
