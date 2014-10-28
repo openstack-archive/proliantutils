@@ -156,7 +156,10 @@ def delete_configuration():
     """Delete a RAID configuration on this server."""
     server = objects.Server()
     for controller in server.controllers:
-        controller.delete_all_logical_drives()
+        # Trigger delete only if there is some RAID array, otherwise
+        # hpssacli will fail saying "no logical drives found."
+        if controller.raid_arrays:
+            controller.delete_all_logical_drives()
 
 
 def get_configuration():
