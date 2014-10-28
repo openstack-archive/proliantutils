@@ -326,6 +326,11 @@ class Controller(object):
         phy_drive_ids = ','.join(physical_drive_ids)
         size_mb = logical_drive_info['size_gb'] * 1024
         raid_level = logical_drive_info['raid_level']
+
+        # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
+        # Check if we have mapping stored, otherwise use the same.
+        raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
+            raid_level, raid_level)
         self.execute_cmd("create", "type=logicaldrive",
                          "drives=%s" % phy_drive_ids,
                          "raid=%s" % raid_level,
@@ -382,7 +387,14 @@ class LogicalDrive(object):
 
         # TODO(rameshg87): Check if size is always reported in GB
         self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
+
         self.raid_level = self.properties.get('Fault Tolerance')
+        # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
+        # Check if we have mapping stored, otherwise use the same.
+        raid_level_mapping = constants.RAID_LEVEL_HPSSA_TO_INPUT_MAPPING
+        self.raid_level = raid_level_mapping.get(self.raid_level,
+                                                 self.raid_level)
+
         self.volume_name = self.properties.get('Logical Drive Label')
 
         # Trim down the WWN to 16 digits (8 bytes) so that it matches

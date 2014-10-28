@@ -18,6 +18,7 @@ import stat
 from oslo.concurrency import processutils
 import testtools
 
+from proliantutils.hpssa import constants
 from proliantutils.hpssa import manager
 from proliantutils.hpssa import objects
 
@@ -31,8 +32,6 @@ class HPSSATestCase(testtools.TestCase):
     def _get_server(self):
 
         server = objects.Server()
-        if not server.controllers:
-            self.fail("No controllers detected on the server.")
         return server
 
     def _get_physical_drives(self, server, no_of_physical_drives_required,
@@ -50,7 +49,7 @@ class HPSSATestCase(testtools.TestCase):
 
         return physical_drives[:no_of_physical_drives_required]
 
-    def test_create_configuration_single_logical_drive(self):
+    def _test_create_configuration_single_logical_drive(self, raid_level):
 
         server = self._get_server()
         size_gb = 100
@@ -58,43 +57,64 @@ class HPSSATestCase(testtools.TestCase):
         manager.delete_configuration()
         devices_before_create = set(glob.glob('/dev/sd[a-z]'))
 
-        for raid_level in ['0', '1', '5', '6']:
-            self._get_physical_drives(server, 2, size_gb)
+        minimum_disks_required = constants.RAID_LEVEL_MIN_DISKS[raid_level]
+        self._get_physical_drives(server, minimum_disks_required, size_gb)
 
-            raid_config = {
-                'logical_disks':
-                    [{'size_gb': size_gb,
-                      'raid_level': raid_level}]
-            }
+        raid_config = {
+            'logical_disks':
+                [{'size_gb': size_gb,
+                  'raid_level': raid_level}]
+        }
 
-            current_config = manager.create_configuration(raid_config)
+        current_config = manager.create_configuration(raid_config)
 
-            logical_disk = current_config['logical_disks'][0]
-            self.assertIsNotNone(logical_disk['root_device_hint'])
-            self.assertIsNotNone(logical_disk['volume_name'])
+        logical_disk = current_config['logical_disks'][0]
+        self.assertIsNotNone(logical_disk['root_device_hint'])
+        self.assertIsNotNone(logical_disk['volume_name'])
 
-            devices_after_create = set(glob.glob('/dev/sd[a-z]'))
-            new_device = devices_after_create - devices_before_create
-            new_device_file = new_device.pop()
+        devices_after_create = set(glob.glob('/dev/sd[a-z]'))
+        new_device = devices_after_create - devices_before_create
+        new_device_file = new_device.pop()
 
-            s = os.stat(new_device_file)
-            if not stat.S_ISBLK(s.st_mode):
-                self.fail("Newly created disk %s is not a block device"
-                          % new_device_file)
+        s = os.stat(new_device_file)
+        if not stat.S_ISBLK(s.st_mode):
+            self.fail("Newly created disk %s is not a block device"
+                      % new_device_file)
 
-            stdout, stderr = processutils.execute("lsblk", "-Pio", "SIZE",
-                                                  new_device_file)
-            # Output is like (two times printed):
-            # SIZE="8G"
-            # SIZE="8G"
-            created_disk_size = stdout.split("\n")[0].split('"')[1][:-1]
-            self.assertEqual(size_gb, int(created_disk_size))
+        stdout, stderr = processutils.execute("lsblk", "-Pio", "SIZE",
+                                              new_device_file)
+        # Output is like (two times printed):
+        # SIZE="8G"
+        # SIZE="8G"
+        created_disk_size = stdout.split("\n")[0].split('"')[1][:-1]
+        self.assertEqual(size_gb, int(created_disk_size))
 
-            stdout, stderr = processutils.execute("lsblk", "-Pio", "WWN",
-                                                  new_device_file)
-            # Output is like:
-            # WWN="0x600508b1001cca7f"
-            wwn = stdout.split("\n")[0].split('"')[1]
-            self.assertEqual(logical_disk['root_device_hint']['wwn'], wwn)
+        stdout, stderr = processutils.execute("lsblk", "-Pio", "WWN",
+                                              new_device_file)
+        # Output is like:
+        # WWN="0x600508b1001cca7f"
+        wwn = stdout.split("\n")[0].split('"')[1]
+        self.assertEqual(logical_disk['root_device_hint']['wwn'], wwn)
 
-            manager.delete_configuration()
+        manager.delete_configuration()
+
+    def test_raid_0_single_drive(self):
+        self._test_create_configuration_single_logical_drive('0')
+
+    def test_raid_1_single_drive(self):
+        self._test_create_configuration_single_logical_drive('1')
+
+    def test_raid_5_single_drive(self):
+        self._test_create_configuration_single_logical_drive('5')
+
+    def test_raid_6_single_drive(self):
+        self._test_create_configuration_single_logical_drive('6')
+
+    def test_raid_10_single_drive(self):
+        self._test_create_configuration_single_logical_drive('1+0')
+
+    def test_raid_50_single_drive(self):
+        self._test_create_configuration_single_logical_drive('5+0')
+
+    def test_raid_60_single_drive(self):
+        self._test_create_configuration_single_logical_drive('6+0')

@@ -97,6 +97,16 @@ class ServerTest(testtools.TestCase):
         self.assertEqual(controller, physical_drive.parent)
         self.assertEqual(400, physical_drive.size_gb)
 
+    def test_server_object_one_logical_drive_raid_level_mappping(
+            self, get_all_details_mock):
+        stdout = raid_constants.HPSSA_ONE_DRIVE_RAID_50
+        get_all_details_mock.return_value = stdout
+
+        server = objects.Server()
+
+        logical_drive = server.controllers[0].raid_arrays[0].logical_drives[0]
+        self.assertEqual(constants.RAID_50, logical_drive.raid_level)
+
     def test_get_controller_by_id(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
@@ -211,6 +221,35 @@ class ControllerTest(testtools.TestCase):
                                              "drives=5I:1:1,5I:1:2,5I:1:3",
                                              "raid=1",
                                              "size=51200")
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_logical_drive_raid_level_mapping(self, execute_mock,
+                                                     get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+
+        server = objects.Server()
+        controller = server.controllers[0]
+
+        logical_drive_info = {'size_gb': 50,
+                              'raid_level': '5+0',
+                              'volume_name': 'boot_volume',
+                              'is_boot_volume': 'true',
+                              'controller': 'Smart Array P822 in Slot 2',
+                              'physical_disks': ['5I:1:1',
+                                                 '5I:1:2',
+                                                 '5I:1:3',
+                                                 '5I:1:4',
+                                                 '5I:1:5',
+                                                 '6I:1:6']}
+
+        controller.create_logical_drive(logical_drive_info,
+                                        ['5I:1:1', '5I:1:2', '5I:1:3',
+                                         '5I:1:4', '5I:1:5', '6I:1:6'])
+        execute_mock.assert_called_once_with(
+            "create", "type=logicaldrive",
+            "drives=5I:1:1,5I:1:2,5I:1:3,5I:1:4,5I:1:5,6I:1:6",
+            "raid=50", "size=51200")
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_all_logical_drives(self, execute_mock,
