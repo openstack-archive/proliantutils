@@ -110,7 +110,6 @@ class IloClient:
         else:
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
-        # print xml
         try:
             req = urllib2.Request(url=urlstr, data=xml)
             req.add_header("Content-length", len(xml))
@@ -178,7 +177,6 @@ class IloClient:
         then the string is returned back.
 
         """
-        # print xml_response
         count = 0
         xml_dict = {}
         resp_message = None
@@ -439,10 +437,11 @@ class IloClient:
         boot_mode = self._check_boot_mode(result)
         if boot_mode == 'bios':
             self.set_persistent_boot(device_type)
+	    return
 
         device_list = []
-        for item in device_type:
-            dev=item.upper()
+	for item in device_type:
+	    dev=item.upper()
             if dev == 'NETWORK':
                 nic_list = self._get_nic_boot_devices(result)
                 device_list += nic_list
@@ -455,58 +454,43 @@ class IloClient:
 
     def _check_boot_mode(self, result):
         
-        boot_mode = None
-        key_list = ['DESCRIPTION']
-        for item in result:
-            for key, val in item.iteritems():
-                if key in key_list:
-                    boot_mode = 'uefi'
-                    return boot_mode
-                else:
-                    boot_mode = 'bios'
-        return boot_mode
+	if 'DESCRIPTION' in result[0]:
+	    return 'uefi'
+	else:
+	    return 'bios'
 
     def _get_nic_boot_devices(self, result):
-        nic_ipv4="NIC (IPv4)"
-        nic_ipv6="NIC (IPv6)"
-        key_desc="DESCRIPTION"
-        key_value="value"
-        nic_values_ipv4=[]
-        nic_values_ipv6=[]
-        found_nic_ipv4 = 0
-        found_nic_ipv6 = 0
-        for item in result:
-            for key,val in item.iteritems():
-                """ Check if we have IPv4/IPv6 NICS"""
-                if key == key_desc:
-                    if val.find(nic_ipv4)!= -1:
-                        found_nic_ipv4=1
-                    if val.find(nic_ipv6)!= -1:
-                         found_nic_ipv6=1
-                if key == key_value:
-                    if found_nic_ipv4:
-                         nic_values_ipv4.append(val)
-                         found_nic_ipv4=0
-                    if found_nic_ipv6:
-                         nic_values_ipv6.append(val)
-                         found_nic_ipv6=0
-        nic_list = nic_values_ipv4 + nic_values_ipv6
-        return nic_list
+        nw_identifier = "NIC" 
+	pxe_enabled = "PXE"
+        nic_list = []
+	pxe_nic_list = []
+	try:
+	    for item in result:
+	        if nw_identifier in item["DESCRIPTION"]:
+	            # Check if it is PXE enabled, to add it to starting of list
+		    if pxe_enabled in item["DESCRIPTION"]:
+		        pxe_nic_list.append(item["value"])
+		    else:
+		        nic_list.append(item["value"])
+	except KeyError as e:
+            msg = "_get_nic_boot_devices failed with the KeyError:%s"
+	    raise IloError((msg)% e)
+
+	all_nics = pxe_nic_list + nic_list 
+        return all_nics
+
+    def _isDisk(self, result):
+	disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
+	return any(e in result for e in disk_identifier)
 
     def _get_disk_boot_devices(self, result):
-        disk_str="Logical Drive"
-        key_desc="DESCRIPTION"
-        key_value="value"
         disk_list=[]
-        found_disk = 0
-        for item in result:
-            for key,val in item.iteritems():
-                if key == key_desc:
-                    if val.find(disk_str)!= -1:
-                        found_disk=1
-                if key == key_value:
-                    if found_disk:
-                         disk_list.append(val)
-                         found_disk=0
+	try:
+	    for item in result:
+	        if self._isDisk(item["DESCRIPTION"]):
+		    disk_list.append(item["value"])
+	except KeyError:
+	    msg = "_get_disk_boot_devices failed with the KeyError:%s"
+            raise IloError((msg)% e)
+	    
         return disk_list
-
