@@ -27,6 +27,15 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
 
 
+def _add_physical_disks_detail_to_raid_config(server, raid_config):
+    """Adds the physical disk details to the RAID configuration passed."""
+    raid_config['physical_disks'] = []
+    physical_drives = server.get_physical_drives()
+    for physical_drive in physical_drives:
+        physical_drive_dict = physical_drive.get_physical_drive_dict()
+        raid_config['physical_disks'].append(physical_drive_dict)
+
+
 def validate(raid_config):
     """Validates the RAID configuration provided.
 
@@ -149,6 +158,7 @@ def create_configuration(raid_config):
 
         wwns_before_create = wwns_after_create.copy()
 
+    _add_physical_disks_detail_to_raid_config(server, raid_config)
     return raid_config
 
 
@@ -190,4 +200,5 @@ def get_configuration():
         logical_drive_dict = logical_drive.get_logical_drive_dict()
         raid_config['logical_disks'].append(logical_drive_dict)
 
+    _add_physical_disks_detail_to_raid_config(server, raid_config)
     return raid_config
