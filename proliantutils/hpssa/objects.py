@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import re
 import time
 
 from oslo.concurrency import processutils
@@ -114,11 +115,11 @@ def _convert_to_dict(stdout):
     return info_dict
 
 
-def _hpssacli(*args):
+def _hpssacli(*args, **kwargs):
     """Wrapper function for executing hpssacli command."""
     try:
         stdout, stderr = processutils.execute("hpssacli",
-                                              *args)
+                                              *args, **kwargs)
     except (OSError, processutils.ProcessExecutionError) as e:
         raise exception.HPSSAOperationError(reason=e)
 
@@ -317,22 +318,23 @@ class Controller(object):
                     return phy_drive
         return None
 
-    def execute_cmd(self, *args):
+    def execute_cmd(self, *args, **kwargs):
         """Execute a given hpssacli command on the controller.
 
         This method executes a given command on the controller.
 
         :params args: a tuple consisting of sub-commands to be appended
             after specifying the controller in hpssacli command.
+        :param kwargs: kwargs to be passed to execute() in processutils
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
 
         slot = self.properties['Slot']
         base_cmd = ("controller", "slot=%s" % slot)
         cmd = base_cmd + args
-        return _hpssacli(*cmd)
+        return _hpssacli(*cmd, **kwargs)
 
-    def create_logical_drive(self, logical_drive_info, physical_drive_ids):
+    def create_logical_drive(self, logical_drive_info):
         """Create a logical drive on the controller.
 
         This method creates a logical drive on the controller when the
@@ -340,10 +342,18 @@ class Controller(object):
 
         :param logical_drive_info: a dictionary containing the details
             of the logical drive as specified in raid config.
-        :param physical_drive_ids: a list of physical drive ids to be used.
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
-        phy_drive_ids = ','.join(physical_drive_ids)
+        cmd_args = []
+        if 'array' in logical_drive_info:
+            cmd_args.extend(['array', logical_drive_info['array']])
+
+        cmd_args.extend(['create', "type=logicaldrive"])
+
+        if 'physical_disks' in logical_drive_info:
+            phy_drive_ids = ','.join(logical_drive_info['physical_disks'])
+            cmd_args.append("drives=%s" % phy_drive_ids)
+
         size_mb = logical_drive_info['size_gb'] * 1024
         raid_level = logical_drive_info['raid_level']
 
@@ -351,10 +361,9 @@ class Controller(object):
         # Check if we have mapping stored, otherwise use the same.
         raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
             raid_level, raid_level)
-        self.execute_cmd("create", "type=logicaldrive",
-                         "drives=%s" % phy_drive_ids,
-                         "raid=%s" % raid_level,
-                         "size=%s" % size_mb)
+        cmd_args.extend(["raid=%s" % raid_level, "size=%s" % size_mb])
+
+        self.execute_cmd(*cmd_args)
 
     def delete_all_logical_drives(self):
         """Deletes all logical drives on trh controller.
@@ -393,6 +402,34 @@ class RaidArray(object):
             self.physical_drives.append(PhysicalDrive(physical_drive,
                                         properties[physical_drive],
                                         self))
+
+    def can_accomodate(self, logical_disk):
+        """Check if this RAID array can accomodate the logical disk.
+
+        This method uses hpssacli command's option to check if the
+        logical disk with desired size and RAID level can be created
+        on this RAID array.
+
+        :param logical_disk: Dictionary of logical disk to be created.
+        :returns: True, if logical disk can be created on the RAID array
+                  False, otherwise.
+        """
+        raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
+            logical_disk['raid_level'], logical_disk['raid_level'])
+        args = ("array", self.id, "create", "type=logicaldrive",
+                "raid=%s" % raid_level, "size=?")
+
+        # hpssacli returns error code 1 when RAID level of the
+        # logical disk is not supported on the array.
+        stdout, stderr = self.parent.execute_cmd(*args,
+                                                 check_exit_code=[0, 1])
+
+        match = re.search('Max: (\d+)', stdout)
+        if not match:
+            return False
+
+        max_size_gb = int(match.group(1)) / 1024
+        return logical_disk['size_gb'] <= max_size_gb
 
 
 class LogicalDrive(object):

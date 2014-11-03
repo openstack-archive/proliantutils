@@ -208,8 +208,8 @@ class ControllerTest(testtools.TestCase):
                           'foo', 'bar')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
-    def test_create_logical_drive(self, execute_mock,
-                                  get_all_details_mock):
+    def test_create_logical_drive_with_physical_disks(self, execute_mock,
+                                                      get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
@@ -225,13 +225,33 @@ class ControllerTest(testtools.TestCase):
                                                  '5I:1:2',
                                                  '5I:1:3']}
 
-        controller.create_logical_drive(logical_drive_info,
-                                        ['5I:1:1',
-                                         '5I:1:2',
-                                         '5I:1:3'])
+        controller.create_logical_drive(logical_drive_info)
         execute_mock.assert_called_once_with("create",
                                              "type=logicaldrive",
                                              "drives=5I:1:1,5I:1:2,5I:1:3",
+                                             "raid=1",
+                                             "size=51200")
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_logical_drive_with_raid_array(self, execute_mock,
+                                                  get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+
+        server = objects.Server()
+        controller = server.controllers[0]
+
+        logical_drive_info = {'size_gb': 50,
+                              'raid_level': '1',
+                              'volume_name': 'boot_volume',
+                              'is_boot_volume': 'true',
+                              'controller': 'Smart Array P822 in Slot 2',
+                              'array': 'A'}
+
+        controller.create_logical_drive(logical_drive_info)
+        execute_mock.assert_called_once_with("array", "A",
+                                             "create",
+                                             "type=logicaldrive",
                                              "raid=1",
                                              "size=51200")
 
@@ -256,9 +276,7 @@ class ControllerTest(testtools.TestCase):
                                                  '5I:1:5',
                                                  '6I:1:6']}
 
-        controller.create_logical_drive(logical_drive_info,
-                                        ['5I:1:1', '5I:1:2', '5I:1:3',
-                                         '5I:1:4', '5I:1:5', '6I:1:6'])
+        controller.create_logical_drive(logical_drive_info)
         execute_mock.assert_called_once_with(
             "create", "type=logicaldrive",
             "drives=5I:1:1,5I:1:2,5I:1:3,5I:1:4,5I:1:5,6I:1:6",
@@ -317,6 +335,62 @@ class LogicalDriveTest(testtools.TestCase):
                          sorted(ret['physical_disks']))
         self.assertEqual('01F42227PDVTF0BRH5T0MOAB64',
                          ret['volume_name'])
+
+
+@mock.patch.object(objects.Server, '_get_all_details')
+class ArrayTest(testtools.TestCase):
+
+    @mock.patch.object(processutils, 'execute')
+    def test_can_accomodate_okay(self, execute_mock,
+                                 get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
+        logical_disk = {'size_gb': 500, 'raid_level': '5'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
+            logical_disk)
+        self.assertTrue(ret_val)
+
+    @mock.patch.object(processutils, 'execute')
+    def test_can_accomodate_not_enough_space(self, execute_mock,
+                                             get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
+        logical_disk = {'size_gb': 1500, 'raid_level': '5'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
+            logical_disk)
+        self.assertFalse(ret_val)
+
+    @mock.patch.object(processutils, 'execute')
+    def test_can_accomodate_invalid_raid_level(self, execute_mock,
+                                               get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK_INVALID, None)
+        logical_disk = {'size_gb': 1500, 'raid_level': '1'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
+            logical_disk)
+        self.assertFalse(ret_val)
+
+    @mock.patch.object(processutils, 'execute')
+    def test_can_accomodate_map_raid_level(self, execute_mock,
+                                           get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        execute_mock.return_value = ("", None)
+        get_all_details_mock.return_value = current_config
+        logical_disk = {'size_gb': 1500, 'raid_level': '5+0'}
+        server = objects.Server()
+        server.controllers[0].raid_arrays[0].can_accomodate(logical_disk)
+        execute_mock.assert_called_once_with(
+            "hpssacli", "controller", "slot=2", "array", "B", "create",
+            "type=logicaldrive", "raid=50", "size=?", check_exit_code=[0, 1])
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
