@@ -67,6 +67,17 @@ class ManagerTestCases(testtools.TestCase):
         self.assertIsNotNone(ld1_ret['volume_name'])
         self.assertIsNotNone(ld2_ret['volume_name'])
 
+        # Assert physical disk info
+        pds_active = [x['id'] for x in current_config['physical_disks']
+                      if x['status'] == 'active']
+        pds_ready = [x['id'] for x in current_config['physical_disks']
+                     if x['status'] == 'ready']
+        pds_active_expected = ['5I:1:3', '5I:1:4', '6I:1:5',
+                               '5I:1:1', '5I:1:2']
+        pds_ready_expected = ['6I:1:6', '6I:1:7']
+        self.assertEqual(sorted(pds_active_expected), sorted(pds_active))
+        self.assertEqual(sorted(pds_ready_expected), sorted(pds_ready))
+
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_configuration_with_disk_input_create_succeeds(
             self, controller_exec_cmd_mock, get_all_details_mock):
@@ -204,6 +215,17 @@ class ManagerTestCases(testtools.TestCase):
                          ld1_returned['root_device_hint'])
         self.assertEqual(sorted(ld1_expected['physical_disks']),
                          sorted(ld1_returned['physical_disks']))
+
+        # Assert physical disk info
+        pds_active = [x['id'] for x in raid_info_returned['physical_disks']
+                      if x['status'] == 'active']
+        pds_ready = [x['id'] for x in raid_info_returned['physical_disks']
+                     if x['status'] == 'ready']
+        pds_active_expected = ['5I:1:1', '5I:1:2']
+        pds_ready_expected = ['6I:1:6', '6I:1:7', '5I:1:3',
+                              '5I:1:4', '6I:1:5']
+        self.assertEqual(sorted(pds_active_expected), sorted(pds_active))
+        self.assertEqual(sorted(pds_ready_expected), sorted(pds_ready))
 
 
 class RaidConfigValidationTestCases(testtools.TestCase):

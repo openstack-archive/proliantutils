@@ -242,6 +242,26 @@ class Server(object):
                     logical_drives.append(logical_drive)
         return logical_drives
 
+    def get_physical_drives(self):
+        """Get all the RAID physical drives on the Server.
+
+        This method returns all the physical drives on the server
+        by examining all the controllers.
+
+        :returns: a list of PhysicalDrive objects.
+        """
+        physical_drives = []
+        for controller in self.controllers:
+            # First add unassigned physical drives.
+            for physical_drive in controller.unassigned_physical_drives:
+                physical_drives.append(physical_drive)
+            # Now add physical drives part of RAID arrays.
+            for array in controller.raid_arrays:
+                for physical_drive in array.physical_drives:
+                    physical_drives.append(physical_drive)
+
+        return physical_drives
+
     def get_logical_drive_by_wwn(self, wwn):
         """Get the logical drive object given the wwn.
 
@@ -466,3 +486,22 @@ class PhysicalDrive:
         self.disk_type = constants.get_disk_type(ssa_interface)
         self.model = self.properties.get('Model')
         self.firmware = self.properties.get('Firmware Revision')
+
+    def get_physical_drive_dict(self):
+        """Returns a dictionary of with the details of the physical drive."""
+
+        if isinstance(self.parent, RaidArray):
+            controller = self.parent.parent.id
+            status = 'active'
+        else:
+            controller = self.parent.id
+            status = 'ready'
+
+        return {'size_gb': self.size_gb,
+                'controller': controller,
+                'id': self.id,
+                'disk_type': self.disk_type,
+                'interface_type': self.interface_type,
+                'model': self.model,
+                'firmware': self.firmware,
+                'status': status}
