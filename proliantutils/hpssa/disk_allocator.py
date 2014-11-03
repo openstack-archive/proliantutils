@@ -32,19 +32,19 @@ def _get_criteria_matching_disks(logical_disk, physical_drives):
     criteria_to_consider = [x for x in FILTER_CRITERIA
                             if x in logical_disk]
 
-    for physical_drive in physical_drives:
+    for physical_drive_object in physical_drives:
         for criteria in criteria_to_consider:
             logical_drive_value = logical_disk.get(criteria)
-            physical_drive_value = getattr(physical_drive, criteria)
+            physical_drive_value = getattr(physical_drive_object, criteria)
             if logical_drive_value != physical_drive_value:
                 break
         else:
-            matching_physical_drives.append(physical_drive)
+            matching_physical_drives.append(physical_drive_object)
 
     return matching_physical_drives
 
 
-def allocate_disks(logical_disk, server):
+def allocate_disks(logical_disk, server, raid_config):
     """Allocate physical disks to a logical disk.
 
     This method allocated physical disks to a logical
@@ -54,6 +54,7 @@ def allocate_disks(logical_disk, server):
     :param logical_disk: a dictionary of a logical disk
         from the RAID configuration input to the module.
     :param server: An objects.Server object
+    :param raid_config: The target RAID configuration requested.
     :raises: PhysicalDisksNotFoundError, if cannot find
         physical disks for the request.
     """
@@ -63,6 +64,7 @@ def allocate_disks(logical_disk, server):
         'number_of_physical_disks', constants.RAID_LEVEL_MIN_DISKS[raid_level])
     share_physical_disks = logical_disk.get('share_physical_disks', False)
 
+    # Try to create a new independent array for this request.
     for controller in server.controllers:
         physical_drives = controller.unassigned_physical_drives
         physical_drives = _get_criteria_matching_disks(logical_disk,
@@ -76,13 +78,39 @@ def allocate_disks(logical_disk, server):
             logical_disk['controller'] = controller.id
             physical_disks = selected_drive_ids[:number_of_physical_disks]
             logical_disk['physical_disks'] = physical_disks
-            break
+            return
 
-        if not share_physical_disks:
-            # TODO(rameshg87): When this logical drives can share disks
-            # with other arrays, figure out free space in other arrays
-            # and then consider which array to use.
-            pass
-    else:
-        raise exception.PhysicalDisksNotFoundError(size_gb=size_gb,
-                                                   raid_level=raid_level)
+    # We didn't find physical disks to create an independent array.
+    # Check if we can get some shared arrays.
+    if share_physical_disks:
+        sharable_disk_wwns = []
+        for sharable_logical_disk in raid_config['logical_disks']:
+            if (sharable_logical_disk.get('share_physical_disks', False) and
+                    'root_device_hint' in sharable_logical_disk):
+                wwn = sharable_logical_disk['root_device_hint']['wwn']
+                sharable_disk_wwns.append(wwn)
+
+        for controller in server.controllers:
+            sharable_arrays = [x for x in controller.raid_arrays if
+                               x.logical_drives[0].wwn in sharable_disk_wwns]
+
+            for array in sharable_arrays:
+
+                # Check if criterias for the logical disk match the ones with
+                # physical disks in the raid array.
+                criteria_matched_disks = _get_criteria_matching_disks(
+                    logical_disk, array.physical_drives)
+
+                # Check if all disks in the array don't match the criteria
+                if len(criteria_matched_disks) != len(array.physical_drives):
+                    continue
+
+                # Check if raid array can accomodate the logical disk.
+                if array.can_accomodate(logical_disk):
+                    logical_disk['controller'] = controller.id
+                    logical_disk['array'] = array.id
+                    return
+
+    # We check both options and couldn't get any physical disks.
+    raise exception.PhysicalDisksNotFoundError(size_gb=size_gb,
+                                               raid_level=raid_level)

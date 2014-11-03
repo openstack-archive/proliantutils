@@ -107,7 +107,8 @@ class DiskAllocatorTestCase(testtools.TestCase):
         disk1.size_gb = 300
         disk2.size_gb = 300
 
-        disk_allocator.allocate_disks(logical_disk, server)
+        raid_config = {'logical_disks': [logical_disk]}
+        disk_allocator.allocate_disks(logical_disk, server, raid_config)
         self.assertEqual('Smart Array P822 in Slot 2',
                          logical_disk['controller'])
         self.assertEqual(sorted(['5I:1:3', '6I:1:7']),
@@ -122,9 +123,10 @@ class DiskAllocatorTestCase(testtools.TestCase):
                         'raid_level': '1',
                         'disk_type': 'hdd',
                         'interface_type': 'sas'}
+        raid_config = {'logical_disks': [logical_disk]}
         exc = self.assertRaises(exception.PhysicalDisksNotFoundError,
                                 disk_allocator.allocate_disks,
-                                logical_disk, server)
+                                logical_disk, server, raid_config)
         self.assertIn("of size 700 GB and raid level 1", str(exc))
 
     def test_allocate_disks_disk_not_enough_disks(self,
@@ -139,7 +141,92 @@ class DiskAllocatorTestCase(testtools.TestCase):
                         'raid_level': '5',
                         'disk_type': 'hdd',
                         'interface_type': 'sas'}
+        raid_config = {'logical_disks': [logical_disk]}
         exc = self.assertRaises(exception.PhysicalDisksNotFoundError,
                                 disk_allocator.allocate_disks,
-                                logical_disk, server)
+                                logical_disk, server, raid_config)
         self.assertIn("of size 600 GB and raid level 5", str(exc))
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_allocate_disks_share_physical_disks(self, execute_mock,
+                                                 get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.ONE_DRIVE_RAID_1
+        execute_mock.return_value = (
+            raid_constants.DRIVE_2_RAID_1_OKAY_TO_SHARE, None)
+
+        rdh = {'wwn': '0x600508b1001c02bd'}
+        controller = 'Smart Array P822 in Slot 2'
+        physical_disks = ['5I:1:1', '5I:1:2']
+
+        raid_config = {'logical_disks': [{'size_gb': 50,
+                                          'raid_level': '1',
+                                          'share_physical_disks': True,
+                                          'root_device_hint': rdh,
+                                          'controller': controller,
+                                          'physical_disks': physical_disks},
+                                         {'size_gb': 50,
+                                          'raid_level': '1',
+                                          'share_physical_disks': True}]}
+
+        logical_disk = raid_config['logical_disks'][1]
+        server = objects.Server()
+        disk_allocator.allocate_disks(logical_disk, server, raid_config)
+        self.assertEqual(controller, logical_disk['controller'])
+        self.assertEqual('A', logical_disk['array'])
+        self.assertNotIn('physical_disks', logical_disk)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_allocate_disks_share_physical_disks_no_space(
+            self, execute_mock, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.ONE_DRIVE_RAID_1
+        execute_mock.return_value = (
+            raid_constants.DRIVE_2_RAID_1_OKAY_TO_SHARE, None)
+
+        rdh = {'wwn': '0x600508b1001c02bd'}
+        controller = 'Smart Array P822 in Slot 2'
+        physical_disks = ['5I:1:1', '5I:1:2']
+
+        raid_config = {'logical_disks': [{'size_gb': 50,
+                                          'raid_level': '1',
+                                          'share_physical_disks': True,
+                                          'root_device_hint': rdh,
+                                          'controller': controller,
+                                          'physical_disks': physical_disks},
+                                         {'size_gb': 600,
+                                          'raid_level': '1',
+                                          'share_physical_disks': True}]}
+
+        logical_disk = raid_config['logical_disks'][1]
+        server = objects.Server()
+        self.assertRaises(exception.PhysicalDisksNotFoundError,
+                          disk_allocator.allocate_disks,
+                          logical_disk, server, raid_config)
+
+    def test_allocate_disks_share_physical_disks_criteria_mismatch(
+            self, get_all_details_mock):
+
+        # Both the drives don't have firmware HPD6
+        get_all_details_mock.return_value = raid_constants.ONE_DRIVE_RAID_1
+
+        rdh = {'wwn': '0x600508b1001c02bd'}
+        controller = 'Smart Array P822 in Slot 2'
+        physical_disks = ['5I:1:1', '5I:1:2']
+
+        raid_config = {'logical_disks': [{'size_gb': 50,
+                                          'raid_level': '1',
+                                          'share_physical_disks': True,
+                                          'root_device_hint': rdh,
+                                          'controller': controller,
+                                          'physical_disks': physical_disks},
+                                         {'size_gb': 50,
+                                          'raid_level': '1',
+                                          'firmware': 'HPD6',
+                                          'share_physical_disks': True}]}
+
+        logical_disk = raid_config['logical_disks'][1]
+        server = objects.Server()
+        self.assertRaises(exception.PhysicalDisksNotFoundError,
+                          disk_allocator.allocate_disks,
+                          logical_disk, server, raid_config)
