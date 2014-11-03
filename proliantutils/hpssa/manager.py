@@ -116,7 +116,8 @@ def create_configuration(raid_config):
     for logical_disk in logical_disks_sorted:
 
         if 'physical_disks' not in logical_disk:
-            disk_allocator.allocate_disks(logical_disk, server)
+            disk_allocator.allocate_disks(logical_disk, server,
+                                          raid_config)
 
         controller_id = logical_disk['controller']
 
@@ -125,18 +126,17 @@ def create_configuration(raid_config):
             msg = ("Unable to find controller named '%s'" % controller_id)
             raise exception.InvalidInputError(reason=msg)
 
-        for physical_disk in logical_disk['physical_disks']:
-            disk_obj = controller.get_physical_drive_by_id(physical_disk)
-            if not disk_obj:
-                msg = ("Unable to find physical disk '%(physical_disk)s' "
-                       "on '%(controller)s'" %
-                       {'physical_disk': physical_disk,
-                        'controller': controller_id})
-                raise exception.InvalidInputError(msg)
+        if 'physical_disks' in logical_disk:
+            for physical_disk in logical_disk['physical_disks']:
+                disk_obj = controller.get_physical_drive_by_id(physical_disk)
+                if not disk_obj:
+                    msg = ("Unable to find physical disk '%(physical_disk)s' "
+                           "on '%(controller)s'" %
+                           {'physical_disk': physical_disk,
+                            'controller': controller_id})
+                    raise exception.InvalidInputError(msg)
 
-        physical_drive_ids = logical_disk['physical_disks']
-
-        controller.create_logical_drive(logical_disk, physical_drive_ids)
+        controller.create_logical_drive(logical_disk)
 
         # Now find the new logical drive created.
         server.refresh()
