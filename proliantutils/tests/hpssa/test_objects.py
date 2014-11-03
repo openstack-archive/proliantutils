@@ -118,6 +118,19 @@ class ServerTest(testtools.TestCase):
                          server.get_controller_by_id(id))
         self.assertIsNone(server.get_controller_by_id('foo'))
 
+    def test_get_physical_drives(self, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        server = objects.Server()
+        exp_pds = [server.controllers[0].unassigned_physical_drives[0],
+                   server.controllers[0].unassigned_physical_drives[1],
+                   server.controllers[0].unassigned_physical_drives[2],
+                   server.controllers[0].unassigned_physical_drives[3],
+                   server.controllers[0].unassigned_physical_drives[4],
+                   server.controllers[0].raid_arrays[0].physical_drives[0],
+                   server.controllers[0].raid_arrays[0].physical_drives[1]]
+        self.assertEqual(exp_pds, server.get_physical_drives())
+
     def test_get_logical_drives(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
@@ -336,3 +349,37 @@ class PhysicalDriveTest(testtools.TestCase):
         server = objects.Server()
         self.assertEqual(
             2, server.controllers[0].unassigned_physical_drives[0].size_gb)
+
+    def test_get_physical_drive_dict_part_of_array(self, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        server = objects.Server()
+        d = server.controllers[0].raid_arrays[0].physical_drives[0]
+        d = [x for x in server.controllers[0].raid_arrays[0].physical_drives
+             if x.id == '5I:1:1']
+        ret = d[0].get_physical_drive_dict()
+        self.assertEqual(500, ret['size_gb'])
+        self.assertEqual('Smart Array P822 in Slot 2', ret['controller'])
+        self.assertEqual('5I:1:1', ret['id'])
+        self.assertEqual('hdd', ret['disk_type'])
+        self.assertEqual('sas', ret['interface_type'])
+        self.assertEqual('HP      EF0600FARNA', ret['model'])
+        self.assertEqual('HPD6', ret['firmware'])
+        self.assertEqual('active', ret['status'])
+
+    def test_get_physical_drive_dict_unassigned(self, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        server = objects.Server()
+        d = server.controllers[0].unassigned_physical_drives[0]
+        d = [x for x in server.controllers[0].unassigned_physical_drives
+             if x.id == '5I:1:3']
+        ret = d[0].get_physical_drive_dict()
+        self.assertEqual('Smart Array P822 in Slot 2', ret['controller'])
+        self.assertEqual(400, ret['size_gb'])
+        self.assertEqual('5I:1:3', ret['id'])
+        self.assertEqual('hdd', ret['disk_type'])
+        self.assertEqual('sas', ret['interface_type'])
+        self.assertEqual('HP      EF0600FARNA', ret['model'])
+        self.assertEqual('HPD6', ret['firmware'])
+        self.assertEqual('ready', ret['status'])
