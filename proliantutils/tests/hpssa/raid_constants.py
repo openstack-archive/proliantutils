@@ -1174,3 +1174,22 @@ Smart Array P822 in Slot 2
       Vendor ID: PMCSIERA
       Model: SRCv24x6G
 '''
+
+ARRAY_ACCOMODATE_LOGICAL_DISK = '''
+
+Available options are:
+   Max: 1042188 (Units in MB)
+   Min: 16 (Units in MB)
+
+'''
+
+ARRAY_ACCOMODATE_LOGICAL_DISK_INVALID = '''
+
+Error: "raid=1" is not a valid option for array A
+
+Available options are:
+       0
+       1adm
+       5 (default value)
+
+'''

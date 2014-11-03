@@ -320,6 +320,49 @@ class LogicalDriveTest(testtools.TestCase):
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
+class ArrayTest(testtools.TestCase):
+
+    @mock.patch.object(processutils, 'execute')
+    def test_has_space_to_accomodate_okay(self, execute_mock,
+                                          get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
+        logical_disk = {'size_gb': 500, 'raid_level': '5'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].has_space_to_accomodate(
+            logical_disk)
+        self.assertTrue(ret_val)
+
+    @mock.patch.object(processutils, 'execute')
+    def test_has_space_to_accomodate_not_enough_space(self, execute_mock,
+                                                      get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
+        logical_disk = {'size_gb': 1500, 'raid_level': '5'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].has_space_to_accomodate(
+            logical_disk)
+        self.assertFalse(ret_val)
+
+    @mock.patch.object(processutils, 'execute')
+    def test_has_space_to_accomodate_invalid_raid_level(self, execute_mock,
+                                                        get_all_details_mock):
+        current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = current_config
+        execute_mock.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK_INVALID, None)
+        logical_disk = {'size_gb': 1500, 'raid_level': '1'}
+        server = objects.Server()
+        ret_val = server.controllers[0].raid_arrays[0].has_space_to_accomodate(
+            logical_disk)
+        self.assertFalse(ret_val)
+
+
+@mock.patch.object(objects.Server, '_get_all_details')
 class PhysicalDriveTest(testtools.TestCase):
 
     def test_get_physical_drive_dict_part_of_array(self, get_all_details_mock):

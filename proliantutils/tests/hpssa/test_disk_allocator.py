@@ -107,7 +107,8 @@ class DiskAllocatorTestCase(testtools.TestCase):
         disk1.size_gb = 300
         disk2.size_gb = 300
 
-        disk_allocator.allocate_disks(logical_disk, server)
+        raid_config = {'logical_disks': [logical_disk]}
+        disk_allocator.allocate_disks(logical_disk, server, raid_config)
         self.assertEqual('Smart Array P822 in Slot 2',
                          logical_disk['controller'])
         self.assertEqual(sorted(['5I:1:3', '6I:1:7']),
@@ -122,9 +123,10 @@ class DiskAllocatorTestCase(testtools.TestCase):
                         'raid_level': '1',
                         'disk_type': 'hdd',
                         'interface_type': 'sas'}
+        raid_config = {'logical_disks': [logical_disk]}
         exc = self.assertRaises(exception.PhysicalDisksNotFoundError,
                                 disk_allocator.allocate_disks,
-                                logical_disk, server)
+                                logical_disk, server, raid_config)
         self.assertIn("of size 700 GB and raid level 1", str(exc))
 
     def test_allocate_disks_disk_not_enough_disks(self,
@@ -139,7 +141,8 @@ class DiskAllocatorTestCase(testtools.TestCase):
                         'raid_level': '5',
                         'disk_type': 'hdd',
                         'interface_type': 'sas'}
+        raid_config = {'logical_disks': [logical_disk]}
         exc = self.assertRaises(exception.PhysicalDisksNotFoundError,
                                 disk_allocator.allocate_disks,
-                                logical_disk, server)
+                                logical_disk, server, raid_config)
         self.assertIn("of size 600 GB and raid level 5", str(exc))

@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import re
 import time
 
 from oslo.concurrency import processutils
@@ -332,7 +333,9 @@ class Controller(object):
         cmd = base_cmd + args
         return _hpssacli(*cmd)
 
-    def create_logical_drive(self, logical_drive_info, physical_drive_ids):
+    def create_logical_drive(self, logical_drive_info,
+                             physical_drive_ids=None,
+                             array=None):
         """Create a logical drive on the controller.
 
         This method creates a logical drive on the controller when the
@@ -343,7 +346,16 @@ class Controller(object):
         :param physical_drive_ids: a list of physical drive ids to be used.
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
-        phy_drive_ids = ','.join(physical_drive_ids)
+        cmd_args = []
+        if array:
+            cmd_args = cmd_args.extend(['array', array.id])
+
+        cmd_args.extend(['create', "type=logicaldrive"])
+
+        if physical_drive_ids:
+            phy_drive_ids = ','.join(physical_drive_ids)
+            cmd_args.append("drives=%s" % phy_drive_ids)
+
         size_mb = logical_drive_info['size_gb'] * 1024
         raid_level = logical_drive_info['raid_level']
 
@@ -351,10 +363,9 @@ class Controller(object):
         # Check if we have mapping stored, otherwise use the same.
         raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
             raid_level, raid_level)
-        self.execute_cmd("create", "type=logicaldrive",
-                         "drives=%s" % phy_drive_ids,
-                         "raid=%s" % raid_level,
-                         "size=%s" % size_mb)
+        cmd_args.extend(["raid=%s" % raid_level, "size=%s" % size_mb])
+
+        self.execute_cmd(*cmd_args)
 
     def delete_all_logical_drives(self):
         """Deletes all logical drives on trh controller.
@@ -393,6 +404,21 @@ class RaidArray(object):
             self.physical_drives.append(PhysicalDrive(physical_drive,
                                         properties[physical_drive],
                                         self))
+
+    def has_space_to_accomodate(self, logical_disk):
+        try:
+            stdout, stderr = self.parent.execute_cmd(
+                "array", self.id, "create", "type=logicaldrive",
+                "raid=%s" % logical_disk['raid_level'], "size=?")
+        except exception.HPSSAOperationError:
+            return False
+
+        match = re.search('Max: (\d+)', stdout)
+        if not match:
+            return False
+
+        max_size_gb = int(match.group(1)) / 1024
+        return logical_disk['size_gb'] <= max_size_gb
 
 
 class LogicalDrive(object):

@@ -44,7 +44,7 @@ def _get_criteria_matching_disks(logical_disk, physical_drives):
     return matching_physical_drives
 
 
-def allocate_disks(logical_disk, server):
+def allocate_disks(logical_disk, server, raid_config):
     """Allocate physical disks to a logical disk.
 
     This method allocated physical disks to a logical
@@ -54,6 +54,7 @@ def allocate_disks(logical_disk, server):
     :param logical_disk: a dictionary of a logical disk
         from the RAID configuration input to the module.
     :param server: An objects.Server object
+    :param raid_config: The target RAID configuration requested.
     :raises: PhysicalDisksNotFoundError, if cannot find
         physical disks for the request.
     """
@@ -63,6 +64,7 @@ def allocate_disks(logical_disk, server):
         'number_of_physical_disks', constants.RAID_LEVEL_MIN_DISKS[raid_level])
     share_physical_disks = logical_disk.get('share_physical_disks', False)
 
+    # Try to create a new independent array for this request.
     for controller in server.controllers:
         physical_drives = controller.unassigned_physical_drives
         physical_drives = _get_criteria_matching_disks(logical_disk,
@@ -76,13 +78,23 @@ def allocate_disks(logical_disk, server):
             logical_disk['controller'] = controller.id
             physical_disks = selected_drive_ids[:number_of_physical_disks]
             logical_disk['physical_disks'] = physical_disks
-            break
+            return
 
-        if not share_physical_disks:
-            # TODO(rameshg87): When this logical drives can share disks
-            # with other arrays, figure out free space in other arrays
-            # and then consider which array to use.
-            pass
-    else:
-        raise exception.PhysicalDisksNotFoundError(size_gb=size_gb,
-                                                   raid_level=raid_level)
+    # We didn't find physical disks to create an independent array.
+    # Check if we can get some shared arrays.
+    if share_physical_disks:
+        sharable_disk_wwns = set([x.get('wwn', None) for x in raid_config
+                                  if x.get('share_physical_disks', False)])
+
+        for controller in server.controllers:
+            sharable_arrays = [x for x in controller.arrays if
+                               x.logical_drives[0].wwn in sharable_disk_wwns]
+            for array in sharable_arrays:
+                if array.has_space_to_accomodate(logical_disk):
+                    logical_disk['controller'] = controller.id
+                    logical_disk['array'] = array
+                    return
+
+    # We check both options and couldn't get any physical disks.
+    raise exception.PhysicalDisksNotFoundError(size_gb=size_gb,
+                                               raid_level=raid_level)

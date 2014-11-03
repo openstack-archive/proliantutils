@@ -116,7 +116,8 @@ def create_configuration(raid_config):
     for logical_disk in logical_disks_sorted:
 
         if 'physical_disks' not in logical_disk:
-            disk_allocator.allocate_disks(logical_disk, server)
+            disk_allocator.allocate_disks(logical_disk, server,
+                                          raid_config)
 
         controller_id = logical_disk['controller']
 
