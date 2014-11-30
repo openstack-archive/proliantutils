@@ -470,6 +470,73 @@ class RIBCLOperations(operations.IloOperations):
 
         return disk_list
 
+    def _request_host(self):
+        """Request host info from the server."""
+        urlstr = 'http://%s/xmldata?item=all' % (self.host)
+        try:
+            req = urllib2.Request(url=urlstr)
+            xml = urllib2.urlopen(req).read()
+        except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
+            raise IloConnectionError(e)
+
+        return xml
+
+    def get_host_uuid(self):
+        """Request host UUID of the server."""
+        xml = self._request_host()
+        root = etree.fromstring(xml)
+        data = self._elementtree_to_dict(root)
+        return data['HSI']['SPN']['text'], data['HSI']['cUUID']['text']
+
+    def get_host_health_data(self, data=None):
+        """Request host health data of the server."""
+        if not data or data and "GET_EMBEDDED_HEALTH_DATA" not in data:
+            data = self._execute_command(
+                'GET_EMBEDDED_HEALTH', 'SERVER_INFO', 'read')
+        return data
+
+    def get_host_health_present_power_reading(self, data=None):
+        """Request the power consumption of the server."""
+        data = self.get_host_health_data(data)
+        return (data['GET_EMBEDDED_HEALTH_DATA']['POWER_SUPPLIES']
+                    ['POWER_SUPPLY_SUMMARY']
+                    ['PRESENT_POWER_READING']['VALUE'])
+
+    def get_host_health_power_supplies(self, data=None):
+        """Request the health power supply information."""
+        data = self.get_host_health_data(data)
+        d = (data['GET_EMBEDDED_HEALTH_DATA']['POWER_SUPPLIES']['SUPPLY'])
+        if not isinstance(d, list):
+            d = [d]
+        return d
+
+    def get_host_health_temperature_sensors(self, data=None):
+        """Get the health Temp Sensor report."""
+        data = self.get_host_health_data(data)
+        d = data['GET_EMBEDDED_HEALTH_DATA']['TEMPERATURE']['TEMP']
+        if not isinstance(d, list):
+            d = [d]
+        return d
+
+    def get_host_health_fan_sensors(self, data=None):
+        """Get the health Fan Sensor Report."""
+        data = self.get_host_health_data(data)
+        d = data['GET_EMBEDDED_HEALTH_DATA']['FANS']['FAN']
+        if not isinstance(d, list):
+            d = [d]
+        return d
+
+    def get_host_health_at_a_glance(self, data=None):
+        """Get the health at a glance Report."""
+        data = self.get_host_health_data(data)
+        return data['GET_EMBEDDED_HEALTH_DATA']['HEALTH_AT_A_GLANCE']
+
+    def get_host_power_readings(self):
+        """Retrieves the host power readings."""
+        data = self._execute_command(
+            'GET_POWER_READINGS', 'SERVER_INFO', 'read')
+        return data['GET_POWER_READINGS']
+
     def reset_ilo(self):
         """Resets the iLO.
 
