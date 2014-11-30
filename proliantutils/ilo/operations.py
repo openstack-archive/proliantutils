@@ -161,3 +161,81 @@ class IloOperations:
                  on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_uuid(self):
+        """Request host UUID of the server.
+
+        :returns: the host UUID of the server
+        :raises: IloConnectionError if failed connecting to the iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_data(self, data=None):
+        """Request host health data of the server.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the embedded health data.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_present_power_reading(self, data=None):
+        """Request the power consumption of the server.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the power readings.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_power_supplies(self, data=None):
+        """Request the health power supply information.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the power supply information.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_fan_sensors(self, data=None):
+        """Get the health Fan Sensor Report.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the fan sensor information.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+
+    def get_host_health_temperature_sensors(self, data=None):
+        """Get the health Temp Sensor report.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the temperature sensors
+            information.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_at_a_glance(self, data=None):
+        """Get the health at a glance Report.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the health at a glance information.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_power_readings(self):
+        """Retrieves the host power readings.
+
+        :param: the data to retrieve from the server, defaults to None.
+        :returns: the dictionary containing the power readings.
+        :raises: IloConnectionError if failed connecting to the iLO.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
