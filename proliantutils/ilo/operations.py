@@ -161,3 +161,31 @@ class IloOperations:
                  on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_uuid(self):
+        """Request host UUID of the server."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_data(self, data=None):
+        """Request host health data of the server."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_present_power_reading(self, data=None):
+        """Request the power consumption of the server."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_power_supplies(self, data=None):
+        """Request the health power supply information."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_temperature_sensors(self, data=None):
+        """Get the health Temp Sensor report."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_health_at_a_glance(self, data=None):
+        """Get the health at a glance Report."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_power_readings(self):
+        """Retrieves the host power readings."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)

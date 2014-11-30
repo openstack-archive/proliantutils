@@ -292,6 +292,71 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
         self.ilo.set_vm_status('cdrom', 'boot_once', 'yes')
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_health_data(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_HEALTH_DATA
+        result = self.ilo.get_host_health_data()
+        self.assertIn('GET_EMBEDDED_HEALTH_DATA', result)
+
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_health_present_power_reading(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_HEALTH_DATA
+        for i in (None, self.ilo.get_host_health_data(), "Bad Input"):
+            result = self.ilo.get_host_health_present_power_reading(i)
+            self.assertIn('37 Watts', result)
+
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_health_power_supplies(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_HEALTH_DATA
+        for i in (None, self.ilo.get_host_health_data(), "Bad Input"):
+            result = self.ilo.get_host_health_power_supplies()
+            self.assertIsInstance(result, list)
+            for power in result:
+                self.assertIn('STATUS', power)
+                self.assertIn('LABEL', power)
+
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_temperature_sensors(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_HEALTH_DATA
+        for i in (None, self.ilo.get_host_health_data(), "Bad Input"):
+            result = self.ilo.get_host_health_temperature_sensors()
+            self.assertIsInstance(result, list)
+            for temp in result:
+                self.assertIn('STATUS', temp)
+                self.assertIn('CURRENTREADING', temp)
+                self.assertIn('CRITICAL', temp)
+                self.assertIn('CAUTION', temp)
+                self.assertIn('LOCATION', temp)
+
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_fan_sensors(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_HEALTH_DATA
+        for i in (None, self.ilo.get_host_health_data(), "Bad Input"):
+            result = self.ilo.get_host_health_fan_sensors()
+            self.assertIsInstance(result, list)
+            for fan in result:
+                self.assertIn('STATUS', fan)
+                self.assertIn('SPEED', fan)
+                self.assertIn('ZONE', fan)
+                self.assertIn('LABEL', fan)
+
+    @mock.patch.object(ribcl.IloClient, '_request_ilo')
+    def test_get_host_power_readings(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.GET_HOST_POWER_READINGS
+        for i in (None, self.ilo.get_host_health_data(), "Bad Input"):
+            result = self.ilo.get_host_power_readings()
+            self.assertIn('PRESENT_POWER_READING', result)
+            self.assertIn('MAXIMUM_POWER_READING', result)
+            self.assertIn('MINIMUM_POWER_READING', result)
+            self.assertIn('AVERAGE_POWER_READING', result)
+
+    @mock.patch.object(ribcl.IloClient, '_request_host')
+    def test_get_host_uuid(self, request_host_mock):
+        request_host_mock.return_value = constants.GET_HOST_UUID
+        name, uuid = self.ilo.get_host_uuid()
+        self.assertIn('ProLiant ML110 G7', name)
+        self.assertIn('37363536-3636-4D32-3232-303130324A41', uuid)
+
 
 if __name__ == '__main__':
     unittest.main()
