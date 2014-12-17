@@ -17,15 +17,15 @@
 over RIBCL scripting language
 """
 
+import ConfigParser
+import os
 import re
 import urllib2
 import xml.etree.ElementTree as etree
 
 import six
-
 from proliantutils.ilo import exception
 from proliantutils.ilo import operations
-
 
 POWER_STATE = {
     'ON': 'Yes',
@@ -40,6 +40,8 @@ BOOT_MODE_CMDS = [
 ]
 
 
+
+
 class RIBCLOperations(operations.IloOperations):
     """iLO class for RIBCL interface for iLO.
 
@@ -52,6 +54,7 @@ class RIBCLOperations(operations.IloOperations):
         self.password = password
         self.timeout = timeout
         self.port = port
+
 
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
