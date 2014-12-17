@@ -25,6 +25,11 @@ class InvalidInputError(Exception):
     message = "Invalid Input: %(reason)s"
 
 
+class VirtualBoxEmulatorError(ProliantUtilsException):
+    """Class for all errors from VirtualBox Emulator."""
+    pass
+
+
 class IloError(ProliantUtilsException):
     """Base Exception.
 
