@@ -13,11 +13,20 @@
 # under the License.
 """IloClient module"""
 
+from oslo_config import cfg
+
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils import log
+
+CONF = cfg.CONF
+CONF.register_opt(cfg.BoolOpt('enabled',
+                              default=False,
+                              help=('Set this to true to enable virtualbox '
+                                    'emulation.')),
+                  group='vbox_emulator')
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
@@ -63,6 +72,19 @@ class IloClient(operations.IloOperations):
         self.model = self.ribcl.get_product_name()
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
+
+    def __new__(cls, host, login, password, timeout=60, port=443,
+                bios_password=None, cacert=None):
+
+        # We load the virtualbox module lazily so that a normal user wouldn't
+        # need to configure virtualbox
+        if CONF.vbox_emulator.enabled:
+            from proliantutils.ilo import vbox
+            return vbox.VirtualBoxOperations(host, login, password,
+                                             timeout, port)
+
+        obj = object.__new__(cls)
+        return obj
 
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""

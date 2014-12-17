@@ -17,13 +17,17 @@
 import json
 
 import mock
+from oslo_config import cfg
 import testtools
 
 from proliantutils.ilo import client
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo import vbox
 from proliantutils.tests.ilo import ribcl_sample_outputs as constants
+
+CONF = cfg.CONF
 
 
 class IloClientInitTestCase(testtools.TestCase):
@@ -49,6 +53,14 @@ class IloClientInitTestCase(testtools.TestCase):
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
             c.info)
         self.assertEqual('product', c.model)
+
+    @mock.patch.object(vbox, 'VirtualBoxOperations', autospec=True)
+    def test_new(self, vbox_mock):
+        CONF.vbox_emulator.enabled = True
+        client.IloClient("1.2.3.4", "admin", "Admin", timeout=120,  port=4430)
+        vbox_mock.assert_called_once_with("1.2.3.4", "admin", "Admin",
+                                          timeout=120,  port=4430)
+        CONF.vbox_emulator.enabled = False
 
 
 class IloClientTestCase(testtools.TestCase):
