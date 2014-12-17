@@ -12,11 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 """Provides iLO management interface. Talks to the iLO management engine
 over RIBCL scripting language
 """
-
 import re
 import urllib2
 import xml.etree.ElementTree as etree
@@ -25,7 +23,6 @@ import six
 
 from proliantutils.ilo import exception
 from proliantutils.ilo import operations
-
 
 POWER_STATE = {
     'ON': 'Yes',

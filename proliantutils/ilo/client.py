@@ -12,15 +12,41 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import ConfigParser
+import os
+
 from proliantutils.ilo import ribcl
 # Commenting to satisfy pep8
 # from proliantutils.ilo import ris
+
+
+def _is_mock_enabled():
+
+    conf_file = os.path.join(os.getenv('HOME'), 'proliantutils.conf')
+    Config = ConfigParser.ConfigParser()
+    Config.read(conf_file)
+    if 'mock' in Config.sections():
+        try:
+            value = Config.get('mock', 'enable')
+            return bool(value)
+        except Exception:
+            return False
+    return False
 
 
 class IloClient(object):
 
     def __new__(self, host, login, password, timeout=60, port=443,
                 bios_password=None):
+
+        # Mock support with VirtualBox
+        if _is_mock_enabled():
+            from proliantutils.ilo import virtualbox
+            return virtualbox.VirtualBoxOperations(host,
+                                                   login,
+                                                   password,
+                                                   timeout,
+                                                   port)
 
         # Object is created based on the server model
         client = ribcl.RIBCLOperations(host, login, password, timeout, port)
