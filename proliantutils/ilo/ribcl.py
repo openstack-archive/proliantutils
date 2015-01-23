@@ -21,7 +21,8 @@ import re
 import six
 import urllib2
 import xml.etree.ElementTree as etree
-
+import operations
+import exception
 
 POWER_STATE = {
     'ON': 'Yes',
@@ -36,62 +37,11 @@ BOOT_MODE_CMDS = [
 ]
 
 
-class IloError(Exception):
-    """This exception is used when a problem is encountered in
-    executing an operation on the iLO
-    """
-    def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
-
-
-class IloClientInternalError(IloError):
-    """This exception is raised when iLO client library fails to
-    communicate properly with the iLO
-    """
-    def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
-
-
-class IloCommandNotSupportedError(IloError):
-    """This exception is raised when iLO client library fails to
-    communicate properly with the iLO
-    """
-    def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
-
-
-class IloLoginFailError(IloError):
-    """This exception is used to communicate a login failure to
-    the caller.
-    """
-    messages = ['User login name was not found',
-                'Login failed', 'Login credentials rejected']
-    statuses = [0x005f, 0x000a]
-
-
-class IloConnectionError(IloError):
-    """This exception is used to communicate an HTTP connection
-    error from the iLO to the caller.
-    """
-    def __init__(self, message):
-        super(IloConnectionError, self).__init__(message)
-
-
-class IloInvalidInputError(IloError):
-    """This exception is used when invalid inputs are passed to
-    the APIs exposed by this module.
-    """
-    def __init__(self, message):
-        super(IloInvalidInputError, self).__init__(message)
-
-
-class IloClient:
+class RIBCLOperations(operations.IloOperations):
     """iLO class for RIBCL interface for iLO.
 
-    This class provides an OO interface for retrieving information
-    and managing iLO. This class currently uses RIBCL scripting
-    language to talk to the iLO. It implements the same interface in
-    python as described in HP iLO 4 Scripting and Command Line Guide.
+    Implements the base class using RIBCL scripting language to talk
+    to the iLO. e
     """
     def __init__(self, host, login, password, timeout=60, port=443):
         self.host = host
@@ -117,7 +67,7 @@ class IloClient:
             req.add_header("Content-length", len(xml))
             data = urllib2.urlopen(req).read()
         except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
-            raise IloConnectionError(e)
+            raise exception.IloConnectionError(e)
         return data
 
     def _create_dynamic_xml(self, cmdname, tag_name, mode, subelements=None):
@@ -240,7 +190,7 @@ class IloClient:
             # XML response is returned by Ilo. Set status to some
             # arbitary non-zero value.
             status = -1
-            raise IloClientInternalError(message, status)
+            raise exception.IloClientInternalError(message, status)
 
         for child in message:
             if child.tag != 'RESPONSE':
@@ -253,14 +203,14 @@ class IloClient:
                 if 'syntax error' in msg:
                     for cmd in BOOT_MODE_CMDS:
                         if cmd in msg:
-                            msg = "%s not supported on this platform." % cmd
-                            raise IloCommandNotSupportedError(msg, status)
+                            msg="%s not supported on this platform." % cmd
+                            raise exception.IloCommandNotSupportedError(msg, status)
                     else:
-                        raise IloClientInternalError(msg, status)
-                if status in IloLoginFailError.statuses or \
-                        msg in IloLoginFailError.messages:
-                    raise IloLoginFailError(msg, status)
-                raise IloError(msg, status)
+                        raise exception.IloClientInternalError(msg, status)
+                if status in exception.IloLoginFailError.statuses or \
+                        msg in exception.IloLoginFailError.messages:
+                    raise exception.IloLoginFailError(msg, status)
+                raise exception.IloError(msg, status)
 
     def _execute_command(self, create_command, tag_info, mode, dic={}):
         """Common infrastructure used by all APIs to send/get
@@ -280,6 +230,14 @@ class IloClient:
             if isinstance(val, dict):
                 d[key] = data['GET_ALL_LICENSES']['LICENSE'][key]['VALUE']
         return d
+    
+    def get_product_name(self):
+        """ Get the model name of the queried server"""
+        data = self._execute_command(
+            'GET_PRODUCT_NAME', 'SERVER_INFO', 'read')
+        
+        return data['GET_PRODUCT_NAME']['PRODUCT_NAME']['VALUE']
+        
 
     def get_host_power_status(self):
         """Request the power state of the server.
@@ -329,7 +287,7 @@ class IloClient:
                 'SET_HOST_POWER', 'SERVER_INFO', 'write', dic)
             return data
         else:
-            raise IloInvalidInputError(
+            raise exception.IloInvalidInputError(
                 "Invalid input. The expected input is ON or OFF.")
 
     def set_one_time_boot(self, value):
@@ -475,7 +433,7 @@ class IloClient:
                         nic_list.append(item["value"])
         except KeyError as e:
             msg = "_get_nic_boot_devices failed with the KeyError:%s"
-            raise IloError((msg) % e)
+	    raise exception.IloError((msg)% e)
 
         all_nics = pxe_nic_list + nic_list
         return all_nics
@@ -485,13 +443,13 @@ class IloClient:
         return any(e in result for e in disk_identifier)
 
     def _get_disk_boot_devices(self, result):
-        disk_list = []
-        try:
-            for item in result:
-                if self._isDisk(item["DESCRIPTION"]):
-                    disk_list.append(item["value"])
-        except KeyError as e:
-            msg = "_get_disk_boot_devices failed with the KeyError:%s"
-            raise IloError((msg) % e)
-
+        disk_list=[]
+	try:
+	    for item in result:
+	        if self._isDisk(item["DESCRIPTION"]):
+		    disk_list.append(item["value"])
+	except KeyError:
+	    msg = "_get_disk_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg)% e)
+	    
         return disk_list
