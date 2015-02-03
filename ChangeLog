@@ -1,16 +1,14 @@
 CHANGES
 =======
 
-v0.1.2
-------
-
-* added update_persistent_mode and other helper functions
-
-v1.1
-----
-
-* new commands added
+* Fix update_persistent_boot for Gen9 servers
+* Backout changes from 18bbcad
+* Add system health methods to ribcl module
+* Remove unused variable
+* Fix minor space issues in ribcl module
+* Add update_persistent_boot to ribcl module
+* Add boot mode commands to ribcl module
 * Add support for pbr
-* Adding Documentation to ribcl module
+* Add documentation to ribcl module
 * Submit ribcl ilo module
 * Initial commit
