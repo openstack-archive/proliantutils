@@ -1,16 +1,16 @@
- # Copyright 2014 Hewlett-Packard Development Company, L.P.
- #
- # Licensed under the Apache License, Version 2.0 (the "License"); you may
- # not use this file except in compliance with the License. You may obtain
- # a copy of the License at
- #
- #      http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- # License for the specific language governing permissions and limitations
- # under the License.
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 
 """Provides iLO management interface. Talks to the iLO management engine
@@ -35,6 +35,7 @@ BOOT_MODE_CMDS = [
     'SET_PENDING_BOOT_MODE'
 ]
 
+
 class IloError(Exception):
     """This exception is used when a problem is encountered in
     executing an operation on the iLO
@@ -50,6 +51,7 @@ class IloClientInternalError(IloError):
     def __init__(self, message, errorcode=None):
         super(IloError, self).__init__(message)
 
+
 class IloCommandNotSupportedError(IloError):
     """This exception is raised when iLO client library fails to
     communicate properly with the iLO
@@ -63,7 +65,7 @@ class IloLoginFailError(IloError):
     the caller.
     """
     messages = ['User login name was not found',
-                    'Login failed', 'Login credentials rejected']
+                'Login failed', 'Login credentials rejected']
     statuses = [0x005f, 0x000a]
 
 
@@ -187,9 +189,9 @@ class IloClient:
             if (count == len(xml_start_pos) - 1):
                 result = xml_response[xml_start_pos[count]:]
             else:
-                result = \
-                    xml_response[xml_start_pos[count]:
-                        xml_start_pos[count + 1]]
+                start = xml_start_pos[count]
+                end = xml_start_pos[count + 1]
+                result = xml_response[start:end]
             result = result.strip()
             message = etree.fromstring(result)
             resp = self._validate_message(message)
@@ -251,7 +253,7 @@ class IloClient:
                 if 'syntax error' in msg:
                     for cmd in BOOT_MODE_CMDS:
                         if cmd in msg:
-                            msg="%s not supported on this platform." % cmd
+                            msg = "%s not supported on this platform." % cmd
                             raise IloCommandNotSupportedError(msg, status)
                     else:
                         raise IloClientInternalError(msg, status)
@@ -370,10 +372,10 @@ class IloClient:
 
         for child in child_iterator:
             if child.tag == 'SET_VM_STATUS':
-                etree.SubElement(
-                   child, 'VM_BOOT_OPTION', VALUE=boot_option.upper())
-                etree.SubElement(
-                   child, 'VM_WRITE_PROTECT', VALUE=write_protect.upper())
+                etree.SubElement(child, 'VM_BOOT_OPTION',
+                                 VALUE=boot_option.upper())
+                etree.SubElement(child, 'VM_WRITE_PROTECT',
+                                 VALUE=write_protect.upper())
 
         d = self._request_ilo(xml)
         data = self._parse_output(d)
@@ -425,8 +427,7 @@ class IloClient:
         for child in child_iterator:
             for val in values:
                 if child.tag == 'SET_PERSISTENT_BOOT':
-                   etree.SubElement(
-                       child, 'DEVICE', VALUE=val)
+                    etree.SubElement(child, 'DEVICE', VALUE=val)
         d = self._request_ilo(xml)
         data = self._parse_output(d)
         return data
@@ -437,60 +438,60 @@ class IloClient:
         boot_mode = self._check_boot_mode(result)
         if boot_mode == 'bios':
             self.set_persistent_boot(device_type)
-	    return
+            return
 
         device_list = []
-	for item in device_type:
-	    dev=item.upper()
+        for item in device_type:
+            dev = item.upper()
             if dev == 'NETWORK':
                 nic_list = self._get_nic_boot_devices(result)
                 device_list += nic_list
             if dev == 'HDD':
                 disk_list = self._get_disk_boot_devices(result)
                 device_list += disk_list
-       
+
         if device_list:
             self.set_persistent_boot(device_list)
 
     def _check_boot_mode(self, result):
-        
-	if 'DESCRIPTION' in result[0]:
-	    return 'uefi'
-	else:
-	    return 'bios'
+
+        if 'DESCRIPTION' in result[0]:
+            return 'uefi'
+        else:
+            return 'bios'
 
     def _get_nic_boot_devices(self, result):
-        nw_identifier = "NIC" 
-	pxe_enabled = "PXE"
+        nw_identifier = "NIC"
+        pxe_enabled = "PXE"
         nic_list = []
-	pxe_nic_list = []
-	try:
-	    for item in result:
-	        if nw_identifier in item["DESCRIPTION"]:
-	            # Check if it is PXE enabled, to add it to starting of list
-		    if pxe_enabled in item["DESCRIPTION"]:
-		        pxe_nic_list.append(item["value"])
-		    else:
-		        nic_list.append(item["value"])
-	except KeyError as e:
+        pxe_nic_list = []
+        try:
+            for item in result:
+                if nw_identifier in item["DESCRIPTION"]:
+                    # Check if it is PXE enabled, to add it to starting of list
+                    if pxe_enabled in item["DESCRIPTION"]:
+                        pxe_nic_list.append(item["value"])
+                    else:
+                        nic_list.append(item["value"])
+        except KeyError as e:
             msg = "_get_nic_boot_devices failed with the KeyError:%s"
-	    raise IloError((msg)% e)
+            raise IloError((msg) % e)
 
-	all_nics = pxe_nic_list + nic_list 
+        all_nics = pxe_nic_list + nic_list
         return all_nics
 
     def _isDisk(self, result):
-	disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
-	return any(e in result for e in disk_identifier)
+        disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
+        return any(e in result for e in disk_identifier)
 
     def _get_disk_boot_devices(self, result):
-        disk_list=[]
-	try:
-	    for item in result:
-	        if self._isDisk(item["DESCRIPTION"]):
-		    disk_list.append(item["value"])
-	except KeyError:
-	    msg = "_get_disk_boot_devices failed with the KeyError:%s"
-            raise IloError((msg)% e)
-	    
+        disk_list = []
+        try:
+            for item in result:
+                if self._isDisk(item["DESCRIPTION"]):
+                    disk_list.append(item["value"])
+        except KeyError as e:
+            msg = "_get_disk_boot_devices failed with the KeyError:%s"
+            raise IloError((msg) % e)
+
         return disk_list

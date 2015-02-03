@@ -21,6 +21,7 @@ from proliantutils.ilo import ribcl
 import constants
 import unittest
 
+
 class IloRibclTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -132,8 +133,7 @@ class IloRibclTestCase(unittest.TestCase):
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
     def test_eject_virtual_media(self, request_ilo_mock):
         request_ilo_mock.return_value = constants.EJECT_VIRTUAL_MEDIA_XML
-        self.assertRaises(
-                ribcl.IloError, self.ilo.eject_virtual_media)
+        self.assertRaises(ribcl.IloError, self.ilo.eject_virtual_media)
 
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
     def test_set_vm_status(self, request_ilo_mock):
