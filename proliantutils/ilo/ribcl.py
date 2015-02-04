@@ -18,10 +18,10 @@ over RIBCL scripting language
 """
 
 import re
-import six
 import urllib2
 import xml.etree.ElementTree as etree
 
+import six
 
 POWER_STATE = {
     'ON': 'Yes',
@@ -37,23 +37,29 @@ BOOT_MODE_CMDS = [
 
 
 class IloError(Exception):
-    """This exception is used when a problem is encountered in
-    executing an operation on the iLO
+    """Base Exception
+
+    This exception is used when a problem is encountered in
+    executing an operation on the iLO.
     """
     def __init__(self, message, errorcode=None):
         super(IloError, self).__init__(message)
 
 
 class IloClientInternalError(IloError):
-    """This exception is raised when iLO client library fails to
-    communicate properly with the iLO
+    """Internal Error from IloClient
+
+    This exception is raised when iLO client library fails to
+    communicate properly with the iLO.
     """
     def __init__(self, message, errorcode=None):
         super(IloError, self).__init__(message)
 
 
 class IloCommandNotSupportedError(IloError):
-    """This exception is raised when iLO client library fails to
+    """Command not supported on the platform.
+
+    This exception is raised when iLO client library fails to
     communicate properly with the iLO
     """
     def __init__(self, message, errorcode=None):
@@ -61,7 +67,9 @@ class IloCommandNotSupportedError(IloError):
 
 
 class IloLoginFailError(IloError):
-    """This exception is used to communicate a login failure to
+    """iLO Login Failed.
+
+    This exception is used to communicate a login failure to
     the caller.
     """
     messages = ['User login name was not found',
@@ -70,7 +78,9 @@ class IloLoginFailError(IloError):
 
 
 class IloConnectionError(IloError):
-    """This exception is used to communicate an HTTP connection
+    """Cannot connect to iLO.
+
+    This exception is used to communicate an HTTP connection
     error from the iLO to the caller.
     """
     def __init__(self, message):
@@ -78,7 +88,9 @@ class IloConnectionError(IloError):
 
 
 class IloInvalidInputError(IloError):
-    """This exception is used when invalid inputs are passed to
+    """Invalid Input passed
+
+    This exception is used when invalid inputs are passed to
     the APIs exposed by this module.
     """
     def __init__(self, message):
@@ -101,11 +113,12 @@ class IloClient:
         self.port = port
 
     def _request_ilo(self, root):
-        """This function sends the XML request to the ILO and
+        """Send RIBCL XML data to iLO.
+
+        This function sends the XML request to the ILO and
         receives the output from ILO.
 
-        :raises: IloConnectionError() if
-        unable to send the request.
+        :raises: IloConnectionError() if unable to send the request.
         """
         if self.port:
             urlstr = 'https://%s:%d/ribcl' % (self.host, self.port)
@@ -121,7 +134,9 @@ class IloClient:
         return data
 
     def _create_dynamic_xml(self, cmdname, tag_name, mode, subelements=None):
-        """This function creates the dynamic xml required to be sent
+        """Create RIBCL XML to send to iLO.
+
+        This function creates the dynamic xml required to be sent
         to the ILO for all the APIs.
 
         :param cmdname: the API which needs to be implemented.
@@ -131,7 +146,6 @@ class IloClient:
         :param subelements: dictionary containing subelements of the
                             particular API tree.
         :returns: the etree.Element for the root of the RIBCL XML
-
         """
         root = etree.Element('RIBCL', VERSION="2.0")
         login = etree.SubElement(
@@ -153,7 +167,9 @@ class IloClient:
         return root
 
     def _serialize_xml(self, root):
-        """It serializes the dynamic xml created and converts
+        """Serialize XML data into string
+
+        It serializes the dynamic xml created and converts
         it to a string. This is done before sending the
         xml to the ILO.
 
@@ -166,7 +182,9 @@ class IloClient:
         return xml
 
     def _parse_output(self, xml_response):
-        """This function parses the output received from ILO.
+        """Parse the response XML from iLO.
+
+        This function parses the output received from ILO.
         As the output contains multiple XMLs, it extracts
         one xml at a time and loops over till all the xmls
         in the response are exhausted.
@@ -177,7 +195,6 @@ class IloClient:
         contains the data under the requested RIBCL command.
         If the Ilo response contains only the string,
         then the string is returned back.
-
         """
         count = 0
         xml_dict = {}
@@ -207,7 +224,9 @@ class IloClient:
             return resp_message
 
     def _elementtree_to_dict(self, element):
-        """Converts the actual response from the ILO for an API
+        """Convert XML elementtree to dictionary.
+
+        Converts the actual response from the ILO for an API
         to the dictionary.
         """
         node = dict()
@@ -229,7 +248,9 @@ class IloClient:
         return node
 
     def _validate_message(self, message):
-        """This function validates the XML response to see
+        """Validate XML response from iLO.
+
+        This function validates the XML response to see
         if the exit status is 0 or not in the response.
         If the status is non-zero it raises exception.
         """
@@ -257,13 +278,15 @@ class IloClient:
                             raise IloCommandNotSupportedError(msg, status)
                     else:
                         raise IloClientInternalError(msg, status)
-                if status in IloLoginFailError.statuses or \
-                        msg in IloLoginFailError.messages:
+                if (status in IloLoginFailError.statuses or
+                        msg in IloLoginFailError.messages):
                     raise IloLoginFailError(msg, status)
                 raise IloError(msg, status)
 
     def _execute_command(self, create_command, tag_info, mode, dic={}):
-        """Common infrastructure used by all APIs to send/get
+        """Execute a command on the iLO.
+
+        Common infrastructure used by all APIs to send/get
         response from ILO.
         """
         xml = self._create_dynamic_xml(
@@ -282,8 +305,7 @@ class IloClient:
         return d
 
     def get_host_power_status(self):
-        """Request the power state of the server.
-        """
+        """Request the power state of the server."""
         data = self._execute_command(
             'GET_HOST_POWER_STATUS', 'SERVER_INFO', 'read')
         return data['GET_HOST_POWER']['HOST_POWER']
@@ -295,8 +317,7 @@ class IloClient:
         return data['ONE_TIME_BOOT']['BOOT_TYPE']['VALUE']
 
     def get_vm_status(self, device='FLOPPY'):
-        """Returns the virtual media drive status like url, is connected, etc.
-        """
+        """Returns the virtual media drive status."""
         dic = {'DEVICE': device.upper()}
         data = self._execute_command(
             'GET_VM_STATUS', 'RIB_INFO', 'read', dic)
@@ -321,7 +342,8 @@ class IloClient:
 
     def set_host_power(self, power):
         """Toggle the power button of server.
-        : param power : 'ON' or 'OFF'
+
+        :param power: 'ON' or 'OFF'
         """
         if power.upper() in POWER_STATE:
             dic = {'HOST_POWER': POWER_STATE[power.upper()]}
@@ -358,8 +380,9 @@ class IloClient:
 
     def set_vm_status(self, device='FLOPPY',
                       boot_option='BOOT_ONCE', write_protect='YES'):
-        """Sets the Virtual Media drive status and allows the
-        boot options for booting from the virtual media.
+        """Sets the Virtual Media drive status
+
+        It also allows the boot options for booting from the virtual media.
         """
         dic = {'DEVICE': device.upper()}
         xml = self._create_dynamic_xml(

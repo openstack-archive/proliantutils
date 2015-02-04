@@ -15,11 +15,12 @@
 
 """Test class for RIBCL Module."""
 
+import unittest
+
+import constants
 import mock
 
 from proliantutils.ilo import ribcl
-import constants
-import unittest
 
 
 class IloRibclTestCase(unittest.TestCase):
