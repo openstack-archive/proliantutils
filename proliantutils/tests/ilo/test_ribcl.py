@@ -143,5 +143,16 @@ class IloRibclTestCase(unittest.TestCase):
         self.ilo.set_vm_status('cdrom', 'boot_once', 'yes')
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_get_pending_boot_mode_feature_not_supported(self,
+                                                         request_ilo_mock):
+        request_ilo_mock.side_effect = [constants.BOOT_MODE_NOT_SUPPORTED,
+                                        constants.GET_PRODUCT_NAME]
+        try:
+            self.ilo.get_pending_boot_mode()
+        except exception.IloCommandNotSupportedError as e:
+            self.assertIn('ProLiant DL380 G7', str(e))
+
+
 if __name__ == '__main__':
     unittest.main()
