@@ -271,11 +271,14 @@ class IloClient:
             if status == 0 and msg != 'No error':
                 return msg
             if status != 0:
-                if 'syntax error' in msg:
+                if 'syntax error' in msg or 'Feature not supported' in msg:
                     for cmd in BOOT_MODE_CMDS:
                         if cmd in msg:
-                            msg = "%s not supported on this platform." % cmd
-                            raise IloCommandNotSupportedError(msg, status)
+                            platform = self.get_product_name()
+                            msg = ("%(cmd)s is not supported on %(platform)s" %
+                                   {'cmd': cmd, 'platform': platform})
+                            raise (IloCommandNotSupportedError
+                                   (msg, status))
                     else:
                         raise IloClientInternalError(msg, status)
                 if (status in IloLoginFailError.statuses or
@@ -303,6 +306,11 @@ class IloClient:
             if isinstance(val, dict):
                 d[key] = data['GET_ALL_LICENSES']['LICENSE'][key]['VALUE']
         return d
+
+    def get_product_name(self):
+        """Get the model name of the queried server."""
+        data = self._execute_command('GET_PRODUCT_NAME', 'SERVER_INFO', 'read')
+        return data['GET_PRODUCT_NAME']['PRODUCT_NAME']['VALUE']
 
     def get_host_power_status(self):
         """Request the power state of the server."""
