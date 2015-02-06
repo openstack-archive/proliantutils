@@ -212,7 +212,7 @@ class RIBCLOperations(operations.IloOperations):
             if status == 0 and msg != 'No error':
                 return msg
             if status != 0:
-                if 'syntax error' in msg:
+                if 'syntax error' or 'Feature not supported' in msg:
                     for cmd in BOOT_MODE_CMDS:
                         if cmd in msg:
                             msg = "%s not supported on this platform." % cmd
