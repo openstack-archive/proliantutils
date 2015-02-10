@@ -153,6 +153,24 @@ class IloRibclTestCase(unittest.TestCase):
         except exception.IloCommandNotSupportedError as e:
             self.assertIn('ProLiant DL380 G7', str(e))
 
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_reset_ilo(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.RESET_ILO_XML
+        self.ilo.reset_ilo()
+        self.assertTrue(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_reset_ilo_credential(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.RESET_ILO_CREDENTIAL_XML
+        self.ilo.reset_ilo_credential("fakepassword")
+        self.assertTrue(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_reset_ilo_credential_fail(self, request_ilo_mock):
+        request_ilo_mock.return_value = constants.RESET_ILO_CREDENTIAL_FAIL_XML
+        self.assertRaises(exception.IloError,
+                          self.ilo.reset_ilo_credential, "fake")
+        self.assertTrue(request_ilo_mock.called)
 
 if __name__ == '__main__':
     unittest.main()
