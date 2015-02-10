@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 __author__ = 'HP'
 
 import base64
@@ -221,8 +220,7 @@ class RISOperations(operations.IloOperations):
         status, headers, system = self._rest_get('/rest/v1/Systems/1')
         if status < 300:
             stype = self._get_type(system)
-            if not (stype == 'ComputerSystem.0' or
-                    stype(system) == 'ComputerSystem.1'):
+            if stype not in ['ComputerSystem.0', 'ComputerSystem.1']:
                 msg = "%s is not a valid system type " % stype
                 raise exception.IloError(msg)
         else:
@@ -294,44 +292,6 @@ class RISOperations(operations.IloOperations):
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      properties)
 
-        if status >= 300:
-            msg = self._get_extended_error(response)
-            raise exception.IloError(msg)
-
-    def _reset_to_default(self):
-        """Change to default  bios setting to default values."""
-        # Check if the BIOS resource if exists.
-        headers_bios, bios_settings = self._check_bios_resource()
-
-        # Get the default configs
-        base_config_uri = bios_settings['links']['BaseConfigs']['href']
-        status, headers, config = self._rest_get(base_config_uri)
-
-        if status >= 300:
-            msg = self._get_extended_error(config)
-            raise exception.IloError(msg)
-
-        # if this BIOS resource doesn't support PATCH, go get the Settings
-        if not self._operation_allowed(headers_bios, 'PATCH'):
-            # this is GET-only
-            bios_uri = bios_settings['links']['Settings']['href']
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
-            if not self._operation_allowed(headers, 'PATCH'):
-                msg = ('PATCH Operation not supported on the resource'
-                       '%s ' % bios_uri)
-                raise exception.IloError(msg)
-
-        new_bios_settings = config['BaseConfigs'][0]['default']
-        request_headers = dict()
-        if self.bios_password:
-            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
-                                                hexdigest().upper())
-            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
-
-        # perform the patch
-        status, headers, response = self._rest_patch(bios_uri, request_headers,
-                                                     new_bios_settings)
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
@@ -468,3 +428,108 @@ class RISOperations(operations.IloOperations):
 
         # Change the Boot Mode
         self._change_bios_setting(boot_properties)
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+
+        acc_uri = '/rest/v1/AccountService/Accounts'
+        status, headers, accounts = self._rest_get(acc_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(accounts)
+            raise exception.IloError(msg)
+
+        for memberuri in accounts['links']['Member']:
+            uri = memberuri['href']
+            status, headers, account = self._rest_get(uri)
+            if account['UserName'] == self.login:
+                mod_user = {}
+                mod_user['Password'] = password
+                status, headers, response = self._rest_patch(uri,
+                                                             None, mod_user)
+                if status != 200:
+                    msg = self._get_extended_error(response)
+                    raise exception.IloError(msg)
+
+                return
+
+        msg = "iLO Account with specified username is not found."
+        raise exception.IloError(msg)
+
+    def reset_ilo(self):
+        """Resets the iLO.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        reset_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(reset_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        # verify expected type
+        mtype = self._get_type(manager)
+        if (mtype not in ['Manager.0', 'Manager.1']):
+            msg = "%s is not a valid Manager type " % mtype
+            raise exception.IloError(msg)
+
+        action = {'Action': 'Reset'}
+
+        # perform the POST
+        status, headers, response = self._rest_post(reset_uri, None, action)
+
+        if(status != 200):
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def reset_bios_to_default(self):
+        """Resets the BIOS settings to default values.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_settings = self._check_bios_resource()
+
+        # Get the default configs
+        base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        status, headers, config = self._rest_get(base_config_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        # if this BIOS resource doesn't support PATCH, go get the Settings
+        if not self._operation_allowed(headers_bios, 'PATCH'):
+            # this is GET-only
+            bios_uri = bios_settings['links']['Settings']['href']
+            status, headers, bios_settings = self._rest_get(bios_uri)
+            # this should allow PATCH, else raise error
+            if not self._operation_allowed(headers, 'PATCH'):
+                msg = ('PATCH Operation not supported on the resource'
+                       '%s ' % bios_uri)
+                raise exception.IloError(msg)
+
+        new_bios_settings = config['BaseConfigs'][0]['default']
+        request_headers = dict()
+        if self.bios_password:
+            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
+                                                hexdigest().upper())
+            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
+
+        # perform the patch
+        status, headers, response = self._rest_patch(bios_uri, request_headers,
+                                                     new_bios_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)

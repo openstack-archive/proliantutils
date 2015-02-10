@@ -467,3 +467,27 @@ class RIBCLOperations(operations.IloOperations):
             raise exception.IloError((msg) % e)
 
         return disk_list
+
+    def reset_ilo(self):
+        """Resets the iLO.
+
+        :raises: IloError, on an error from iLO.
+        """
+        self._execute_command('RESET_RIB', 'RIB_INFO', 'write')
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        """
+
+        dic = {'USER_LOGIN': self.login}
+        root = self._create_dynamic_xml(
+            'MOD_USER', 'USER_INFO', 'write', dic)
+
+        element = root.find('LOGIN/USER_INFO/MOD_USER')
+        etree.SubElement(element, 'PASSWORD', VALUE=password)
+        d = self._request_ilo(root)
+        data = self._parse_output(d)
+        return data
