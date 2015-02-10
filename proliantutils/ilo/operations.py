@@ -133,3 +133,31 @@ class IloOperations:
     def clear_secure_boot_keys(self):
         """Reset all keys."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+             on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def reset_ilo(self):
+        """Resets the iLO.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def reset_bios_to_default(self):
+        """Resets the BIOS settings to default values.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

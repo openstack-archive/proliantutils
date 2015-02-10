@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 __author__ = 'HP'
 
 import base64
@@ -151,6 +150,65 @@ class RISOperations(operations.IloOperations):
         """
         return self._rest_op('DELETE', suburi, request_headers, None)
 
+    def _get_collection(self, collection_uri, request_headers=None):
+        """Generator function that returns collection members."""
+
+        # get the collection
+        status, headers, thecollection = self._rest_get(collection_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(thecollection)
+            raise exception.IloError(msg)
+
+        while status < 300:
+            # verify expected type
+            # Don't limit to version 0 here as we will rev to 1.0 at some
+            # point hopefully with minimal changes
+            ctype = self._get_type(thecollection)
+            if (ctype not in ['Collection.0', 'Collection.1']):
+                raise exception.IloError("collection not found")
+
+            # if this collection has inline items, return those
+            # NOTE:  Collections are very flexible in how the represent
+            # members.  They can be inline in the collection as members
+            # of the 'Items' array, or they may be href links in the
+            # links/Members array.  The could actually be both. Typically,
+            # iLO implements the inline (Items) for only when the collection
+            # is read only.  We have to render it with the href links when an
+            # array contains PATCHable items because its complex to PATCH
+            # inline collection members.
+
+            if 'Items' in thecollection:
+                # iterate items
+                for item in thecollection['Items']:
+                    # if the item has a self uri pointer,
+                    # supply that for convenience.
+                    memberuri = None
+                    if 'links' in item and 'self' in item['links']:
+                        memberuri = item['links']['self']['href']
+                    yield 200, None, item, memberuri
+
+            # else walk the member links
+            elif ('links' in thecollection and
+                  'Member' in thecollection['links']):
+                # iterate members
+                for memberuri in thecollection['links']['Member']:
+                    # for each member return the resource indicated by the
+                    # member link
+                    status, headers, member = self._rest_get(memberuri['href'])
+                    yield status, headers, member, memberuri['href']
+
+            # page forward if there are more pages in the collection
+            if ('links' in thecollection and
+                    'NextPage' in thecollection['links']):
+                next_link_uri = (collection_uri + '?page=' + str(
+                                 thecollection['links']['NextPage']['page']))
+                status, headers, thecollection = self._rest_get(next_link_uri)
+
+            # else we are finished iterating the collection
+            else:
+                break
+
     def _get_type(self, obj):
         """Return the type of an object."""
         typever = obj['Type']
@@ -221,8 +279,7 @@ class RISOperations(operations.IloOperations):
         status, headers, system = self._rest_get('/rest/v1/Systems/1')
         if status < 300:
             stype = self._get_type(system)
-            if not (stype == 'ComputerSystem.0' or
-                    stype(system) == 'ComputerSystem.1'):
+            if stype not in ['ComputerSystem.0', 'ComputerSystem.1']:
                 msg = "%s is not a valid system type " % stype
                 raise exception.IloError(msg)
         else:
@@ -294,44 +351,6 @@ class RISOperations(operations.IloOperations):
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      properties)
 
-        if status >= 300:
-            msg = self._get_extended_error(response)
-            raise exception.IloError(msg)
-
-    def _reset_to_default(self):
-        """Change to default  bios setting to default values."""
-        # Check if the BIOS resource if exists.
-        headers_bios, bios_settings = self._check_bios_resource()
-
-        # Get the default configs
-        base_config_uri = bios_settings['links']['BaseConfigs']['href']
-        status, headers, config = self._rest_get(base_config_uri)
-
-        if status >= 300:
-            msg = self._get_extended_error(config)
-            raise exception.IloError(msg)
-
-        # if this BIOS resource doesn't support PATCH, go get the Settings
-        if not self._operation_allowed(headers_bios, 'PATCH'):
-            # this is GET-only
-            bios_uri = bios_settings['links']['Settings']['href']
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
-            if not self._operation_allowed(headers, 'PATCH'):
-                msg = ('PATCH Operation not supported on the resource'
-                       '%s ' % bios_uri)
-                raise exception.IloError(msg)
-
-        new_bios_settings = config['BaseConfigs'][0]['default']
-        request_headers = dict()
-        if self.bios_password:
-            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
-                                                hexdigest().upper())
-            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
-
-        # perform the patch
-        status, headers, response = self._rest_patch(bios_uri, request_headers,
-                                                     new_bios_settings)
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
@@ -468,3 +487,99 @@ class RISOperations(operations.IloOperations):
 
         # Change the Boot Mode
         self._change_bios_setting(boot_properties)
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        acc_uri = '/rest/v1/AccountService/Accounts'
+
+        for status, hds, account, memberuri in self._get_collection(acc_uri):
+            if account['UserName'] == self.login:
+                mod_user = {}
+                mod_user['Password'] = password
+                status, headers, response = self._rest_patch(memberuri,
+                                                             None, mod_user)
+                if status != 200:
+                    msg = self._get_extended_error(response)
+                    raise exception.IloError(msg)
+                return
+
+        msg = "iLO Account with specified username is not found."
+        raise exception.IloError(msg)
+
+    def reset_ilo(self):
+        """Resets the iLO.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        reset_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(reset_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        # verify expected type
+        mtype = self._get_type(manager)
+        if (mtype not in ['Manager.0', 'Manager.1']):
+            msg = "%s is not a valid Manager type " % mtype
+            raise exception.IloError(msg)
+
+        action = {'Action': 'Reset'}
+
+        # perform the POST
+        status, headers, response = self._rest_post(reset_uri, None, action)
+
+        if(status != 200):
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def reset_bios_to_default(self):
+        """Resets the BIOS settings to default values.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_settings = self._check_bios_resource()
+
+        # Get the default configs
+        base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        status, headers, config = self._rest_get(base_config_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        # if this BIOS resource doesn't support PATCH, go get the Settings
+        if not self._operation_allowed(headers_bios, 'PATCH'):
+            # this is GET-only
+            bios_uri = bios_settings['links']['Settings']['href']
+            status, headers, bios_settings = self._rest_get(bios_uri)
+            # this should allow PATCH, else raise error
+            if not self._operation_allowed(headers, 'PATCH'):
+                msg = ('PATCH Operation not supported on the resource'
+                       '%s ' % bios_uri)
+                raise exception.IloError(msg)
+
+        new_bios_settings = config['BaseConfigs'][0]['default']
+        request_headers = dict()
+        if self.bios_password:
+            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
+                                                hexdigest().upper())
+            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
+
+        # perform the patch
+        status, headers, response = self._rest_patch(bios_uri, request_headers,
+                                                     new_bios_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
