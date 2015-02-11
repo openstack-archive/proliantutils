@@ -469,3 +469,14 @@ class RIBCLOperations(operations.IloOperations):
             raise exception.IloError((msg) % e)
 
         return disk_list
+
+
+# The below block of code is there only for backward-compatibility
+# reasons (before commit 47608b6 for ris-support).
+IloClient = RIBCLOperations
+IloError = exception.IloError
+IloClientInternalError = exception.IloClientInternalError
+IloCommandNotSupportedError = exception.IloCommandNotSupportedError
+IloLoginFailError = exception.IloLoginFailError
+IloConnectionError = exception.IloConnectionError
+IloInvalidInputError = exception.IloInvalidInputError
