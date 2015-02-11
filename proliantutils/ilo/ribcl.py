@@ -23,13 +23,14 @@ import xml.etree.ElementTree as etree
 
 import six
 
+from proliantutils.ilo import constants
 from proliantutils.ilo import exception
 from proliantutils.ilo import operations
 
 
 POWER_STATE = {
-    'ON': 'Yes',
-    'OFF': 'No',
+    constants.POWER_STATE_ON: 'Yes',
+    constants.POWER_STATE_OFF: 'No',
 }
 
 BOOT_MODE_CMDS = [
@@ -239,6 +240,17 @@ class RIBCLOperations(operations.IloOperations):
         data = self._parse_output(d)
         return data
 
+    def _validate_and_return_server_property(self,
+                                             property_name,
+                                             property_value,
+                                             accepted_values):
+        if property_value in accepted_values:
+            return property_value
+        else:
+            msg = ("iLO returned invalid %(property)s '%(value)s'" %
+                   {'property': property_name, 'value': property_value})
+            raise exception.IloError(msg)
+
     def get_all_licenses(self):
         """Retrieve license type, key, installation date, etc."""
         data = self._execute_command('GET_ALL_LICENSES', 'RIB_INFO', 'read')
@@ -259,15 +271,21 @@ class RIBCLOperations(operations.IloOperations):
         """Request the power state of the server."""
         data = self._execute_command(
             'GET_HOST_POWER_STATUS', 'SERVER_INFO', 'read')
-        return data['GET_HOST_POWER']['HOST_POWER']
+        return self._validate_and_return_server_property(
+            'power status', data['GET_HOST_POWER']['HOST_POWER'],
+            constants.ACCEPTED_POWER_STATES)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
         data = self._execute_command(
             'GET_ONE_TIME_BOOT', 'SERVER_INFO', 'read')
-        return data['ONE_TIME_BOOT']['BOOT_TYPE']['VALUE']
+        return self._validate_and_return_server_property(
+            'boot device',
+            data['ONE_TIME_BOOT']['BOOT_TYPE']['VALUE'],
+            (constants.ACCEPTED_BOOT_DEVICES,
+             constants.DEVICE_ONE_TIME_BOOT_NORMAL))
 
-    def get_vm_status(self, device='FLOPPY'):
+    def get_vm_status(self, device=constants.DEVICE_FLOPPY):
         """Returns the virtual media drive status."""
         dic = {'DEVICE': device.upper()}
         data = self._execute_command(
@@ -312,7 +330,7 @@ class RIBCLOperations(operations.IloOperations):
             'SET_ONE_TIME_BOOT', 'SERVER_INFO', 'write', dic)
         return data
 
-    def insert_virtual_media(self, url, device='FLOPPY'):
+    def insert_virtual_media(self, url, device=constants.DEVICE_FLOPPY):
         """Notifies iLO of the location of a virtual media diskette image."""
         dic = {
             'DEVICE': device.upper(),
@@ -322,15 +340,16 @@ class RIBCLOperations(operations.IloOperations):
             'INSERT_VIRTUAL_MEDIA', 'RIB_INFO', 'write', dic)
         return data
 
-    def eject_virtual_media(self, device='FLOPPY'):
+    def eject_virtual_media(self, device=constants.DEVICE_FLOPPY):
         """Ejects the Virtual Media image if one is inserted."""
         dic = {'DEVICE': device.upper()}
         data = self._execute_command(
             'EJECT_VIRTUAL_MEDIA', 'RIB_INFO', 'write', dic)
         return data
 
-    def set_vm_status(self, device='FLOPPY',
-                      boot_option='BOOT_ONCE', write_protect='YES'):
+    def set_vm_status(self, device=constants.DEVICE_FLOPPY,
+                      boot_option=constants.BOOT_OPTION_BOOT_ONCE,
+                      write_protect='YES'):
         """Sets the Virtual Media drive status
 
         It also allows the boot options for booting from the virtual media.
@@ -359,13 +378,19 @@ class RIBCLOperations(operations.IloOperations):
         """Retrieves the current boot mode settings."""
         data = self._execute_command(
             'GET_CURRENT_BOOT_MODE', 'SERVER_INFO', 'read')
-        return data['GET_CURRENT_BOOT_MODE']['BOOT_MODE']['VALUE']
+        return self._validate_and_return_server_property(
+            'current boot mode',
+            data['GET_CURRENT_BOOT_MODE']['BOOT_MODE']['VALUE'],
+            constants.ACCEPTED_BOOT_MODES)
 
     def get_pending_boot_mode(self):
         """Retrieves the pending boot mode settings."""
         data = self._execute_command(
             'GET_PENDING_BOOT_MODE', 'SERVER_INFO', 'read')
-        return data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE']
+        return self._validate_and_return_server_property(
+            'pending boot mode',
+            data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE'],
+            constants.ACCEPTED_BOOT_MODES)
 
     def get_supported_boot_mode(self):
         """Retrieves the supported boot mode."""
