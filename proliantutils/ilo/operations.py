@@ -118,11 +118,11 @@ class IloOperations:
         """Updates persistent boot based on the boot mode."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
-    def get_secure_boot_state(self):
+    def get_secure_boot_mode(self):
         """Get the status if secure boot is enabled or not."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
-    def set_secure_boot_state(self, secure_boot_enable):
+    def set_secure_boot_mode(self, secure_boot_enable):
         """Enable/Disable secure boot on the server."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
