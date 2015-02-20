@@ -19,6 +19,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.hpssa import objects
 from proliantutils.hpssa import types
+from proliantutils.tests.hpssa import raid_constants
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
@@ -26,9 +27,7 @@ class ServerTest(testtools.TestCase):
 
     def test_server_object_no_logical_drives(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
 
@@ -62,9 +61,7 @@ class ServerTest(testtools.TestCase):
 
     def test_server_object_one_logical_drive(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         server = objects.Server()
 
@@ -102,9 +99,7 @@ class ServerTest(testtools.TestCase):
 
     def test_get_controller_by_id(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         server = objects.Server()
 
@@ -115,9 +110,7 @@ class ServerTest(testtools.TestCase):
 
     def test_get_logical_drives(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         server = objects.Server()
 
@@ -126,9 +119,7 @@ class ServerTest(testtools.TestCase):
 
     def test_get_logical_drives_no_drives(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
         self.assertFalse(server.get_logical_drives())
@@ -140,9 +131,7 @@ class ControllerTest(testtools.TestCase):
     @mock.patch.object(processutils, 'execute')
     def test_execute_cmd(self, processutils_mock, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
         controller = server.controllers[0]
@@ -162,9 +151,7 @@ class ControllerTest(testtools.TestCase):
     @mock.patch.object(processutils, 'execute')
     def test_execute_cmd_fails(self, processutils_mock, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
         server = objects.Server()
         controller = server.controllers[0]
 
@@ -178,9 +165,7 @@ class ControllerTest(testtools.TestCase):
     def test_create_logical_drive(self, execute_mock,
                                   get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
         controller = server.controllers[0]
@@ -208,9 +193,7 @@ class ControllerTest(testtools.TestCase):
     def test_delete_all_logical_drives(self, execute_mock,
                                        get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
         controller = server.controllers[0]
@@ -221,9 +204,7 @@ class ControllerTest(testtools.TestCase):
 
     def test_get_physical_drive_by_id(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         server = objects.Server()
         controller = server.controllers[0]
