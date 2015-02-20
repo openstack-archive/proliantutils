@@ -18,6 +18,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.hpssa import manager
 from proliantutils.hpssa import objects
+from proliantutils.tests.hpssa import raid_constants
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
@@ -27,9 +28,7 @@ class ManagerTestCases(testtools.TestCase):
     def test_create_configuration(self, controller_exec_cmd_mock,
                                   get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/no_drives.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         ld1 = {'size_gb': 50,
                'raid_level': '1',
@@ -78,9 +77,7 @@ class ManagerTestCases(testtools.TestCase):
     def test_delete_configuration(self, controller_exec_cmd_mock,
                                   get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         manager.delete_configuration()
 
@@ -91,9 +88,7 @@ class ManagerTestCases(testtools.TestCase):
 
     def test_get_configuration(self, get_all_details_mock):
 
-        fobj = open('proliantutils/tests/hpssa/outputs/one_drive.out', 'r')
-        stdout = '\n'.join(fobj.readlines())
-        get_all_details_mock.return_value = stdout
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
 
         raid_info_returned = manager.get_configuration()
 
