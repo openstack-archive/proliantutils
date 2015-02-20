@@ -51,14 +51,15 @@ class ManagerTestCases(testtools.TestCase):
         ld2_drives = '5I:1:3,5I:1:4,6I:1:5'
         controller_exec_cmd_mock.assert_any_call("create",
                                                  "type=logicaldrive",
-                                                 "drives=%s" % ld1_drives,
-                                                 "raid=1",
-                                                 "size=%d" % (50*1024))
-        controller_exec_cmd_mock.assert_any_call("create",
-                                                 "type=logicaldrive",
                                                  "drives=%s" % ld2_drives,
                                                  "raid=5",
                                                  "size=%d" % (100*1024))
+        # Verify that we created the 50GB disk the last.
+        controller_exec_cmd_mock.assert_called_with("create",
+                                                    "type=logicaldrive",
+                                                    "drives=%s" % ld1_drives,
+                                                    "raid=1",
+                                                    "size=%d" % (50*1024))
 
     def test_create_configuration_invalid_logical_disks(self,
                                                         get_all_details_mock):

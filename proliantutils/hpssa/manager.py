@@ -25,11 +25,6 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
 
 
-def _compare_logical_disks(ld1, ld2):
-    """Compares the two logical disks provided based on size."""
-    return ld1['size_gb'] - ld2['size_gb']
-
-
 def _find_physical_disks(logical_disk, server):
     # To be implemented
     pass
@@ -67,8 +62,19 @@ def create_configuration(raid_config):
     validate(raid_config)
 
     server = objects.Server()
+
+    # Make sure we create the large disks first.  This is avoid the
+    # situation that we avoid giving large disks to smaller requests.
+    # For example, consider this:
+    #   - two logical disks - LD1(50), LD(100)
+    #   - have 4 physical disks - PD1(50), PD2(50), PD3(100), PD4(100)
+    #
+    # In this case, for RAID1 configuration, if we were to consider
+    # LD1 first and allocate PD3 and PD4 for it, then allocation would
+    # fail. So follow a particular order for allocation.
     logical_disks_sorted = sorted(raid_config['logical_disks'],
-                                  cmp=_compare_logical_disks)
+                                  key=lambda x: int(x['size_gb']),
+                                  reverse=True)
 
     for logical_disk in logical_disks_sorted:
 
