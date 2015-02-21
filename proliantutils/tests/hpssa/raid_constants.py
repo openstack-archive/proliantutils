@@ -55,7 +55,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -97,7 +97,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -118,7 +118,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -139,7 +139,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -285,7 +285,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -306,7 +306,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -330,7 +330,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -351,7 +351,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -372,7 +372,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -516,7 +516,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -537,7 +537,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -558,7 +558,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -582,7 +582,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -603,7 +603,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Unassigned Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -748,7 +748,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -769,7 +769,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -790,7 +790,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 400 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -844,7 +844,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6
@@ -865,7 +865,7 @@ Smart Array P822 in Slot 2
          Status: OK
          Drive Type: Data Drive
          Interface Type: SAS
-         Size: 600 GB
+         Size: 500 GB
          Native Block Size: 512
          Rotational Speed: 15000
          Firmware Revision: HPD6

@@ -420,3 +420,5 @@ class PhysicalDrive:
         ssa_interface = self.properties['Interface Type']
         self.interface_type = types.get_interface_type(ssa_interface)
         self.disk_type = types.get_disk_type(ssa_interface)
+        self.model = self.properties.get('Model')
+        self.firmware = self.properties.get('Firmware Revision')

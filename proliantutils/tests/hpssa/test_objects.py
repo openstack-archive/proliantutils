@@ -53,7 +53,7 @@ class ServerTest(testtools.TestCase):
         physical_drive = filter(lambda x: x.id == '5I:1:1',
                                 controller.unassigned_physical_drives)[0]
         self.assertEqual(controller, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
+        self.assertEqual(500, physical_drive.size_gb)
         self.assertEqual(types.INTERFACE_TYPE_SAS,
                          physical_drive.interface_type)
         self.assertEqual(types.DISK_TYPE_HDD,
@@ -89,13 +89,13 @@ class ServerTest(testtools.TestCase):
         physical_drive = filter(lambda x: x.id == '5I:1:1',
                                 array.physical_drives)[0]
         self.assertEqual(array, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
+        self.assertEqual(500, physical_drive.size_gb)
 
         # Assertion on physical drives of controller
         physical_drive = filter(lambda x: x.id == '5I:1:3',
                                 controller.unassigned_physical_drives)[0]
         self.assertEqual(controller, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
+        self.assertEqual(400, physical_drive.size_gb)
 
     def test_get_controller_by_id(self, get_all_details_mock):
 

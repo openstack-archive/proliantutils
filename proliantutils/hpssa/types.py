@@ -12,22 +12,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-INTERFACE_TYPE_SAS = 'SAS'
-INTERFACE_TYPE_SCSI = 'SCSI'
-INTERFACE_TYPE_SATA = 'SATA'
+INTERFACE_TYPE_SAS = 'sas'
+INTERFACE_TYPE_SCSI = 'scsi'
+INTERFACE_TYPE_SATA = 'sata'
 
-DISK_TYPE_HDD = 'HDD'
-DISK_TYPE_SSD = 'SSD'
+DISK_TYPE_HDD = 'hdd'
+DISK_TYPE_SSD = 'ssd'
 
 RAID_0 = '0'
 RAID_1 = '1'
-RAID_1_ADM = '1ADM'
-RAID_10 = '10'
-RAID_10_ADM = '10ADM'
+RAID_10 = '1+0'
 RAID_5 = '5'
 RAID_6 = '6'
-RAID_50 = '50'
-RAID_60 = '60'
+RAID_50 = '5+0'
+RAID_60 = '6+0'
+# Below are not supported in Ironic now.
+RAID_1_ADM = '1ADM'
+RAID_10_ADM = '10ADM'
 
 
 INTERFACE_TYPE_MAP = {'SCSI': INTERFACE_TYPE_SCSI,
