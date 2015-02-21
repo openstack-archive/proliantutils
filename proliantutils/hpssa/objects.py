@@ -241,6 +241,20 @@ class Server(object):
                     logical_drives.append(logical_drive)
         return logical_drives
 
+    def get_logical_drive_by_wwn(self, wwn):
+        """Get the logical drive object given the wwn.
+
+        This method returns the logical drive object with the given wwn.
+
+        :param wwn: wwn of the logical drive
+        :returns: LogicalDrive object which has the wwn or None if
+            logical drive is not found.
+        """
+        disk = [x for x in self.get_logical_drives() if x.wwn == wwn]
+        if disk:
+            return disk[0]
+        return None
+
 
 class Controller(object):
     """This is the class for RAID controller."""
@@ -368,12 +382,25 @@ class LogicalDrive(object):
 
         # TODO(rameshg87): Check if size is always reported in GB
         self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
-        self.raid_level = self.properties['Fault Tolerance']
+        self.raid_level = self.properties.get('Fault Tolerance')
+        self.wwn = self.properties.get('Unique Identifier')
+        self.volume_name = self.properties.get('Logical Drive Label')
 
     def get_property(self, prop):
         if not self.properties:
             return None
         return self.properties.get(prop)
+
+    def get_logical_drive_dict(self):
+
+        physical_disk_ids = [x.id for x in self.parent.physical_drives]
+
+        return {'size_gb': self.size_gb,
+                'raid_level': self.raid_level,
+                'root_device_hint': {'wwn': self.wwn},
+                'controller': self.parent.parent.id,
+                'physical_disks': physical_disk_ids,
+                'volume_name': self.volume_name}
 
 
 class PhysicalDrive:
