@@ -19,15 +19,11 @@ import jsonschema
 from jsonschema import exceptions as json_schema_exc
 
 from proliantutils import exception
+from proliantutils.hpssa import disk_allocator
 from proliantutils.hpssa import objects
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
-
-
-def _find_physical_disks(logical_disk, server):
-    # To be implemented
-    pass
 
 
 def validate(raid_config):
@@ -89,14 +85,7 @@ def create_configuration(raid_config):
     for logical_disk in logical_disks_sorted:
 
         if 'physical_disks' not in logical_disk:
-            # TODO(rameshg87): hpssa module should be capable of finding
-            # the suitable controller and physical disks if it not provided
-            # by using hints. This is a supported use-case, but not implemented
-            # as of now. Will be implemented soon.
-            # _find_physical_disks(logical_disk, server)
-            msg = ("Mentioning logical_disks without 'controller' and "
-                   "'physical_disks' is not supported as of now.")
-            raise exception.InvalidInputError(reason=msg)
+            disk_allocator.allocate_disks(logical_disk, server)
 
         controller_id = logical_disk['controller']
 
@@ -173,23 +162,7 @@ def get_configuration():
     raid_config['logical_disks'] = []
 
     for logical_drive in logical_drives:
-        logical_drive_info = {}
-        logical_drive_info['size_gb'] = logical_drive.size_gb
-        logical_drive_info['raid_level'] = logical_drive.raid_level
-
-        array = logical_drive.parent
-        controller = array.parent
-        logical_drive_info['controller'] = controller.id
-
-        physical_drive_ids = map(lambda x: x.id, array.physical_drives)
-        logical_drive_info['physical_disks'] = physical_drive_ids
-
-        vol_name = logical_drive.get_property('Logical Drive Label')
-        logical_drive_info['volume_name'] = vol_name
-
-        wwn = logical_drive.get_property('Unique Identifier')
-        logical_drive_info['root_device_hint'] = {'wwn': wwn}
-
-        raid_config['logical_disks'].append(logical_drive_info)
+        logical_drive_dict = logical_drive.get_logical_drive_dict()
+        raid_config['logical_disks'].append(logical_drive_dict)
 
     return raid_config
