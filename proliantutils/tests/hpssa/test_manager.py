@@ -102,6 +102,57 @@ class ManagerTestCases(testtools.TestCase):
                           raid_info)
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_without_disk_input_succeeds(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.HPSSA_NO_DRIVES
+        one_drive = raid_constants.HPSSA_ONE_DRIVE_100GB_RAID_5
+        two_drives = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
+        raid_info = {'logical_disks': [{'size_gb': 50,
+                                        'raid_level': '1'},
+                                       {'size_gb': 100,
+                                        'raid_level': '5'}]}
+        current_config = manager.create_configuration(raid_info)
+        controller_exec_cmd_mock.assert_any_call("create",
+                                                 "type=logicaldrive",
+                                                 mock.ANY,
+                                                 "raid=5",
+                                                 "size=%d" % (100*1024))
+        # Verify that we created the 50GB disk the last.
+        controller_exec_cmd_mock.assert_called_with("create",
+                                                    "type=logicaldrive",
+                                                    mock.ANY,
+                                                    "raid=1",
+                                                    "size=%d" % (50*1024))
+
+        ld1_ret = [x for x in current_config['logical_disks']
+                   if x['raid_level'] == '1'][0]
+        ld2_ret = [x for x in current_config['logical_disks']
+                   if x['raid_level'] == '5'][0]
+        self.assertEqual('600508B1001CC42CDF101F06E5563967',
+                         ld2_ret['root_device_hint']['wwn'])
+        self.assertEqual('600508B1001CE1E18302A8702C6AB008',
+                         ld1_ret['root_device_hint']['wwn'])
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_without_disk_input_fails_on_disk_type(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.HPSSA_NO_DRIVES
+        one_drive = raid_constants.HPSSA_ONE_DRIVE_100GB_RAID_5
+        two_drives = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
+        raid_info = {'logical_disks': [{'size_gb': 50,
+                                        'raid_level': '1',
+                                        'disk_type': 'ssd'},
+                                       {'size_gb': 100,
+                                        'raid_level': '5',
+                                        'disk_type': 'hdd'}]}
+        exc = self.assertRaises(exception.PhysicalDisksNotFoundError,
+                                manager.create_configuration,
+                                raid_info)
+        self.assertIn("of size 50 GB and raid level 1", str(exc))
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_configuration(self, controller_exec_cmd_mock,
                                   get_all_details_mock):
 
