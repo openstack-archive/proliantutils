@@ -24,12 +24,9 @@ from proliantutils.tests.hpssa import raid_constants
 @mock.patch.object(objects.Server, '_get_all_details')
 class ManagerTestCases(testtools.TestCase):
 
-    @mock.patch.object(objects.Controller, 'execute_cmd')
-    def test_create_configuration(self, controller_exec_cmd_mock,
-                                  get_all_details_mock):
-
-        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
-
+    def _test_create_configuration_with_disk_input(self,
+                                                   controller_exec_cmd_mock,
+                                                   get_all_details_mock):
         ld1 = {'size_gb': 50,
                'raid_level': '1',
                'controller': 'Smart Array P822 in Slot 2',
@@ -44,7 +41,7 @@ class ManagerTestCases(testtools.TestCase):
 
         raid_info = {'logical_disks': [ld1, ld2]}
 
-        manager.create_configuration(raid_info)
+        current_config = manager.create_configuration(raid_info)
 
         ld1_drives = '5I:1:1,5I:1:2'
         ld2_drives = '5I:1:3,5I:1:4,6I:1:5'
@@ -59,6 +56,37 @@ class ManagerTestCases(testtools.TestCase):
                                                     "drives=%s" % ld1_drives,
                                                     "raid=1",
                                                     "size=%d" % (50*1024))
+
+        ld1_ret = [x for x in current_config['logical_disks']
+                   if x['raid_level'] == '1'][0]
+        ld2_ret = [x for x in current_config['logical_disks']
+                   if x['raid_level'] == '5'][0]
+
+        self.assertIsNotNone(ld1_ret['root_device_hint']['wwn'])
+        self.assertIsNotNone(ld2_ret['root_device_hint']['wwn'])
+        self.assertIsNotNone(ld1_ret['volume_name'])
+        self.assertIsNotNone(ld2_ret['volume_name'])
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_with_disk_input_create_succeeds(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.HPSSA_NO_DRIVES
+        one_drive = raid_constants.HPSSA_ONE_DRIVE_100GB_RAID_5
+        two_drives = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
+        self._test_create_configuration_with_disk_input(
+            controller_exec_cmd_mock, get_all_details_mock)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_with_disk_input_create_fails(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.HPSSA_NO_DRIVES
+        one_drive = raid_constants.HPSSA_ONE_DRIVE_100GB_RAID_5
+        get_all_details_mock.side_effect = [no_drives, one_drive, one_drive]
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               self._test_create_configuration_with_disk_input,
+                               controller_exec_cmd_mock, get_all_details_mock)
+        self.assertIn("raid_level '1' and size 50 GB not found", str(ex))
 
     def test_create_configuration_invalid_logical_disks(self,
                                                         get_all_details_mock):

@@ -124,6 +124,29 @@ class ServerTest(testtools.TestCase):
         server = objects.Server()
         self.assertFalse(server.get_logical_drives())
 
+    def test_get_logical_drive_by_wwn(self, get_all_details_mock):
+
+        two_drives = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = two_drives
+        server = objects.Server()
+
+        wwn = '600508B1001CC42CDF101F06E5563967'
+        ld_ret = server.get_logical_drive_by_wwn(wwn)
+        raid_arrays = server.controllers[0].raid_arrays
+        ld_exp = [x.logical_drives[0] for x in raid_arrays
+                  if x.logical_drives[0].raid_level == '5'][0]
+        self.assertEqual(ld_exp, ld_ret)
+
+    def test_get_logical_drive_by_wwn_not_exist(self, get_all_details_mock):
+
+        two_drives = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        get_all_details_mock.return_value = two_drives
+        server = objects.Server()
+
+        wwn = 'foo'
+        ld_ret = server.get_logical_drive_by_wwn(wwn)
+        self.assertIsNone(ld_ret)
+
 
 @mock.patch.object(objects.Server, '_get_all_details')
 class ControllerTest(testtools.TestCase):
@@ -221,3 +244,24 @@ class ControllerTest(testtools.TestCase):
                          controller.get_physical_drive_by_id('5I:1:3'))
 
         self.assertIsNone(controller.get_physical_drive_by_id('foo'))
+
+
+@mock.patch.object(objects.Server, '_get_all_details')
+class LogicalDriveTest(testtools.TestCase):
+
+    def test_get_logical_drive_dict(self, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        server = objects.Server()
+        logical_drive = server.controllers[0].raid_arrays[0].logical_drives[0]
+        ret = logical_drive.get_logical_drive_dict()
+        self.assertEqual(558, ret['size_gb'])
+        self.assertEqual('1', ret['raid_level'])
+        self.assertEqual('600508B1001C321CCA06EB7CD847939D',
+                         ret['root_device_hint']['wwn'])
+        self.assertEqual('Smart Array P822 in Slot 2',
+                         ret['controller'])
+        self.assertEqual(sorted(['5I:1:1', '5I:1:2']),
+                         ret['physical_disks'])
+        self.assertEqual('01F42227PDVTF0BRH5T0MOAB64',
+                         ret['volume_name'])
