@@ -172,6 +172,22 @@ class IloRibclTestCase(unittest.TestCase):
                           self.ilo.reset_ilo_credential, "fake")
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_get_persistent_boot_device_uefi(self, request_ilo_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_UEFI_XML
+        request_ilo_mock.return_value = xml
+        result = self.ilo.get_persistent_boot_device()
+        self.assertEqual(result, 'HDD')
+        self.assertTrue(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_get_persistent_boot_device_bios(self, request_ilo_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_BIOS_XML
+        request_ilo_mock.return_value = xml
+        result = self.ilo.get_persistent_boot_device()
+        self.assertEqual(result, 'CDROM')
+        self.assertTrue(request_ilo_mock.called)
+
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
 
