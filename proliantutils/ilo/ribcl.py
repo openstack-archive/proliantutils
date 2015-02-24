@@ -387,6 +387,22 @@ class RIBCLOperations(operations.IloOperations):
         if data is not None:
             return data['PERSISTENT_BOOT']['DEVICE']
 
+    def get_persistent_boot_device(self):
+        """Get the current persistent boot device set for the host."""
+        result = self.get_persistent_boot()
+        boot_mode = self._check_boot_mode(result)
+
+        if boot_mode == 'bios':
+            return result[0]['value']
+
+        value = result[0]['DESCRIPTION']
+        if 'NIC' in value:
+            return 'NETWORK'
+        elif self._isDisk(value):
+            return 'HDD'
+        else:
+            return None
+
     def set_persistent_boot(self, values=[]):
         """Configures a boot from a specific device."""
 

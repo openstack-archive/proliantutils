@@ -669,3 +669,91 @@ RESET_ILO_CREDENTIAL_FAIL_XML = """
      />
 </RIBCL>
 """
+
+GET_PERSISTENT_BOOT_DEVICE_HDD_UEFI_XML = """
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+<PERSISTENT_BOOT>
+    <DEVICE value="Boot0007"
+        DESCRIPTION="Embedded SAS : Smart Array P830i Controller - 279.367 GB,
+             RAID 1 Logical Drive(Target:0, Lun:0)"/>
+    <DEVICE value="Boot000B"
+        DESCRIPTION="iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM"/>
+    <DEVICE value="Boot000A"
+        DESCRIPTION="iLO Virtual USB 1 : HP iLO Virtual USB Key"/>
+    <DEVICE value="Boot0009"
+        DESCRIPTION="Embedded FlexibleLOM 1 Port 1 :HP Ethernet 1Gb
+            4-port 331FLR Adapter - NIC (IPv4) "/>
+    <DEVICE value="Boot0008"
+        DESCRIPTION="Embedded FlexibleLOM 1 Port 1 :HP Ethernet 1Gb
+            4-port 331FLR Adapter - NIC (IPv6) "/>
+</PERSISTENT_BOOT>
+</RIBCL>
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+</RIBCL>
+"""
+
+GET_PERSISTENT_BOOT_DEVICE_NIC_UEFI_XML = """
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+<PERSISTENT_BOOT>
+    <DEVICE value="Boot0009"
+        DESCRIPTION="Embedded FlexibleLOM 1 Port 1 :HP Ethernet 1Gb
+            4-port 331FLR Adapter - NIC (IPv4) "/>
+    <DEVICE value="Boot0007"
+        DESCRIPTION="Embedded SAS : Smart Array P830i Controller - 279.367 GB,
+             RAID 1 Logical Drive(Target:0, Lun:0)"/>
+    <DEVICE value="Boot000B"
+        DESCRIPTION="iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM"/>
+    <DEVICE value="Boot000A"
+        DESCRIPTION="iLO Virtual USB 1 : HP iLO Virtual USB Key"/>
+    <DEVICE value="Boot0008"
+        DESCRIPTION="Embedded FlexibleLOM 1 Port 1 :HP Ethernet 1Gb
+            4-port 331FLR Adapter - NIC (IPv6) "/>
+</PERSISTENT_BOOT>
+</RIBCL>
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+</RIBCL>
+"""
+
+GET_PERSISTENT_BOOT_DEVICE_BIOS_XML = """
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+<PERSISTENT_BOOT>
+    <DEVICE value="CDROM"/>
+    <DEVICE value="NETWORK"/>
+    <DEVICE value="USB"/>
+    <DEVICE value="FLOPPY"/>
+    <DEVICE value="HDD"/>
+</PERSISTENT_BOOT>
+</RIBCL>
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+     />
+</RIBCL>
+"""
