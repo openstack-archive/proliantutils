@@ -57,6 +57,10 @@ def create_configuration(raid_config):
         raid_config = {'logical_disks': [{'raid_level': 1, 'size_gb': 100},
                                          <info-for-logical-disk-2>
                                         ]}
+    :returns: the current raid configuration. This is same as raid_config
+        with some extra properties like root_device_hint, volume_name,
+        controller, physical_disks, etc filled for each logical disk
+        after its creation.
     :raises exception.InvalidInputError, if input is invalid.
     """
     validate(raid_config)
@@ -75,6 +79,12 @@ def create_configuration(raid_config):
     logical_disks_sorted = sorted(raid_config['logical_disks'],
                                   key=lambda x: int(x['size_gb']),
                                   reverse=True)
+
+    # We figure out the new disk created by recording the wwns
+    # before and after the create, and then figuring out the
+    # newly found wwn from it.
+    wwns_before_create = set([x.wwn for x in
+                              server.get_logical_drives()])
 
     for logical_disk in logical_disks_sorted:
 
@@ -102,12 +112,33 @@ def create_configuration(raid_config):
                        "on '%(controller)s'" %
                        {'physical_disk': physical_disk,
                         'controller': controller_id})
-                raise exception.InvalidInputError(reason=msg)
+                raise exception.InvalidInputError(msg)
 
         physical_drive_ids = logical_disk['physical_disks']
 
         controller.create_logical_drive(logical_disk, physical_drive_ids)
+
+        # Now find the new logical drive created.
         server.refresh()
+        wwns_after_create = set([x.wwn for x in
+                                 server.get_logical_drives()])
+
+        new_wwn = wwns_after_create - wwns_before_create
+
+        if not new_wwn:
+            reason = ("Newly created logical disk with raid_level "
+                      "'%(raid_level)s' and size %(size_gb)s GB not "
+                      "found." % {'raid_level': logical_disk['raid_level'],
+                                  'size_gb': logical_disk['size_gb']})
+            raise exception.HPSSAOperationError(reason=reason)
+
+        new_logical_disk = server.get_logical_drive_by_wwn(new_wwn.pop())
+        new_log_drive_properties = new_logical_disk.get_logical_drive_dict()
+        logical_disk.update(new_log_drive_properties)
+
+        wwns_before_create = wwns_after_create.copy()
+
+    return raid_config
 
 
 def delete_configuration():
