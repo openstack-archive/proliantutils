@@ -17,8 +17,8 @@ from oslo.concurrency import processutils
 import testtools
 
 from proliantutils import exception
+from proliantutils.hpssa import constants
 from proliantutils.hpssa import objects
-from proliantutils.hpssa import types
 from proliantutils.tests.hpssa import raid_constants
 
 
@@ -53,10 +53,10 @@ class ServerTest(testtools.TestCase):
         physical_drive = filter(lambda x: x.id == '5I:1:1',
                                 controller.unassigned_physical_drives)[0]
         self.assertEqual(controller, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
-        self.assertEqual(types.INTERFACE_TYPE_SAS,
+        self.assertEqual(500, physical_drive.size_gb)
+        self.assertEqual(constants.INTERFACE_TYPE_SAS,
                          physical_drive.interface_type)
-        self.assertEqual(types.DISK_TYPE_HDD,
+        self.assertEqual(constants.DISK_TYPE_HDD,
                          physical_drive.disk_type)
 
     def test_server_object_one_logical_drive(self, get_all_details_mock):
@@ -82,20 +82,20 @@ class ServerTest(testtools.TestCase):
         self.assertEqual('1', logical_drive.id)
         self.assertEqual(logical_drive.parent, array)
         self.assertEqual(558, logical_drive.size_gb)
-        self.assertEqual(types.RAID_1, logical_drive.raid_level)
+        self.assertEqual(constants.RAID_1, logical_drive.raid_level)
         self.assertIsInstance(logical_drive.properties, dict)
 
         # Assertion on physical drives of array
         physical_drive = filter(lambda x: x.id == '5I:1:1',
                                 array.physical_drives)[0]
         self.assertEqual(array, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
+        self.assertEqual(500, physical_drive.size_gb)
 
         # Assertion on physical drives of controller
         physical_drive = filter(lambda x: x.id == '5I:1:3',
                                 controller.unassigned_physical_drives)[0]
         self.assertEqual(controller, physical_drive.parent)
-        self.assertEqual(600, physical_drive.size_gb)
+        self.assertEqual(400, physical_drive.size_gb)
 
     def test_get_controller_by_id(self, get_all_details_mock):
 

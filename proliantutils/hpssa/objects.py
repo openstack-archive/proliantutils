@@ -17,7 +17,7 @@ import time
 from oslo.concurrency import processutils
 
 from proliantutils import exception
-from proliantutils.hpssa import types
+from proliantutils.hpssa import constants
 
 
 def _get_indentation(string):
@@ -418,5 +418,7 @@ class PhysicalDrive:
         self.size_gb = int(float(self.properties['Size'].rstrip(' GB')))
 
         ssa_interface = self.properties['Interface Type']
-        self.interface_type = types.get_interface_type(ssa_interface)
-        self.disk_type = types.get_disk_type(ssa_interface)
+        self.interface_type = constants.get_interface_type(ssa_interface)
+        self.disk_type = constants.get_disk_type(ssa_interface)
+        self.model = self.properties.get('Model')
+        self.firmware = self.properties.get('Firmware Revision')
