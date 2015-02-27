@@ -396,10 +396,15 @@ class RIBCLOperations(operations.IloOperations):
             return result[0]['value']
 
         value = result[0]['DESCRIPTION']
-        if 'NIC' in value:
+        if 'HP iLO Virtual USB CD' in value:
+            return 'CDROM'
+
+        elif 'NIC' in value:
             return 'NETWORK'
+
         elif self._isDisk(value):
             return 'HDD'
+
         else:
             return None
 
@@ -439,6 +444,9 @@ class RIBCLOperations(operations.IloOperations):
             if dev == 'HDD':
                 disk_list = self._get_disk_boot_devices(result)
                 device_list += disk_list
+            if dev == 'CDROM':
+                virtual_list = self._get_virtual_boot_devices(result)
+                device_list += virtual_list
 
         if device_list:
             self.set_persistent_boot(device_list)
@@ -508,6 +516,19 @@ class RIBCLOperations(operations.IloOperations):
         etree.SubElement(element, 'PASSWORD', VALUE=password)
         d = self._request_ilo(root)
         self._parse_output(d)
+
+    def _get_virtual_boot_devices(self, result):
+        virtual_list = []
+        dev_desc = "HP iLO Virtual USB CD"
+        try:
+            for item in result:
+                if dev_desc in item["DESCRIPTION"]:
+                    virtual_list.append(item["value"])
+        except KeyError as e:
+            msg = "_get_virtual_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        return virtual_list
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

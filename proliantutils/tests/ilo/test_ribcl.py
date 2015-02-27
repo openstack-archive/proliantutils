@@ -189,12 +189,76 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertTrue(request_ilo_mock.called)
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_get_persistent_boot_device_CDROM_uefi(self, request_ilo_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_CDROM_UEFI_XML
+        request_ilo_mock.return_value = xml
+        result = self.ilo.get_persistent_boot_device()
+        self.assertEqual(result, 'CDROM')
+        self.assertTrue(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_get_persistent_boot_device_bios(self, request_ilo_mock):
         xml = constants.GET_PERSISTENT_BOOT_DEVICE_BIOS_XML
         request_ilo_mock.return_value = xml
         result = self.ilo.get_persistent_boot_device()
         self.assertEqual(result, 'CDROM')
         self.assertTrue(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_update_persistent_boot_uefi_CDROM(self,
+                                               request_ilo_mock,
+                                               set_persist_boot_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_NIC_UEFI_XML
+        request_ilo_mock.return_value = xml
+        self.ilo.update_persistent_boot(["CDROM"])
+        self.assertTrue(request_ilo_mock.called)
+        set_persist_boot_mock.assert_called_once_with(['Boot000B'])
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_update_persistent_boot_uefi_HDD(self,
+                                             request_ilo_mock,
+                                             set_persist_boot_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_CDROM_UEFI_XML
+        request_ilo_mock.return_value = xml
+        self.ilo.update_persistent_boot(["HDD"])
+        self.assertTrue(request_ilo_mock.called)
+        set_persist_boot_mock.assert_called_once_with(['Boot0007'])
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_update_persistent_boot_uefi_NIC(self,
+                                             request_ilo_mock,
+                                             set_persist_boot_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_CDROM_UEFI_XML
+        request_ilo_mock.return_value = xml
+        self.ilo.update_persistent_boot(["NETWORK"])
+        self.assertTrue(request_ilo_mock.called)
+        set_persist_boot_mock.assert_called_once_with(['Boot0009',
+                                                       'Boot0008'])
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_update_persistent_boot_uefi_oth(self,
+                                             request_ilo_mock,
+                                             set_persist_boot_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_CDROM_UEFI_XML
+        request_ilo_mock.return_value = xml
+        self.ilo.update_persistent_boot(["OTHER"])
+        self.assertTrue(request_ilo_mock.called)
+        self.assertFalse(set_persist_boot_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_update_persistent_boot_bios(self,
+                                         request_ilo_mock,
+                                         set_persist_boot_mock):
+        xml = constants.GET_PERSISTENT_BOOT_DEVICE_BIOS_XML
+        request_ilo_mock.return_value = xml
+        self.ilo.update_persistent_boot(["CDROM"])
+        self.assertTrue(request_ilo_mock.called)
+        set_persist_boot_mock.assert_called_once_with(['CDROM'])
 
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
