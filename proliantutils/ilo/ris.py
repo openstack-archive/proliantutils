@@ -520,12 +520,8 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        reset_uri = '/rest/v1/Managers/1'
-        status, headers, manager = self._rest_get(reset_uri)
-
-        if status != 200:
-            msg = self._get_extended_error(manager)
-            raise exception.IloError(msg)
+        manager = self._get_manager_details()
+        reset_uri = manager['links']['self']['href']
 
         # verify expected type
         mtype = self._get_type(manager)
@@ -590,3 +586,269 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def reset_server(self):
+        """Resets the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        system = self._get_host_details()
+        reset_uri = system['links']['self']['href']
+
+        action = dict()
+        action['Action'] = 'Reset'
+        action['ResetType'] = 'ForceRestart'
+
+        # perform the POST action
+        status, headers, response = self._rest_post(reset_uri, None, action)
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def _set_pwr_btn_push_type(self, pushtype):
+        """Simulates the physical press type of the server power button."""
+        system = self._get_host_details()
+        memberuri = system['links']['self']['href']
+
+        action = dict()
+        action['Action'] = 'PowerButton'
+        action['Target'] = '/Oem/Hp'
+        if pushtype == 'PressAndHold':
+            action['PushType'] = 'PressAndHold'
+        else:
+            action['PushType'] = 'Press'
+
+        # perform the POST action
+        status, headers, response = self._rest_post(memberuri, None, action)
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def hold_pwr_btn(self):
+        """Simulate a physical press and hold of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        return self._set_pwr_btn_push_type('PressAndHold')
+
+    def press_pwr_btn(self):
+        """Simulates a physical press of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        return self._set_pwr_btn_push_type('Press')
+
+    def set_host_power(self, power):
+        """Toggle the power button of server.
+
+        :param power : 'ON' or 'OFF'
+        :raises: IloInvalidInputError, on an invalid input.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        system = self._get_host_details()
+        memberuri = system['links']['self']['href']
+
+        if power == system['Power']:
+            return
+        action = dict()
+        action['Action'] = 'Reset'
+
+        if power == 'ON':
+            action['ResetType'] = 'On'
+        elif power == 'OFF':
+            action['ResetType'] = 'ForceOff'
+        else:
+            msg = ('Power state is not supported')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        # perform the POST action
+        status, headers, response = self._rest_post(
+            memberuri, None, action
+        )
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def get_product_name(self):
+        """Request the product name of the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_host_details()
+        return data['Model']
+
+    def _get_manager_details(self):
+        """Get the managers details.
+
+        Assuming only one system present as part of collection,
+        as we are dealing with iLO's here.
+        """
+        status, headers, manager = self._rest_get('/rest/v1/Managers/1')
+        if status < 300:
+            mtype = self._get_type(manager)
+            if not (mtype == 'Manager.0' or
+                    mtype(manager) == 'Manager.1'):
+                msg = "%s is not a valid Manager type " % mtype
+                raise exception.IloError(msg)
+        else:
+            msg = self.get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        return manager
+
+    def get_all_licenses(self):
+        """Request the licenses of the server.
+
+        :returns: iLO License information.
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_manager_details()
+        action = dict()
+        action['LICENSE_TYPE'] = data['Oem']['Hp']['License']['LicenseString']
+        action['LICENSE_KEY'] = data['Oem']['Hp']['License']['LicenseKey']
+        action['LICENSE_CLASS'] = data['Oem']['Hp']['License']['LicenseType']
+        return action
+
+    def get_one_time_boot(self):
+        """Retrieves the one time boot mode of the system.
+
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_host_details()
+        return data['Boot']['BootSourceOverrideTarget']
+
+    def get_supported_boot_mode(self):
+        """Retrieves the supported boot mode of the system.
+
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_host_details()
+        return data['Boot']['BootSourceOverrideSupported']
+
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        boot_mode = self._get_bios_setting('BootMode')
+        return boot_mode.upper()
+
+    def get_persistent_boot(self):
+        """Change boot order for uefi.
+
+        :returns:returns Persistent Boot Config Order'.
+        :raises: IloError, on an error from iLO.
+        """
+        system = self._get_host_details()
+
+        # find the BIOS URI
+        if (('links' not in system['Oem']['Hp']) or
+                ('BIOS' not in system['Oem']['Hp']['links'])):
+            msg = ('BIOS Settings resource or '
+                   'feature is not supported on this system')
+            raise exception.IloError(msg)
+
+        bios_uri = system['Oem']['Hp']['links']['BIOS']['href']
+
+        # get the BIOS object
+        status, headers, bios_settings = self._rest_get(bios_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(bios_settings)
+            raise exception.IloError(msg)
+
+        # get the BOOT object
+        if 'Boot' not in bios_settings['links']:
+            msg = ('"links" section in Bios settings'
+                   'does not have a Boot order resource')
+            raise exception.IloError(msg)
+
+        boot_uri = bios_settings['links']['Boot']['href']
+        status, headers, boot_settings = self._rest_get(boot_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(boot_settings)
+            raise exception.IloError(msg)
+
+        # return boot_settings
+        return boot_settings['PersistentBootConfigOrder']
+
+    def set_one_time_boot(self, boottarget):
+        """Configures a single boot from a specific device.
+
+        :param boottarget:'None','Pxe','Floppy','Cd','Usb','Hdd',
+                                 'BiosSetup' or 'Utilities'.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        system = self._get_host_details()
+        memberuri = system['links']['self']['href']
+
+        # verify the requested boot target is supported
+        if boottarget in system['Boot']['BootSourceOverrideSupported']:
+
+            # build a PATCH payload to change to the requested boot target
+            boot = dict()
+            boot['Boot'] = dict()
+            boot['Boot']['BootSourceOverrideTarget'] = boottarget
+
+            # perform the PATCH action
+            status, headers, response = self._rest_patch(memberuri, None, boot)
+
+            if status != 200:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
+
+        else:  # target not in supported list
+            print('\tBootSourceOverrideTarget value " '
+                  + boottarget + '" is not supported. Valid values are: ')
+            for tgt in system['Boot']['BootSourceOverrideSupported']:
+                print('\t\t' + tgt)
+
+    def get_vm_status(self, device_type):
+        """Returns the virtual media drive status.
+
+        :param device_type:'Floppy' or 'CD'
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        system = self._get_manager_details()
+
+        # Virtual Media URI
+        vm_uri = system['links']['VirtualMedia']['href']
+        status, headers, response = self._rest_get(vm_uri)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+        for x in range(len(response['links']['Member'])):
+            vmdev_uri = response['links']['Member'][x]['href']
+            status, headers, vmdev_response = self._rest_get(vmdev_uri)
+            if status != 200:
+                msg = self._get_extended_error(vmdev_response)
+                raise exception.IloError(msg)
+            if device_type in vmdev_response['MediaTypes']:
+                action = dict()
+                action['WRITE_PROTECT'] = vmdev_response['WriteProtected']
+                action['VM_APPLET'] = vmdev_response['ConnectedVia']
+                action['IMAGE_URL'] = vmdev_response['Image']
+                action['DEVICE'] = vmdev_response['MediaTypes'][0]
+                action['IMAGE_INSERTED'] = vmdev_response['Inserted']
+                bootnext = vmdev_response.get('Oem')
+                if not bootnext:
+                    action['BOOT_OPTION'] = 'Unavailable'
+                else:
+                    bootnext = bootnext['Hp']
+                    action['BOOT_OPTION'] = bootnext['BootOnNextServerReset']
+                return action
+        # return invalid input
+        msg = "not a valid device type."
+        raise exception.IloError(msg)
+        return
