@@ -296,6 +296,41 @@ class RISOperations(operations.IloOperations):
 
         return system
 
+    def _get_host_uri(self):
+        """Gets the uri for system['links']['self']['href']."""
+        system = self._get_host_details()
+        memberuri = None
+        if 'links' in system and 'self' in system['links']:
+            memberuri = system['links']['self']['href']
+        return memberuri
+
+    def _get_ilo_uri(self):
+        """Gets the uri for system['links']['self']['href']."""
+        manager = self._get_ilo_details()
+        memberuri = None
+        if 'links' in manager and 'self' in manager['links']:
+            memberuri = manager['links']['self']['href']
+        return memberuri
+
+    def _get_ilo_details(self):
+        """Get the managers details.
+
+        Assuming only one system present as part of collection,
+        as we are dealing with iLO's here.
+        """
+        status, headers, manager = self._rest_get('/rest/v1/Managers/1')
+        if status < 300:
+            mtype = self._get_type(manager)
+            if not (mtype == 'Manager.0' or
+                    mtype(manager) == 'Manager.1'):
+                msg = "%s is not a valid Manager type " % mtype
+                raise exception.IloError(msg)
+        else:
+            msg = self.get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        return manager
+
     def _check_bios_resource(self, properties=[]):
         """Check if the bios resource exists."""
 
@@ -583,18 +618,7 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        reset_uri = '/rest/v1/Managers/1'
-        status, headers, manager = self._rest_get(reset_uri)
-
-        if status != 200:
-            msg = self._get_extended_error(manager)
-            raise exception.IloError(msg)
-
-        # verify expected type
-        mtype = self._get_type(manager)
-        if (mtype not in ['Manager.0', 'Manager.1']):
-            msg = "%s is not a valid Manager type " % mtype
-            raise exception.IloError(msg)
+        reset_uri = self._get_ilo_uri()
 
         action = {'Action': 'Reset'}
 
@@ -619,9 +643,11 @@ class RISOperations(operations.IloOperations):
         headers_bios, bios_uri, bios_settings = self._check_bios_resource()
 
         # Get the default configs
-        base_config_uri = bios_settings['links']['BaseConfigs']['href']
-        status, headers, config = self._rest_get(base_config_uri)
+        if ('links' in bios_settings and 'BaseConfigs' in
+                bios_settings['links']):
+            base_config_uri = bios_settings['links']['BaseConfigs']['href']
 
+        status, headers, config = self._rest_get(base_config_uri)
         if status != 200:
             msg = self._get_extended_error(config)
             raise exception.IloError(msg)
@@ -629,7 +655,10 @@ class RISOperations(operations.IloOperations):
         # if this BIOS resource doesn't support PATCH, go get the Settings
         if not self._operation_allowed(headers_bios, 'PATCH'):
             # this is GET-only
-            bios_uri = bios_settings['links']['Settings']['href']
+            if ('links' in bios_settings and 'Settings' in
+                    bios_settings['links']):
+                bios_uri = bios_settings['links']['Settings']['href']
+
             status, headers, bios_settings = self._rest_get(bios_uri)
             # this should allow PATCH, else raise error
             if not self._operation_allowed(headers, 'PATCH'):
@@ -655,4 +684,358 @@ class RISOperations(operations.IloOperations):
                                                      new_bios_settings)
         if status >= 300:
             msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def reset_server(self):
+        """Resets the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        return self.set_host_power('RESET_SERVER')
+
+    def _set_pwr_btn_push_type(self, pushtype):
+        """Simulates the physical press type of the server power button."""
+        memberuri = self._get_host_uri()
+
+        action = dict()
+        action['Action'] = 'PowerButton'
+        action['Target'] = '/Oem/Hp'
+        action['PushType'] = pushtype
+
+        # perform the POST action
+        status, headers, response = self._rest_post(memberuri, None, action)
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def hold_pwr_btn(self):
+        """Simulate a physical press and hold of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        return self._set_pwr_btn_push_type('PressAndHold')
+
+    def press_pwr_btn(self):
+        """Simulates a physical press of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        return self._set_pwr_btn_push_type('Press')
+
+    def set_host_power(self, power):
+        """Toggle the power button of server.
+
+        :param power : 'ON' or 'OFF'
+        :raises: IloInvalidInputError, on an invalid input.
+        :raises: IloError, on an error from iLO.
+        """
+        system = self._get_host_details()
+        memberuri = self._get_host_uri()
+
+        if power == system['Power']:
+            return
+        action = dict()
+        action['Action'] = 'Reset'
+
+        if power == 'ON':
+            action['ResetType'] = 'On'
+        elif power == 'OFF':
+            action['ResetType'] = 'ForceOff'
+        elif power == 'RESET_SERVER':
+            action['ResetType'] = 'ForceRestart'
+        else:
+            msg = "Invalid power state specified."
+            raise exception.IloInvalidInputError(msg)
+
+        # perform the POST action
+        status, headers, response = self._rest_post(
+            memberuri, None, action
+        )
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def get_all_licenses(self):
+        """Request the licenses of the server.
+
+        :returns: iLO License information.
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_ilo_details()
+        action = dict()
+        if 'License' in data['Oem']['Hp']:
+            if 'LicenseString' in data['Oem']['Hp']['License']:
+                action['LICENSE_TYPE'] = (
+                    data['Oem']['Hp']['License']['LicenseString'])
+            if 'LicenseKey' in data['Oem']['Hp']['License']:
+                action['LICENSE_KEY'] = (
+                    data['Oem']['Hp']['License']['LicenseKey'])
+            if 'LicenseType' in data['Oem']['Hp']['License']:
+                action['LICENSE_CLASS'] = (
+                    data['Oem']['Hp']['License']['LicenseType'])
+        return action
+
+    def get_one_time_boot(self):
+        """Retrieves the one time boot mode of the system.
+
+        :returns: returns one tome boot
+        :raises: IloError, on an error from iLO.
+        """
+        data = self._get_host_details()
+        if 'Boot' in data and 'BootSourceOverrideTarget' in data['Boot']:
+            return data['Boot']['BootSourceOverrideTarget']
+
+    def get_pending_boot_mode(self):
+        """Retrieves the supported boot mode of the system.
+
+        :returns: returns supported boot modes
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource([])
+        if 'Settings' not in bios_settings['links']:
+            msg = '"links" section in Bios settings does not have a Settings'
+            raise exception.IloCommandNotSupportedError(msg)
+
+        boot_uri = bios_settings['links']['Settings']['href']
+        status, headers, response = self._rest_get(boot_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+        data = response['BootMode']
+        if data == 'LegacyBios':
+            data = 'LEGACY'
+        else:
+            data = 'UEFI'
+        return data
+
+    def get_supported_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        :returns: 'LEGACY_ONLY' or 'UEFI'
+        :raises: IloError, on an error from iLO.
+        """
+        boot_mode = self._get_bios_setting('BootMode')
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'LEGACY_ONLY'
+        else:
+            boot_mode = 'UEFI'
+        return boot_mode
+
+    def get_persistent_boot(self):
+        """Retrieves the current boot mode settings.
+
+        :returns: returns Persistent Boot Config Order.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        system = self._get_host_details()
+
+        # find the BIOS URI
+        if (('links' not in system['Oem']['Hp']) or
+                ('BIOS' not in system['Oem']['Hp']['links'])):
+            msg = ('BIOS Settings resource or '
+                   'feature is not supported on this system')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        bios_uri = system['Oem']['Hp']['links']['BIOS']['href']
+
+        # get the BIOS object
+        status, headers, bios_settings = self._rest_get(bios_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(bios_settings)
+            raise exception.IloError(msg)
+
+        # get the BOOT object
+        if 'Boot' not in bios_settings['links']:
+            msg = ('"links" section in Bios settings'
+                   'does not have a Boot order resource')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        boot_uri = bios_settings['links']['Boot']['href']
+        status, headers, boot_settings = self._rest_get(boot_uri)
+
+        if status >= 300:
+            msg = self._get_extended_error(boot_settings)
+            raise exception.IloError(msg)
+
+        # return boot_settings
+        if 'PersistentBootConfigOrder' in boot_settings:
+            return boot_settings['PersistentBootConfigOrder']
+
+    def set_one_time_boot(self, boottarget):
+        """Configures a single boot from a specific device.
+
+        :param boottarget:'None','Pxe','Floppy','Cd','Usb','Hdd',
+                                 'BiosSetup' or 'Utilities'.
+        :param boottarget:'NORMAL','FLOPPY','CDROM','HDD','USB' Or 'NETWORK'
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, on an invalid input.
+        """
+        system = self._get_host_details()
+        memberuri = self._get_host_uri()
+
+        if boottarget == 'NORMAL':
+            boottarget = 'None'
+        elif boottarget == 'FLOPPY':
+            boottarget = 'Floppy'
+        elif boottarget == 'CDROM':
+            boottarget = 'Cd'
+        elif boottarget == 'HDD':
+            boottarget = 'Hdd'
+        elif boottarget == 'USB':
+            boottarget = 'Usb'
+        elif boottarget == 'NETWORK':
+            boottarget = 'Pxe'
+        else:
+            msg = "Invalid boot option specified."
+            raise exception.IloInvalidInputError(msg)
+
+        # verify the requested boot target is supported
+        if boottarget in system['Boot']['BootSourceOverrideSupported']:
+            # build a PATCH payload to change to the requested boot target
+            boot = dict()
+            boot['Boot'] = dict()
+            boot['Boot']['BootSourceOverrideTarget'] = boottarget
+
+            # perform the PATCH action
+            status, headers, response = self._rest_patch(memberuri, None, boot)
+
+            if status != 200:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
+
+        else:  # target not in supported list
+            msg = "value not supported on this system."
+            raise exception.IloInvalidInputError(msg)
+
+    def get_vm_status(self, device_type):
+        """Returns the virtual media drive status.
+
+        :param device_type:'FLOPPY' or 'CDROM'
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, on an invalid input.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        system = self._get_ilo_details()
+
+        # Virtual Media URI
+        if 'links' in system and 'VirtualMedia' in system['links']:
+            vm_uri = system['links']['VirtualMedia']['href']
+
+        if device_type == 'FLOPPY':
+            device_type = 'Floppy'
+        elif device_type == 'CDROM':
+            device_type = 'CD'
+        else:  # return invalid input
+            msg = "not a valid device type."
+            raise exception.IloInvalidInputError(msg)
+            return
+
+        for status, headers, vmdev_response, memberuri in (
+                self._get_collection(vm_uri)):
+
+            if status != 200:
+                msg = self._get_extended_error(vmdev_response)
+                raise exception.IloError(msg)
+                return
+
+            if device_type in vmdev_response['MediaTypes']:
+                action = dict()
+                action['WRITE_PROTECT'] = vmdev_response['WriteProtected']
+                action['VM_APPLET'] = vmdev_response['ConnectedVia']
+                action['IMAGE_URL'] = vmdev_response['Image']
+                action['DEVICE'] = vmdev_response['MediaTypes'][0]
+                action['IMAGE_INSERTED'] = vmdev_response['Inserted']
+                bootnext = vmdev_response.get('Oem')
+                if not bootnext:
+                    action['BOOT_OPTION'] = 'Unavailable'
+                else:
+                    bootnext = bootnext['Hp']
+                    action['BOOT_OPTION'] = bootnext['BootOnNextServerReset']
+                return action
+
+        msg = "iLO Account with specified VirtualMedia is not found."
+        raise exception.IloError(msg)
+
+    def set_persistent_boot(self, user_bootorder):
+        """Change Boot Order (UEFI).
+
+        :param user_bootorder:A list with one or more values.
+            values: 'CDROM' or 'FLOPPY' or 'NETWORK' or 'HDD' or 'USB'.
+        :raises: IloError, on an error from iLO.
+        """
+        getboot = self.get_persistent_boot()
+        bootorder = list()
+        for item1 in user_bootorder:
+            for item2 in getboot:
+                if item1 in item2:
+                    bootorder.append(item2)
+        return self._set_persistent_boot(bootorder)
+
+    def _set_persistent_boot(self, bootorder):
+        """Change Boot Order (UEFI)."""
+
+        system = self._get_host_details()
+        # find the BIOS URI
+        if ('links' not in system['Oem']['Hp'] or
+                'BIOS' not in system['Oem']['Hp']['links']):
+            msg = ('BIOS Settings resource or'
+                   'feature is not supported on this system')
+            raise exception.IloCommandNotSupportedErro(msg)
+
+        bios_uri = system['Oem']['Hp']['links']['BIOS']['href']
+
+        # get the BIOS object
+        status, headers, bios_settings = self._rest_get(bios_uri)
+        if status != 200:
+            msg = self._get_extended_error(bios_settings)
+            raise exception.IloError(msg)
+
+        # get the BOOT object
+        if 'Boot' not in bios_settings['links']:
+            msg = ('"links" section in Bios settings does not have a'
+                   'Boot order resource')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        boot_uri = bios_settings['links']['Boot']['href']
+        status, headers, boot_settings = self._rest_get(boot_uri)
+        if status != 200:
+            msg = self._get_extended_error(boot_settings)
+            raise exception.IloError(msg)
+
+        # if the BIOS doesn't support PATCH, go get the Settings, which should
+        if not self._operation_allowed(headers, 'PATCH'):   # this is GET-only
+            boot_uri = boot_settings['links']['Settings']['href']
+            status, headers, boot_settings = self._rest_get(boot_uri)
+            # this allows PATCH, else error
+            if not self._operation_allowed(headers, 'PATCH'):
+                msg = ('"PATCH Operation not supported on the'
+                       'resource %s " % boot_uri')
+                raise exception.IloError(msg)
+        # we don't need to PATCH back everything, change the required one
+        new_boot_settings = dict()
+        new_boot_settings['PersistentBootConfigOrder'] = bootorder
+        for item in boot_settings['PersistentBootConfigOrder']:
+            if item not in new_boot_settings['PersistentBootConfigOrder']:
+                new_boot_settings['PersistentBootConfigOrder'].append(item)
+        request_headers = dict()
+        if self.bios_password:
+            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
+                                                hexdigest().upper())
+            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
+
+        # perform the patch
+        status, headers, response = self._rest_patch(boot_uri, request_headers,
+                                                     new_boot_settings)
+
+        if status >= 300:
+            msg = self.get_extended_error(response)
             raise exception.IloError(msg)
