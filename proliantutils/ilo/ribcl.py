@@ -396,10 +396,15 @@ class RIBCLOperations(operations.IloOperations):
             return result[0]['value']
 
         value = result[0]['DESCRIPTION']
-        if 'NIC' in value:
+        if 'HP iLO Virtual USB CD' in value:
+            return 'CDROM'
+
+        elif 'NIC' in value:
             return 'NETWORK'
+
         elif self._isDisk(value):
             return 'HDD'
+
         else:
             return None
 
@@ -424,6 +429,16 @@ class RIBCLOperations(operations.IloOperations):
 
     def update_persistent_boot(self, device_type=[]):
 
+        valid_devices = ['NETWORK',
+                         'HDD',
+                         'CDROM']
+
+        # Check if the input is valid
+        for item in device_type:
+            if item.upper() not in valid_devices:
+                raise exception.IloInvalidInputError(
+                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
+
         result = self.get_persistent_boot()
         boot_mode = self._check_boot_mode(result)
         if boot_mode == 'bios':
@@ -435,13 +450,22 @@ class RIBCLOperations(operations.IloOperations):
             dev = item.upper()
             if dev == 'NETWORK':
                 nic_list = self._get_nic_boot_devices(result)
-                device_list += nic_list
+                device_list.extend(nic_list)
             if dev == 'HDD':
                 disk_list = self._get_disk_boot_devices(result)
-                device_list += disk_list
+                device_list.extend(disk_list)
+            if dev == 'CDROM':
+                virtual_list = self._get_virtual_boot_devices(result)
+                device_list.extend(virtual_list)
 
-        if device_list:
-            self.set_persistent_boot(device_list)
+        if not device_list:
+            platform = self.get_product_name()
+            msg = ("\'%(device)s\' is not configured as boot device on "
+                   "this system of type %(platform)s."
+                   % {'device': device_type[0], 'platform': platform})
+            raise (exception.IloInvalidInputError(msg))
+
+        self.set_persistent_boot(device_list)
 
     def _check_boot_mode(self, result):
 
@@ -508,6 +532,19 @@ class RIBCLOperations(operations.IloOperations):
         etree.SubElement(element, 'PASSWORD', VALUE=password)
         d = self._request_ilo(root)
         self._parse_output(d)
+
+    def _get_virtual_boot_devices(self, result):
+        virtual_list = []
+        dev_desc = "HP iLO Virtual USB CD"
+        try:
+            for item in result:
+                if dev_desc in item["DESCRIPTION"]:
+                    virtual_list.append(item["value"])
+        except KeyError as e:
+            msg = "_get_virtual_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        return virtual_list
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
