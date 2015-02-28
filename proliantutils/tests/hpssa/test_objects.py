@@ -130,7 +130,7 @@ class ServerTest(testtools.TestCase):
         get_all_details_mock.return_value = two_drives
         server = objects.Server()
 
-        wwn = '600508B1001CC42CDF101F06E5563967'
+        wwn = '0x600508b1001cc42c'
         ld_ret = server.get_logical_drive_by_wwn(wwn)
         raid_arrays = server.controllers[0].raid_arrays
         ld_exp = [x.logical_drives[0] for x in raid_arrays
@@ -257,7 +257,7 @@ class LogicalDriveTest(testtools.TestCase):
         ret = logical_drive.get_logical_drive_dict()
         self.assertEqual(558, ret['size_gb'])
         self.assertEqual('1', ret['raid_level'])
-        self.assertEqual('600508B1001C321CCA06EB7CD847939D',
+        self.assertEqual('0x600508b1001c321c',
                          ret['root_device_hint']['wwn'])
         self.assertEqual('Smart Array P822 in Slot 2',
                          ret['controller'])
