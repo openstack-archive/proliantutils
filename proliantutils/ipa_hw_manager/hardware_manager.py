@@ -22,8 +22,31 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
 
     HARDWARE_MANAGER_VERSION = "3"
 
-    def get_clean_steps(self):
-        pass
+    def get_clean_steps(self, node, ports):
+        """Get the list of clean steps with priority.
+
+        :param node: Ironic node object.
+        :param ports: list of Ironic port objects.
+        :return: a list of clean steps supported.
+        """
+
+        return [
+            {
+                'step': 'erase_devices',
+                'priority': 10,
+                'reboot_requested': False
+            },
+            {
+                'step': 'create_raid_configuration',
+                'priority': 20,
+                'reboot_requested': False
+            },
+            {
+                'step': 'delete_raid_configuration',
+                'priority': 30,
+                'reboot_requested': False
+            }
+        ]
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
@@ -34,12 +57,14 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                '--iterations', npass, block_device.name)
         processutils.execute(*cmd)
 
-    def erase_devices(self):
+    def erase_devices(self, node, ports):
         block_devices = self.list_block_devices()
         for block_device in block_devices:
             self.erase_block_device(block_device)
 
-    def create_raid_configuration(self, raid_config):
+    def create_raid_configuration(self, node, ports):
+        info = node.driver_internal_info
+        raid_config = info.get('target_raid_configuration')
         return hpssa_manager.create_configuration(raid_config=raid_config)
 
     def delete_raid_configuration(self):

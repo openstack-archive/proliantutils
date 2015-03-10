@@ -24,6 +24,8 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
 
     def setUp(self):
         self.hardware_manager = hardware_manager.ProliantHardwareManager()
+        self.node = mock.MagicMock()
+        self.ports = mock.MagicMock()
         super(ProliantHardwareManagerTestCase, self).setUp()
 
     @mock.patch.object(processutils, 'execute')
@@ -41,7 +43,7 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
     def test_erase_devices(self, erase_block_device_mock):
         disks = ['/dev/sda', '/dev/sdb']
         self.hardware_manager.list_block_devices.return_value = disks
-        self.hardware_manager.erase_devices()
+        self.hardware_manager.erase_devices(self.node, self.ports)
         self.hardware_manager.list_block_devices.assert_called_once_with()
         erase_block_device_mock.assert_any_call('/dev/sda')
         erase_block_device_mock.assert_any_call('/dev/sdb')
@@ -49,9 +51,11 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
     @mock.patch.object(hpssa_manager, 'create_configuration')
     def test_create_raid_configuration(self, create_mock):
         create_mock.return_value = 'current-config'
+        info = self.node.driver_internal_info
+        raid_info = info.get('target_raid_configuration')
         manager = self.hardware_manager
-        ret = manager.create_raid_configuration(raid_config='target')
-        create_mock.assert_called_once_with(raid_config='target')
+        ret = manager.create_raid_configuration(self.node, self.ports)
+        create_mock.assert_called_once_with(raid_config=raid_info)
         self.assertEqual('current-config', ret)
 
     @mock.patch.object(hpssa_manager, 'delete_configuration')
