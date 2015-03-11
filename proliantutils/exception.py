@@ -55,6 +55,16 @@ class IloCommandNotSupportedError(IloError):
         super(IloError, self).__init__(message)
 
 
+class IloCommandNotSupportedInBiosError(IloCommandNotSupportedError):
+    """Command not supported on the bios boot mode.
+
+    This exception is raised when iLO client library fails to
+    communicate properly with the iLO
+    """
+    def __init__(self, message, errorcode=None):
+        super(IloCommandNotSupportedError, self).__init__(message)
+
+
 class IloLoginFailError(IloError):
     """iLO Login Failed.
 

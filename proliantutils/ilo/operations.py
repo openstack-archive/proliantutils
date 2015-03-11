@@ -37,6 +37,26 @@ class IloOperations:
         """Request the power state of the server."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
+    def get_http_boot_url(self):
+        """Request the http boot url.
+
+        :returns: URL for http boot.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is in
+        the bios boot mode.
+        """
+        raise exception.IloCommandNotSupportedInBiosError(ERRMSG)
+
+    def set_http_boot_url(self, url):
+        """Set the url to the UefiShellStartupUrl.
+
+        :param url: URL for http boot.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is in
+        the bios boot mode.
+        """
+        raise exception.IloCommandNotSupportedInBiosError(ERRMSG)
+
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
