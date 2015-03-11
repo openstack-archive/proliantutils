@@ -453,6 +453,45 @@ class RISOperations(operations.IloOperations):
         data = self._get_host_details()
         return data['Power'].upper()
 
+    def _validate_uefi_boot_mode(self):
+        """Checks if the system is in uefi boot mode."""
+
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'UEFI':
+            return True
+        else:
+            return False
+
+    def get_http_boot_url(self):
+        """Request the http boot url from system in uefi boot mode.
+
+        :returns: URL for http boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+
+        if(self._validate_uefi_boot_mode() is True):
+            return self._get_bios_setting('UefiShellStartupUrl')
+        else:
+            msg = 'get_http_boot_url is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def set_http_boot_url(self, url):
+        """Set url to the UefiShellStartupUrl to the system in uefi boot mode.
+
+        :param url: URL for http boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+
+        if(self._validate_uefi_boot_mode() is True):
+            self._change_bios_setting({'UefiShellStartupUrl': url})
+        else:
+            msg = 'set_http_boot_url is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
     def get_current_boot_mode(self):
         """Retrieves the current boot mode of the server.
 

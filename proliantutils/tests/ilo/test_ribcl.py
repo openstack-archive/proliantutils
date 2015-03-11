@@ -19,6 +19,7 @@ import unittest
 
 import mock
 import ribcl_sample_outputs as constants
+import ris_sample_outputs as ris_constants
 
 from proliantutils import exception
 from proliantutils.ilo import ribcl
@@ -97,6 +98,19 @@ class IloRibclTestCase(unittest.TestCase):
         request_ilo_mock.return_value = constants.GET_HOST_POWER_STATUS_XML
         result = self.ilo.get_host_power_status()
         self.assertIn('ON', result)
+
+    def test_get_http_boot_url(self):
+        self.assertRaises(
+            exception.IloCommandNotSupportedError,
+            self.ilo.get_http_boot_url
+            )
+
+    def test_set_http_boot_url(self):
+        self.assertRaises(
+            exception.IloCommandNotSupportedError,
+            self.ilo.set_http_boot_url,
+            ris_constants.HTTP_BOOT_URL['UefiShellStartupUrl']
+            )
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_reset_server(self, request_ilo_mock):
