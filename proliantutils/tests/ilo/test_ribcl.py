@@ -98,6 +98,17 @@ class IloRibclTestCase(unittest.TestCase):
         result = self.ilo.get_host_power_status()
         self.assertIn('ON', result)
 
+    def test_get_http_boot_url(self):
+        self.assertRaises(
+            exception.IloCommandNotSupportedError, self.ilo.get_http_boot_url
+            )
+
+    def test_set_http_boot_url(self):
+        self.assertRaises(
+            exception.IloCommandNotSupportedError, self.ilo.set_http_boot_url,
+            'http://10.10.1.30:8081/startup.nsh'
+            )
+
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_reset_server(self, request_ilo_mock):
         request_ilo_mock.return_value = constants.RESET_SERVER_XML
