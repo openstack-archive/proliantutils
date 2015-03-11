@@ -453,6 +453,39 @@ class RISOperations(operations.IloOperations):
         data = self._get_host_details()
         return data['Power'].upper()
 
+    def _validate_uefi_boot_mode(self):
+        """Checks if the system is in uefi boot mode.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+        on the bios boot mode.
+        """
+
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'LEGACY':
+            msg = 'Current operation is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def get_http_boot_url(self):
+        """Request the http boot url.
+
+        :returns: URL for http boot.
+        :raises: IloError, on an error from iLO.
+        """
+
+        self._validate_uefi_boot_mode()
+        return self._get_bios_setting('UefiShellStartupUrl')
+
+    def set_http_boot_url(self, url):
+        """Set the url to the UefiShellStartupUrl.
+
+        :param url: URL for http boot.
+        :raises: IloError, on an error from iLO.
+        """
+
+        self._validate_uefi_boot_mode()
+        self._change_bios_setting({'UefiShellStartupUrl': url})
+
     def get_current_boot_mode(self):
         """Retrieves the current boot mode of the server.
 
