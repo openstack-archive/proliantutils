@@ -833,3 +833,5 @@ GET_PERSISTENT_BOOT_DEVICE_CDROM_MISSING_UEFI_XML = """
      />
 </RIBCL>
 """
+
+URL = 'http://10.10.1.30:8081/startup.nsh'
