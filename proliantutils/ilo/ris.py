@@ -288,6 +288,22 @@ class RISOperations(operations.IloOperations):
 
         return system
 
+    def _get_ilo_details(self):
+        reset_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(reset_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        # verify expected type
+        mtype = self._get_type(manager)
+        if (mtype not in ['Manager.0', 'Manager.1']):
+            msg = "%s is not a valid Manager type " % mtype
+            raise exception.IloError(msg)
+        return manager
+ 
+
     def _check_bios_resource(self, properties=[]):
         """Check if the bios resource exists."""
 
@@ -520,18 +536,7 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        reset_uri = '/rest/v1/Managers/1'
-        status, headers, manager = self._rest_get(reset_uri)
-
-        if status != 200:
-            msg = self._get_extended_error(manager)
-            raise exception.IloError(msg)
-
-        # verify expected type
-        mtype = self._get_type(manager)
-        if (mtype not in ['Manager.0', 'Manager.1']):
-            msg = "%s is not a valid Manager type " % mtype
-            raise exception.IloError(msg)
+        manager = self._get_ilo_details()
 
         action = {'Action': 'Reset'}
 
@@ -590,3 +595,28 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def get_rom_firmware_version(self):
+        system = self._get_host_details()
+        return system['Oem']['Hp']['Bios']['Current']['Version']
+
+    def get_ilo_firmware_version(self):
+        manager = self._get_ilo_details()
+        return manager['Firmware']['Current']['VersionString']
+
+    def get_essential_properties(self):
+
+        system = self._get_host_details()
+        manager = self._get_ilo_details()
+        properties = {}
+        properties['memory_size'] = system['Memory']['TotalSystemMemoryGB']
+        properies['cpus'] = system['Processors']['Count']
+        processor_family = system['Processor']['ProcessorFamily']
+        if 'Xeon(R)' in processor_family:
+            properties['cpu_arch'] = 'x86_64'
+        # TODO: Check the disk size and call RIBCL for NIC data
+        return properties
+
+    def get_server_capabilities(self):
+        # TODO: implement the function
+        pass

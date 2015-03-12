@@ -396,15 +396,10 @@ class RIBCLOperations(operations.IloOperations):
             return result[0]['value']
 
         value = result[0]['DESCRIPTION']
-        if 'HP iLO Virtual USB CD' in value:
-            return 'CDROM'
-
-        elif 'NIC' in value:
+        if 'NIC' in value:
             return 'NETWORK'
-
         elif self._isDisk(value):
             return 'HDD'
-
         else:
             return None
 
@@ -429,16 +424,6 @@ class RIBCLOperations(operations.IloOperations):
 
     def update_persistent_boot(self, device_type=[]):
 
-        valid_devices = ['NETWORK',
-                         'HDD',
-                         'CDROM']
-
-        # Check if the input is valid
-        for item in device_type:
-            if item.upper() not in valid_devices:
-                raise exception.IloInvalidInputError(
-                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
-
         result = self.get_persistent_boot()
         boot_mode = self._check_boot_mode(result)
         if boot_mode == 'bios':
@@ -450,22 +435,13 @@ class RIBCLOperations(operations.IloOperations):
             dev = item.upper()
             if dev == 'NETWORK':
                 nic_list = self._get_nic_boot_devices(result)
-                device_list.extend(nic_list)
+                device_list += nic_list
             if dev == 'HDD':
                 disk_list = self._get_disk_boot_devices(result)
-                device_list.extend(disk_list)
-            if dev == 'CDROM':
-                virtual_list = self._get_virtual_boot_devices(result)
-                device_list.extend(virtual_list)
+                device_list += disk_list
 
-        if not device_list:
-            platform = self.get_product_name()
-            msg = ("\'%(device)s\' is not configured as boot device on "
-                   "this system of type %(platform)s."
-                   % {'device': device_type[0], 'platform': platform})
-            raise (exception.IloInvalidInputError(msg))
-
-        self.set_persistent_boot(device_list)
+        if device_list:
+            self.set_persistent_boot(device_list)
 
     def _check_boot_mode(self, result):
 
@@ -600,18 +576,244 @@ class RIBCLOperations(operations.IloOperations):
         d = self._request_ilo(root)
         self._parse_output(d)
 
-    def _get_virtual_boot_devices(self, result):
-        virtual_list = []
-        dev_desc = "HP iLO Virtual USB CD"
-        try:
-            for item in result:
-                if dev_desc in item["DESCRIPTION"]:
-                    virtual_list.append(item["value"])
-        except KeyError as e:
-            msg = "_get_virtual_boot_devices failed with the KeyError:%s"
-            raise exception.IloError((msg) % e)
+    def get_essential_properties(self):
+        """Gets essential scheduling properties as required by ironic
 
-        return virtual_list
+        :returns: a dictionary of server properties like memory size,
+                  disk size, number of cpus, cpu arch, port numbers
+                  and mac addresses.
+        :raises:IloError if iLO returns an error in command execution.
+
+        """
+
+        data = self.get_host_health_data()
+        return self._mandatory_properties(data)
+
+    def get_server_boot_modes(self):
+        """Gets boot modes supported by the server
+
+        :returns: a dictionary of supported boot modes.
+        :raises:IloError if iLO returns an error in command execution.
+        """
+        bootmode = self.get_supported_boot_mode()
+        if bootmode == 'LEGACY_ONLY':
+            BootMode = ['bios']
+        elif bootmode == 'LEGACY_UEFI':
+            BootMode = ['bios', 'uefi']
+        elif bootmode == 'UEFI_ONLY':
+            BootMode = ['uefi']
+        else:
+            BootMode = 'None'
+        return {'BootMode': BootMode}
+
+    def get_server_capabilities(self):
+        """Gets server properties which can be used for scheduling
+
+        :returns: a dictionary of hardware properties like firmware
+                  versions, server model.
+        :raises: IloError if iLO returns an error in command execution.
+        """
+
+        # Commenting out the BootMode as we dont plan to add it for Kilo.
+        # BootMode = self.get_server_boot_modes()
+        capabilities = {}
+        data = self.get_host_health_data()
+        capabilities.update(self.get_ilo_firmware_version(data))
+        capabilities.update(self.get_rom_firmware_version(data))
+        capabilities.update(self.get_product_name())
+
+        return capabilities
+
+    def _mandatory_properties(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: a dictionary of essential properties namely, memory size,
+                  disk size, number of cpus, cpu arch, port numbers and
+                  mac addresses.
+        """
+        properties = {}
+        properties['memory_mb'] = self._parse_memory_embedded_health(data)
+        cpus, cpu_arch = self._parse_processor_embedded_health(data)
+        properties['cpus'] = cpus
+        properties['cpu_arch'] = cpu_arch
+        properties['local_gb'] = self._parse_storage_embedded_health(data)
+        macs = self._parse_nics_embedded_health(data)
+        return_value = {'properties': properties, 'macs': macs}
+        return return_value
+
+    def _parse_memory_embedded_health(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: memory size in MB.
+
+        """
+        memory = (
+            data['GET_EMBEDDED_HEALTH_DATA']['MEMORY']['MEMORY_DETAILS_SUMMARY'])
+
+        # here the value can be either a dictionary or a list.
+        # Convert it tolist so that its uniform across servers.
+        if not isinstance(memory, list):
+            memory = [memory]
+        memory_mb = 0
+        for items in memory:
+            for key, val in items.items():
+                memsize = val['TOTAL_MEMORY_SIZE']['VALUE']
+                if memsize != 'N/A':
+                    mem = memsize.split(' ')
+                    memory_mb = memory_mb + int(mem[0])
+                    unit = mem[1]
+        if unit == 'GB':
+            memory_mb = memory_mb * 1024
+        return memory_mb
+
+    def _parse_processor_embedded_health(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: processor details like cpu arch and number of cpus.
+
+        """
+        processor = data['GET_EMBEDDED_HEALTH_DATA']['PROCESSORS']['PROCESSOR']
+        # here the value can be either a dictionary or a list.
+        # Convert it tolist so that its uniform across servers.
+        if not isinstance(processor,  list):
+            processor = [processor]
+        cpu_arch = ''
+        cpus = 0
+        arch = ''
+        for items in processor:
+            for key, val in items.items():
+                if key == 'MEMORY_TECHNOLOGY':
+                    tech = val['VALUE']
+                if key == 'NAME':
+                    arch = val['VALUE']
+                cpus = cpus + 1
+            if 'Intel(R) Xeon(R)' in arch:
+                cpu_arch = 'x86'
+                if '64-bit' in tech:
+                    cpu_arch = cpu_arch + '_64'
+        return cpus, cpu_arch
+
+    def _parse_storage_embedded_health(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: disk size in GB.
+
+        """
+        try:
+            storage = (
+                data['GET_EMBEDDED_HEALTH_DATA']['STORAGE']['CONTROLLER']['LOGICAL_DRIVE'])
+        except KeyError:
+            local_gb = 0
+            return local_gb
+       
+        capacity = ''
+        local_gb = 0
+
+        # here the value can be either a dictionary or a list.
+        # Convert it tolist so that its uniform across servers.
+        if not isinstance(storage, list):
+            storage = [storage]
+
+        for item in storage:
+            for key, val in item.items():
+                if key == 'PHYSICAL_DRIVE':
+                    # here the value can be either a dictionary or a list.
+                    # Convert it tolist so that its uniform across servers.
+                    if not isinstance(val, list):
+                        storage_val = [val]
+                    else:
+                        storage_val = val
+                    for key1 in storage_val:
+                        for k2, v2 in key1.items():
+                            if k2 == 'CAPACITY':
+                                capacity = v2['VALUE']
+                                v = capacity.split(' ')
+                                local_gb = local_gb + int(v[0])
+                                unit = v[1]
+        if unit == 'MB':
+            local_gb = local_gb / 1024
+        return local_gb
+
+    def _parse_nics_embedded_health(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: a dictionary of port numbers and their corresponding
+                  mac addresses.
+
+        """
+        nic_data = data['GET_EMBEDDED_HEALTH_DATA']['NIC_INFORMATION']['NIC']
+        # here the value can be either a dictionary or a list.
+        # Convert it tolist so that its uniform across servers.
+        if isinstance(nic_data, list):
+            nic_data = [nic_data]
+        nic_dict = {}
+        for item in nic_data:
+            port = None
+            mac = None
+            location = None
+            for key, val in item.items():
+                if key == 'LOCATION':
+                    location = val['VALUE']
+                if key == 'NETWORK_PORT':
+                    port = val['VALUE']
+                if key == 'MAC_ADDRESS':
+                    mac = val['VALUE']
+                if port and mac and (location == 'Embedded'):
+                    nic_dict[port] = mac
+        return nic_dict
+
+    def get_firmware_embedded_health(self, data):
+        """Parse the get_host_health_data() for server capabilities
+
+        :param data: the output returned by get_host_health_data()
+        :returns: a dictionary of firmware name and firmware version.
+
+        """
+        firmware = data['GET_EMBEDDED_HEALTH_DATA']['FIRMWARE_INFORMATION']
+        if not isinstance(firmware, list):
+            firmware = [firmware]
+        firmware_dict = {}
+        for key in firmware:
+            for index, details in key.items():
+                version = None
+                name = None
+                for k, v in details.items():
+                    if k == 'FIRMWARE_VERSION':
+                        version = v['VALUE']
+                    if k == 'FIRMWARE_NAME':
+                        name = v['VALUE']
+                    if name and version:
+                        firmware_dict[name] = version
+        return firmware_dict
+
+    def get_rom_firmware_version(self, data):
+        """Parse the get_host_health_data() for essential capabilities
+
+        :param data: the output returned by get_host_health_data()
+        :returns: rom firmware version.
+
+        """
+        firmware_details = self.get_firmware_embedded_health(data)
+        for key, val in firmware_details.items():
+            if key == "HP ProLiant System ROM":
+                return {key: val}
+
+    def get_ilo_firmware_version(self, data):
+        """Parse the get_host_health_data() for server capabilities
+
+        :param data: the output returned by get_host_health_data()
+        :returns: iLO firmware version.
+
+        """
+        firmware_details = self.get_firmware_embedded_health(data)
+        for key, val in firmware_details.items():
+            if key == "iLO":
+                return {key: val}
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
