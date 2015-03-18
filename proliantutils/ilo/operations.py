@@ -259,3 +259,25 @@ class IloOperations:
         :raises: IloError, on an error from iLO.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_essential_properties(self):
+        """Get the essential scheduling properties
+
+        :returns: a dictionary containing memory size, disk size,
+                  number of cpus, cpu arch, port numbers and
+                  mac addresses.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_server_capabilities(self):
+        """Get hardware properties which can be used for scheduling
+
+        :return: a dictionary of server capabilities.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

@@ -15,6 +15,7 @@
 
 """Test class for RIBCL Module."""
 
+import json
 import unittest
 
 import mock
@@ -341,6 +342,96 @@ class IloRibclTestCase(unittest.TestCase):
         name, uuid = self.ilo.get_host_uuid()
         self.assertIn('ProLiant ML110 G7', name)
         self.assertIn('37363536-3636-4D32-3232-303130324A41', uuid)
+
+    def test__parse_processor_embedded_health(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        cpus, cpu_arch = self.ilo._parse_processor_embedded_health(json_data)
+        self.assertEqual('18', str(cpus))
+        self.assertEqual('x86_64', cpu_arch)
+        self.assertTrue(type(cpus), int)
+
+    def test__parse_memory_embedded_health(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        memory_mb = self.ilo._parse_memory_embedded_health(json_data)
+        self.assertEqual('32768', str(memory_mb))
+        self.assertTrue(type(memory_mb), int)
+
+    def test__parse_nics_embedded_health(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        expected_output = {u'Port 4': u'40:a8:f0:1e:86:77',
+                           u'Port 3': u'40:a8:f0:1e:86:76',
+                           u'Port 2': u'40:a8:f0:1e:86:75',
+                           u'Port 1': u'40:a8:f0:1e:86:74'}
+        nic_data = self.ilo._parse_nics_embedded_health(json_data)
+        self.assertIsInstance(nic_data, dict)
+        for key, val in nic_data.items():
+            self.assertIn("Port", key)
+        self.assertEqual(expected_output, nic_data)
+
+    def test__parse_storage_embedded_health(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        local_gb = self.ilo._parse_storage_embedded_health(json_data)
+        self.assertTrue(type(local_gb), int)
+        self.assertEqual("558", str(local_gb))
+
+    def test__get_firmware_embedded_health(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        firmware_dict = self.ilo._get_firmware_embedded_health(json_data)
+        self.assertIsInstance(firmware_dict, dict)
+
+    def test__get_rom_firmware_version(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        rom_firmware = self.ilo._get_rom_firmware_version(json_data)
+        self.assertIsInstance(rom_firmware, dict)
+
+    def test__get_ilo_firmware_version(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        ilo_firmware = self.ilo._get_ilo_firmware_version(json_data)
+        self.assertIsInstance(ilo_firmware, dict)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_essential_properties(self, health_data_mock):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        health_data_mock.return_value = json_data
+        expected_properties = {'macs': {
+                               u'Port 4': u'40:a8:f0:1e:86:77',
+                               u'Port 3': u'40:a8:f0:1e:86:76',
+                               u'Port 2': u'40:a8:f0:1e:86:75',
+                               u'Port 1': u'40:a8:f0:1e:86:74'
+                               },
+                               'properties': {
+                               'memory_mb': 32768,
+                               'cpu_arch': 'x86_64',
+                               'local_gb': 558,
+                               'cpus': 18}
+                               }
+        properties = self.ilo.get_essential_properties()
+        self.assertIsInstance(properties, dict)
+        self.assertIn('macs', properties)
+        self.assertIn('properties', properties)
+        self.assertEqual(expected_properties, properties)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_server_capabilities_gen8(self, health_data_mock, server_mock):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        health_data_mock.return_value = json_data
+        server_mock.return_value = 'ProLiant DL580 Gen8'
+        capabilities = self.ilo.get_server_capabilities()
+        self.assertIsInstance(capabilities, dict)
+        self.assertIn('ilo_firmware_version', capabilities)
+        self.assertIn('rom_firmware_version', capabilities)
+        self.assertIn('server_model', capabilities)
+        self.assertNotIn('secure_boot', capabilities)
 
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):

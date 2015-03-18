@@ -24,6 +24,7 @@ import urlparse
 
 from proliantutils import exception
 from proliantutils.ilo import operations
+from proliantutils.ilo import ribcl
 
 """ Currently this class supports only secure boot and firmware settings
 related API's .
@@ -565,6 +566,23 @@ class RISOperations(operations.IloOperations):
         msg = "iLO Account with specified username is not found."
         raise exception.IloError(msg)
 
+    def _get_ilo_details(self):
+
+        reset_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(reset_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        # verify expected type
+        mtype = self._get_type(manager)
+        if (mtype not in ['Manager.0', 'Manager.1']):
+            msg = "%s is not a valid Manager type " % mtype
+            raise exception.IloError(msg)
+
+        return manager
+
     def reset_ilo(self):
         """Resets the iLO.
 
@@ -642,3 +660,81 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_rom_firmware_version(self):
+        """Gets the rom firmware version for server capabilities
+
+        :returns: a dictionary of rom firmware version.
+
+        """
+
+        system = self._get_host_details()
+        rom_firmware_version = (
+            system['Oem']['Hp']['Bios']['Current']['VersionString'])
+        return {'rom_firmware_version': rom_firmware_version}
+
+    def _get_ilo_firmware_version(self):
+        """Gets the ilo firmware version for server capabilities
+
+        :returns: a dictionary of iLO firmware version.
+
+        """
+
+        manager = self._get_ilo_details()
+        ilo_firmware_version = manager['Firmware']['Current']['VersionString']
+        return {'ilo_firmware_version': ilo_firmware_version}
+
+    def get_essential_properties(self):
+        """Gets essential scheduling properties as required by ironic
+
+        :returns: a dictionary of server properties like memory size,
+                  disk size, number of cpus, cpu arch, port numbers
+                  and mac addresses.
+        :raises:IloError if iLO returns an error in command execution.
+
+        """
+        system = self._get_host_details()
+        properties = {}
+        properties['memory_size'] = system['Memory']['TotalSystemMemoryGB']
+        properties['cpus'] = system['Processors']['Count']
+        processor_family = system['Processors']['ProcessorFamily']
+        if 'Xeon(R)' in processor_family:
+            properties['cpu_arch'] = 'x86_64'
+
+        # RIS doesn't give direct mapping between mac addresses
+        # and port number.
+        # Hence falling back to RIBCL for this.
+        # The below from RIS gives the mac addresses:
+        # macs = system['HostCorrelation']['HostMACAddress']
+        # The Port numbers can be got from URL:
+        # http://x.x.x.x/rest/v1/Systems/1/PCIDevices
+        # The Port numbers are received under:
+        # PCIdevices['Items']['DeviceSubInstance']
+        # but this link doesn't get the mac address.
+        ribcl_obj = ribcl.RIBCLOperations(self.host, self.login, self.password)
+        health_data = ribcl_obj.get_host_health_data()
+        nic_dict = ribcl_obj._parse_nics_embedded_health(health_data)
+        properties['macs'] = nic_dict
+
+        # TODO(Nisha): update for storage capacity from RIS. As of now the
+        # data is retreived from RIBCL.
+        local_gb = ribcl_obj._parse_storage_embedded_health(health_data)
+        properties['local_gb'] = local_gb
+        return properties
+
+    def get_server_capabilities(self):
+        """Gets server properties which can be used for scheduling
+
+        :returns: a dictionary of hardware properties like firmware
+                  versions, server model.
+        :raises: IloError if iLO returns an error in command execution.
+
+        """
+        capabilities = {}
+        system = self._get_host_details()
+        capabilities['server_model'] = system['Model']
+        capabilities.update(self._get_rom_firmware_version())
+        capabilities.update(self._get_ilo_firmware_version())
+        secure_boot = self.get_secure_boot_mode()
+        capabilities['secure_boot'] = secure_boot
+        return capabilities
