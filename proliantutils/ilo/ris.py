@@ -592,14 +592,8 @@ class RISOperations(operations.IloOperations):
         msg = "iLO Account with specified username is not found."
         raise exception.IloError(msg)
 
-    def reset_ilo(self):
-        """Resets the iLO.
+    def _get_ilo_details(self):
 
-        :raises: IloError, on an error from iLO.
-        :raises: IloConnectionError, if iLO is not up after reset.
-        :raises: IloCommandNotSupportedError, if the command is not supported
-                 on the server.
-        """
         reset_uri = '/rest/v1/Managers/1'
         status, headers, manager = self._rest_get(reset_uri)
 
@@ -613,6 +607,17 @@ class RISOperations(operations.IloOperations):
             msg = "%s is not a valid Manager type " % mtype
             raise exception.IloError(msg)
 
+        return manager, reset_uri
+
+    def reset_ilo(self):
+        """Resets the iLO.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if iLO is not up after reset.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        manager, reset_uri = self._get_ilo_details()
         action = {'Action': 'Reset'}
 
         # perform the POST
@@ -665,3 +670,39 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_ilo_firmware_version(self):
+        """Gets the ilo firmware version for server capabilities
+
+        :returns: a dictionary of iLO firmware version.
+
+        """
+
+        manager = self._get_ilo_details()
+        ilo_firmware_version = manager['Firmware']['Current']['VersionString']
+        return {'ilo_firmware_version': ilo_firmware_version}
+
+    def get_server_capabilities(self):
+        """Gets server properties which can be used for scheduling
+
+        :returns: a dictionary of hardware properties like firmware
+                  versions, server model.
+        :raises: IloError, if iLO returns an error in command execution.
+
+        """
+        capabilities = {}
+        system = self._get_host_details()
+        capabilities['server_model'] = system['Model']
+        rom_firmware_version = (
+            system['Oem']['Hp']['Bios']['Current']['VersionString'])
+        capabilities['rom_firmware_version'] = rom_firmware_version
+        capabilities.update(self._get_ilo_firmware_version())
+        try:
+            self.get_secure_boot_mode()
+            capabilities['secure_boot'] = True
+        except (exception.IloCommandNotSupportedError,
+                exception.IloError):
+            # If an error is raised dont populate the capability
+            # secure_boot
+            pass
+        return capabilities
