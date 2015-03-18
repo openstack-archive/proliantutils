@@ -281,6 +281,32 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
+                                     secure_mock):
+        host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_details_mock.return_value = host_details
+        ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
+        secure_mock.return_value = False
+        expected_caps = {'secure_boot': 'true',
+                         'ilo_firmware_version': 'iLO 4 v2.20',
+                         'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
+                         'server_model': u'ProLiant BL460c Gen9'}
+        capabilities = self.client.get_server_capabilities()
+        self.assertEqual(expected_caps, capabilities)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test__get_ilo_firmware_version(self, get_ilo_details_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        uri = '/rest/v1/Managers/1'
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        ilo_firm = self.client._get_ilo_firmware_version()
+        expected_ilo_firm = {'ilo_firmware_version': 'iLO 4 v2.20'}
+        self.assertIn('ilo_firmware_version', ilo_firm)
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 

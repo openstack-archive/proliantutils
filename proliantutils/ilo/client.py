@@ -31,7 +31,8 @@ SUPPORTED_RIS_METHODS = [
     'reset_secure_boot_keys',
     'set_http_boot_url',
     'set_pending_boot_mode',
-    'set_secure_boot_mode'
+    'set_secure_boot_mode',
+    'get_server_capabilities'
     ]
 
 
@@ -288,3 +289,31 @@ class IloClient(operations.IloOperations):
         :raises: IloError, on an error from iLO.
         """
         return self._call_method('get_host_power_readings')
+
+    def get_essential_properties(self):
+        """Get the essential scheduling properties
+
+        :returns: a dictionary containing memory size, disk size,
+                  number of cpus, cpu arch, port numbers and
+                  mac addresses.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('get_essential_properties')
+
+    def get_server_capabilities(self):
+        """Get hardware properties which can be used for scheduling
+
+        :return: a dictionary of server capabilities.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if 'Gen9' in self.model:
+            capabilities = self.ris.get_server_capabilities()
+            gpu = self.ribcl._get_number_of_gpu_devices_connected()
+            capabilities.update(gpu)
+            return capabilities
+        else:
+            return self.ribcl.get_server_capabilities()
