@@ -590,3 +590,30 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+
+    def get_rom_firmware_version(self):
+        system = self._get_host_details()
+        return system['Oem']['Hp']['Bios']['Current']['Version']
+
+    def get_ilo_firmware_version(self):
+        manager = self._get_ilo_details()
+        return manager['Firmware']['Current']['VersionString']
+
+    def get_essential_properties(self):
+
+        system = self._get_host_details()
+        manager = self._get_ilo_details()
+        properties = {}
+        properties['memory_size'] = system['Memory']['TotalSystemMemoryGB']
+        properies['cpus'] = system['Processors']['Count']
+        processor_family = system['Processor']['ProcessorFamily']
+        if 'Xeon(R)' in processor_family:
+            properties['cpu_arch'] = 'x86_64'
+        # TODO: Check the disk size and call RIBCL for NIC data
+        return properties
+
+    def get_server_capabilities(self):
+        # TODO: implement the function
+        pass
+
