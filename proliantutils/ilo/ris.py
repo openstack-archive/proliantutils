@@ -575,6 +575,23 @@ class RISOperations(operations.IloOperations):
         msg = "iLO Account with specified username is not found."
         raise exception.IloError(msg)
 
+    def _get_ilo_details(self):
+
+        reset_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(reset_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(manager)
+            raise exception.IloError(msg)
+
+        # verify expected type
+        mtype = self._get_type(manager)
+        if (mtype not in ['Manager.0', 'Manager.1']):
+            msg = "%s is not a valid Manager type " % mtype
+            raise exception.IloError(msg)
+
+        return manager
+
     def reset_ilo(self):
         """Resets the iLO.
 
@@ -656,3 +673,46 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_rom_firmware_version(self):
+        """Gets the rom firmware version for server capabilities
+
+        :returns: a dictionary of rom firmware version.
+
+        """
+
+        system = self._get_host_details()
+        rom_firmware_version = (
+            system['Oem']['Hp']['Bios']['Current']['VersionString'])
+        return {'rom_firmware_version': rom_firmware_version}
+
+    def _get_ilo_firmware_version(self):
+        """Gets the ilo firmware version for server capabilities
+
+        :returns: a dictionary of iLO firmware version.
+
+        """
+
+        manager = self._get_ilo_details()
+        ilo_firmware_version = manager['Firmware']['Current']['VersionString']
+        return {'ilo_firmware_version': ilo_firmware_version}
+
+    def get_server_capabilities(self):
+        """Gets server properties which can be used for scheduling
+
+        :returns: a dictionary of hardware properties like firmware
+                  versions, server model.
+        :raises: IloError if iLO returns an error in command execution.
+
+        """
+        capabilities = {}
+        system = self._get_host_details()
+        capabilities['server_model'] = system['Model']
+        rom_firmware_version = (
+            system['Oem']['Hp']['Bios']['Current']['VersionString'])
+        capabilities['rom_firmware_version'] = rom_firmware_version
+        capabilities.update(self._get_rom_firmware_version())
+        capabilities.update(self._get_ilo_firmware_version())
+        secure_boot = self.get_secure_boot_mode()
+        capabilities['secure_boot'] = secure_boot
+        return capabilities
