@@ -86,6 +86,10 @@ class RISOperations(operations.IloOperations):
                 redir_count -= 1
             else:
                 break
+        else:
+            # Redirected for 5th time. Throw error
+            msg = "URL Redirected 5 times continously. Url incorrect"
+            raise exception.IloConnectionError(msg)
 
         response = dict()
         try:
