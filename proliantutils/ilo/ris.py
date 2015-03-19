@@ -45,6 +45,8 @@ class RISOperations(operations.IloOperations):
         """Generic REST Operation handler."""
 
         url = urlparse.urlparse('https://' + self.host + suburi)
+        # Used for logging on redirection error.
+        start_url = urlparse.urlunparse(url)
 
         if request_headers is None:
             request_headers = dict()
@@ -54,7 +56,7 @@ class RISOperations(operations.IloOperations):
             hr = "BASIC " + base64.b64encode(self.login + ":" + self.password)
             request_headers['Authorization'] = hr
 
-        redir_count = 4
+        redir_count = 5
         while redir_count:
             conn = None
             if url.scheme == 'https':
@@ -86,6 +88,11 @@ class RISOperations(operations.IloOperations):
                 redir_count -= 1
             else:
                 break
+        else:
+            # Redirected for 5th time. Throw error
+            msg = ("URL Redirected 5 times continously. "
+                   "URL incorrect: %s" % start_url)
+            raise exception.IloConnectionError(msg)
 
         response = dict()
         try:
