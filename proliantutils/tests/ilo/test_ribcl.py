@@ -17,8 +17,8 @@
 
 import unittest
 
-import constants
 import mock
+import ribcl_constants as constants
 
 from proliantutils import exception
 from proliantutils.ilo import ribcl
