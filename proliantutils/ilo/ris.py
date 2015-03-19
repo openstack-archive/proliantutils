@@ -56,11 +56,7 @@ class RISOperations(operations.IloOperations):
 
         redir_count = 4
         while redir_count:
-            conn = None
-            if url.scheme == 'https':
-                conn = httplib.HTTPSConnection(host=url.netloc, strict=True)
-            elif url.scheme == 'http':
-                conn = httplib.HTTPConnection(host=url.netloc, strict=True)
+            conn = httplib.HTTPSConnection(host=url.netloc, strict=True)
 
             try:
                 conn.request(operation, url.path, headers=request_headers,
@@ -86,6 +82,10 @@ class RISOperations(operations.IloOperations):
                 redir_count -= 1
             else:
                 break
+        else:
+            # Redirected for 5th time. Throw error
+            msg = "URL Redirected 5 times continously. Url incorrect"
+            raise exception.IloConnectionError(msg)
 
         response = dict()
         try:
