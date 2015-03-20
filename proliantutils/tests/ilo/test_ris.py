@@ -23,6 +23,7 @@ import mock
 import testtools
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
 
@@ -68,6 +69,101 @@ class IloRisTestCase(testtools.TestCase):
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
                           self.client.set_http_boot_url,
                           'http://10.10.1.30:8081/startup.nsh')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_secure_boot_mode(self, get_details_mock, rest_get_mock):
+        host_response = ris_outputs.RESPONSE_BODY_FOR_REST_OP
+        get_details_mock.return_value = json.loads(host_response)
+        uri = ris_outputs.REST_GET_SECURE_BOOT['links']['self']['href']
+        rest_get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                      ris_outputs.REST_GET_SECURE_BOOT)
+        result = self.client.get_secure_boot_mode()
+        self.assertFalse(result)
+        get_details_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_secure_boot_mode_fail(self, get_details_mock, rest_get_mock):
+        host_response = ris_outputs.RESPONSE_BODY_FOR_REST_OP
+        get_details_mock.return_value = json.loads(host_response)
+        uri = ris_outputs.REST_GET_SECURE_BOOT['links']['self']['href']
+        rest_get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                      ris_outputs.REST_FAILURE_OUTPUT)
+        exc = self.assertRaises(exception.IloError,
+                                self.client.get_secure_boot_mode)
+        get_details_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(uri)
+        self.assertIn('FakeFailureMessage', str(exc))
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_secure_boot_mode_not_supported(self, get_details_mock):
+        host_response = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        del host_response['Oem']['Hp']['links']['SecureBoot']
+        get_details_mock.return_value = host_response
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.get_secure_boot_mode)
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_host_power_status_ok(self, get_details_mock):
+        host_response = ris_outputs.RESPONSE_BODY_FOR_REST_OP
+        get_details_mock.return_value = json.loads(host_response)
+        result = self.client.get_host_power_status()
+        self.assertEqual(result, 'OFF')
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(common, 'wait_for_ilo_after_reset')
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test_reset_ilo_ok(self, get_mock, post_mock, status_mock):
+        uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 manager_data)
+        post_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_POST_RESPONSE)
+        self.client.reset_ilo()
+        get_mock.assert_called_once_with(uri)
+        post_mock.assert_called_once_with(uri, None, {'Action': 'Reset'})
+        status_mock.assert_called_once_with(self.client)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test_reset_ilo_fail(self, get_mock, post_mock):
+        uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        get_mock.return_value = (200, ris_outputs.HEADERS_FOR_REST_OP,
+                                 manager_data)
+        post_mock.return_value = (301, ris_outputs.HEADERS_FOR_REST_OP,
+                                  ris_outputs.REST_FAILURE_OUTPUT)
+        exc = self.assertRaises(exception.IloError, self.client.reset_ilo)
+
+        get_mock.assert_called_once_with(uri)
+        post_mock.assert_called_once_with(uri, None, {'Action': 'Reset'})
+        self.assertIn('FakeFailureMessage', str(exc))
+
+    @mock.patch.object(ris.RISOperations, '_get_type')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test_reset_ilo_type_mismatch(self, get_mock, type_mock):
+        uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        get_mock.return_value = (200, ris_outputs.HEADERS_FOR_REST_OP,
+                                 manager_data)
+        type_mock.return_value = 'Manager.x'
+        self.assertRaises(exception.IloError, self.client.reset_ilo)
+        get_mock.assert_called_once_with(uri)
+
+    @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
+    def test_reset_secure_boot_keys(self, change_mock):
+        self.client.reset_secure_boot_keys()
+        change_mock.assert_called_once_with('ResetToDefaultKeys', True)
+
+    @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
+    def test_clear_secure_boot_keys(self, change_mock):
+        self.client.clear_secure_boot_keys()
+        change_mock.assert_called_once_with('ResetAllKeys', True)
 
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
@@ -261,3 +357,65 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertEqual(200, status)
         self.assertEqual(exp_headers, headers)
         self.assertEqual(json.loads(sample_response_body), response)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test___change_bios_setting(self, check_bios_mock, patch_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        properties = {'fake-property': 'fake-value'}
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        patch_mock.return_value = (200, ris_outputs.REST_POST_RESPONSE,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client._change_bios_setting(properties)
+        check_bios_mock.assert_called_once_with(properties.keys())
+        patch_mock.assert_called_once_with(bios_uri, {}, properties)
+
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test___change_secure_boot_settings(self, get_details_mock, patch_mock,
+                                           get_bios_mock, change_bios_mock):
+        host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_details_mock.return_value = host_details
+        get_bios_mock.return_value = "test"
+        secure_boot_uri = '/rest/v1/Systems/1/SecureBoot'
+        bios_dict = {'CustomPostMessage': 'test '}
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client._change_secure_boot_settings('fake-property',
+                                                 'fake-value')
+        get_details_mock.assert_called_once_with()
+        patch_mock.assert_called_once_with(secure_boot_uri, None,
+                                           {'fake-property': 'fake-value'})
+        get_bios_mock.assert_called_once_with('CustomPostMessage')
+        change_bios_mock.assert_called_once_with(bios_dict)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test___change_secure_boot_settings_not_supported(self,
+                                                         get_details_mock):
+        host_response = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        del host_response['Oem']['Hp']['links']['SecureBoot']
+        get_details_mock.return_value = host_response
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._change_secure_boot_settings,
+                          'fake-property', 'fake-value')
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test___change_secure_boot_settings_fail(self, get_details_mock,
+                                                patch_mock):
+        host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_details_mock.return_value = host_details
+        secure_boot_uri = '/rest/v1/Systems/1/SecureBoot'
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client._change_secure_boot_settings,
+                          'fake-property', 'fake-value')
+        get_details_mock.assert_called_once_with()
+        patch_mock.assert_called_once_with(secure_boot_uri, None,
+                                           {'fake-property': 'fake-value'})
