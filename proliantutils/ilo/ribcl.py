@@ -18,6 +18,7 @@ over RIBCL scripting language
 """
 
 import re
+import time
 import urllib2
 import xml.etree.ElementTree as etree
 
@@ -52,6 +53,7 @@ class RIBCLOperations(operations.IloOperations):
         self.password = password
         self.timeout = timeout
         self.port = port
+        self.retry_count = 2
 
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
@@ -628,8 +630,26 @@ class RIBCLOperations(operations.IloOperations):
         """Resets the iLO.
 
         :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if iLO is not up after reset.
         """
         self._execute_command('RESET_RIB', 'RIB_INFO', 'write')
+        # Delay for 5 sec, for the reset operation to take effect.
+        time.sleep(5)
+        # Check if iLO is up again after reset.
+        self._check_link_status()
+
+    def _check_link_status(self):
+        """Checks if iLO is up after reset."""
+        retry_count = self.retry_count
+        while retry_count:
+            try:
+                self.get_product_name()
+                break
+            except exception.IloError:
+                retry_count -= 1
+        else:
+            msg = ('iLO is not up after reset.')
+            raise exception.IloConnectionError(msg)
 
     def reset_ilo_credential(self, password):
         """Resets the iLO password.

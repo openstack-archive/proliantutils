@@ -20,6 +20,7 @@ import hashlib
 import httplib
 import json
 import StringIO
+import time
 import urlparse
 
 from proliantutils import exception
@@ -40,6 +41,7 @@ class RISOperations(operations.IloOperations):
         self.bios_password = bios_password
         # Message registry support
         self.message_registries = {}
+        self.retry_count = 2
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
@@ -386,6 +388,15 @@ class RISOperations(operations.IloOperations):
         val = val.rstrip() if val.endswith(" ") else val+" "
         self._change_bios_setting({'CustomPostMessage': val})
 
+    def get_product_name(self):
+        """Gets the product name of the server.
+
+        :returns: server model name.
+        :raises: IloError, on an error from iLO.
+        """
+        system = self._get_host_details()
+        return system['Model']
+
     def get_secure_boot_mode(self):
         """Get the status of secure boot.
 
@@ -517,6 +528,7 @@ class RISOperations(operations.IloOperations):
         """Resets the iLO.
 
         :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if iLO is not up after reset.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
@@ -541,6 +553,24 @@ class RISOperations(operations.IloOperations):
         if(status != 200):
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+        # Delay for 5 sec, for the reset operation to take effect.
+        time.sleep(5)
+        # Check if the iLO is up again.
+        self._check_link_status()
+
+    def _check_link_status(self):
+        """Checks if iLO is up after reset."""
+        retry_count = self.retry_count
+        while retry_count:
+            try:
+                self.get_product_name()
+                break
+            except exception.IloError:
+                retry_count -= 1
+        else:
+            msg = ('iLO is not up after reset.')
+            raise exception.IloConnectionError(msg)
 
     def reset_bios_to_default(self):
         """Resets the BIOS settings to default values.
