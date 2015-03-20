@@ -23,6 +23,7 @@ import StringIO
 import urlparse
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 
 """ Currently this class supports only secure boot and firmware settings
@@ -386,6 +387,15 @@ class RISOperations(operations.IloOperations):
         val = val.rstrip() if val.endswith(" ") else val+" "
         self._change_bios_setting({'CustomPostMessage': val})
 
+    def get_product_name(self):
+        """Gets the product name of the server.
+
+        :returns: server model name.
+        :raises: IloError, on an error from iLO.
+        """
+        system = self._get_host_details()
+        return system['Model']
+
     def get_secure_boot_mode(self):
         """Get the status of secure boot.
 
@@ -517,6 +527,7 @@ class RISOperations(operations.IloOperations):
         """Resets the iLO.
 
         :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if iLO is not up after reset.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
@@ -541,6 +552,9 @@ class RISOperations(operations.IloOperations):
         if(status != 200):
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+        # Check if the iLO is up again.
+        common.wait_for_ilo_after_reset(self)
 
     def reset_bios_to_default(self):
         """Resets the BIOS settings to default values.

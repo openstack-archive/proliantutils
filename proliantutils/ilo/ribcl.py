@@ -24,6 +24,7 @@ import xml.etree.ElementTree as etree
 import six
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 
 
@@ -628,8 +629,11 @@ class RIBCLOperations(operations.IloOperations):
         """Resets the iLO.
 
         :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if iLO is not up after reset.
         """
         self._execute_command('RESET_RIB', 'RIB_INFO', 'write')
+        # Check if iLO is up again after reset.
+        common.wait_for_ilo_after_reset(self)
 
     def reset_ilo_credential(self, password):
         """Resets the iLO password.
