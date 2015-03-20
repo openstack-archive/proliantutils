@@ -359,7 +359,6 @@ class RISOperations(operations.IloOperations):
         # perform the patch
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      properties)
-
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
@@ -384,6 +383,7 @@ class RISOperations(operations.IloOperations):
         # perform the patch
         status, headers, response = self._rest_patch(
             secure_boot_uri, None, new_secure_boot_settings)
+
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
@@ -425,7 +425,7 @@ class RISOperations(operations.IloOperations):
         status, headers, secure_boot_settings = self._rest_get(secure_boot_uri)
 
         if status >= 300:
-            msg = self._get_extended_error(system)
+            msg = self._get_extended_error(secure_boot_settings)
             raise exception.IloError(msg)
 
         return secure_boot_settings['SecureBootCurrentState']
