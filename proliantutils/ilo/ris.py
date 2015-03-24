@@ -637,8 +637,8 @@ class RISOperations(operations.IloOperations):
         try:
             base_config_uri = bios_settings['links']['BaseConfigs']['href']
         except KeyError:
-            msg = _("BaseConfigs resource not found. Couldn't apply the BIOS "
-                    "Settings.")
+            msg = ("BaseConfigs resource not found. Couldn't apply the BIOS "
+                   "Settings.")
             raise exception.IloCommandNotSupportedError(msg)
 
         status, headers, config = self._rest_get(base_config_uri)
@@ -655,7 +655,7 @@ class RISOperations(operations.IloOperations):
                 new_bios_settings = default_settings
                 break
         else:
-            msg = _("Default Settings not found in 'BaseConfigs' resource.")
+            msg = ("Default Settings not found in 'BaseConfigs' resource.")
             raise exception.IloCommandNotSupportedError(msg)
         request_headers = self._get_bios_hash_password(self.bios_password)
         # perform the patch
