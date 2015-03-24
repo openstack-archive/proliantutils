@@ -42,7 +42,7 @@ class IloClientInternalError(IloError):
     communicate properly with the iLO.
     """
     def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
+        super(IloClientInternalError, self).__init__(message)
 
 
 class IloCommandNotSupportedError(IloError):
@@ -52,7 +52,7 @@ class IloCommandNotSupportedError(IloError):
     communicate properly with the iLO
     """
     def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
+        super(IloCommandNotSupportedError, self).__init__(message)
 
 
 class IloCommandNotSupportedInBiosError(IloCommandNotSupportedError):
@@ -77,7 +77,7 @@ class IloLoginFailError(IloError):
     message = 'Authorization Failed'
 
     def __init__(self, message, errorcode=None):
-        super(IloError, self).__init__(message)
+        super(IloLoginFailError, self).__init__(message)
 
 
 class IloConnectionError(IloError):
