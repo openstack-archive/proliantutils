@@ -17,7 +17,7 @@ from proliantutils import exception
 ERRMSG = "The specified operation is not supported on current platform."
 
 
-class IloOperations:
+class IloOperations(object):
     """iLO class for performing iLO Operations.
 
     This class provides an OO interface for retrieving information
