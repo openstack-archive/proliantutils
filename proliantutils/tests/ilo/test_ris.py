@@ -23,6 +23,7 @@ import mock
 import testtools
 
 from proliantutils import exception
+from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
 
@@ -32,6 +33,11 @@ class IloRisTestCase(testtools.TestCase):
     def setUp(self):
         super(IloRisTestCase, self).setUp()
         self.client = ris.RISOperations("1.2.3.4", "admin", "Admin")
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_one_time_boot')
+    def test_fallback_to_ribcl(self, boot_mock):
+        self.client.get_one_time_boot()
+        boot_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
