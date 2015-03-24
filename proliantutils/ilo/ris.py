@@ -24,7 +24,7 @@ import urlparse
 
 from proliantutils import exception
 from proliantutils.ilo import common
-from proliantutils.ilo import operations
+from proliantutils.ilo import ribcl
 
 """ Currently this class supports only secure boot and firmware settings
 related API's .
@@ -32,15 +32,18 @@ related API's .
 TODO : Add rest of the API's that exists in RIBCL. """
 
 
-class RISOperations(operations.IloOperations):
+class RISOperations(ribcl.RIBCLOperations):
 
-    def __init__(self, host, login, password, bios_password=None):
+    def __init__(self, host, login, password, timeout=60, port=443,
+                 bios_password=None):
         self.host = host
         self.login = login
         self.password = password
         self.bios_password = bios_password
         # Message registry support
         self.message_registries = {}
+        super(RISOperations, self).__init__(host, login, password, timeout,
+                                            port)
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
