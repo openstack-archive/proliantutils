@@ -401,29 +401,38 @@ class RISOperations(operations.IloOperations):
         else:
             return False
 
-    def _get_bios_settings_resource(self, headers, bios_uri, bios_settings):
+    def _get_bios_settings_resource(self, headers, bios_uri, bios_settings,
+                                    read_only=False):
         """Get the BIOS settings resource.
 
-        Check if the BIOS resource supports PATCH Operation. If not, get the
-        Settings resource which supports the PATCH Operation.
+        If read_only is False, check if the BIOS resource supports PATCH
+        Operation. If not, get the Settings resource which supports the
+        PATCH Operation.
         """
+        if not read_only and self._operation_allowed(headers, 'PATCH'):
+            return bios_uri, bios_settings
+        # Get the settings resource
+        try:
+            bios_uri = bios_settings['links']['Settings']['href']
+        except KeyError:
+            msg = ('BIOS Settings resource not found.')
+            raise Exception.IloError(msg)
 
-        if not self._operation_allowed(headers, 'PATCH'):   # this is GET-only
-            # Get the settings for patch operation
-            try:
-                bios_uri = bios_settings['links']['Settings']['href']
-            except KeyError:
-                msg = ('BIOS Settings resource not found.')
-                raise Exception.IloError(msg)
+        status, headers, bios_settings = self._rest_get(bios_uri)
+        if status != 200:
+            msg = self._get_extended_error(bios_settings)
+            raise exception.IloError(msg)
 
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
+        if read_only:
+            return bios_uri, bios_settings
+        else:
+            # For updating, settings resource should allow PATCH,
+            # else raise error.
             if not self._operation_allowed(headers, 'PATCH'):
                 msg = ('PATCH Operation not supported on the resource'
                        '%s ' % bios_uri)
                 raise exception.IloError(msg)
-
-        return bios_uri
+            return bios_uri, bios_settings
 
     def get_product_name(self):
         """Gets the product name of the server.
@@ -543,6 +552,22 @@ class RISOperations(operations.IloOperations):
 
         return boot_mode.upper()
 
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        Gets the boot mode to be set on next reset.
+        :returns: boot mode, LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        headers, uri, bios_settings = self._check_bios_resource('BootMode')
+        bios_uri, settings = self._get_bios_settings_resource(headers, uri,
+                                                              bios_settings,
+                                                              True)
+        boot_mode = settings.get('BootMode')
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+        return boot_mode.upper()
+
     def set_pending_boot_mode(self, boot_mode):
         """Sets the boot mode of the system for next boot.
 
@@ -552,13 +577,13 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        if boot_mode not in ['uefi', 'bios']:
+        if boot_mode.lower() not in ['uefi', 'legacy']:
             msg = 'Invalid Boot mode specified'
             raise exception.IloInvalidInputError(msg)
 
         boot_properties = {'BootMode': boot_mode}
 
-        if boot_mode == 'bios':
+        if boot_mode == 'legacy':
             boot_properties['BootMode'] = 'LegacyBios'
         else:
             # If Boot Mode is 'Uefi' set the UEFIOptimizedBoot first.
@@ -646,8 +671,9 @@ class RISOperations(operations.IloOperations):
             msg = self._get_extended_error(config)
             raise exception.IloError(msg)
         # Check if BIOS resource supports patch, else get the settings
-        bios_uri = self._get_bios_settings_resource(headers_bios, bios_uri,
-                                                    bios_settings)
+        bios_uri, settings = self._get_bios_settings_resource(headers_bios,
+                                                              bios_uri,
+                                                              bios_settings)
         new_bios_settings = {}
         for cfg in config['BaseConfigs']:
             default_settings = cfg.get('default', None)
