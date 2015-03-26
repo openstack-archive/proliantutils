@@ -332,34 +332,27 @@ class RISOperations(operations.IloOperations):
             bios_property])
         return bios_settings[bios_property]
 
-    def _change_bios_setting(self, properties):
-        """Change the bios settings to specified values."""
-
-        # Get the keys to check if keys are supported.
-        keys = properties.keys()
-        # Check if the BIOS resource/property if exists.
-        headers, bios_uri, bios_settings = self._check_bios_resource(keys)
-
-        # if this BIOS resource doesn't support PATCH, go get the Settings.
-        if not self._operation_allowed(headers, 'PATCH'):   # this is GET-only
-            bios_uri = bios_settings['links']['Settings']['href']
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
-            if not self._operation_allowed(headers, 'PATCH'):
-                msg = ('PATCH Operation not supported on the resource'
-                       '%s ' % bios_uri)
-                raise exception.IloError(msg)
-
+    def _get_bios_hash_password(self, bios_password):
+        """Get the hashed BIOS password."""
         request_headers = dict()
-        if self.bios_password:
-            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
+        if bios_password:
+            bios_password_hash = hashlib.sha256((bios_password.encode()).
                                                 hexdigest().upper())
             request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
+        return request_headers
 
+    def _change_bios_setting(self, properties):
+        """Change the bios settings to specified values."""
+        keys = properties.keys()
+        # Check if the BIOS resource/property exists.
+        headers, bios_uri, bios_settings = self._check_bios_resource(keys)
+        # Get the BIOS Settings resource, if PATCH not supported on BIOS.
+        bios_uri = self._get_bios_settings_resource(headers, bios_uri,
+                                                    bios_settings)
+        request_headers = self._get_bios_hash_password(self.bios_password)
         # perform the patch
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      properties)
-
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
@@ -393,6 +386,44 @@ class RISOperations(operations.IloOperations):
         val = self._get_bios_setting('CustomPostMessage')
         val = val.rstrip() if val.endswith(" ") else val+" "
         self._change_bios_setting({'CustomPostMessage': val})
+
+    def _validate_uefi_boot_mode(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: 'True' if the boot mode is uefi else 'False'
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'UEFI':
+            return True
+        else:
+            return False
+
+    def _get_bios_settings_resource(self, headers, bios_uri, bios_settings):
+        """Get the BIOS settings resource.
+
+        Check if the BIOS resource supports PATCH Operation. If not, get the
+        Settings resource which supports the PATCH Operation.
+        """
+
+        if not self._operation_allowed(headers, 'PATCH'):   # this is GET-only
+            # Get the settings for patch operation
+            try:
+                bios_uri = bios_settings['links']['Settings']['href']
+            except KeyError:
+                msg = ('BIOS Settings resource not found.')
+                raise Exception.IloError(msg)
+
+            status, headers, bios_settings = self._rest_get(bios_uri)
+            # this should allow PATCH, else raise error
+            if not self._operation_allowed(headers, 'PATCH'):
+                msg = ('PATCH Operation not supported on the resource'
+                       '%s ' % bios_uri)
+                raise exception.IloError(msg)
+
+        return bios_uri
 
     def get_product_name(self):
         """Gets the product name of the server.
@@ -469,21 +500,6 @@ class RISOperations(operations.IloOperations):
 
         data = self._get_host_details()
         return data['Power'].upper()
-
-    def _validate_uefi_boot_mode(self):
-        """Checks if the system is in uefi boot mode.
-
-        :return: 'True' if the boot mode is uefi else 'False'
-        :raises: IloError, on an error from iLO.
-        :raises: IloCommandNotSupportedError, if the command is not supported
-                 on the server.
-        """
-
-        boot_mode = self.get_current_boot_mode()
-        if boot_mode == 'UEFI':
-            return True
-        else:
-            return False
 
     def get_http_boot_url(self):
         """Request the http boot url from system in uefi boot mode.
@@ -617,39 +633,31 @@ class RISOperations(operations.IloOperations):
         """
         # Check if the BIOS resource if exists.
         headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+        # Get the BaseConfig resource.
+        try:
+            base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        except KeyError:
+            msg = _("BaseConfigs resource not found. Couldn't apply the BIOS "
+                    "Settings.")
+            raise exception.IloCommandNotSupportedError(msg)
 
-        # Get the default configs
-        base_config_uri = bios_settings['links']['BaseConfigs']['href']
         status, headers, config = self._rest_get(base_config_uri)
-
         if status != 200:
             msg = self._get_extended_error(config)
             raise exception.IloError(msg)
-
-        # if this BIOS resource doesn't support PATCH, go get the Settings
-        if not self._operation_allowed(headers_bios, 'PATCH'):
-            # this is GET-only
-            bios_uri = bios_settings['links']['Settings']['href']
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
-            if not self._operation_allowed(headers, 'PATCH'):
-                msg = ('PATCH Operation not supported on the resource'
-                       '%s ' % bios_uri)
-                raise exception.IloError(msg)
-
+        # Check if BIOS resource supports patch, else get the settings
+        bios_uri = self._get_bios_settings_resource(headers_bios, bios_uri,
+                                                    bios_settings)
         new_bios_settings = {}
         for cfg in config['BaseConfigs']:
             default_settings = cfg.get('default', None)
             if default_settings is not None:
                 new_bios_settings = default_settings
                 break
-
-        request_headers = dict()
-        if self.bios_password:
-            bios_password_hash = hashlib.sha256((self.bios_password.encode()).
-                                                hexdigest().upper())
-            request_headers['X-HPRESTFULAPI-AuthToken'] = bios_password_hash
-
+        else:
+            msg = _("Default Settings not found in 'BaseConfigs' resource.")
+            raise exception.IloCommandNotSupportedError(msg)
+        request_headers = self._get_bios_hash_password(self.bios_password)
         # perform the patch
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      new_bios_settings)
