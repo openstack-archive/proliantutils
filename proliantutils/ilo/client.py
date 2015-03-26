@@ -17,13 +17,22 @@ from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 
-SUPPORTED_RIS_METHODS = ['get_product_name', 'get_http_boot_url',
-                         'set_http_boot_url', 'get_host_power_status',
-                         'get_current_boot_mode', 'set_pending_boot_mode',
-                         'reset_ilo', 'reset_ilo_credential',
-                         'reset_secure_keys', 'clear_secure_boot_keys',
-                         'get_secure_boot_mode', 'set_secure_boot_mode',
-                         'reset_bios_to_default']
+SUPPORTED_RIS_METHODS = [
+    'clear_secure_boot_keys',
+    'get_current_boot_mode',
+    'get_host_power_status',
+    'get_http_boot_url',
+    'get_pending_boot_mode',
+    'get_product_name',
+    'get_secure_boot_mode',
+    'reset_bios_to_default',
+    'reset_ilo',
+    'reset_ilo_credential',
+    'reset_secure_boot_keys',
+    'set_http_boot_url',
+    'set_pending_boot_mode',
+    'set_secure_boot_mode'
+    ]
 
 
 class IloClient(operations.IloOperations):

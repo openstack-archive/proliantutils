@@ -184,9 +184,19 @@ class IloRisTestCase(testtools.TestCase):
         result = self.client.get_current_boot_mode()
         self.assertEqual(result, 'LEGACY')
 
+    @mock.patch.object(ris.RISOperations, '_get_bios_settings_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_pending_boot_mode(self, check_mock, bios_mock):
+        check_mock.return_value = ('fake', 'fake',
+                                   json.loads(ris_outputs.GET_BIOS_SETTINGS))
+        bios_mock.return_value = ('fake', 'fake',
+                                  json.loads(ris_outputs.GET_BIOS_SETTINGS))
+        result = self.client.get_pending_boot_mode()
+        self.assertEqual(result, 'UEFI')
+
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    def test_set_pending_boot_mode_bios(self, change_mock):
-        self.client.set_pending_boot_mode('bios')
+    def test_set_pending_boot_mode_legacy(self, change_mock):
+        self.client.set_pending_boot_mode('legacy')
         change_mock.assert_called_once_with({'BootMode': 'LegacyBios'})
 
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
@@ -239,8 +249,37 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.reset_ilo_credential,
                           'fake-password')
 
-    def test_reset_bios_to_default(self):
-        pass
+    @mock.patch.object(ris.RISOperations, '_validate_if_patch_supported')
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_bios_hash_password')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_operation_allowed')
+    @mock.patch.object(ris.RISOperations, '_get_bios_settings_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_reset_bios_to_default(self, check_mock, bios_mock, op_mock,
+                                   get_mock, passwd_mock, patch_mock,
+                                   validate_mock):
+        settings_uri = '/rest/v1/systems/1/bios/Settings'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        base_config = json.loads(ris_outputs.GET_BASE_CONFIG)
+        default_config = base_config['BaseConfigs'][0]['default']
+        check_mock.return_value = (ris_outputs.GET_HEADERS, 'fake',
+                                   json.loads(ris_outputs.GET_BIOS_SETTINGS))
+        op_mock.return_value = False
+        passwd_mock.return_value = {}
+        get_mock.return_value = (200, 'fake', base_config)
+        bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                  settings_uri, {})
+        patch_mock.return_value = (200, 'fake', 'fake')
+        self.client.reset_bios_to_default()
+        check_mock.assert_called_once_with()
+        bios_mock.assert_called_once_with(settings)
+        op_mock.assert_called_once_with(ris_outputs.GET_HEADERS, 'PATCH')
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/BaseConfigs')
+        passwd_mock.assert_called_once_with(None)
+        patch_mock.assert_called_once_with(settings_uri, {}, default_config)
+        validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
+                                              settings_uri)
 
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
@@ -443,16 +482,37 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, settings)
-        patch_mock.return_value = (200, ris_outputs.REST_POST_RESPONSE,
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
                                    ris_outputs.REST_POST_RESPONSE)
         self.client._change_bios_setting(properties)
         check_bios_mock.assert_called_once_with(properties.keys())
         patch_mock.assert_called_once_with(bios_uri, {}, properties)
 
+    @mock.patch.object(ris.RISOperations, '_validate_if_patch_supported')
+    @mock.patch.object(ris.RISOperations, '_operation_allowed')
+    @mock.patch.object(ris.RISOperations, '_get_bios_settings_resource')
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
-    def test___change_bios_setting_fail(self, check_bios_mock, patch_mock):
-        pass
+    def test___change_bios_setting_fail(self, check_bios_mock, patch_mock,
+                                        settings_mock, op_mock,
+                                        validate_mock):
+        bios_uri = '/rest/v1/systems/1/bios/Settings'
+        properties = {'fake-property': 'fake-value'}
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        op_mock.return_value = False
+        settings_mock.return_value = (ris_outputs.GET_HEADERS,
+                                      bios_uri, settings)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.assertRaises(exception.IloError,
+                          self.client._change_bios_setting,
+                          properties)
+        check_bios_mock.assert_called_once_with(properties.keys())
+        op_mock.assert_called_once_with(ris_outputs.GET_HEADERS, 'PATCH')
+        settings_mock.assert_called_once_with(settings)
+        patch_mock.assert_called_once_with(bios_uri, {}, properties)
 
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
@@ -502,5 +562,36 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         patch_mock.assert_called_once_with(secure_boot_uri, None,
                                            {'fake-property': 'fake-value'})
 
-    def test__get_bios_setting(self):
-        pass
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_bios_setting(self, bios_mock):
+        bios_mock.return_value = ('fake', 'fake',
+                                  json.loads(ris_outputs.GET_BIOS_SETTINGS))
+        result = self.client._get_bios_setting('BootMode')
+        bios_mock.assert_called_once_with(['BootMode'])
+        self.assertEqual(result, 'Uefi')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_settings_resource(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 settings)
+        self.client._get_bios_settings_resource(settings)
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/Settings')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_settings_resource_key_error(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BASE_CONFIG)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_settings_resource,
+                          settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_settings_resource_fail(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        settings_uri = '/rest/v1/systems/1/bios/Settings'
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_settings_resource,
+                          settings)
+        get_mock.assert_called_once_with(settings_uri)
