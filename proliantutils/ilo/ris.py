@@ -314,8 +314,8 @@ class RISOperations(operations.IloOperations):
             for property in properties:
                 if property not in bios_settings:
                     # not supported on this platform
-                    msg = ('\tBIOS Property "' + property + '" is not'
-                           '  supported on this system.')
+                    msg = ('BIOS Property "' + property + '" is not'
+                           ' supported on this system.')
                     raise exception.IloCommandNotSupportedError(msg)
 
             return headers, bios_uri, bios_settings
@@ -325,9 +325,30 @@ class RISOperations(operations.IloOperations):
                    ' does not exist')
             raise exception.IloCommandNotSupportedError(msg)
 
+    def _get_bios_settings_resource(self, data):
+        """Get the BIOS settings resource."""
+        try:
+            bios_settings_uri = data['links']['Settings']['href']
+        except KeyError:
+            msg = ('BIOS Settings resource not found.')
+            raise Exception.IloError(msg)
+
+        status, headers, bios_settings = self._rest_get(bios_settings_uri)
+        if status != 200:
+            msg = self._get_extended_error(bios_settings)
+            raise exception.IloError(msg)
+
+        return headers, bios_settings_uri, bios_settings
+
+    def _is_patch_supported(self, headers, uri):
+        """Check if the PATCH Operation is allowed on the resource."""
+        if not self._operation_allowed(headers, 'PATCH'):
+                msg = ('PATCH Operation not supported on the resource'
+                       '%s ' % uri)
+                raise exception.IloError(msg)
+
     def _get_bios_setting(self, bios_property):
         """Retrieves bios settings of the server."""
-
         headers, bios_uri, bios_settings = self._check_bios_resource([
             bios_property])
         return bios_settings[bios_property]
@@ -345,12 +366,12 @@ class RISOperations(operations.IloOperations):
         """Change the bios settings to specified values."""
         keys = properties.keys()
         # Check if the BIOS resource/property exists.
-        headers, bios_uri, bios_settings = self._check_bios_resource(keys)
-        # Get the BIOS Settings resource, if PATCH not supported on BIOS.
-        bios_uri = self._get_bios_settings_resource(headers, bios_uri,
-                                                    bios_settings)
+        headers, bios_uri, settings = self._check_bios_resource(keys)
+        if not self._operation_allowed('PATCH', headers):
+            headers, bios_uri, _ = self._get_bios_settings_resource(settings)
+            self._is_patch_supported(headers, bios_uri)
+
         request_headers = self._get_bios_hash_password(self.bios_password)
-        # perform the patch
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      properties)
         if status >= 300:
@@ -360,7 +381,6 @@ class RISOperations(operations.IloOperations):
     def _change_secure_boot_settings(self, property, value):
         """Change secure boot settings on the server."""
         system = self._get_host_details()
-
         # find the BIOS URI
         if ('links' not in system['Oem']['Hp'] or
            'SecureBoot' not in system['Oem']['Hp']['links']):
@@ -400,30 +420,6 @@ class RISOperations(operations.IloOperations):
             return True
         else:
             return False
-
-    def _get_bios_settings_resource(self, headers, bios_uri, bios_settings):
-        """Get the BIOS settings resource.
-
-        Check if the BIOS resource supports PATCH Operation. If not, get the
-        Settings resource which supports the PATCH Operation.
-        """
-
-        if not self._operation_allowed(headers, 'PATCH'):   # this is GET-only
-            # Get the settings for patch operation
-            try:
-                bios_uri = bios_settings['links']['Settings']['href']
-            except KeyError:
-                msg = ('BIOS Settings resource not found.')
-                raise Exception.IloError(msg)
-
-            status, headers, bios_settings = self._rest_get(bios_uri)
-            # this should allow PATCH, else raise error
-            if not self._operation_allowed(headers, 'PATCH'):
-                msg = ('PATCH Operation not supported on the resource'
-                       '%s ' % bios_uri)
-                raise exception.IloError(msg)
-
-        return bios_uri
 
     def get_product_name(self):
         """Gets the product name of the server.
@@ -509,7 +505,6 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedInBiosError, if the system is
                  in the bios boot mode.
         """
-
         if(self._validate_uefi_boot_mode() is True):
             return self._get_bios_setting('UefiShellStartupUrl')
         else:
@@ -524,7 +519,6 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedInBiosError, if the system is
                  in the bios boot mode.
         """
-
         if(self._validate_uefi_boot_mode() is True):
             self._change_bios_setting({'UefiShellStartupUrl': url})
         else:
@@ -543,22 +537,36 @@ class RISOperations(operations.IloOperations):
 
         return boot_mode.upper()
 
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        Gets the boot mode to be set on next reset.
+        :returns: either LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        headers, uri, bios_settings = self._check_bios_resource(['BootMode'])
+        _, _, settings = self._get_bios_settings_resource(bios_settings)
+        boot_mode = settings.get('BootMode')
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+        return boot_mode.upper()
+
     def set_pending_boot_mode(self, boot_mode):
         """Sets the boot mode of the system for next boot.
 
-        :param boot_mode: either 'uefi' or 'bios'.
+        :param boot_mode: either 'uefi' or 'legacy'.
         :raises: IloInvalidInputError, on an invalid input.
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        if boot_mode not in ['uefi', 'bios']:
+        if boot_mode.lower() not in ['uefi', 'legacy']:
             msg = 'Invalid Boot mode specified'
             raise exception.IloInvalidInputError(msg)
 
         boot_properties = {'BootMode': boot_mode}
 
-        if boot_mode == 'bios':
+        if boot_mode == 'legacy':
             boot_properties['BootMode'] = 'LegacyBios'
         else:
             # If Boot Mode is 'Uefi' set the UEFIOptimizedBoot first.
@@ -641,13 +649,16 @@ class RISOperations(operations.IloOperations):
                    "Settings.")
             raise exception.IloCommandNotSupportedError(msg)
 
+        # Check if BIOS resource supports patch, else get the settings
+        if not self._operation_allowed('PATCH', headers_bios):
+            headers, bios_uri, _ = self._get_bios_settings_resource()
+            self._is_patch_supported(headers, bios_uri)
+
         status, headers, config = self._rest_get(base_config_uri)
         if status != 200:
             msg = self._get_extended_error(config)
             raise exception.IloError(msg)
-        # Check if BIOS resource supports patch, else get the settings
-        bios_uri = self._get_bios_settings_resource(headers_bios, bios_uri,
-                                                    bios_settings)
+
         new_bios_settings = {}
         for cfg in config['BaseConfigs']:
             default_settings = cfg.get('default', None)
@@ -658,7 +669,6 @@ class RISOperations(operations.IloOperations):
             msg = ("Default Settings not found in 'BaseConfigs' resource.")
             raise exception.IloCommandNotSupportedError(msg)
         request_headers = self._get_bios_hash_password(self.bios_password)
-        # perform the patch
         status, headers, response = self._rest_patch(bios_uri, request_headers,
                                                      new_bios_settings)
         if status >= 300:

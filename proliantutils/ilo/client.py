@@ -20,10 +20,10 @@ from proliantutils.ilo import ris
 SUPPORTED_RIS_METHODS = ['get_product_name', 'get_http_boot_url',
                          'set_http_boot_url', 'get_host_power_status',
                          'get_current_boot_mode', 'set_pending_boot_mode',
-                         'reset_ilo', 'reset_ilo_credential',
-                         'reset_secure_keys', 'clear_secure_boot_keys',
+                         'get_pending_boot_mode', 'reset_ilo_credential',
+                         'reset_secure_boot_keys', 'clear_secure_boot_keys',
                          'get_secure_boot_mode', 'set_secure_boot_mode',
-                         'reset_bios_to_default']
+                         'reset_bios_to_default', 'reset_ilo']
 
 
 class IloClient(operations.IloOperations):
