@@ -561,7 +561,8 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        if boot_mode.lower() not in ['uefi', 'legacy']:
+        boot_mode = boot_mode.lower()
+        if boot_mode not in ['uefi', 'legacy']:
             msg = 'Invalid Boot mode specified'
             raise exception.IloInvalidInputError(msg)
 
