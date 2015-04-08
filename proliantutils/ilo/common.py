@@ -19,21 +19,23 @@ import time
 from proliantutils import exception
 
 # Max number of times an operation to be retried
-RETRY_COUNT = 2
+RETRY_COUNT = 10
 
 
 def wait_for_ilo_after_reset(ilo_object):
     """Checks if iLO is up after reset."""
 
     retry_count = RETRY_COUNT
+    # Delay for 10 sec, for the reset operation to take effect.
+    time.sleep(10)
+
     while retry_count:
         try:
-            # Delay for 5 sec, for the reset operation to take effect.
-            time.sleep(5)
             ilo_object.get_product_name()
             break
         except exception.IloError:
             retry_count -= 1
+            time.sleep(5)
     else:
         msg = ('iLO is not up after reset.')
         raise exception.IloConnectionError(msg)

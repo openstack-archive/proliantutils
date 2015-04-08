@@ -26,7 +26,6 @@ SUPPORTED_RIS_METHODS = [
     'get_product_name',
     'get_secure_boot_mode',
     'reset_bios_to_default',
-    'reset_ilo',
     'reset_ilo_credential',
     'reset_secure_boot_keys',
     'set_http_boot_url',

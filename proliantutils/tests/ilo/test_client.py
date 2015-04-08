@@ -40,3 +40,9 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen9'
         self.client._call_method('get_host_power_status')
         power_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'reset_ilo')
+    def test__call_method_gen9_ribcl(self, ilo_mock):
+        self.client.model = 'Gen9'
+        self.client._call_method('reset_ilo')
+        ilo_mock.assert_called_once_with()
