@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
@@ -43,6 +44,7 @@ class IloClient(operations.IloOperations):
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port)
         self.ris = ris.RISOperations(host, login, password, bios_password)
+        self.info = {'address': host, 'username': login, 'password': password}
         self.model = self.ribcl.get_product_name()
 
     def _call_method(self, method_name, *args, **kwargs):
@@ -310,10 +312,16 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
+        capabilities = {}
         if 'Gen9' in self.model:
             capabilities = self.ris.get_server_capabilities()
-            gpu = self.ribcl._get_number_of_gpu_devices_connected()
+            data = self.ribcl.get_host_health_data()
+            gpu = self.ribcl._get_number_of_gpu_devices_connected(data)
             capabilities.update(gpu)
-            return capabilities
         else:
-            return self.ribcl.get_server_capabilities()
+            capabilities = self.ribcl.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(self.info)
+        if nic_capacity:
+            capabilities.update({'nic_capacity': nic_capacity})
+        if capabilities:
+            return capabilities
