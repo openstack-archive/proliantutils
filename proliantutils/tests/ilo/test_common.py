@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """Test Class for Common Operations."""
+
+import time
 import unittest
 
 import mock
@@ -36,18 +38,23 @@ class IloCommonModuleTestCase(unittest.TestCase):
         common.wait_for_ilo_after_reset(self.ribcl)
         name_mock.assert_called_once_with()
 
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
-    def test__check_link_status_retry(self, name_mock):
+    def test_wait_for_ilo_after_reset_retry(self, name_mock, sleep_mock):
         exc = exception.IloError('error')
         name_mock.side_effect = [exc, ribcl_output.GET_PRODUCT_NAME]
         common.wait_for_ilo_after_reset(self.ribcl)
-        self.assertEqual(common.RETRY_COUNT, name_mock.call_count)
+        self.assertEqual(2, name_mock.call_count)
         name_mock.assert_called_with()
 
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
-    def test__check_link_status_fail(self, name_mock):
+    def test_wait_for_ilo_after_reset_fail(self, name_mock, time_mock):
         exc = exception.IloError('error')
-        name_mock.side_effect = [exc, exc]
+        exc_list = []
+        for i in range(common.RETRY_COUNT):
+            exc_list.append(exc)
+        name_mock.side_effect = exc_list
         self.assertRaises(exception.IloConnectionError,
                           common.wait_for_ilo_after_reset,
                           self.ribcl)
