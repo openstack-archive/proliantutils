@@ -84,7 +84,7 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        return self._call_method('set_http_boot_url')
+        return self._call_method('set_http_boot_url', url)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
