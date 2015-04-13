@@ -476,6 +476,12 @@ class IloRibclTestCase(unittest.TestCase):
         boot_mode = self.ilo._get_server_boot_modes()
         self.assertEqual(expected_boot_mode, boot_mode)
 
+    def test__get_nic_boot_devices(self):
+        data = json.loads(constants.GET_NIC_DEVICES_DATA)
+        expected = ["Boot0003", "Boot0001", "Boot0004"]
+        result = self.ilo._get_nic_boot_devices(data)
+        self.assertEqual(result, expected)
+
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
 

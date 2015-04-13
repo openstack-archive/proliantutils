@@ -834,6 +834,19 @@ GET_PERSISTENT_BOOT_DEVICE_CDROM_MISSING_UEFI_XML = """
 </RIBCL>
 """
 
+GET_NIC_DEVICES_DATA = '''
+[{"DESCRIPTION": "Slot 1 : Smart Array P840 Controller - 279.37 GiB, RAID 0\
+  Logical Drive(Target:0, Lun:0)", "value": "Boot000E"}, {"DESCRIPTION": \
+  "Slot 1 : Smart Array P840 Controller - 279.37 GiB, RAID 0 Logical Drive\
+  (Target:0, Lun:1)", "value": "Boot000F"}, {"DESCRIPTION": "Embedded LOM 1\
+  Port 1 : HP Ethernet 1Gb 4-port 331i Adapter - NIC (iSCSI IPv4) ", "value":\
+  "Boot0004"}, {"DESCRIPTION": "Embedded LOM 1 Port 2 : HP Ethernet 1Gb \
+  4-port 331i Adapter - NIC (PXE IPv4) ", "value": "Boot0003"},
+  {"DESCRIPTION": "Embedded LOM 1 Port 2 : HP Ethernet 1Gb \
+   4-port 331i Adapter - NIC IPv4 ", "value": "Boot0001"},
+  {"DESCRIPTION": "Generic USB Boot", "value": "Boot0000"}]
+'''
+
 GET_HOST_UUID = '''
 <RIMP>
 <HSI>
