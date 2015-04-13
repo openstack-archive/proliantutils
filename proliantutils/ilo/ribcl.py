@@ -401,7 +401,7 @@ class RIBCLOperations(operations.IloOperations):
         if 'HP iLO Virtual USB CD' in value:
             return 'CDROM'
 
-        elif 'NIC' in value:
+        elif 'NIC' in value or 'PXE' in value:
             return 'NETWORK'
 
         elif self._isDisk(value):
@@ -483,12 +483,10 @@ class RIBCLOperations(operations.IloOperations):
         pxe_nic_list = []
         try:
             for item in result:
+                if pxe_enabled in item["DESCRIPTION"]:
+                    pxe_nic_list.append(item["value"])
                 if nw_identifier in item["DESCRIPTION"]:
-                    # Check if it is PXE enabled, to add it to starting of list
-                    if pxe_enabled in item["DESCRIPTION"]:
-                        pxe_nic_list.append(item["value"])
-                    else:
-                        nic_list.append(item["value"])
+                    nic_list.append(item["value"])
         except KeyError as e:
             msg = "_get_nic_boot_devices failed with the KeyError:%s"
             raise exception.IloError((msg) % e)
