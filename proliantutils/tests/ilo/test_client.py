@@ -18,6 +18,7 @@ import mock
 import testtools
 
 from proliantutils.ilo import client
+from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 
@@ -229,3 +230,110 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_host_health_at_a_glance('fake-data')
         call_mock.assert_called_once_with('get_host_health_at_a_glance',
                                           'fake-data')
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
+    def test_get_server_capabilities(self, cap_mock, nic_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        nic_mock.return_value = '10Gb'
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2',
+                                 'nic_capacity': '10Gb'}
+        capabilities = self.client.ribcl.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(info)
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(info)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2',
+                                 'nic_capacity': '10Gb'}
+        self.assertEqual(expected_capabilities, capabilities)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_nic(self, cap_mock, nic_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        nic_mock.return_value = None
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        capabilities = self.client.ribcl.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(info)
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(info)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        self.assertEqual(expected_capabilities, capabilities)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_nic_Gen9(self, cap_mock, nic_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        self.client.model = 'Gen9'
+        nic_mock.return_value = None
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true'}
+        capabilities = self.client.ris.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(info)
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(info)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true'}
+        self.assertEqual(expected_capabilities, capabilities)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_nic_Gen9(self, cap_mock, nic_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        self.client.model = 'Gen9'
+        nic_mock.return_value = None
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true'}
+        capabilities = self.client.ris.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(info)
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(info)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true'}
+        self.assertEqual(expected_capabilities, capabilities)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_Gen9(self, cap_mock, nic_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        self.client.model = 'Gen9'
+        nic_mock.return_value = '10Gb'
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true',
+                                 'nic_capacity': '10Gb'}
+        capabilities = self.client.ris.get_server_capabilities()
+        nic_capacity = ipmi.get_nic_capacity(info)
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(info)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': '2',
+                                 'secure_boot': 'true',
+                                 'nic_capacity': '10Gb'}
+        self.assertEqual(expected_capabilities, capabilities)
