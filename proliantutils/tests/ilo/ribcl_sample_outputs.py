@@ -6274,6 +6274,46 @@ GET_EMBEDDED_HEALTH_OUTPUT = '''
                     "STATUS": {
                         "VALUE": "OK"
                     }
+                },
+                {
+                    "CAUTION": {
+                        "VALUE": "N/A"
+                    },
+                    "CRITICAL": {
+                        "VALUE": "N/A"
+                    },
+                    "CURRENTREADING": {
+                        "VALUE": "N/A"
+                    },
+                    "LABEL": {
+                        "VALUE": "56-GPU 1"
+                    },
+                    "LOCATION": {
+                        "VALUE": "I/O Board"
+                    },
+                    "STATUS": {
+                        "VALUE": "Not Installed"
+                    }
+                },
+                {
+                    "CAUTION": {
+                        "VALUE": "N/A"
+                    },
+                    "CRITICAL": {
+                        "VALUE": "N/A"
+                    },
+                    "CURRENTREADING": {
+                        "VALUE": "N/A"
+                    },
+                    "LABEL": {
+                        "VALUE": "57-GPU 2"
+                    },
+                    "LOCATION": {
+                        "VALUE": "I/O Board"
+                    },
+                    "STATUS": {
+                        "VALUE": "Not Installed"
+                    }
                 }
             ]
         },
