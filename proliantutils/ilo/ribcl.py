@@ -745,17 +745,12 @@ class RIBCLOperations(operations.IloOperations):
 
         """
         memory_mb = 0
-        try:
-            memory = (data['GET_EMBEDDED_HEALTH_DATA']['MEMORY']
-                      ['MEMORY_DETAILS_SUMMARY'])
-        except KeyError as e:
-            msg = "Unable to get memory data. Error: Data missing %s"
-            raise exception.IloError((msg) % e)
+        memory = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                        ['MEMORY']), 'MEMORY_DETAILS_SUMMARY')
+        if memory is None:
+            msg = "Unable to get memory data. Error: Data missing"
+            raise exception.IloError(msg)
 
-        # here the value can be either a dictionary or a list.
-        # Convert it tolist so that its uniform across servers.
-        if not isinstance(memory, list):
-            memory = [memory]
         total_memory_size = 0
         for item in memory:
             for val in item.values():
@@ -775,17 +770,11 @@ class RIBCLOperations(operations.IloOperations):
         :returns: processor details like cpu arch and number of cpus.
 
         """
-        try:
-            processor = (data['GET_EMBEDDED_HEALTH_DATA']
-                         ['PROCESSORS']['PROCESSOR'])
-        except KeyError as e:
-            msg = "Unable to get cpu data. Error: Data missing %s"
-            raise exception.IloError((msg) % e)
-
-        # here the value can be either a dictionary or a list.
-        # Convert it tolist so that its uniform across servers.
-        if not isinstance(processor,  list):
-            processor = [processor]
+        processor = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                           ['PROCESSORS']), 'PROCESSOR')
+        if processor is None:
+            msg = "Unable to get cpu data. Error: Data missing"
+            raise exception.IloError(msg)
         cpus = len(processor)
         cpu_arch = 'x86_64'
         return cpus, cpu_arch
@@ -799,36 +788,57 @@ class RIBCLOperations(operations.IloOperations):
         :returns: disk size in GB.
 
         """
-        try:
-            s = data['GET_EMBEDDED_HEALTH_DATA']['STORAGE']
-            storage = s['CONTROLLER']['LOGICAL_DRIVE']
-        except KeyError:
+        local_gb = 0
+        storage = self.get_value_as_list(data['GET_EMBEDDED_HEALTH_DATA'],
+                                         'STORAGE')
+        if storage is None:
             # We dont raise exception because this dictionary
             # is available only when RAID is configured.
             # If we raise error here then we will always fail
             # inspection where this module is consumed. Hence
             # as a workaround just return 0.
-            local_gb = 0
             return local_gb
 
-        local_gb = 0
         minimum = local_gb
 
-        # here the value can be either a dictionary or a list.
-        # Convert it to a list so that its uniform across servers.
-        if not isinstance(storage, list):
-            storage = [storage]
-
         for item in storage:
-            for key, val in item.items():
-                if key == 'CAPACITY':
-                    capacity = val['VALUE']
-                    local_bytes = (strutils.string_to_bytes(
-                                   capacity.replace(' ', ''), return_int=True))
-                    local_gb = int(local_bytes / (1024 * 1024 * 1024))
-                    if minimum >= local_gb or minimum == 0:
-                        minimum = local_gb
+            cntlr = self.get_value_as_list(item, 'CONTROLLER')
+            if cntlr is None:
+                continue
+            for s in cntlr:
+                drive = self.get_value_as_list(s, 'LOGICAL_DRIVE')
+                if drive is None:
+                    continue
+                for item in drive:
+                    for key, val in item.items():
+                        if key == 'CAPACITY':
+                            capacity = val['VALUE']
+                            local_bytes = (strutils.string_to_bytes(
+                                           capacity.replace(' ', ''),
+                                           return_int=True))
+                            local_gb = int(local_bytes / (1024 * 1024 * 1024))
+                            if minimum >= local_gb or minimum == 0:
+                                minimum = local_gb
         return minimum
+
+    def get_value_as_list(self, dictionary, key):
+        """Helper function to check and convert a value to list.
+
+        Helper function to check and convert a value to json list.
+        This helps the ribcl data to be generalized across the servers.
+
+        :param dictionary: a dictionary to check in if key is present.
+        :param key: key to be checked if thats present in the given dictionary.
+
+        :returns the data converted to a list.
+        """
+        if key not in dictionary:
+            return None
+        value = dictionary[key]
+        if not isinstance(value, list):
+            return [value]
+        else:
+            return value
 
     def _parse_nics_embedded_health(self, data):
         """Gets the NIC details from get_embedded_health data
@@ -841,16 +851,11 @@ class RIBCLOperations(operations.IloOperations):
         :raises IloError, if unable to get NIC data.
 
         """
-        try:
-            nic_data = (data['GET_EMBEDDED_HEALTH_DATA']
-                        ['NIC_INFORMATION']['NIC'])
-        except KeyError as e:
-            msg = "Unable to get NIC details. Data missing %s"
-            raise exception.IloError((msg) % e)
-        # here the value can be either a dictionary or a list.
-        # Convert it tolist so that its uniform across servers.
-        if not isinstance(nic_data, list):
-            nic_data = [nic_data]
+        nic_data = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                          ['NIC_INFORMATION']), 'NIC')
+        if nic_data is None:
+            msg = "Unable to get NIC details. Data missing"
+            raise exception.IloError(msg)
         nic_dict = {}
         for item in nic_data:
             try:
@@ -859,9 +864,9 @@ class RIBCLOperations(operations.IloOperations):
                 location = item['LOCATION']['VALUE']
                 if location == 'Embedded':
                     nic_dict[port] = mac
-            except KeyError as e:
-                msg = "Unable to get NIC details. Data missing %s"
-                raise exception.IloError((msg) % e)
+            except KeyError:
+                msg = "Unable to get NIC details. Data missing"
+                raise exception.IloError(msg)
         return nic_dict
 
     def _get_firmware_embedded_health(self, data):
@@ -871,13 +876,10 @@ class RIBCLOperations(operations.IloOperations):
         :returns: a dictionary of firmware name and firmware version.
 
         """
-        try:
-            firmware = data['GET_EMBEDDED_HEALTH_DATA']['FIRMWARE_INFORMATION']
-        except KeyError:
-            pass
-
-        if not isinstance(firmware, list):
-            firmware = [firmware]
+        firmware = self.get_value_as_list(data['GET_EMBEDDED_HEALTH_DATA'],
+                                          'FIRMWARE_INFORMATION')
+        if firmware is None:
+            return None
         return dict((y['FIRMWARE_NAME']['VALUE'],
                      y['FIRMWARE_VERSION']['VALUE'])
                     for x in firmware for y in x.values())
@@ -893,8 +895,9 @@ class RIBCLOperations(operations.IloOperations):
 
         """
         firmware_details = self._get_firmware_embedded_health(data)
-        rom_firmware_version = firmware_details['HP ProLiant System ROM']
-        return {'rom_firmware_version': rom_firmware_version}
+        if firmware_details:
+            rom_firmware_version = firmware_details['HP ProLiant System ROM']
+            return {'rom_firmware_version': rom_firmware_version}
 
     def _get_ilo_firmware_version(self, data):
         """Gets the ilo firmware version for server capabilities
@@ -907,7 +910,8 @@ class RIBCLOperations(operations.IloOperations):
 
         """
         firmware_details = self._get_firmware_embedded_health(data)
-        return {'ilo_firmware_version': firmware_details['iLO']}
+        if firmware_details:
+            return {'ilo_firmware_version': firmware_details['iLO']}
 
     def _get_number_of_gpu_devices_connected(self, data):
         """Gets the number of GPU devices connected to the server
@@ -919,15 +923,12 @@ class RIBCLOperations(operations.IloOperations):
         :returns: a dictionary of rom firmware version.
 
         """
-        try:
-            temp = data['GET_EMBEDDED_HEALTH_DATA']['TEMPERATURE']['TEMP']
-        except KeyError:
-            pass
-
-        if not isinstance(temp, list):
-            temp = [temp]
-
+        temp = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                      ['TEMPERATURE']), 'TEMP')
         count = 0
+        if temp is None:
+            return {'pci_gpu_devices': count}
+
         for key in temp:
             for name, value in key.items():
                 if name == 'LABEL' and 'GPU' in value['VALUE']:
