@@ -381,6 +381,27 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertTrue(type(local_gb), int)
         self.assertEqual("99", str(local_gb))
 
+    def test__parse_storage_embedded_health_controller_list(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_LIST_STORAGE
+        json_data = json.loads(data)
+        local_gb = self.ilo._parse_storage_embedded_health(json_data)
+        self.assertTrue(type(local_gb), int)
+        self.assertEqual("99", str(local_gb))
+
+    def test__parse_storage_embedded_health_no_logical_drive(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_NO_LOGICAL_DRIVE
+        json_data = json.loads(data)
+        local_gb = self.ilo._parse_storage_embedded_health(json_data)
+        self.assertTrue(type(local_gb), int)
+        self.assertEqual("0", str(local_gb))
+
+    def test__parse_storage_embedded_health_no_controller(self):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_NO_CONTROLLER
+        json_data = json.loads(data)
+        local_gb = self.ilo._parse_storage_embedded_health(json_data)
+        self.assertTrue(type(local_gb), int)
+        self.assertEqual("0", str(local_gb))
+
     def test__get_firmware_embedded_health(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
@@ -444,6 +465,27 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsInstance(capabilities, dict)
         self.assertIn('ilo_firmware_version', capabilities)
         self.assertIn('rom_firmware_version', capabilities)
+        self.assertIn('server_model', capabilities)
+        self.assertIn('pci_gpu_devices', capabilities)
+        self.assertNotIn('secure_boot', capabilities)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    @mock.patch.object(ribcl.RIBCLOperations, '_get_ilo_firmware_version')
+    @mock.patch.object(ribcl.RIBCLOperations, '_get_rom_firmware_version')
+    def test_get_server_capabilities_gen8_no_firmware(self, rom_mock, ilo_mock,
+                                                      health_data_mock,
+                                                      server_mock):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        health_data_mock.return_value = json_data
+        server_mock.return_value = 'ProLiant DL580 Gen8'
+        ilo_mock.return_value = None
+        rom_mock.return_value = None
+        capabilities = self.ilo.get_server_capabilities()
+        self.assertIsInstance(capabilities, dict)
+        self.assertNotIn('ilo_firmware_version', capabilities)
+        self.assertNotIn('rom_firmware_version', capabilities)
         self.assertIn('server_model', capabilities)
         self.assertIn('pci_gpu_devices', capabilities)
         self.assertNotIn('secure_boot', capabilities)
