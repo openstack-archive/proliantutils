@@ -786,35 +786,47 @@ class RIBCLOperations(operations.IloOperations):
         :returns: disk size in GB.
 
         """
+        local_gb = 0
         try:
-            s = data['GET_EMBEDDED_HEALTH_DATA']['STORAGE']
-            storage = s['CONTROLLER']['LOGICAL_DRIVE']
+            storage = data['GET_EMBEDDED_HEALTH_DATA']['STORAGE']
+            # here the value can be either a dictionary or a list.
+            # Convert it to a list so that its uniform across servers.
+            if not isinstance(storage, list):
+                storage = [storage]
         except KeyError:
             # We dont raise exception because this dictionary
             # is available only when RAID is configured.
             # If we raise error here then we will always fail
             # inspection where this module is consumed. Hence
             # as a workaround just return 0.
-            local_gb = 0
             return local_gb
 
-        local_gb = 0
         minimum = local_gb
 
-        # here the value can be either a dictionary or a list.
-        # Convert it to a list so that its uniform across servers.
-        if not isinstance(storage, list):
-            storage = [storage]
-
         for item in storage:
-            for key, val in item.items():
-                if key == 'CAPACITY':
-                    capacity = val['VALUE']
-                    local_bytes = (strutils.string_to_bytes(
-                                   capacity.replace(' ', ''), return_int=True))
-                    local_gb = local_bytes / (1024 * 1024 * 1024)
-                    if minimum >= local_gb or minimum == 0:
-                        minimum = local_gb
+            try:
+                cntlr = item['CONTROLLER']
+            except KeyError:
+                continue
+            if not isinstance(cntlr, list):
+                cntlr = [cntlr]
+            for s in cntlr:
+                try:
+                    drive = s['LOGICAL_DRIVE']
+                except KeyError:
+                    continue
+                if not isinstance(drive, list):
+                    drive = [drive]
+                for item in drive:
+                    for key, val in item.items():
+                        if key == 'CAPACITY':
+                            capacity = val['VALUE']
+                            local_bytes = (strutils.string_to_bytes(
+                                           capacity.replace(' ', ''),
+                                           return_int=True))
+                            local_gb = local_bytes / (1024 * 1024 * 1024)
+                            if minimum >= local_gb or minimum == 0:
+                                minimum = local_gb
         return minimum
 
     def _parse_nics_embedded_health(self, data):
