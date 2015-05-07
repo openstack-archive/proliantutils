@@ -19,7 +19,7 @@ import json
 import unittest
 
 import mock
-import ribcl_sample_outputs as constants
+from proliantutils.tests.ilo import ribcl_sample_outputs as constants
 
 from proliantutils import exception
 from proliantutils.ilo import common

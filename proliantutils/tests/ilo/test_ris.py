@@ -16,11 +16,11 @@
 """Test class for RIS Module."""
 
 import base64
-import httplib
 import json
 
 import mock
 import testtools
+from six.moves import http_client
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -326,7 +326,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         result = self.client._validate_uefi_boot_mode()
         self.assertFalse(result)
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_okay(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         response_mock_obj = mock.MagicMock(status=200)
@@ -354,7 +354,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
             body="null")
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_request_error(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         https_con_mock.return_value = connection_mock_obj
@@ -365,7 +365,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         https_con_mock.assert_called_once_with(host='1.2.3.4', strict=True)
         self.assertIn("boom", str(exc))
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_get_response_error(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         https_con_mock.return_value = connection_mock_obj
@@ -380,7 +380,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             body="null")
         self.assertIn("boom", str(exc))
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_response_read_error(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         response_mock_obj = mock.MagicMock(status=200)
@@ -392,7 +392,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                 'GET', '/v1/foo', None, None)
         self.assertIn("boom", str(exc))
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_continous_redirection(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         response_mock_obj = mock.MagicMock(status=301)
@@ -418,8 +418,8 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertEqual(5, connection_mock_obj.request.call_count)
         self.assertIn('https://1.2.3.4/v1/foo', str(exc))
 
-    @mock.patch.object(httplib, 'HTTPConnection')
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_one_redirection(self, https_con_mock,
                                       http_con_mock):
         connection_mock_obj = mock.MagicMock()
@@ -454,7 +454,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertTrue(response_mock_obj1.read.called)
         self.assertTrue(response_mock_obj2.read.called)
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_response_decode_error(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         response_mock_obj = mock.MagicMock(status=200)
@@ -477,7 +477,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
             body="null")
 
-    @mock.patch.object(httplib, 'HTTPSConnection')
+    @mock.patch.object(http_client, 'HTTPSConnection')
     def test__rest_op_response_gzipped_response(self, https_con_mock):
         connection_mock_obj = mock.MagicMock()
         response_mock_obj = mock.MagicMock(status=200)

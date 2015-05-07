@@ -18,10 +18,11 @@ over RIBCL scripting language
 """
 
 import re
-import urllib2
 import xml.etree.ElementTree as etree
 
 from oslo_utils import strutils
+from six.moves.urllib import request
+from six.moves.urllib import error as urllib_error
 import six
 
 from proliantutils import exception
@@ -69,10 +70,11 @@ class RIBCLOperations(operations.IloOperations):
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
         try:
-            req = urllib2.Request(url=urlstr, data=xml)
+            req = request.Request(url=urlstr, data=xml)
             req.add_header("Content-length", len(xml))
-            data = urllib2.urlopen(req).read()
-        except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
+            data = request.urlopen(req).read()
+        except (ValueError, urllib_error.URLError,
+                urllib_error.HTTPError) as e:
             raise exception.IloConnectionError(e)
         return data
 
@@ -518,9 +520,10 @@ class RIBCLOperations(operations.IloOperations):
         """Request host info from the server."""
         urlstr = 'http://%s/xmldata?item=all' % (self.host)
         try:
-            req = urllib2.Request(url=urlstr)
-            xml = urllib2.urlopen(req).read()
-        except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
+            req = request.Request(url=urlstr)
+            xml = request.urlopen(req).read()
+        except (ValueError, urllib_error.URLError,
+                urllib_error.HTTPError) as e:
             raise IloConnectionError(e)
 
         return xml
