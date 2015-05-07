@@ -17,10 +17,11 @@ __author__ = 'HP'
 import base64
 import gzip
 import hashlib
-import httplib
 import json
-import StringIO
-import urlparse
+
+import six
+from six.moves import http_client
+from six.moves.urllib import parse as urlparse
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -54,16 +55,20 @@ class RISOperations(operations.IloOperations):
 
         # Use self.login/self.password and Basic Auth
         if self.login is not None and self.password is not None:
-            hr = "BASIC " + base64.b64encode(self.login + ":" + self.password)
+            auth_data = self.login + ":" + self.password
+            hr = "BASIC " + base64.b64encode(
+                auth_data.encode('ascii')).decode("utf-8")
             request_headers['Authorization'] = hr
 
         redir_count = 5
         while redir_count:
             conn = None
             if url.scheme == 'https':
-                conn = httplib.HTTPSConnection(host=url.netloc, strict=True)
+                conn = http_client.HTTPSConnection(host=url.netloc,
+                                                   strict=True)
             elif url.scheme == 'http':
-                conn = httplib.HTTPConnection(host=url.netloc, strict=True)
+                conn = http_client.HTTPConnection(host=url.netloc,
+                                                  strict=True)
 
             try:
                 conn.request(operation, url.path, headers=request_headers,
@@ -98,14 +103,14 @@ class RISOperations(operations.IloOperations):
         response = dict()
         try:
             if body:
-                response = json.loads(body.decode('utf-8'))
-        except ValueError:
+                response = json.loads(body)
+        except (ValueError, TypeError):
             # if it doesn't decode as json
             # NOTE:  resources may return gzipped content
             # try to decode as gzip (we should check the headers for
             # Content-Encoding=gzip)
             try:
-                gzipper = gzip.GzipFile(fileobj=StringIO.StringIO(body))
+                gzipper = gzip.GzipFile(fileobj=six.BytesIO(body))
                 uncompressed_string = gzipper.read().decode('UTF-8')
                 response = json.loads(uncompressed_string)
             except Exception as e:

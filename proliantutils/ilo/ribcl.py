@@ -18,11 +18,12 @@ over RIBCL scripting language
 """
 
 import re
-import urllib2
 import xml.etree.ElementTree as etree
 
 from oslo_utils import strutils
 import six
+from six.moves.urllib import error as urllib_error
+from six.moves.urllib import request
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -69,10 +70,11 @@ class RIBCLOperations(operations.IloOperations):
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
         try:
-            req = urllib2.Request(url=urlstr, data=xml)
+            req = request.Request(url=urlstr, data=xml.encode('ascii'))
             req.add_header("Content-length", len(xml))
-            data = urllib2.urlopen(req).read()
-        except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
+            data = request.urlopen(req).read()
+        except (ValueError, urllib_error.URLError,
+                urllib_error.HTTPError) as e:
             raise exception.IloConnectionError(e)
         return data
 
@@ -119,9 +121,19 @@ class RIBCLOperations(operations.IloOperations):
         :param root: root of the dynamic xml.
         """
         if hasattr(etree, 'tostringlist'):
-            xml = '\r\n'.join(etree.tostringlist(root)) + '\r\n'
+            if six.PY3:
+                xml_content_list = [
+                    x.decode("utf-8") for x in etree.tostringlist(root)]
+            else:
+                xml_content_list = etree.tostringlist(root)
+
+            xml = '\r\n'.join(xml_content_list) + '\r\n'
         else:
-            xml = etree.tostring(root) + '\r\n'
+            if six.PY3:
+                xml_content = etree.tostring(root).decode("utf-8")
+            else:
+                xml_content = etree.tostring(root)
+            xml = xml_content + '\r\n'
         return xml
 
     def _parse_output(self, xml_response):
@@ -518,9 +530,10 @@ class RIBCLOperations(operations.IloOperations):
         """Request host info from the server."""
         urlstr = 'http://%s/xmldata?item=all' % (self.host)
         try:
-            req = urllib2.Request(url=urlstr)
-            xml = urllib2.urlopen(req).read()
-        except (ValueError, urllib2.URLError, urllib2.HTTPError) as e:
+            req = request.Request(url=urlstr)
+            xml = request.urlopen(req).read()
+        except (ValueError, urllib_error.URLError,
+                urllib_error.HTTPError) as e:
             raise IloConnectionError(e)
 
         return xml
@@ -751,7 +764,7 @@ class RIBCLOperations(operations.IloOperations):
                     memory_bytes = (
                         strutils.string_to_bytes(
                             memsize.replace(' ', ''), return_int=True))
-                    memory_mb = memory_bytes / (1024 * 1024)
+                    memory_mb = int(memory_bytes / (1024 * 1024))
                     total_memory_size = total_memory_size + memory_mb
         return total_memory_size
 
@@ -812,7 +825,7 @@ class RIBCLOperations(operations.IloOperations):
                     capacity = val['VALUE']
                     local_bytes = (strutils.string_to_bytes(
                                    capacity.replace(' ', ''), return_int=True))
-                    local_gb = local_bytes / (1024 * 1024 * 1024)
+                    local_gb = int(local_bytes / (1024 * 1024 * 1024))
                     if minimum >= local_gb or minimum == 0:
                         minimum = local_gb
         return minimum

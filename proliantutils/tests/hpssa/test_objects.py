@@ -50,8 +50,8 @@ class ServerTest(testtools.TestCase):
         self.assertEqual(sorted(physical_drives_expected),
                          sorted(physical_drives_found))
 
-        physical_drive = filter(lambda x: x.id == '5I:1:1',
-                                controller.unassigned_physical_drives)[0]
+        physical_drive = list(filter(lambda x: x.id == '5I:1:1',
+                                     controller.unassigned_physical_drives))[0]
         self.assertEqual(controller, physical_drive.parent)
         self.assertEqual(500, physical_drive.size_gb)
         self.assertEqual(constants.INTERFACE_TYPE_SAS,
@@ -86,14 +86,14 @@ class ServerTest(testtools.TestCase):
         self.assertIsInstance(logical_drive.properties, dict)
 
         # Assertion on physical drives of array
-        physical_drive = filter(lambda x: x.id == '5I:1:1',
-                                array.physical_drives)[0]
+        physical_drive = list(filter(lambda x: x.id == '5I:1:1',
+                                     array.physical_drives))[0]
         self.assertEqual(array, physical_drive.parent)
         self.assertEqual(500, physical_drive.size_gb)
 
         # Assertion on physical drives of controller
-        physical_drive = filter(lambda x: x.id == '5I:1:3',
-                                controller.unassigned_physical_drives)[0]
+        physical_drive = list(filter(lambda x: x.id == '5I:1:3',
+                                     controller.unassigned_physical_drives))[0]
         self.assertEqual(controller, physical_drive.parent)
         self.assertEqual(400, physical_drive.size_gb)
 
@@ -303,13 +303,13 @@ class ControllerTest(testtools.TestCase):
         controller = server.controllers[0]
         array = controller.raid_arrays[0]
 
-        physical_drive = filter(lambda x: x.id == '5I:1:1',
-                                array.physical_drives)[0]
+        physical_drive = list(filter(lambda x: x.id == '5I:1:1',
+                                     array.physical_drives))[0]
         self.assertEqual(physical_drive,
                          controller.get_physical_drive_by_id('5I:1:1'))
 
-        physical_drive = filter(lambda x: x.id == '5I:1:3',
-                                controller.unassigned_physical_drives)[0]
+        physical_drive = list(filter(lambda x: x.id == '5I:1:3',
+                                     controller.unassigned_physical_drives))[0]
         self.assertEqual(physical_drive,
                          controller.get_physical_drive_by_id('5I:1:3'))
 

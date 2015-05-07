@@ -111,7 +111,7 @@ def _convert_to_dict(stdout):
     """
 
     lines = stdout.split("\n")
-    lines = filter(None, lines)
+    lines = list(filter(None, lines))
     info_dict, j = _get_dict(lines, 0, 0)
     return info_dict
 
@@ -231,7 +231,7 @@ class Server(object):
         raid_info = _convert_to_dict(config)
         self.controllers = []
 
-        for key, value in raid_info.iteritems():
+        for key, value in raid_info.items():
             self.controllers.append(Controller(key, value, self))
 
         self.last_updated = time.time()
@@ -313,7 +313,7 @@ class Controller(object):
         self.raid_arrays = []
 
         unassigned_drives = properties.get('unassigned', dict())
-        for key, value in unassigned_drives.iteritems():
+        for key, value in unassigned_drives.items():
             self.unassigned_physical_drives.append(PhysicalDrive(key,
                                                                  value,
                                                                  self))
@@ -485,8 +485,9 @@ class LogicalDrive(object):
         # It requires space to be stripped.
         size = self.properties['Size'].replace(' ', '')
         try:
-            self.size_gb = (strutils.string_to_bytes(size, return_int=True) /
-                            (1024*1024*1024))
+            self.size_gb = int(strutils.string_to_bytes(size,
+                                                        return_int=True) /
+                               (1024*1024*1024))
         except ValueError:
             msg = ("hpssacli returned unknown size '%(size)s' for logical "
                    "disk '%(logical_disk)s' of RAID array '%(array)s' in "
@@ -545,8 +546,9 @@ class PhysicalDrive:
         # (like 500MB, 25GB) unit of storage space to bytes (Integer value).
         # It requires space to be stripped.
         try:
-            self.size_gb = (strutils.string_to_bytes(size, return_int=True) /
-                            (1024*1024*1024))
+            self.size_gb = int(strutils.string_to_bytes(size,
+                                                        return_int=True) /
+                               (1024*1024*1024))
         except ValueError:
             msg = ("hpssacli returned unknown size '%(size)s' for physical "
                    "disk '%(physical_disk)s' of controller "
