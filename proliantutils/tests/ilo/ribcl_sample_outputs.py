@@ -6327,6 +6327,369 @@ GET_EMBEDDED_HEALTH_OUTPUT = '''
 }
 '''
 
+GET_EMBEDDED_HEALTH_OUTPUT_LIST_STORAGE = '''
+{
+    "GET_EMBEDDED_HEALTH_DATA": {
+        "STORAGE": {
+            "CONTROLLER": [
+                {
+                    "CACHE_MODULE_MEMORY": {
+                        "VALUE": "2097152 KB"
+                    },
+                    "CACHE_MODULE_SERIAL_NUM": {
+                        "VALUE": "PBKUD0BRH6U3KO"
+                    },
+                    "CACHE_MODULE_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "CONTROLLER_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "DRIVE_ENCLOSURE": [
+                        {
+                            "DRIVE_BAY": {
+                                "VALUE": "04"
+                            },
+                            "LABEL": {
+                                "VALUE": "Port 1I Box 1"
+                            },
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        },
+                        {
+                            "DRIVE_BAY": {
+                                "VALUE": "01"
+                            },
+                            "LABEL": {
+                                "VALUE": "Port 1I Box 0"
+                            },
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        }
+                    ],
+                    "ENCRYPTION_CSP_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "ENCRYPTION_SELF_TEST_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "ENCRYPTION_STATUS": {
+                        "VALUE": "Not Enabled"
+                    },
+                    "FW_VERSION": {
+                        "VALUE": "1.62"
+                    },
+                    "LABEL": {
+                        "VALUE": "Controller on System Board"
+                    },
+                    "LOGICAL_DRIVE": [
+                        {
+                            "CAPACITY": {
+                                "VALUE": "99 GB"
+                            },
+                            "ENCRYPTION_STATUS": {
+                                "VALUE": "Not Encrypted"
+                            },
+                            "FAULT_TOLERANCE": {
+                                "VALUE": "RAID 1/RAID 1+0"
+                            },
+                            "LABEL": {
+                                "VALUE": "01"
+                            },
+                            "PHYSICAL_DRIVE": [
+                                {
+                                    "CAPACITY": {
+                                        "VALUE": "279 GB"
+                                    },
+                                    "DRIVE_CONFIGURATION": {
+                                        "VALUE": "Configured"
+                                    },
+                                    "ENCRYPTION_STATUS": {
+                                        "VALUE": "Not Encrypted"
+                                    },
+                                    "FW_VERSION": {
+                                        "VALUE": "HPD0"
+                                    },
+                                    "LABEL": {
+                                        "VALUE": "Port 1I Box 1 Bay 1"
+                                    },
+                                    "LOCATION": {
+                                        "VALUE": "Port 1I Box 1 Bay 1"
+                                    },
+                                    "MODEL": {
+                                        "VALUE": "EG0300FCSPH"
+                                    },
+                                    "SERIAL_NUMBER": {
+                                        "VALUE": "64R0A18KFTM91426"
+                                    },
+                                    "STATUS": {
+                                        "VALUE": "OK"
+                                    }
+                                },
+                                {
+                                    "CAPACITY": {
+                                        "VALUE": "279 GB"
+                                    },
+                                    "ENCRYPTION_STATUS": {
+                                        "VALUE": "Not Encrypted"
+                                    },
+                                    "FW_VERSION": {
+                                        "VALUE": "HPD0"
+                                    },
+                                    "LABEL": {
+                                        "VALUE": "Port 1I Box 1 Bay 2"
+                                    },
+                                    "LOCATION": {
+                                        "VALUE": "Port 1I Box 1 Bay 2"
+                                    },
+                                    "MODEL": {
+                                        "VALUE": "EG0300FCSPH"
+                                    },
+                                    "SERIAL_NUMBER": {
+                                        "VALUE": "64R0A109FTM91426"
+                                    },
+                                    "STATUS": {
+                                        "VALUE": "OK"
+                                    }
+                                }
+                            ],
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        },
+                        {
+                            "CAPACITY": {
+                                "VALUE": "99 GB"
+                            },
+                            "ENCRYPTION_STATUS": {
+                                "VALUE": "Not Encrypted"
+                            },
+                            "FAULT_TOLERANCE": {
+                                "VALUE": "RAID 1/RAID 1+0"
+                            },
+                            "LABEL": {
+                                "VALUE": "01"
+                            },
+                            "PHYSICAL_DRIVE": [
+                                {
+                                    "CAPACITY": {
+                                        "VALUE": "279 GB"
+                                    },
+                                    "DRIVE_CONFIGURATION": {
+                                        "VALUE": "Configured"
+                                    },
+                                    "ENCRYPTION_STATUS": {
+                                        "VALUE": "Not Encrypted"
+                                    },
+                                    "FW_VERSION": {
+                                        "VALUE": "HPD0"
+                                    },
+                                    "LABEL": {
+                                        "VALUE": "Port 1I Box 1 Bay 1"
+                                    },
+                                    "LOCATION": {
+                                        "VALUE": "Port 1I Box 1 Bay 1"
+                                    },
+                                    "MODEL": {
+                                        "VALUE": "EG0300FCSPH"
+                                    },
+                                    "SERIAL_NUMBER": {
+                                        "VALUE": "64R0A18KFTM91426"
+                                    },
+                                    "STATUS": {
+                                        "VALUE": "OK"
+                                    }
+                                },
+                                {
+                                    "CAPACITY": {
+                                        "VALUE": "279 GB"
+                                    },
+                                    "DRIVE_CONFIGURATION": {
+                                        "VALUE": "Configured"
+                                    },
+                                    "ENCRYPTION_STATUS": {
+                                        "VALUE": "Not Encrypted"
+                                    },
+                                    "FW_VERSION": {
+                                        "VALUE": "HPD0"
+                                    },
+                                    "LABEL": {
+                                        "VALUE": "Port 1I Box 1 Bay 2"
+                                    },
+                                    "LOCATION": {
+                                        "VALUE": "Port 1I Box 1 Bay 2"
+                                    },
+                                    "MODEL": {
+                                        "VALUE": "EG0300FCSPH"
+                                    },
+                                    "SERIAL_NUMBER": {
+                                        "VALUE": "64R0A109FTM91426"
+                                    },
+                                    "STATUS": {
+                                        "VALUE": "OK"
+                                    }
+                                }
+                            ],
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        }
+                    ],
+                    "MODEL": {
+                        "VALUE": "HP Smart Array P830i Controller"
+                    },
+                    "SERIAL_NUMBER": {
+                        "VALUE": "001438031389320"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                },
+                {
+                    "CONTROLLER_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "FW_VERSION": {
+                        "VALUE": "5.42"
+                    },
+                    "LABEL": {
+                        "VALUE": "Controller in Slot 1"
+                    },
+                    "MODEL": {
+                        "VALUE": "HP Smart Array P421 Controller"
+                    },
+                    "SERIAL_NUMBER": {
+                        "VALUE": "PDSXL0BRH6G032"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                }
+            ],
+            "DISCOVERY_STATUS": {
+                "STATUS": {
+                    "VALUE": "Discovery Complete"
+                }
+            }
+        }
+    }
+}
+'''
+
+GET_EMBEDDED_HEALTH_OUTPUT_NO_CONTROLLER = '''
+{
+    "GET_EMBEDDED_HEALTH_DATA": {
+        "STORAGE": {
+            "DISCOVERY_STATUS": {
+                "STATUS": {
+                    "VALUE": "Discovery Complete"
+                }
+            }
+        }
+    }
+}
+'''
+
+GET_EMBEDDED_HEALTH_OUTPUT_NO_LOGICAL_DRIVE = '''
+{
+    "GET_EMBEDDED_HEALTH_DATA": {
+        "STORAGE": {
+            "CONTROLLER": [
+                {
+                    "CACHE_MODULE_MEMORY": {
+                        "VALUE": "2097152 KB"
+                    },
+                    "CACHE_MODULE_SERIAL_NUM": {
+                        "VALUE": "PBKUD0BRH6U3KO"
+                    },
+                    "CACHE_MODULE_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "CONTROLLER_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "DRIVE_ENCLOSURE": [
+                        {
+                            "DRIVE_BAY": {
+                                "VALUE": "04"
+                            },
+                            "LABEL": {
+                                "VALUE": "Port 1I Box 1"
+                            },
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        },
+                        {
+                            "DRIVE_BAY": {
+                                "VALUE": "01"
+                            },
+                            "LABEL": {
+                                "VALUE": "Port 1I Box 0"
+                            },
+                            "STATUS": {
+                                "VALUE": "OK"
+                            }
+                        }
+                    ],
+                    "ENCRYPTION_CSP_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "ENCRYPTION_SELF_TEST_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "ENCRYPTION_STATUS": {
+                        "VALUE": "Not Enabled"
+                    },
+                    "FW_VERSION": {
+                        "VALUE": "1.62"
+                    },
+                    "LABEL": {
+                        "VALUE": "Controller on System Board"
+                    },
+                    "MODEL": {
+                        "VALUE": "HP Smart Array P830i Controller"
+                    },
+                    "SERIAL_NUMBER": {
+                        "VALUE": "001438031389320"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                },
+                {
+                    "CONTROLLER_STATUS": {
+                        "VALUE": "OK"
+                    },
+                    "FW_VERSION": {
+                        "VALUE": "5.42"
+                    },
+                    "LABEL": {
+                        "VALUE": "Controller in Slot 1"
+                    },
+                    "MODEL": {
+                        "VALUE": "HP Smart Array P421 Controller"
+                    },
+                    "SERIAL_NUMBER": {
+                        "VALUE": "PDSXL0BRH6G032"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                }
+            ],
+            "DISCOVERY_STATUS": {
+                "STATUS": {
+                    "VALUE": "Discovery Complete"
+                }
+            }
+        }
+    }
+}
+'''
+
 FIRMWARE_EMBEDDED_HEALTH_OUTPUT = '''
 {
     "iLO": "2.02 Sep 05 2014",
