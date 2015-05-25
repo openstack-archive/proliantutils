@@ -56,6 +56,9 @@ RAID_LEVEL_MIN_DISKS = {RAID_0: 2,
                         RAID_60: 8}
 
 
+MINIMUM_DISK_SIZE = 1
+
+
 def get_interface_type(ssa_interface):
     return INTERFACE_TYPE_MAP[ssa_interface]
 

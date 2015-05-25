@@ -378,14 +378,19 @@ class Controller(object):
             phy_drive_ids = ','.join(logical_drive_info['physical_disks'])
             cmd_args.append("drives=%s" % phy_drive_ids)
 
-        size_mb = logical_drive_info['size_gb'] * 1024
         raid_level = logical_drive_info['raid_level']
-
         # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
         # Check if we have mapping stored, otherwise use the same.
         raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
             raid_level, raid_level)
-        cmd_args.extend(["raid=%s" % raid_level, "size=%s" % size_mb])
+        cmd_args.append("raid=%s" % raid_level)
+
+        # If size_gb is MAX, then don't pass size argument.  HPSSA will
+        # automatically allocate the maximum # disks size possible to the
+        # logical disk.
+        if logical_drive_info['size_gb'] != "MAX":
+            size_mb = logical_drive_info['size_gb'] * 1024
+            cmd_args.append("size=%s" % size_mb)
 
         self.execute_cmd(*cmd_args)
 
@@ -443,6 +448,11 @@ class RaidArray(object):
         args = ("array", self.id, "create", "type=logicaldrive",
                 "raid=%s" % raid_level, "size=?")
 
+        if logical_disk['size_gb'] != "MAX":
+            desired_disk_size = logical_disk['size_gb']
+        else:
+            desired_disk_size = constants.MINIMUM_DISK_SIZE
+
         try:
             stdout, stderr = self.parent.execute_cmd(
                 *args, dont_transform_to_hpssa_exception=True)
@@ -467,7 +477,7 @@ class RaidArray(object):
             return False
 
         max_size_gb = int(match.group(1)) / 1024
-        return logical_disk['size_gb'] <= max_size_gb
+        return desired_disk_size <= max_size_gb
 
 
 class LogicalDrive(object):

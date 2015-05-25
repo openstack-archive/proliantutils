@@ -114,6 +114,31 @@ class DiskAllocatorTestCase(testtools.TestCase):
         self.assertEqual(sorted(['5I:1:3', '6I:1:7']),
                          sorted(logical_disk['physical_disks']))
 
+    def test_allocate_disks_max_okay(self, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        server = objects.Server()
+
+        logical_disk = {'size_gb': 'MAX',
+                        'raid_level': '1',
+                        'disk_type': 'hdd',
+                        'interface_type': 'sas'}
+
+        # Decrease size of three disks so that the remaining gets
+        # selected.
+        disk1 = server.controllers[0].get_physical_drive_by_id('5I:1:3')
+        disk2 = server.controllers[0].get_physical_drive_by_id('6I:1:7')
+        disk3 = server.controllers[0].get_physical_drive_by_id('5I:1:4')
+        disk1.size_gb = 300
+        disk2.size_gb = 300
+        disk3.size_gb = 300
+
+        raid_config = {'logical_disks': [logical_disk]}
+        disk_allocator.allocate_disks(logical_disk, server, raid_config)
+        self.assertEqual('Smart Array P822 in Slot 2',
+                         logical_disk['controller'])
+        self.assertEqual(sorted(['6I:1:5', '6I:1:6']),
+                         sorted(logical_disk['physical_disks']))
+
     def test_allocate_disks_disk_size_not_matching(self,
                                                    get_all_details_mock):
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE

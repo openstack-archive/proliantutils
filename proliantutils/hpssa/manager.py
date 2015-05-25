@@ -103,9 +103,15 @@ def create_configuration(raid_config):
     # In this case, for RAID1 configuration, if we were to consider
     # LD1 first and allocate PD3 and PD4 for it, then allocation would
     # fail. So follow a particular order for allocation.
-    logical_disks_sorted = sorted(raid_config['logical_disks'],
-                                  key=lambda x: int(x['size_gb']),
-                                  reverse=True)
+    #
+    # Also make sure we create the MAX logical_disks the last to make sure
+    # we allot only the remaining space available.
+    logical_disks_sorted = (
+        sorted((x for x in raid_config['logical_disks']
+                if x['size_gb'] != "MAX"),
+               reverse=True,
+               key=lambda x: x['size_gb']) +
+        [x for x in raid_config['logical_disks'] if x['size_gb'] == "MAX"])
 
     # We figure out the new disk created by recording the wwns
     # before and after the create, and then figuring out the
