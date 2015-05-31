@@ -32,7 +32,8 @@ SUPPORTED_RIS_METHODS = [
     'set_http_boot_url',
     'set_pending_boot_mode',
     'set_secure_boot_mode',
-    'get_server_capabilities'
+    'get_server_capabilities',
+    'set_iscsi_boot_info'
     ]
 
 
@@ -85,6 +86,30 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('set_http_boot_url', url)
+
+    def set_iscsi_boot_info(self, mac, target_name, lun, ip_address,
+                            port='3260', auth_method=None, username=None,
+                            password=None):
+        """Set iscsi details of the system in uefi boot mode.
+
+        The iSCSI initiator is identified by the MAC provided.
+        The initiator system is set with the target details like
+        IQN, LUN, IP, Port etc.
+        :param mac: MAC address of initiator.
+        :param target_name: Target Name for iscsi.
+        :param lun: logical unit number.
+        :param ip_address: IP address of the target.
+        :param port: port of the target.
+        :param auth_method : either None or CHAP.
+        :param username: CHAP Username for authentication.
+        :param password: CHAP secret.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        return self._call_method('set_iscsi_boot_info', mac, target_name, lun,
+                                 ip_address, port, auth_method, username,
+                                 password)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
