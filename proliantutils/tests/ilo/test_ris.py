@@ -70,6 +70,33 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.set_http_boot_url,
                           'http://10.10.1.30:8081/startup.nsh')
 
+    @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    def test_set_iscsi_boot_info_uefi(self, _validate_uefi_boot_mode_mock,
+                                      change_iscsi_settings_mock):
+        _validate_uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {
+            'TargetName': 'iqn.2011-07.com.example.server:test1',
+            'LUN': '1',
+            'IpAddress': '10.10.1.30',
+            'Port': '3260'}
+        self.client.set_iscsi_boot_info(
+            'C4346BB7EF30',
+            'iqn.2011-07.com.example.server:test1',
+            '1', '10.10.1.30')
+        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
+                                                           iscsi_variables)
+
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    def test_set_iscsi_boot_info_bios(self, _validate_uefi_boot_mode_mock):
+        _validate_uefi_boot_mode_mock.return_value = False
+        mac = 'C4346BB7EF30'
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.set_iscsi_boot_info, mac,
+                          'iqn.2011-07.com.example.server:test1',
+                          '1', '10.10.1.30')
+
     @mock.patch.object(ris.RISOperations, '_rest_get')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_secure_boot_mode(self, get_details_mock, rest_get_mock):
@@ -540,6 +567,187 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         settings_mock.assert_called_once_with(settings)
         patch_mock.assert_called_once_with(bios_uri, {}, properties)
 
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__check_iscsi_resource(self, check_bios_mock, get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        self.client._check_iscsi_resource('iSCSIBootSources')
+        check_bios_mock.assert_called_once_with()
+        get_mock.assert_called_once_with(iscsi_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__check_iscsi_resource_invalid_property(self, check_bios_mock,
+                                                    get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._check_iscsi_resource,
+                          'fake-property')
+        check_bios_mock.assert_called_once_with()
+        get_mock.assert_called_once_with(iscsi_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__check_iscsi_resource_fail(self, check_bios_mock,
+                                        get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (201, ris_outputs.GET_HEADERS, iscsi_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._check_iscsi_resource, 'fake-property')
+        check_bios_mock.assert_called_once_with()
+        get_mock.assert_called_once_with(iscsi_uri)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__check_iscsi_resource_not_found(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BASE_CONFIG)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._check_iscsi_resource,
+                          'fake-property')
+        check_bios_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_iscsi_settings_resource')
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__change_iscsi_settings(self, check_bios_mock, boot_mock,
+                                    mappings_mock, check_iscsi_mock,
+                                    settings_mock, patch_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_uri = '/rest/v1/systems/1/bios/Boot'
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_uri, boot_settings
+        map_uri = '/rest/v1/systems/1/bios/Mappings'
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        mappings_mock.return_value = map_uri, map_settings
+        iscsi_uri = '/rest/ems/1/bios/iScsi/Settings'
+        properties = {'TargetName': 'iqn.2011-07.com.example.server:test1',
+                      'LUN': '1', 'IpAddress': '10.10.1.30', 'Port': '3260'}
+        settings = json.loads(ris_outputs.GET_ISCSI_PATCH)
+        settings_mock.return_value = (ris_outputs.GET_HEADERS,
+                                      iscsi_uri, settings)
+        check_iscsi_mock.return_value = (ris_outputs.GET_HEADERS,
+                                         iscsi_uri, settings)
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client._change_iscsi_settings('C4346BB7EF30', properties)
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        mappings_mock.assert_called_once_with(bios_settings)
+        check_iscsi_mock.assert_called_once_with('iSCSIBootSources')
+        settings_mock.assert_called_once_with(settings)
+        patch_mock.assert_called_once_with(iscsi_uri, None, settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__change_iscsi_settings_invalid_mac(self, check_bios_mock,
+                                                boot_mock,
+                                                mappings_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_uri = '/rest/v1/systems/1/bios/Boot'
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_uri, boot_settings
+        map_uri = '/rest/v1/systems/1/bios/Mappings'
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        mappings_mock.return_value = map_uri, map_settings
+        self.assertRaises(exception.IloInvalidInputError,
+                          self.client._change_iscsi_settings, 'C456', {})
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        mappings_mock.assert_called_once_with(bios_settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__change_iscsi_settings_invalid_mapping(self, check_bios_mock,
+                                                    boot_mock,
+                                                    mappings_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_uri = '/rest/v1/systems/1/bios/Boot'
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_uri, boot_settings
+        map_uri = '/rest/v1/systems/1/bios/Mappings'
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        mappings_mock.return_value = map_uri, map_settings
+        self.assertRaises(exception.IloError,
+                          self.client._change_iscsi_settings,
+                          'C4346BB7EF31', {})
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        mappings_mock.assert_called_once_with(bios_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_iscsi_settings_resource')
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__change_iscsi_settings_fail(self, check_bios_mock, boot_mock,
+                                         mappings_mock, check_iscsi_mock,
+                                         settings_mock, patch_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_uri = '/rest/v1/systems/1/bios/Boot'
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_uri, boot_settings
+        map_uri = '/rest/v1/systems/1/bios/Mappings'
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        mappings_mock.return_value = map_uri, map_settings
+        iscsi_uri = '/rest/ems/1/bios/iScsi/Settings'
+        properties = {'TargetName': 'iqn.2011-07.com.example.server:test1',
+                      'LUN': '1', 'IpAddress': '10.10.1.30', 'Port': '3260'}
+        settings = json.loads(ris_outputs.GET_ISCSI_PATCH)
+        settings_mock.return_value = (ris_outputs.GET_HEADERS,
+                                      iscsi_uri, settings)
+        check_iscsi_mock.return_value = (ris_outputs.GET_HEADERS,
+                                         iscsi_uri, settings)
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.assertRaises(exception.IloError,
+                          self.client._change_iscsi_settings,
+                          'C4346BB7EF30', properties)
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        mappings_mock.assert_called_once_with(bios_settings)
+        check_iscsi_mock.assert_called_once_with('iSCSIBootSources')
+        settings_mock.assert_called_once_with(settings)
+        patch_mock.assert_called_once_with(iscsi_uri, None, settings)
+
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_rest_patch')
@@ -621,3 +829,82 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client._get_bios_settings_resource,
                           settings)
         get_mock.assert_called_once_with(settings_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_boot_resource(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 boot_settings)
+        self.client._get_bios_boot_resource(settings)
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/Boot')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_boot_resource_key_error(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BASE_CONFIG)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_boot_resource,
+                          settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_boot_resource_fail(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        get_mock.return_value = (201, ris_outputs.GET_HEADERS,
+                                 boot_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_boot_resource,
+                          settings)
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/Boot')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_mappings_resource(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 map_settings)
+        self.client._get_bios_mappings_resource(settings)
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/Mappings')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_mappings_resource_key_error(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BASE_CONFIG)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_mappings_resource,
+                          settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_bios_mappings_resource_fail(self, get_mock):
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        get_mock.return_value = (201, ris_outputs.GET_HEADERS,
+                                 map_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_bios_mappings_resource,
+                          settings)
+        get_mock.assert_called_once_with('/rest/v1/systems/1/bios/Mappings')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_iscsi_settings_resource(self, get_mock):
+        settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS, settings)
+        self.client._get_iscsi_settings_resource(settings)
+        get_mock.assert_called_once_with(
+            '/rest/v1/systems/1/bios/iScsi/Settings')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_iscsi_settings_resource_key_error(self, get_mock):
+        settings = json.loads(ris_outputs.GET_ISCSI_PATCH)
+        self.assertRaises(exception.IloError,
+                          self.client._get_iscsi_settings_resource,
+                          settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_iscsi_settings_resource_fail(self, get_mock):
+        settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (201, ris_outputs.GET_HEADERS, settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_iscsi_settings_resource,
+                          settings)
+        get_mock.assert_called_once_with(
+            '/rest/v1/systems/1/bios/iScsi/Settings')
