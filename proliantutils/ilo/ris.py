@@ -383,6 +383,154 @@ class RISOperations(operations.IloOperations):
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
 
+    def _get_iscsi_settings_resource(self, data):
+        """Get the iScsi settings resoure.
+
+        :param: Existing iScsi settings of the server.
+        :returns: headers, iscsi_settings url and
+                 iScsi settings as a dictionary.
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            iscsi_settings_uri = data['links']['Settings']['href']
+        except KeyError:
+            msg = ('iScsi Settings resource not found.')
+            raise exception.IloError(msg)
+
+        status, headers, iscsi_settings = self._rest_get(iscsi_settings_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(iscsi_settings)
+            raise exception.IloError(msg)
+
+        return headers, iscsi_settings_uri, iscsi_settings
+
+    def _get_bios_boot_resource(self, data):
+        """Get the Boot resource like BootSources.
+
+        :param: Existing Bios settings of the server.
+        :returns: boot url and boot settings.
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            boot_uri = data['links']['Boot']['href']
+        except KeyError:
+            msg = ('Boot resource not found.')
+            raise exception.IloError(msg)
+
+        status, headers, boot_settings = self._rest_get(boot_uri)
+
+        if status != 200:
+            msg = self._get_extended_error(boot_settings)
+            raise exception.IloError(msg)
+
+        return boot_uri, boot_settings
+
+    def _get_bios_mappings_resource(self, data):
+        """Get the Mappings resource.
+
+        :param: Existing Bios settings of the server.
+        :returns: mappings url and mappings settings.
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            map_uri = data['links']['Mappings']['href']
+        except KeyError:
+            msg = ('Mappings resource not found.')
+            raise exception.IloError(msg)
+
+        status, headers, map_settings = self._rest_get(map_uri)
+        if status != 200:
+            msg = self._get_extended_error(map_settings)
+            raise exception.IloError(msg)
+
+        return map_uri, map_settings
+
+    def _validate_iscsi_patch(self):
+        """Validates if patch is supported for iscsi.
+
+        :returns: iscsi url.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        # Check if the bios resource exists.
+
+        if('links' in bios_settings and 'iScsi' in bios_settings['links']):
+            iscsi_uri = bios_settings['links']['iScsi']['href']
+            status, headers, settings = self._rest_get(iscsi_uri)
+
+            if status != 200:
+                msg = self._get_extended_error(settings)
+                raise exception.IloError(msg)
+
+            if not self._operation_allowed(headers, 'PATCH'):
+                headers, iscsi_uri, settings = (
+                    self._get_iscsi_settings_resource(settings))
+                self._validate_if_patch_supported(headers, iscsi_uri)
+
+            return iscsi_uri, settings
+
+        else:
+            msg = ('"links/iScsi" section in bios'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def _change_iscsi_settings(self, mac, iscsi_info):
+        """Change iSCSI settings.
+
+        :param mac: MAC address of the initiator.
+        :param iscsi_info: A dictionary that contains information of iSCSI
+                           target like target_name, lun, ip_address, port etc.
+        :raises: IloInvalidInputError, if mac provided is invalid.
+        :raises: IloError, on an error from iLO.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        # Get the Boot resource and Mappings resource.
+        map_uri, map_settings = self._get_bios_mappings_resource(
+            bios_settings)
+        boot_uri, boot_settings = self._get_bios_boot_resource(bios_settings)
+        correlatable_id = None
+        for boot_setting in boot_settings['BootSources']:
+            if(mac in boot_setting['UEFIDevicePath']):
+                correlatable_id = boot_setting['CorrelatableID']
+                break
+
+        if not correlatable_id:
+            msg = ('MAC provided is Invalid')
+            raise exception.IloInvalidInputError(msg)
+
+        nic = None
+        # Get the NIC for the particular mac provided.
+        for map_setting in map_settings['BiosPciSettingsMappings']:
+            sub_instances = map_setting['Subinstances']
+            if sub_instances:
+                for sub_instance in sub_instances:
+                    if(sub_instance['CorrelatableID'] ==
+                       correlatable_id):
+                        # The nic is in the format 'NicBoot1' or 'NicBoot2'
+                        nic = sub_instance['Associations'][0]
+                        break
+                break
+
+        if not nic:
+            msg = ('MAC does not have any corresponding mapping')
+            raise exception.IloError(msg)
+
+        iscsi_uri, settings = self._validate_iscsi_patch()
+        iscsi_info['iSCSIBootAttemptName'] = nic
+        iscsi_info['iSCSINicSource'] = nic
+        iscsi_info['iSCSIBootAttemptInstance'] = 1
+        iscsi_info['iSCSIBootEnable'] = 'Enabled'
+        patch_data = {'iSCSIBootSources': [iscsi_info]}
+        status, headers, response = self._rest_patch(iscsi_uri,
+                                                     None, patch_data)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
     def _change_secure_boot_settings(self, property, value):
         """Change secure boot settings on the server."""
         system = self._get_host_details()
@@ -529,6 +677,41 @@ class RISOperations(operations.IloOperations):
             self._change_bios_setting({'UefiShellStartupUrl': url})
         else:
             msg = 'set_http_boot_url is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def set_iscsi_boot_info(self, mac, target_name, lun, ip_address,
+                            port='3260', auth_method=None, username=None,
+                            password=None):
+        """Set iSCSI details of the system in uefi boot mode.
+
+        The iSCSI initiator is identified by the MAC provided.
+        The initiator system is set with the target details like
+        IQN, LUN, IP, Port etc.
+        :param mac: MAC address of initiator.
+        :param target_name: Target Name for iscsi.
+        :param lun: logical unit number.
+        :param ip_address: IP address of the target.
+        :param port: port of the target.
+        :param auth_method : either None or CHAP.
+        :param username: CHAP Username for authentication.
+        :param password: CHAP secret.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        if(self._validate_uefi_boot_mode() is True):
+            iscsi_info = dict()
+            iscsi_info['iSCSITargetName'] = target_name
+            iscsi_info['iSCSIBootLUN'] = lun
+            iscsi_info['iSCSITargetIpAddress'] = ip_address
+            iscsi_info['iSCSITargetTcpPort'] = int(port)
+            if (auth_method is 'CHAP'):
+                iscsi_info['iSCSIAuthenticationMethod'] = 'Chap'
+                iscsi_info['iSCSIChapUsername'] = username
+                iscsi_info['iSCSIChapSecret'] = password
+            self._change_iscsi_settings(mac.upper(), iscsi_info)
+        else:
+            msg = 'iSCSI boot is not supported in the BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
 
     def get_current_boot_mode(self):
