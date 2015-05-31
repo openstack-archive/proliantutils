@@ -57,6 +57,16 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('set_http_boot_url', 'fake-url')
 
     @mock.patch.object(client.IloClient, '_call_method')
+    def test_set_iscsi_boot_info(self, call_mock):
+        self.client.set_iscsi_boot_info('c456', 'iqn.2011-07.com:example:123',
+                                        '1', '10.10.1.23', '3260', 'CHAP',
+                                        'user', 'password')
+        call_mock.assert_called_once_with('set_iscsi_boot_info', 'c456',
+                                          'iqn.2011-07.com:example:123',
+                                          '1', '10.10.1.23', '3260',
+                                          'CHAP', 'user', 'password')
+
+    @mock.patch.object(client.IloClient, '_call_method')
     def test_get_product_name(self, call_mock):
         self.client.get_product_name()
         call_mock.assert_called_once_with('get_product_name')
