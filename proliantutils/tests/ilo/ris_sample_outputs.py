@@ -737,8 +737,287 @@ GET_BIOS_SETTINGS = """
            }
        }
     }
+
 """
 
+GET_BIOS_BOOT = """
+
+{
+    "AttributeRegistry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BootSources": [
+        {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:0)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x0)"
+        },
+        {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:1)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.2",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x1)"
+        },
+        {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                         331i Adapter - NIC (PXE IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv4",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+                                        (C4346BB7EF30,0x0)/IPv4(0.0.0.0)"
+        },
+        {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                          331i Adapter - NIC (PXE IPv6) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv6",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x0)/IPv6(0000:0000:0000:0000:0000:0000:0000:0000)"
+        },
+        {
+            "BootString": "Generic USB Boot",
+            "CorrelatableID": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+            "StructuredBootString": "Generic.USB.1.1",
+            "UEFIDevicePath": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+        },
+        {
+            "BootString": "iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)",
+            "StructuredBootString": "CD.Virtual.2.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)"
+        }
+    ],
+    "DefaultBootOrder": [
+        "Floppy",
+        "Cd",
+        "Usb",
+        "EmbeddedStorage",
+        "PcieSlotStorage",
+        "EmbeddedFlexLOM",
+        "PcieSlotNic",
+        "UefiShell"
+    ],
+    "Description": "This is the Server Boot Order Current Settings",
+    "DesiredBootDevices": [
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        }
+    ],
+    "Modified": "2015-05-26T23:38:24+00:00",
+    "Name": "Boot Order Current Settings",
+    "PersistentBootConfigOrder": [
+        "HD.Slot.1.1",
+        "HD.Slot.1.2",
+        "NIC.LOM.1.1.IPv4",
+        "NIC.LOM.1.1.IPv6",
+        "Generic.USB.1.1",
+        "CD.Virtual.2.1"
+    ],
+    "SettingsResult": {
+        "ETag": "0DEA61A1609C51EED0628E3B0BC633DD",
+        "Messages": [
+            {
+                "MessageArgs": [
+                    "PersistentBootConfigOrder[0"
+                ],
+                "MessageID": "Base.1.0:PropertyValueNotInList"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ],
+        "Time": "2015-05-14T02:38:40+00:00"
+    },
+    "Type": "HpServerBootSettings.1.2.0",
+    "links": {
+        "BaseConfigs": {
+            "href": "/rest/v1/systems/1/bios/Boot/BaseConfigs"
+        },
+        "Settings": {
+            "href": "/rest/v1/systems/1/bios/Boot/Settings"
+        },
+        "self": {
+            "href": "/rest/v1/systems/1/bios/Boot"
+        }
+    }
+}
+
+"""
+
+GET_BIOS_MAPPINGS = """
+{
+    "Registry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BiosPciSettingsMappings": [
+        {
+            "Associations": [
+                "EmbSata1Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1F,0x2)",
+            "Instance": 1,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "EmbSata2Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x11,0x4)",
+            "Instance": 2,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "EmbNicEnable",
+                {
+                    "PreBootNetwork": "EmbNic"
+                }
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "Instance": 3,
+            "Subinstances": [
+                {
+                 "Associations": [
+                 "NicBoot1"
+                 ],
+                 "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+                 "Subinstance": 1
+                },
+                {
+                 "Associations": [
+                 "NicBoot2"
+                 ],
+                 "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x1)",
+                 "Subinstance": 2
+                },
+                {
+                 "Associations": [
+                 "NicBoot3"
+                 ],
+                 "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x2)",
+                 "Subinstance": 3
+                },
+                {
+                 "Associations": [
+                 "NicBoot4"
+                 ],
+                 "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x3)",
+                 "Subinstance": 4
+                }
+            ]
+        },
+        {
+           "Associations": [
+                "EmbSasEnable"
+           ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1,0x0)/Pci(0x0,0x0)",
+            "Instance": 4,
+           "Subinstances": []
+        },
+        {
+            "Associations": [
+                "FlexLom1Enable",
+                {
+                    "PreBootNetwork": "FlexLom1"
+                }
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x2)/Pci(0x0,0x0)",
+            "Instance": 5,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "PciSlot1Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "Instance": 6,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "PciSlot3Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x3,0x0)/Pci(0x0,0x0)",
+            "Instance": 7,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "PciSlot2Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x3,0x2)/Pci(0x0,0x0)",
+            "Instance": 8,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "Slot1StorageBoot"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+                                                       Scsi(0x0,0x0)",
+            "Instance": 9,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "Slot1StorageBoot"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+                                                       Scsi(0x0,0x1)",
+            "Instance": 10,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "Slot1StorageBoot"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+                     Scsi(0x0,0x0)/HD(1,MBR,0x000677A4,0x800,0x2800)",
+            "Instance": 11,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "Slot1StorageBoot"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+                     Scsi(0x0,0x0)/HD(2,MBR,0x000677A4,0x3000,0x800)",
+            "Instance": 12,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "Slot1StorageBoot"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+                 Scsi(0x0,0x0)/HD(3,MBR,0x000677A4,0x3800,0x6400000)",
+            "Instance": 13,
+            "Subinstances": []
+        }
+    ],
+    "Modified": "2015-05-22T06:48:46+00:00",
+    "Name": "Bios Setting Mapping to Devices",
+    "Type": "HpBiosMapping.1.2.0",
+    "links": {
+        "self": {
+            "href": "/rest/v1/systems/1/bios/Mappings"
+        }
+    }
+}
+"""
 GET_BASE_CONFIG = """
 
 
@@ -920,4 +1199,269 @@ GET_BASE_CONFIG = """
            }
        }
     }
+"""
+GET_ISCSI_PATCH = """
+{
+    "iSCSIBootSources": [
+        {
+            "StructuredBootString": null,
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 1,
+            "iSCSIBootAttemptName": "NicBoot1",
+            "iSCSIBootEnable": "Enabled",
+            "iSCSIBootLUN": "1",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 3,
+            "iSCSIConnectTimeoutMS": 1000,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": false,
+            "iSCSIInitiatorIpAddress": "10.10.1.55",
+            "iSCSIInitiatorNetmask": "255.255.255.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": "NicBoot1",
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": false,
+            "iSCSITargetIpAddress": "10.10.1.30",
+            "iSCSITargetName": "iqn.2011-07.com.example.server:test1",
+            "iSCSITargetTcpPort": 3260
+        },
+        {
+            "StructuredBootString": "MAC:456",
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "",
+            "iSCSIBootEnable": "Disabled",
+            "iSCSIBootLUN": "0",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMs": 0,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": null,
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": true,
+            "iSCSITargetIpAddress": "0.0.0.0",
+            "iSCSITargetName": null,
+            "iSCSITargetTcpPort": 0
+        },
+        {
+            "StructuredBootString": null,
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "",
+            "iSCSIBootEnable": "Disabled",
+            "iSCSIBootLUN": "0",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMs": 0,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": null,
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": true,
+            "iSCSITargetIpAddress": "0.0.0.0",
+            "iSCSITargetName": null,
+            "iSCSITargetTcpPort": 0
+        },
+        {
+            "StructuredBootString": null,
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "",
+            "iSCSIBootEnable": "Disabled",
+            "iSCSIBootLUN": "0",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMs": 0,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": null,
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": true,
+            "iSCSITargetIpAddress": "0.0.0.0",
+            "iSCSITargetName": null,
+            "iSCSITargetTcpPort": 0
+        }
+     ]
+}
+"""
+
+GET_ISCSI_SETTINGS = """
+{
+    "AttributRegistry": "HpBiosAttributeRegistryP89.1.1.00",
+    "Description": "This is the Server iSCSI Software Initiator Current \
+                             Settings",
+    "Modified": "2015-05-28T04:11:55+00:00",
+    "Name": "iSCSI Software Initiator Current Settings",
+    "SettingsResult": {
+        "ETag": "D43535CE",
+        "Messages": [
+            {
+                "MessageArgs": [
+                    "iSCSITargetTcpport"
+                ],
+                "MessageID": "Base.1.0:PropertyUnknown"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ],
+        "Time": "2015-05-28T04:11:55+00:00"
+    },
+    "Type": "HpiSCSISoftwareInitiator.1.0.0",
+    "iSCSIBootSources": [
+        {
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 1,
+            "iSCSIBootAttemptName": "NicBoot1",
+            "iSCSIBootEnable": "Enabled",
+            "iSCSIBootLUN": "1",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMS": 1000,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": "NicBoot1",
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": false,
+            "iSCSITargetIpAddress": "10.10.1.38",
+            "iSCSITargetName": "iqn.2014-07.com.tecmint:tgt1",
+            "iSCSITargetTcpPort": 3260
+        },
+        {
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "test2",
+            "iSCSIBootEnable": "Enabled",
+            "iSCSIBootLUN": "1",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMS": 1000,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": "NicBoot1",
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": false,
+            "iSCSITargetIpAddress": "10.10.1.38",
+            "iSCSITargetName": "iqn.2014-07.com.tecmint:tgt1",
+            "iSCSITargetTcpPort": 3260
+        },
+        {
+            "StructuredBootString": null,
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "",
+            "iSCSIBootEnable": "Disabled",
+            "iSCSIBootLUN": "0",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMS": 100,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": null,
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": true,
+            "iSCSITargetIpAddress": "0.0.0.0",
+            "iSCSITargetName": null,
+            "iSCSITargetTcpPort": 0
+        },
+        {
+            "StructuredBootString": null,
+            "UEFIDevicePath": null,
+            "iSCSIAuthenticationMethod": "None",
+            "iSCSIBootAttemptInstance": 0,
+            "iSCSIBootAttemptName": "",
+            "iSCSIBootEnable": "Disabled",
+            "iSCSIBootLUN": "0",
+            "iSCSIChapSecret": null,
+            "iSCSIChapType": "OneWay",
+            "iSCSIChapUsername": null,
+            "iSCSIConnectRetry": 0,
+            "iSCSIConnectTimeoutMS": 100,
+            "iSCSIInitiatorGateway": "0.0.0.0",
+            "iSCSIInitiatorInfoViaDHCP": true,
+            "iSCSIInitiatorIpAddress": "0.0.0.0",
+            "iSCSIInitiatorNetmask": "0.0.0.0",
+            "iSCSIIpAddressType": "IPv4",
+            "iSCSINicSource": null,
+            "iSCSIReverseChapSecret": null,
+            "iSCSIReverseChapUsername": null,
+            "iSCSITargetInfoViaDHCP": true,
+            "iSCSITargetIpAddress": "0.0.0.0",
+            "iSCSITargetName": null,
+            "iSCSITargetTcpPort": 0
+        }
+    ],
+    "iSCSIInitiatorName": "iqn.1986-03.com.hp:uefi-p89-mxq45006w5",
+    "iSCSINicSources": [
+        "NicBoot1",
+        "NicBoot2",
+        "NicBoot3",
+        "NicBoot4"
+    ],
+    "links": {
+        "BaseConfigs": {
+            "href": "/rest/v1/systems/1/bios/iScsi/BaseConfigs"
+        },
+        "Mappings": {
+            "href": "/rest/v1/systems/1/bios/Mappings"
+        },
+        "Settings": {
+            "href": "/rest/v1/systems/1/bios/iScsi/Settings"
+        },
+        "self": {
+            "href": "/rest/v1/systems/1/bios/iScsi"
+        }
+    }
+}
+
 """
