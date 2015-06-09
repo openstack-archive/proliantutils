@@ -19,11 +19,43 @@ import json
 import unittest
 
 import mock
+import requests
+from requests.packages import urllib3
+from requests.packages.urllib3 import exceptions as urllib3_exceptions
 
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ribcl
 from proliantutils.tests.ilo import ribcl_sample_outputs as constants
+
+
+class IloRibclTestCaseInitTestCase(unittest.TestCase):
+
+    @mock.patch.object(urllib3, 'disable_warnings')
+    def test_init(self, disable_warning_mock):
+        ribcl_client = ribcl.RIBCLOperations(
+            "x.x.x.x", "admin", "Admin", 60, 443, cacert='/somepath')
+
+        self.assertEqual(ribcl_client.host, "x.x.x.x")
+        self.assertEqual(ribcl_client.login, "admin")
+        self.assertEqual(ribcl_client.password, "Admin")
+        self.assertEqual(ribcl_client.timeout, 60)
+        self.assertEqual(ribcl_client.port, 443)
+        self.assertEqual(ribcl_client.cacert, '/somepath')
+
+    @mock.patch.object(urllib3, 'disable_warnings')
+    def test_init_without_cacert(self, disable_warning_mock):
+        ribcl_client = ribcl.RIBCLOperations(
+            "x.x.x.x", "admin", "Admin", 60, 443)
+
+        self.assertEqual(ribcl_client.host, "x.x.x.x")
+        self.assertEqual(ribcl_client.login, "admin")
+        self.assertEqual(ribcl_client.password, "Admin")
+        self.assertEqual(ribcl_client.timeout, 60)
+        self.assertEqual(ribcl_client.port, 443)
+        self.assertIsNone(ribcl_client.cacert)
+        disable_warning_mock.assert_called_once_with(
+            urllib3_exceptions.InsecureRequestWarning)
 
 
 class IloRibclTestCase(unittest.TestCase):
@@ -32,9 +64,58 @@ class IloRibclTestCase(unittest.TestCase):
         super(IloRibclTestCase, self).setUp()
         self.ilo = ribcl.RIBCLOperations("x.x.x.x", "admin", "Admin", 60, 443)
 
-    def test__request_ilo_connection_failed(self):
+    @mock.patch.object(ribcl.RIBCLOperations, '_serialize_xml')
+    @mock.patch.object(requests, 'post')
+    def test__request_ilo_without_verify(self, post_mock, serialize_mock):
+        response_mock = mock.MagicMock(text='returned-text')
+        serialize_mock.return_value = 'serialized-xml'
+        post_mock.return_value = response_mock
+
+        retval = self.ilo._request_ilo('xml-obj')
+
+        post_mock.assert_called_once_with(
+            'https://x.x.x.x:443/ribcl',
+            headers={"Content-length": 14},
+            data='serialized-xml',
+            verify=False)
+        response_mock.raise_for_status.assert_called_once_with()
+        self.assertEqual('returned-text', retval)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_serialize_xml')
+    @mock.patch.object(requests, 'post')
+    def test__request_ilo_with_verify(self, post_mock, serialize_mock):
+        self.ilo = ribcl.RIBCLOperations(
+            "x.x.x.x", "admin", "Admin", 60, 443,
+            cacert='/somepath')
+        response_mock = mock.MagicMock(text='returned-text')
+        serialize_mock.return_value = 'serialized-xml'
+        post_mock.return_value = response_mock
+
+        retval = self.ilo._request_ilo('xml-obj')
+
+        post_mock.assert_called_once_with(
+            'https://x.x.x.x:443/ribcl',
+            headers={"Content-length": 14},
+            data='serialized-xml',
+            verify='/somepath')
+        response_mock.raise_for_status.assert_called_once_with()
+        self.assertEqual('returned-text', retval)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_serialize_xml')
+    @mock.patch.object(requests, 'post')
+    def test__request_ilo_raises(self, post_mock, serialize_mock):
+        serialize_mock.return_value = 'serialized-xml'
+        post_mock.side_effect = Exception
+
         self.assertRaises(exception.IloConnectionError,
-                          self.ilo.get_all_licenses)
+                          self.ilo._request_ilo,
+                          'xml-obj')
+
+        post_mock.assert_called_once_with(
+            'https://x.x.x.x:443/ribcl',
+            headers={"Content-length": 14},
+            data='serialized-xml',
+            verify=False)
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_login_fail(self, request_ilo_mock):
@@ -339,6 +420,43 @@ class IloRibclTestCase(unittest.TestCase):
             self.assertIn('MINIMUM_POWER_READING', result)
             self.assertIn('AVERAGE_POWER_READING', result)
 
+    @mock.patch.object(requests, 'get')
+    def test__request_host_with_verify(self, request_mock):
+        self.ilo = ribcl.RIBCLOperations(
+            "x.x.x.x", "admin", "Admin", 60, 443,
+            cacert='/somepath')
+        response_mock = mock.MagicMock(text='foo')
+        request_mock.return_value = response_mock
+
+        retval = self.ilo._request_host()
+
+        request_mock.assert_called_once_with(
+            "https://x.x.x.x/xmldata?item=all", verify='/somepath')
+        response_mock.raise_for_status.assert_called_once_with()
+        self.assertEqual('foo', retval)
+
+    @mock.patch.object(requests, 'get')
+    def test__request_host_without_verify(self, request_mock):
+        response_mock = mock.MagicMock(text='foo')
+        request_mock.return_value = response_mock
+
+        retval = self.ilo._request_host()
+
+        request_mock.assert_called_once_with(
+            "https://x.x.x.x/xmldata?item=all", verify=False)
+        response_mock.raise_for_status.assert_called_once_with()
+        self.assertEqual('foo', retval)
+
+    @mock.patch.object(requests, 'get')
+    def test__request_host_raises(self, request_mock):
+        request_mock.side_effect = Exception
+
+        self.assertRaises(exception.IloConnectionError,
+                          self.ilo._request_host)
+
+        request_mock.assert_called_once_with(
+            "https://x.x.x.x/xmldata?item=all", verify=False)
+
     @mock.patch.object(ribcl.RIBCLOperations, '_request_host')
     def test_get_host_uuid(self, request_host_mock):
         request_host_mock.return_value = constants.GET_HOST_UUID
@@ -542,10 +660,6 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
     def setUp(self):
         super(IloRibclTestCaseBeforeRisSupport, self).setUp()
         self.ilo = ribcl.IloClient("x.x.x.x", "admin", "Admin", 60, 443)
-
-    def test__request_ilo_connection_failed(self):
-        self.assertRaises(ribcl.IloConnectionError,
-                          self.ilo.get_all_licenses)
 
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
     def test_login_fail(self, request_ilo_mock):

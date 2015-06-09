@@ -26,6 +26,31 @@ from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ribcl_sample_outputs as constants
 
 
+class IloClientInitTestCase(testtools.TestCase):
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init(self, ris_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+
+        c = client.IloClient("1.2.3.4", "admin", "Admin",
+                             timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ris_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertEqual('product', c.model)
+
+
 class IloClientTestCase(testtools.TestCase):
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
