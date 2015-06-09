@@ -331,3 +331,8 @@ class IloClientTestCase(testtools.TestCase):
                                  'nic_capacity': '10Gb'}
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_activate_license(self, call_mock):
+        self.client.activate_license('fake-key')
+        call_mock.assert_called_once_with('activate_license', 'fake-key')

@@ -6703,3 +6703,37 @@ FIRMWARE_EMBEDDED_HEALTH_OUTPUT = '''
     "Power Management Controller Firmware": "4.1"
 }
 '''
+
+ACTIVATE_LICENSE_XML = '''
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+    />
+</RIBCL>
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+    />
+</RIBCL>
+'''
+
+ACTIVATE_LICENSE_FAIL_XML = '''
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE='No error'
+    />
+</RIBCL>
+<?xml version="1.0"?>
+<RIBCL VERSION="2.23">
+<RESPONSE
+    STATUS="0x002E"
+    MESSAGE='License key error'
+     />
+</RIBCL>
+'''

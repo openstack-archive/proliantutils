@@ -307,6 +307,35 @@ class IloRisTestCase(testtools.TestCase):
         self.assertIn('ilo_firmware_version', ilo_firm)
         self.assertEqual(expected_ilo_firm, ilo_firm)
 
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_activate_license(self, get_ilo_details_mock, post_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        uri = '/rest/v1/Managers/1'
+        license_uri = "/rest/v1/Managers/1/LicenseService"
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        post_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_POST_RESPONSE)
+        self.client.activate_license('testkey')
+        get_ilo_details_mock.assert_called_once_with()
+        post_mock.assert_called_once_with(license_uri, None,
+                                          {'LicenseKey': 'testkey'})
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_activate_license_fail(self, get_ilo_details_mock, post_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        uri = '/rest/v1/Managers/1'
+        license_uri = "/rest/v1/Managers/1/LicenseService"
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        post_mock.return_value = (500, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError, self.client.activate_license,
+                          'testkey')
+        get_ilo_details_mock.assert_called_once_with()
+        post_mock.assert_called_once_with(license_uri, None,
+                                          {'LicenseKey': 'testkey'})
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
