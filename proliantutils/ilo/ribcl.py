@@ -21,9 +21,10 @@ import re
 import xml.etree.ElementTree as etree
 
 from oslo_utils import strutils
+import requests
+from requests.packages import urllib3
+from requests.packages.urllib3 import exceptions as urllib3_exceptions
 import six
-from six.moves.urllib import error as urllib_error
-from six.moves.urllib import request
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -49,12 +50,21 @@ class RIBCLOperations(operations.IloOperations):
     Implements the base class using RIBCL scripting language to talk
     to the iLO.
     """
-    def __init__(self, host, login, password, timeout=60, port=443):
+    def __init__(self, host, login, password, timeout=60, port=443,
+                 cacert=None):
         self.host = host
         self.login = login
         self.password = password
         self.timeout = timeout
         self.port = port
+        self.cacert = cacert
+
+        # By default, requests logs following message if verify=False
+        #   InsecureRequestWarning: Unverified HTTPS request is
+        #   being made. Adding certificate verification is strongly advised.
+        # Just disable the warning if user intentionally did this.
+        if self.cacert is None:
+            urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
@@ -69,14 +79,19 @@ class RIBCLOperations(operations.IloOperations):
         else:
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
+        headers = {"Content-length": len(xml)}
+        kwargs = {'headers': headers, 'data': xml}
+        if self.cacert is not None:
+            kwargs['verify'] = self.cacert
+        else:
+            kwargs['verify'] = False
+
         try:
-            req = request.Request(url=urlstr, data=xml.encode('ascii'))
-            req.add_header("Content-length", len(xml))
-            data = request.urlopen(req).read()
-        except (ValueError, urllib_error.URLError,
-                urllib_error.HTTPError) as e:
+            response = requests.post(urlstr, **kwargs)
+            response.raise_for_status()
+        except Exception as e:
             raise exception.IloConnectionError(e)
-        return data
+        return response.text
 
     def _create_dynamic_xml(self, cmdname, tag_name, mode, subelements=None):
         """Create RIBCL XML to send to iLO.
@@ -528,15 +543,19 @@ class RIBCLOperations(operations.IloOperations):
 
     def _request_host(self):
         """Request host info from the server."""
-        urlstr = 'http://%s/xmldata?item=all' % (self.host)
+        urlstr = 'https://%s/xmldata?item=all' % (self.host)
+        kwargs = {}
+        if self.cacert is not None:
+            kwargs['verify'] = self.cacert
+        else:
+            kwargs['verify'] = False
         try:
-            req = request.Request(url=urlstr)
-            xml = request.urlopen(req).read()
-        except (ValueError, urllib_error.URLError,
-                urllib_error.HTTPError) as e:
+            response = requests.get(urlstr, **kwargs)
+            response.raise_for_status()
+        except Exception as e:
             raise IloConnectionError(e)
 
-        return xml
+        return response.text
 
     def get_host_uuid(self):
         """Request host UUID of the server.

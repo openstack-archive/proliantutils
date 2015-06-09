@@ -41,10 +41,12 @@ SUPPORTED_RIS_METHODS = [
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
-                 bios_password=None):
+                 bios_password=None, cacert=None):
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
-                                           port)
-        self.ris = ris.RISOperations(host, login, password, bios_password)
+                                           port, cacert=cacert)
+        self.ris = ris.RISOperations(host, login, password,
+                                     bios_password=bios_password,
+                                     cacert=cacert)
         self.info = {'address': host, 'username': login, 'password': password}
         self.model = self.ribcl.get_product_name()
 
