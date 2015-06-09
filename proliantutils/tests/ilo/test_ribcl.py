@@ -524,6 +524,18 @@ class IloRibclTestCase(unittest.TestCase):
         result = self.ilo._get_nic_boot_devices(data)
         self.assertEqual(result, expected)
 
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_activate_license_ok(self, request_mock):
+        request_mock.return_value = constants.ACTIVATE_LICENSE_XML
+        self.ilo.activate_license("testkey")
+        self.assertTrue(request_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_activate_license_invalid(self, request_mock):
+        request_mock.return_value = constants.ACTIVATE_LICENSE_FAIL_XML
+        self.assertRaises(exception.IloError, self.ilo.activate_license, 'key')
+        self.assertTrue(request_mock.called)
+
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
 

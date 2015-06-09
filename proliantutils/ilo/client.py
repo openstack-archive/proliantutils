@@ -324,3 +324,13 @@ class IloClient(operations.IloOperations):
             capabilities.update({'nic_capacity': nic_capacity})
         if capabilities:
             return capabilities
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param: license key
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('activate_license', key)
