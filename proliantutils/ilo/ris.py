@@ -19,8 +19,9 @@ import gzip
 import hashlib
 import json
 
+import requests
+from requests.packages.urllib3 import exceptions as urllib3_exceptions
 import six
-from six.moves import http_client
 from six.moves.urllib import parse as urlparse
 
 from proliantutils import exception
@@ -35,13 +36,23 @@ TODO : Add rest of the API's that exists in RIBCL. """
 
 class RISOperations(operations.IloOperations):
 
-    def __init__(self, host, login, password, bios_password=None):
+    def __init__(self, host, login, password, bios_password=None,
+                 cacert=None):
         self.host = host
         self.login = login
         self.password = password
         self.bios_password = bios_password
         # Message registry support
         self.message_registries = {}
+        self.cacert = cacert
+
+        # By default, requests logs following message if verify=False
+        #   InsecureRequestWarning: Unverified HTTPS request is
+        #   being made. Adding certificate verification is strongly advised.
+        # Just disable the warning if user intentionally did this.
+        if self.cacert is None:
+            requests.packages.urllib3.disable_warnings(
+                urllib3_exceptions.InsecureRequestWarning)
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
@@ -62,19 +73,17 @@ class RISOperations(operations.IloOperations):
 
         redir_count = 5
         while redir_count:
-            conn = None
-            if url.scheme == 'https':
-                conn = http_client.HTTPSConnection(host=url.netloc,
-                                                   strict=True)
-            elif url.scheme == 'http':
-                conn = http_client.HTTPConnection(host=url.netloc,
-                                                  strict=True)
+            kwargs = {'headers': request_headers,
+                      'data': json.dumps(request_body)}
+            if self.cacert is not None:
+                kwargs['verify'] = self.cacert
+            else:
+                kwargs['verify'] = False
 
+            request_method = getattr(requests, operation.lower())
+            response = None
             try:
-                conn.request(operation, url.path, headers=request_headers,
-                             body=json.dumps(request_body))
-                resp = conn.getresponse()
-                body = resp.read()
+                response = request_method(url.geturl(), **kwargs)
             except Exception as e:
                 raise exception.IloConnectionError(e)
 
@@ -86,11 +95,9 @@ class RISOperations(operations.IloOperations):
 
             # NOTE:  this makes sure the headers names are all lower cases
             # because HTTP says they are case insensitive
-            headers = dict((x.lower(), y) for x, y in resp.getheaders())
-
             # Follow HTTP redirect
-            if resp.status == 301 and 'location' in headers:
-                url = urlparse.urlparse(headers['location'])
+            if response.status_code == 301 and 'location' in response.headers:
+                url = urlparse.urlparse(response.headers['location'])
                 redir_count -= 1
             else:
                 break
@@ -100,23 +107,26 @@ class RISOperations(operations.IloOperations):
                    "URL incorrect: %s" % start_url)
             raise exception.IloConnectionError(msg)
 
-        response = dict()
-        try:
-            if body:
-                response = json.loads(body)
-        except (ValueError, TypeError):
-            # if it doesn't decode as json
-            # NOTE:  resources may return gzipped content
-            # try to decode as gzip (we should check the headers for
-            # Content-Encoding=gzip)
+        response_body = {}
+        if response.text:
             try:
-                gzipper = gzip.GzipFile(fileobj=six.BytesIO(body))
-                uncompressed_string = gzipper.read().decode('UTF-8')
-                response = json.loads(uncompressed_string)
-            except Exception as e:
-                raise exception.IloError(e)
+                response_body = json.loads(response.text)
+            except (TypeError, ValueError):
+                # if it doesn't decode as json
+                # NOTE:  resources may return gzipped content
+                # try to decode as gzip (we should check the headers for
+                # Content-Encoding=gzip)
+                # NOTE: json.loads on python3 raises TypeError when
+                # response.text is gzipped one.
+                try:
+                    gzipper = gzip.GzipFile(
+                        fileobj=six.BytesIO(response.text))
+                    uncompressed_string = gzipper.read().decode('UTF-8')
+                    response_body = json.loads(uncompressed_string)
+                except Exception as e:
+                    raise exception.IloError(e)
 
-        return resp.status, headers, response
+        return response.status_code, response.headers, response_body
 
     def _rest_get(self, suburi, request_headers=None):
         """REST GET operation.
