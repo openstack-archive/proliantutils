@@ -947,6 +947,18 @@ class RIBCLOperations(operations.IloOperations):
 
         return {'pci_gpu_devices': count}
 
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        """
+        root = self._create_dynamic_xml('LICENSE', 'RIB_INFO', 'write')
+        element = root.find('LOGIN/RIB_INFO/LICENSE')
+        etree.SubElement(element, 'ACTIVATE', KEY=key)
+        d = self._request_ilo(root)
+        self._parse_output(d)
+
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
 IloClient = RIBCLOperations

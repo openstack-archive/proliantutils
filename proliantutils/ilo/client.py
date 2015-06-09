@@ -19,6 +19,7 @@ from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 
 SUPPORTED_RIS_METHODS = [
+    'activate_license',
     'clear_secure_boot_keys',
     'get_current_boot_mode',
     'get_host_power_status',
@@ -324,3 +325,13 @@ class IloClient(operations.IloOperations):
             capabilities.update({'nic_capacity': nic_capacity})
         if capabilities:
             return capabilities
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('activate_license', key)

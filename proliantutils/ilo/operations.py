@@ -281,3 +281,13 @@ class IloOperations(object):
                  on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

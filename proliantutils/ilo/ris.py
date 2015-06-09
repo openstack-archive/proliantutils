@@ -614,8 +614,8 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        reset_uri = '/rest/v1/Managers/1'
-        status, headers, manager = self._rest_get(reset_uri)
+        manager_uri = '/rest/v1/Managers/1'
+        status, headers, manager = self._rest_get(manager_uri)
 
         if status != 200:
             msg = self._get_extended_error(manager)
@@ -627,7 +627,7 @@ class RISOperations(operations.IloOperations):
             msg = "%s is not a valid Manager type " % mtype
             raise exception.IloError(msg)
 
-        return manager, reset_uri
+        return manager, manager_uri
 
     def reset_ilo(self):
         """Resets the iLO.
@@ -728,3 +728,28 @@ class RISOperations(operations.IloOperations):
             # secure_boot
             pass
         return capabilities
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        manager, uri = self._get_ilo_details()
+        try:
+            lic_uri = manager['Oem']['Hp']['links']['LicenseService']['href']
+        except KeyError:
+            msg = ('"LicenseService" section in Manager/Oem/Hp does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        lic_key = dict()
+        lic_key['LicenseKey'] = key
+
+        # Perform POST to activate license
+        status, headers, response = self._rest_post(lic_uri, None, lic_key)
+
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
