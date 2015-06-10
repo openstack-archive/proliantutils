@@ -15,8 +15,8 @@
 import re
 import time
 
-from oslo.concurrency import processutils
-from oslo.utils import strutils
+from oslo_concurrency import processutils
+from oslo_utils import strutils
 
 from proliantutils import exception
 from proliantutils.hpssa import constants
