@@ -15,7 +15,7 @@ import glob
 import os
 import stat
 
-from oslo.concurrency import processutils
+from oslo_concurrency import processutils
 import testtools
 
 from proliantutils.hpssa import constants

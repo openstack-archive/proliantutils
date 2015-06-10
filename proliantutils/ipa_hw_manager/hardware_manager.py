@@ -13,7 +13,7 @@
 # under the License.
 
 from ironic_python_agent import hardware
-from oslo.concurrency import processutils
+from oslo_concurrency import processutils
 
 from proliantutils.hpssa import manager as hpssa_manager
 

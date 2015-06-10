@@ -15,7 +15,7 @@
 import sys
 
 import mock
-from oslo.utils import importutils
+from oslo_utils import importutils
 
 ironic_python_agent = importutils.try_import('ironic_python_agent')
 if not ironic_python_agent:

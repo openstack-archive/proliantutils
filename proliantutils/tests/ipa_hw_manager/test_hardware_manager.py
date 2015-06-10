@@ -13,7 +13,7 @@
 # under the License.
 
 import mock
-from oslo.concurrency import processutils
+from oslo_concurrency import processutils
 import testtools
 
 from proliantutils.hpssa import manager as hpssa_manager
