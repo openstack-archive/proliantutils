@@ -949,3 +949,54 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_firmware_update_service_resource(self):
+        """Gets the firmware update service URI."""
+
+        manager, uri = self._get_ilo_details()
+        try:
+            fw_uri = manager['Oem']['Hp']['links']['UpdateService']['href']
+        except KeyError:
+            msg = ("Firmware Update Service resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return fw_uri
+
+    def update_firmware(self, url):
+        """Updates given firmware.
+
+        :param url: http url of the firmware to be updated.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        update_service_uri = self._get_firmware_update_service_resource()
+        action = dict()
+        action['Action'] = 'InstallFromURI'
+        action['FirmwareURI'] = url
+        # perform the POST
+        status, headers, response = self._rest_post(update_service_uri, None,
+                                                    action)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def check_firmware_progress(self):
+        """Checks the progress of the firmware update.
+
+        :returns: type of device is being updated, firmware progress percent
+                  and state of the firmware update.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        update_service_uri = self._get_firmware_update_service_resource()
+        status, headers, response = self._rest_get(update_service_uri)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+        result = dict()
+        result['image_type'] = response['ImageType']
+        result['progress_percent'] = response['ProgressPercent']
+        result['state'] = response['State']
+        return result
