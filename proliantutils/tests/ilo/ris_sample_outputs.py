@@ -1200,6 +1200,7 @@ GET_BASE_CONFIG = """
        }
     }
 """
+
 GET_ISCSI_PATCH = """
 {
     "iSCSIBootSources": [
@@ -1369,5 +1370,35 @@ GET_ISCSI_SETTINGS = """
         }
     }
 }
+"""
 
+
+GET_UPDATE_RESOURCE = """
+{
+    "AvailableActions": [
+        {
+            "Action": "InstallFromURI",
+            "Capabilities": [
+                {
+                    "PropertyName": "FirmwareURI"
+                }
+            ]
+        }
+    ],
+    "Details": "",
+    "Flags": "NONE",
+    "ImageType": "ILO_DEVICE",
+    "Name": "Update Service",
+    "ProgressPercent": 30,
+    "State": "PROGRESSING",
+    "Type": "HpiLOFirmwareUpdate.0.9.5",
+    "links": {
+        "UpdateUri": {
+            "extref": "/cgi-bin/uploadFile"
+        },
+        "self": {
+            "href": "/rest/v1/Managers/1/UpdateService"
+        }
+    }
+}
 """
