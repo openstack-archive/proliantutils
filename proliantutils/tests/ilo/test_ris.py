@@ -407,6 +407,65 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.activate_license, 'testkey')
         get_ilo_details_mock.assert_called_once_with()
 
+    @mock.patch.object(ris.RISOperations,
+                       '_get_firmware_update_service_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test__update_firmware_ok(self, post_mock, get_fw_mock):
+        update_uri = '/rest/v1/Managers/1/UpdateService'
+        expected_dict = {'Action': 'InstallFromURI',
+                         'FirmwareURI': 'fake-url'}
+        get_fw_mock.return_value = update_uri
+        post_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_POST_RESPONSE)
+        self.client.update_firmware('fake-url')
+        post_mock.assert_called_once_with(update_uri, None, expected_dict)
+        get_fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations,
+                       '_get_firmware_update_service_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test__update_firmware_fail(self, post_mock, get_fw_mock):
+        update_uri = '/rest/v1/Managers/1/UpdateService'
+        expected_dict = {'Action': 'InstallFromURI',
+                         'FirmwareURI': 'fake-url'}
+        get_fw_mock.return_value = update_uri
+        post_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_POST_RESPONSE)
+        self.assertRaises(exception.IloError,
+                          self.client.update_firmware, 'fake-url')
+        post_mock.assert_called_once_with(update_uri, None, expected_dict)
+        get_fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations,
+                       '_get_firmware_update_service_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__check_firmware_progress(self, update_mock, get_fw_mock):
+        update_uri = '/rest/v1/Managers/1/UpdateService'
+        expected_dict = {'ImageType': 'ILO_DEVICE',
+                         'State': 'PROGRESSING',
+                         'ProgressPercent': 30}
+        get_fw_mock.return_value = update_uri
+        update_details = json.loads(ris_outputs.GET_UPDATE_RESOURCE)
+        update_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                    update_details)
+        res = self.client.check_firmware_progress()
+        self.assertEqual(expected_dict, res)
+        get_fw_mock.assert_called_once_with()
+        update_mock.assert_called_once_with(update_uri)
+
+    @mock.patch.object(ris.RISOperations,
+                       '_get_firmware_update_service_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__check_firmware_progress_fail(self, update_mock, get_fw_mock):
+        update_uri = '/rest/v1/Managers/1/UpdateService'
+        get_fw_mock.return_value = update_uri
+        update_mock.return_value = (201, ris_outputs.GET_HEADERS,
+                                    ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client.check_firmware_progress)
+        get_fw_mock.assert_called_once_with()
+        update_mock.assert_called_once_with(update_uri)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
@@ -914,3 +973,19 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           settings)
         get_mock.assert_called_once_with(
             '/rest/v1/systems/1/bios/iScsi/Settings')
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test__get_firmware_update_service_resource(self, get_ilo_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        fw_uri = '/rest/v1/Managers/1/UpdateService'
+        get_ilo_mock.return_value = ilo_details, 'fake-uri'
+        res = self.client._get_firmware_update_service_resource()
+        self.assertEqual(fw_uri, res)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test__get_firmware_update_service_resource_fail(self, get_ilo_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        del ilo_details['Oem']['Hp']['links']['UpdateService']
+        get_ilo_mock.return_value = ilo_details, 'fake-uri'
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_firmware_update_service_resource)

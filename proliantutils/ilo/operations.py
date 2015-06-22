@@ -288,7 +288,6 @@ class IloOperations(object):
         :returns: a dictionary containing memory size, disk size,
                   number of cpus, cpu arch, port numbers and
                   mac addresses.
-        :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
@@ -298,7 +297,6 @@ class IloOperations(object):
         """Get hardware properties which can be used for scheduling
 
         :return: a dictionary of server capabilities.
-        :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
@@ -308,7 +306,23 @@ class IloOperations(object):
         """Activates iLO license.
 
         :param key: iLO license key.
-        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server.
+
+        :param url: location of the firmware.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def check_firmware_progress(self):
+        """Get the status of the firmware update.
+
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """

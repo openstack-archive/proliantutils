@@ -20,6 +20,7 @@ from proliantutils.ilo import ris
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
+    'check_firmware_progress'
     'clear_secure_boot_keys',
     'get_current_boot_mode',
     'get_host_power_status',
@@ -34,7 +35,8 @@ SUPPORTED_RIS_METHODS = [
     'set_pending_boot_mode',
     'set_secure_boot_mode',
     'get_server_capabilities',
-    'set_iscsi_boot_info'
+    'set_iscsi_boot_info',
+    'update_firmware'
     ]
 
 
@@ -362,3 +364,24 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server.
+
+        :param url: location of the firmware.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('update_firmware', url)
+
+    def check_firmware_progress(self):
+        """Get the status of the firmware update.
+
+        :returns: type of device being updated, firmware progress percent
+                  and state of the firmware update.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('check_firmware_progress')

@@ -371,3 +371,13 @@ class IloClientTestCase(testtools.TestCase):
     def test_activate_license(self, call_mock):
         self.client.activate_license('fake-key')
         call_mock.assert_called_once_with('activate_license', 'fake-key')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_update_firmware(self, call_mock):
+        self.client.update_firmware('fake-url')
+        call_mock.assert_called_once_with('update_firmware', 'fake-url')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_check_firmware_progress(self, call_mock):
+        self.client.check_firmware_progress()
+        call_mock.assert_called_once_with('check_firmware_progress')
