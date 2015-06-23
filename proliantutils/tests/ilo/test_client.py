@@ -371,3 +371,59 @@ class IloClientTestCase(testtools.TestCase):
     def test_activate_license(self, call_mock):
         self.client.activate_license('fake-key')
         call_mock.assert_called_once_with('activate_license', 'fake-key')
+
+    @mock.patch.object(ris.RISOperations, 'eject_virtual_media')
+    def test_eject_virtual_media_gen9(self, eject_virtual_media_mock):
+        self.client.model = 'Gen9'
+        self.client.eject_virtual_media(device='FLOPPY')
+        eject_virtual_media_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'eject_virtual_media')
+    def test_eject_virtual_media_gen8(self, eject_virtual_media_mock):
+        self.client.model = 'Gen8'
+        self.client.eject_virtual_media(device='FLOPPY')
+        eject_virtual_media_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ris.RISOperations, 'get_vm_status')
+    def test_get_vm_status_gen9(self, get_vm_status_mock):
+        self.client.model = 'Gen9'
+        self.client.get_vm_status(device='FLOPPY')
+        get_vm_status_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_vm_status')
+    def test_get_vm_status_gen8(self, get_vm_status_mock):
+        self.client.model = 'Gen8'
+        self.client.get_vm_status(device='FLOPPY')
+        get_vm_status_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ris.RISOperations, 'set_vm_status')
+    def test_set_vm_status_gen9(self, set_vm_status_mock):
+        self.client.model = 'Gen9'
+        self.client.set_vm_status(device='FLOPPY', boot_option='BOOT_ONCE',
+                                  write_protect='YES')
+        set_vm_status_mock.assert_called_once_with('FLOPPY', 'BOOT_ONCE',
+                                                   'YES')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_vm_status')
+    def test_set_vm_status_gen8(self, set_vm_status_mock):
+        self.client.model = 'Gen8'
+        self.client.set_vm_status(device='FLOPPY', boot_option='BOOT_ONCE',
+                                  write_protect='YES')
+        set_vm_status_mock.assert_called_once_with('FLOPPY', 'BOOT_ONCE',
+                                                   'YES')
+
+    @mock.patch.object(ris.RISOperations, 'insert_virtual_media')
+    def test_insert_virtual_media_gen9(self, insert_virtual_media_mock):
+        self.client.model = 'Gen9'
+        self.client.insert_virtual_media(url="http://ilo/fpy.iso",
+                                         device='FLOPPY')
+        insert_virtual_media_mock.assert_called_once_with("http://ilo/fpy.iso",
+                                                          "FLOPPY")
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'insert_virtual_media')
+    def test_insert_virtual_media_gen8(self, insert_virtual_media_mock):
+        self.client.model = 'Gen8'
+        self.client.insert_virtual_media(url="http://ilo/fpy.iso",
+                                         device='FLOPPY')
+        insert_virtual_media_mock.assert_called_once_with("http://ilo/fpy.iso",
+                                                          "FLOPPY")

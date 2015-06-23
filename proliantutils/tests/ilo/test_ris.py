@@ -407,6 +407,186 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.activate_license, 'testkey')
         get_ilo_details_mock.assert_called_once_with()
 
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_get_vm_status_floppy_empty(self, get_vm_device_status_mock):
+        floppy_resp = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_EMPTY)
+        device_uri = floppy_resp["links"]["self"]["href"]
+        get_vm_device_status_mock.return_value = (floppy_resp, device_uri)
+        exp_result = json.loads(ris_outputs.GET_VM_STATUS_FLOPPY_EMPTY)
+        result = self.client.get_vm_status('FLOPPY')
+        self.assertEqual(result, exp_result)
+        get_vm_device_status_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_get_vm_status_floppy_inserted(self, get_vm_device_status_mock):
+        floppy_resp = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_INSERTED)
+        device_uri = floppy_resp["links"]["self"]["href"]
+        get_vm_device_status_mock.return_value = (floppy_resp, device_uri)
+        exp_result = json.loads(ris_outputs.GET_VM_STATUS_FLOPPY_INSERTED)
+        result = self.client.get_vm_status('FLOPPY')
+        self.assertEqual(result, exp_result)
+        get_vm_device_status_mock.assert_called_once_with('FLOPPY')
+
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_get_vm_status_cdrom_empty(self, get_vm_device_status_mock):
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_status_mock.return_value = (cdrom_resp, device_uri)
+        exp_result = json.loads(ris_outputs.GET_VM_STATUS_CDROM_EMPTY)
+        result = self.client.get_vm_status('CDROM')
+        self.assertEqual(result, exp_result)
+        get_vm_device_status_mock.assert_called_once_with('CDROM')
+
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_get_vm_status_cdrom_inserted(self, get_vm_device_status_mock):
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_status_mock.return_value = (cdrom_resp, device_uri)
+        exp_result = json.loads(ris_outputs.GET_VM_STATUS_CDROM_INSERTED)
+        result = self.client.get_vm_status('CDROM')
+        self.assertEqual(result, exp_result)
+        get_vm_device_status_mock.assert_called_once_with('CDROM')
+
+    def test_set_vm_status_cdrom_connect(self):
+        self.client.set_vm_status('CDROM', boot_option='CONNECT')
+
+    def test_set_vm_status_cdrom_invalid_arg(self):
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.set_vm_status,
+                          device='CDROM',
+                          boot_option='FOO')
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_set_vm_status_cdrom(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = json.loads(ris_outputs.PATCH_VM_CDROM)
+
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client.set_vm_status(device='CDROM', boot_option='BOOT_ONCE')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_set_vm_status_cdrom_fail(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = json.loads(ris_outputs.PATCH_VM_CDROM)
+
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client.set_vm_status,
+                          device='CDROM', boot_option='BOOT_ONCE')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_insert_virtual_media(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = {'Image': 'http://1.1.1.1/cdrom.iso'}
+
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client.insert_virtual_media('http://1.1.1.1/cdrom.iso',
+                                         device='CDROM')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, 'eject_virtual_media')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_insert_virtual_media_reload(self,
+                                         get_vm_device_mock,
+                                         eject_virtual_media_mock,
+                                         patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = {'Image': 'http://1.1.1.1/cdrom.iso'}
+
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client.insert_virtual_media('http://1.1.1.1/cdrom.iso',
+                                         device='CDROM')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        eject_virtual_media_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_insert_virtual_media_fail(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = {'Image': 'http://1.1.1.1/cdrom.iso'}
+
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client.insert_virtual_media,
+                          'http://1.1.1.1/cdrom.iso', device='CDROM')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_eject_virtual_media(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = {'Image': None}
+
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client.eject_virtual_media(device='CDROM')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_eject_virtual_media_fail(self, get_vm_device_mock, patch_mock):
+        vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        vm_patch = {'Image': None}
+
+        patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client.eject_virtual_media, device='CDROM')
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
@@ -914,3 +1094,93 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           settings)
         get_mock.assert_called_once_with(
             '/rest/v1/systems/1/bios/iScsi/Settings')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    @mock.patch.object(ris.RISOperations, '_get_collection')
+    def test__get_vm_device_status(self,
+                                   collection_mock,
+                                   ilo_details_mock,
+                                   get_mock):
+        manager_uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+
+        ilo_details_mock.return_value = (manager_data, manager_uri)
+
+        collection_item = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_EMPTY)
+        vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
+        member_uri = '/rest/v1/Managers/1/VirtualMedia/1'
+        collection_mock.return_value = [(200, None, collection_item,
+                                         member_uri)]
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 collection_item)
+        self.client._get_vm_device_status('FLOPPY')
+        ilo_details_mock.assert_called_once_with()
+        collection_mock.assert_called_once_with(vmedia_uri)
+        get_mock.assert_called_once_with(member_uri)
+
+    def test__get_vm_device_status_invalid_device(self):
+        self.assertRaises(exception.IloInvalidInputError,
+                          self.client._get_vm_device_status, device='FOO')
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test__get_vm_device_status_vmedia_not_supported(self,
+                                                        ilo_details_mock):
+        manager_uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS_NO_VMEDIA)
+
+        ilo_details_mock.return_value = (manager_data, manager_uri)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_vm_device_status, device='FLOPPY')
+
+        ilo_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    @mock.patch.object(ris.RISOperations, '_get_collection')
+    def test__get_vm_device_status_fail(self,
+                                        collection_mock,
+                                        ilo_details_mock,
+                                        get_mock):
+        manager_uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+
+        ilo_details_mock.return_value = (manager_data, manager_uri)
+
+        collection_item = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_EMPTY)
+        vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
+        member_uri = '/rest/v1/Managers/1/VirtualMedia/1'
+        collection_mock.return_value = [(200, None, collection_item,
+                                         member_uri)]
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client._get_vm_device_status, device='FLOPPY')
+        ilo_details_mock.assert_called_once_with()
+        collection_mock.assert_called_once_with(vmedia_uri)
+        get_mock.assert_called_once_with(member_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    @mock.patch.object(ris.RISOperations, '_get_collection')
+    def test__get_vm_device_status_device_missing(self,
+                                                  collection_mock,
+                                                  ilo_details_mock,
+                                                  get_mock):
+        manager_uri = '/rest/v1/Managers/1'
+        manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+
+        ilo_details_mock.return_value = (manager_data, manager_uri)
+
+        collection_item = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_MISSING)
+        vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
+        member_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+        collection_mock.return_value = [(200, None, collection_item,
+                                         member_uri)]
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 collection_item)
+        self.assertRaises(exception.IloError,
+                          self.client._get_vm_device_status, device='CDROM')
+        ilo_details_mock.assert_called_once_with()
+        collection_mock.assert_called_once_with(vmedia_uri)
+        get_mock.assert_called_once_with(member_uri)
