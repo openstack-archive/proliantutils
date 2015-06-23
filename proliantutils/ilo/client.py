@@ -21,12 +21,15 @@ from proliantutils.ilo import ris
 SUPPORTED_RIS_METHODS = [
     'activate_license',
     'clear_secure_boot_keys',
+    'eject_virtual_media',
     'get_current_boot_mode',
     'get_host_power_status',
     'get_http_boot_url',
     'get_pending_boot_mode',
     'get_product_name',
     'get_secure_boot_mode',
+    'get_vm_status',
+    'insert_virtual_media',
     'reset_bios_to_default',
     'reset_ilo_credential',
     'reset_secure_boot_keys',
@@ -34,7 +37,8 @@ SUPPORTED_RIS_METHODS = [
     'set_pending_boot_mode',
     'set_secure_boot_mode',
     'get_server_capabilities',
-    'set_iscsi_boot_info'
+    'set_iscsi_boot_info',
+    'set_vm_status'
     ]
 
 
