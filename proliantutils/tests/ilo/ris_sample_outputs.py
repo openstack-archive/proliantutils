@@ -1371,3 +1371,377 @@ GET_ISCSI_SETTINGS = """
 }
 
 """
+
+RESP_VM_STATUS_FLOPPY_EMPTY = """
+{
+    "Description": "Virtual Removable Media",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Managers/1/VirtualMedia/1"
+        }
+    },
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "",
+    "ConnectedVia": "NotConnected",
+    "MediaTypes": [
+        "Floppy",
+        "USBStick"
+    ],
+    "WriteProtected": false,
+    "Inserted": false,
+    "Name": "VirtualMedia"
+}
+"""
+
+GET_VM_STATUS_FLOPPY_EMPTY = """
+{
+    "WRITE_PROTECT": "NO",
+    "VM_APPLET": "DISCONNECTED",
+    "IMAGE_URL": "",
+    "BOOT_OPTION": "NO_BOOT",
+    "DEVICE": "FLOPPY",
+    "IMAGE_INSERTED": "NO"
+}
+"""
+
+RESP_VM_STATUS_FLOPPY_INSERTED = """
+{
+    "ImageName": "floppy.iso",
+    "Description": "Virtual Removable Media",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Managers/1/VirtualMedia/1"
+        }
+    },
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "http://1.1.1.1/floppy.iso",
+    "ConnectedVia": "URI",
+    "MediaTypes": [
+        "Floppy",
+        "USBStick"
+    ],
+    "WriteProtected": true,
+    "Inserted": true,
+    "Name": "VirtualMedia"
+}
+"""
+
+GET_VM_STATUS_FLOPPY_INSERTED = """
+{
+    "WRITE_PROTECT": "YES",
+    "VM_APPLET": "CONNECTED",
+    "IMAGE_URL": "http://1.1.1.1/floppy.iso",
+    "BOOT_OPTION": "BOOT_ALWAYS",
+    "DEVICE": "FLOPPY",
+    "IMAGE_INSERTED": "YES"
+}
+"""
+
+RESP_VM_STATUS_CDROM_EMPTY = """
+{
+    "Description": "Virtual Removable Media",
+    "links": {
+        "self": {"href": "/rest/v1/Managers/1/VirtualMedia/2"
+        }
+    },
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "", "ConnectedVia": "NotConnected",
+    "MediaTypes": ["CD", "DVD"],
+    "Oem": {
+        "Hp": {
+        "Type": "HpiLOVirtualMedia.0.9.5",
+        "BootOnNextServerReset": false
+        }
+    },
+    "WriteProtected": true,
+    "Inserted": false,
+    "Name": "VirtualMedia"
+}
+"""
+
+GET_VM_STATUS_CDROM_EMPTY = """
+{
+    "WRITE_PROTECT": "YES",
+    "VM_APPLET": "DISCONNECTED",
+    "IMAGE_URL": "",
+    "BOOT_OPTION": "NO_BOOT",
+    "DEVICE": "CDROM",
+    "IMAGE_INSERTED": "NO"}
+"""
+
+RESP_VM_STATUS_CDROM_INSERTED = """
+{
+    "ImageName": "cdrom.iso",
+    "Description": "Virtual Removable Media",
+    "links": {"self": {"href": "/rest/v1/Managers/1/VirtualMedia/2"}},
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "http://1.1.1.1/cdrom.iso",
+    "ConnectedVia": "URI",
+    "MediaTypes": ["CD", "DVD"],
+    "Oem": {
+        "Hp": {
+            "Type": "HpiLOVirtualMedia.0.9.5",
+            "BootOnNextServerReset": false
+        }
+    },
+    "WriteProtected": true,
+    "Inserted": true,
+    "Name": "VirtualMedia"
+}
+"""
+
+GET_VM_STATUS_CDROM_INSERTED = """
+{
+    "WRITE_PROTECT": "YES",
+    "VM_APPLET": "CONNECTED",
+    "IMAGE_URL": "http://1.1.1.1/cdrom.iso",
+    "BOOT_OPTION": "BOOT_ALWAYS",
+    "DEVICE": "CDROM",
+    "IMAGE_INSERTED": "YES"
+}
+"""
+
+PATCH_VM_CDROM = """
+{
+    "Oem": {
+        "Hp": {
+            "BootOnNextServerReset": true
+        }
+    }
+}
+"""
+
+GET_MANAGER_DETAILS_NO_VMEDIA = """
+    {
+       "AvailableActions":
+       [
+           {
+               "Action": "Reset"
+           }
+       ],
+       "CommandShell":
+       {
+           "ConnectTypesSupported":
+           [
+               "SSH",
+               "Oem"
+           ],
+           "Enabled": true,
+           "MaxConcurrentSessions": 9
+       },
+       "Description": "Manager View",
+       "Firmware":
+       {
+           "Current":
+           {
+               "VersionString": "iLO 4 v2.20"
+           }
+       },
+       "GraphicalConsole":
+       {
+           "ConnectTypesSupported":
+           [
+               "KVMIP"
+           ],
+           "Enabled": true,
+           "MaxConcurrentSessions": 10
+       },
+       "ManagerType": "BMC",
+       "Model": "iLO 4",
+       "Name": "Manager",
+       "Oem":
+       {
+           "Hp":
+           {
+               "AvailableActions":
+               [
+                   {
+                       "Action": "ResetRestApiState",
+                       "Capabilities":
+                       [
+                           {
+                               "AllowableValues":
+                               [
+                                   "/Oem/Hp"
+                               ],
+                               "PropertyName": "Target"
+                           }
+                       ]
+                   }
+               ],
+               "FederationConfig":
+               {
+                   "IPv6MulticastScope": "Site",
+                   "MulticastAnnouncementInterval": 600,
+                   "MulticastDiscovery": "Enabled",
+                   "MulticastTimeToLive": 5,
+                   "iLOFederationManagement": "Enabled"
+               },
+               "Firmware":
+               {
+                   "Current":
+                   {
+                       "Date": "Feb 09 2015",
+                       "DebugBuild": false,
+                       "MajorVersion": 2,
+                       "MinorVersion": 20,
+                       "Time": "",
+                       "VersionString": "iLO 4 v2.20"
+                   }
+               },
+               "License":
+               {
+                   "LicenseKey": "32Q6W-PQWTB-H7XYL-39968-RR53R",
+                   "LicenseString": "iLO 4 Advanced",
+                   "LicenseType": "Perpetual"
+               },
+               "RequiredLoginForiLORBSU": false,
+               "SerialCLISpeed": 9600,
+               "SerialCLIStatus": "EnabledAuthReq",
+               "Type": "HpiLO.0.13.0",
+               "VSPLogDownloadEnabled": false,
+               "iLOSelfTestResults":
+               [
+                   {
+                       "Notes": "",
+                       "SelfTestName": "NVRAMData",
+                       "Status": "OK"
+                   },
+                   {
+                       "Notes": "Controller firmware revision 2.09.00 ",
+                       "SelfTestName": "EmbeddedFlash/SDCard",
+                       "Status": "OK"
+                   },
+                   {
+                       "Notes": "",
+                       "SelfTestName": "EEPROM",
+                       "Status": "OK"
+                   },
+                   {
+                       "Notes": "",
+                       "SelfTestName": "HostRom",
+                       "Status": "OK"
+                   },
+                   {
+                       "Notes": "",
+                       "SelfTestName": "SupportedHost",
+                       "Status": "OK"
+                   },
+                   {
+                       "Notes": "ProLiant BL460c Gen9 System Programmable \
+                                 Logic Device version 0x13",
+                       "SelfTestName": "CPLDPAL0",
+                       "Status": "Informational"
+                   },
+                   {
+                       "Notes": "ProLiant BL460c Gen9 SAS Programmable \
+                                 Logic Device version 0x01",
+                       "SelfTestName": "CPLDPAL1",
+                       "Status": "Informational"
+                   }
+               ],
+               "links":
+               {
+                   "ActiveHealthSystem":
+                   {
+                       "href": "/rest/v1/Managers/1/ActiveHealthSystem"
+                   },
+                   "DateTimeService":
+                   {
+                       "href": "/rest/v1/Managers/1/DateTime"
+                   },
+                   "EmbeddedMediaService":
+                   {
+                       "href": "/rest/v1/Managers/1/EmbeddedMedia"
+                   },
+                   "FederationDispatch":
+                   {
+                       "extref": "/dispatch"
+                   },
+                   "FederationGroups":
+                   {
+                       "href": "/rest/v1/Managers/1/FederationGroups"
+                   },
+                   "FederationPeers":
+                   {
+                       "href": "/rest/v1/Managers/1/FederationPeers"
+                   },
+                   "LicenseService":
+                   {
+                       "href": "/rest/v1/Managers/1/LicenseService"
+                   },
+                   "UpdateService":
+                   {
+                       "href": "/rest/v1/Managers/1/UpdateService"
+                   },
+                   "VSPLogLocation":
+                   {
+                       "extref": "/sol.log.gz"
+                   }
+               }
+           }
+       },
+       "SerialConsole":
+       {
+           "ConnectTypesSupported":
+           [
+               "SSH",
+               "IPMI",
+               "Oem"
+           ],
+           "Enabled": true,
+           "MaxConcurrentSessions": 13
+       },
+       "Status":
+       {
+           "State": "Enabled"
+       },
+       "Type": "Manager.0.10.0",
+       "UUID": "83590768-e977-575a-927a-b3de8f692d4f",
+       "links":
+       {
+           "EthernetNICs":
+           {
+               "href": "/rest/v1/Managers/1/NICs"
+           },
+           "Logs":
+           {
+               "href": "/rest/v1/Managers/1/Logs"
+           },
+           "ManagerForServers":
+           [
+               {
+                   "href": "/rest/v1/Systems/1"
+               }
+           ],
+           "NetworkService":
+           {
+               "href": "/rest/v1/Managers/1/NetworkService"
+           },
+           "self":
+           {
+               "href": "/rest/v1/Managers/1"
+           }
+       }
+    }
+"""
+
+RESP_VM_STATUS_FLOPPY_MISSING = """
+{
+    "Description": "Virtual Removable Media",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Managers/1/VirtualMedia/1"
+        }
+    },
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "",
+    "ConnectedVia": "NotConnected",
+    "MediaTypes": [
+        "USBStick"
+    ],
+    "WriteProtected": false,
+    "Inserted": false,
+    "Name": "VirtualMedia"
+}
+"""
