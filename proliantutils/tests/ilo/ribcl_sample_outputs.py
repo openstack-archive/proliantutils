@@ -402,28 +402,31 @@ INSERT_VIRTUAL_MEDIA_XML = '''
 </RIBCL>
 '''
 
+
 EJECT_VIRTUAL_MEDIA_XML = '''
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>\r
 <RIBCL VERSION="2.23">
-   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE=\'No error\'
+     />
 </RIBCL>
-
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>\r
 <RIBCL VERSION="2.23">
-   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE=\'No error\'
+     />
 </RIBCL>
-
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>\r
 <RIBCL VERSION="2.23">
-   <RESPONSE STATUS="0x0000" MESSAGE="No error" />
-</RIBCL>
-
-<?xml version="1.0" encoding="UTF-8"?>
-<RIBCL VERSION="2.23">
-   <RESPONSE STATUS="0x0039"
-             MESSAGE="No image present in the Virtual Media drive" />
+<RESPONSE
+    STATUS="0x0000"
+    MESSAGE=\'No error\'
+     />
 </RIBCL>
 '''
+
 
 SET_HOST_POWER_XML = '''
 <?xml version="1.0" encoding="UTF-8"?>
