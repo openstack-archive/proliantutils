@@ -353,6 +353,10 @@ class RIBCLOperations(operations.IloOperations):
 
     def eject_virtual_media(self, device='FLOPPY'):
         """Ejects the Virtual Media image if one is inserted."""
+        vm_status = self.get_vm_status(device=device)
+        if vm_status['IMAGE_INSERTED'] == 'NO':
+            return
+
         dic = {'DEVICE': device.upper()}
         data = self._execute_command(
             'EJECT_VIRTUAL_MEDIA', 'RIB_INFO', 'write', dic)

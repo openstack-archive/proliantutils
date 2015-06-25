@@ -228,10 +228,23 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_vm_status')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
-    def test_eject_virtual_media(self, request_ilo_mock):
+    def test_eject_virtual_media_no_media(
+            self, request_ilo_mock, get_vm_status_mock):
+        get_vm_status_mock.return_value = {'IMAGE_INSERTED': 'NO'}
+        self.assertIsNone(self.ilo.eject_virtual_media(device='FLOPPY'))
+        get_vm_status_mock.assert_called_once_with(device='FLOPPY')
+        self.assertFalse(request_ilo_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_vm_status')
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    def test_eject_virtual_media(
+            self, request_ilo_mock, get_vm_status_mock):
+        get_vm_status_mock.return_value = {'IMAGE_INSERTED': 'YES'}
         request_ilo_mock.return_value = constants.EJECT_VIRTUAL_MEDIA_XML
-        self.assertRaises(exception.IloError, self.ilo.eject_virtual_media)
+        self.assertIsNone(self.ilo.eject_virtual_media(device='CDROM'))
+        get_vm_status_mock.assert_called_once_with(device='CDROM')
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_set_vm_status(self, request_ilo_mock):
@@ -759,10 +772,13 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_vm_status')
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
-    def test_eject_virtual_media(self, request_ilo_mock):
+    def test_eject_virtual_media(self, request_ilo_mock, get_vm_status_mock):
+        get_vm_status_mock.return_value = {'IMAGE_INSERTED': 'YES'}
         request_ilo_mock.return_value = constants.EJECT_VIRTUAL_MEDIA_XML
-        self.assertRaises(ribcl.IloError, self.ilo.eject_virtual_media)
+        self.assertIsNone(self.ilo.eject_virtual_media(device='CDROM'))
+        get_vm_status_mock.assert_called_once_with(device='CDROM')
 
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
     def test_set_vm_status(self, request_ilo_mock):
