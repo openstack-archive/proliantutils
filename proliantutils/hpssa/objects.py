@@ -58,7 +58,7 @@ def _get_key_value(string):
 def _get_dict(lines, start_index, indentation):
     """Recursive function for parsing hpssacli output."""
 
-    info = dict()
+    info = {}
     current_item = None
 
     i = start_index
@@ -69,7 +69,7 @@ def _get_dict(lines, start_index, indentation):
 
         if current_line_indentation == indentation:
             current_item = current_line.lstrip(' ')
-            info[current_item] = dict()
+            info[current_item] = {}
             i = i + 1
             continue
 
@@ -312,7 +312,7 @@ class Controller(object):
         self.unassigned_physical_drives = []
         self.raid_arrays = []
 
-        unassigned_drives = properties.get('unassigned', dict())
+        unassigned_drives = properties.get('unassigned', {})
         for key, value in unassigned_drives.items():
             self.unassigned_physical_drives.append(PhysicalDrive(key,
                                                                  value,

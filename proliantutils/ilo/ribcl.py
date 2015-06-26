@@ -199,7 +199,7 @@ class RIBCLOperations(operations.IloOperations):
         Converts the actual response from the ILO for an API
         to the dictionary.
         """
-        node = dict()
+        node = {}
         text = getattr(element, 'text')
         if text is not None:
             text = text.strip()
