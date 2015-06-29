@@ -949,3 +949,190 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_vm_device_status(self,  device='FLOPPY'):
+        """Returns the given virtual media device status and device URI
+
+        :param  device: virtual media device to be queried
+        :returns json format virtual media device status and its URI
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        valid_devices = {'FLOPPY': 'floppy',
+                         'CDROM': 'cd'}
+
+        # Check if the input is valid
+        if device not in valid_devices:
+                raise exception.IloInvalidInputError(
+                    "Invalid device. Valid devices: FLOPPY or CDROM.")
+
+        manager, uri = self._get_ilo_details()
+        try:
+            vmedia_uri = manager['links']['VirtualMedia']['href']
+        except KeyError:
+            msg = ('"VirtualMedia" section in Manager/links does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        for status, hds, vmed, memberuri in self._get_collection(vmedia_uri):
+            status, headers, response = self._rest_get(memberuri)
+            if status != 200:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
+
+            if (valid_devices[device] in
+               [item.lower() for item in response['MediaTypes']]):
+                vm_device_uri = response['links']['self']['href']
+                return response, vm_device_uri
+
+        # Requested device not found
+        msg = ('Virtualmedia device "' + device + '" is not'
+               ' found on this system.')
+        raise exception.IloError(msg)
+
+    def get_vm_status(self, device='FLOPPY'):
+        """Returns the virtual media drive status.
+
+        :param  device: virtual media device to be queried
+        :returns device status in dictionary form
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        response, vm_device_uri = self._get_vm_device_status(device)
+
+        # Create RIBCL equivalent response
+        # RIBCL provides this data in VM status
+        # VM_APPLET = CONNECTED | DISCONNECTED
+        # DEVICE = FLOPPY | CDROM
+        # BOOT_OPTION = BOOT_ALWAYS | BOOT_ONCE | NO_BOOT
+        # WRITE_PROTECT = YES | NO
+        # IMAGE_INSERTED = YES | NO
+        response_data = dict()
+
+        if response.get('WriteProtected', False):
+            response_data['WRITE_PROTECT'] = 'YES'
+        else:
+            response_data['WRITE_PROTECT'] = 'NO'
+
+        if response.get('BootOnNextServerReset', False):
+            response_data['BOOT_OPTION'] = 'BOOT_ONCE'
+        else:
+            response_data['BOOT_OPTION'] = 'BOOT_ALWAYS'
+
+        if response.get('Inserted', False):
+            response_data['IMAGE_INSERTED'] = 'YES'
+        else:
+            response_data['IMAGE_INSERTED'] = 'NO'
+
+        if response.get('ConnectedVia') == 'NotConnected':
+            response_data['VM_APPLET'] = 'DISCONNECTED'
+            # When media is not connected, it's NO_BOOT
+            response_data['BOOT_OPTION'] = 'NO_BOOT'
+        else:
+            response_data['VM_APPLET'] = 'CONNECTED'
+
+        response_data['IMAGE_URL'] = response['Image']
+        response_data['DEVICE'] = device
+
+        # FLOPPY cannot be a boot device
+        if ((response_data['BOOT_OPTION'] == 'BOOT_ONCE') and
+           (response_data['DEVICE'] == 'FLOPPY')):
+            response_data['BOOT_OPTION'] = 'NO_BOOT'
+
+        return response_data
+
+    def set_vm_status(self, device='FLOPPY',
+                      boot_option='BOOT_ONCE', write_protect='YES'):
+        """Sets the Virtual Media drive status
+
+        It sets the boot option for virtual media device.
+        Note: boot option can be set only for CD device.
+
+        :param device: virual media device
+        :param boot_option: boot option to set on the virtual media device
+        :param write_protect: set the write protect flag on the vmedia device
+                              Note: It's ignored. In RIS it is read-only.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # CONNECT is a RIBCL call. There is no such property to set in RIS.
+        if boot_option == 'CONNECT':
+            return
+
+        boot_option_map = {'BOOT_ONCE': True,
+                           'BOOT_ALWAYS': False,
+                           'NO_BOOT': False
+                           }
+
+        if boot_option not in boot_option_map:
+            msg = ('Virtualmedia boot option "' + boot_option + '" is '
+                   'invalid.')
+            raise exception.IloInvalidInputError(msg)
+
+        response, vm_device_uri = self._get_vm_device_status(device)
+
+        # Update required property
+        vm_settings = dict()
+        vm_settings['Oem'] = (
+            {'Hp': {'BootOnNextServerReset': boot_option_map[boot_option]}})
+
+        # perform the patch operation
+        status, headers, response = self._rest_patch(
+            vm_device_uri, None, vm_settings)
+
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def insert_virtual_media(self, url, device='FLOPPY'):
+        """Notifies iLO of the location of a virtual media diskette image.
+
+        :param url: URL to image
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        response, vm_device_uri = self._get_vm_device_status(device)
+
+        # Eject media if there is one. RIBCL was tolerant enough to overwrite
+        # existing media, RIS is not. This check is to take care of that
+        # assumption.
+        if response.get('Inserted', False):
+            self.eject_virtual_media(device)
+
+        # Update required property
+        vm_settings = dict()
+        vm_settings['Image'] = url
+
+        # Perform the patch operation
+        status, headers, response = self._rest_patch(
+            vm_device_uri, None, vm_settings)
+
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def eject_virtual_media(self, device='FLOPPY'):
+        """Ejects the Virtual Media image if one is inserted.
+
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        response, vm_device_uri = self._get_vm_device_status(device)
+
+        # Update required property
+        vm_settings = dict()
+        vm_settings['Image'] = None
+
+        # perform the patch operation
+        status, headers, response = self._rest_patch(
+            vm_device_uri, None, vm_settings)
+
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
