@@ -201,27 +201,36 @@ class ManagerTestCases(testtools.TestCase):
             'array', 'A', 'create', 'type=logicaldrive', 'raid=1',
             'size=51200')
 
+    @mock.patch.object(manager, 'get_configuration')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_configuration(self, controller_exec_cmd_mock,
+                                  get_configuration_mock,
                                   get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
+        get_configuration_mock.return_value = 'foo'
 
-        manager.delete_configuration()
+        ret = manager.delete_configuration()
 
-        controller_exec_cmd_mock.assert_called_with("logicaldrive",
-                                                    "all",
-                                                    "delete",
-                                                    "forced")
+        controller_exec_cmd_mock.assert_called_with(
+            "logicaldrive", "all", "delete", "forced")
+        get_configuration_mock.assert_called_once_with()
+        self.assertEqual('foo', ret)
 
+    @mock.patch.object(manager, 'get_configuration')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_configuration_no_arrays(
-            self, controller_exec_cmd_mock, get_all_details_mock):
+            self, controller_exec_cmd_mock,
+            get_configuration_mock, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+        get_configuration_mock.return_value = 'foo'
 
-        manager.delete_configuration()
+        ret = manager.delete_configuration()
+
         self.assertFalse(controller_exec_cmd_mock.called)
+        get_configuration_mock.assert_called_once_with()
+        self.assertEqual('foo', ret)
 
     def test_get_configuration(self, get_all_details_mock):
 
