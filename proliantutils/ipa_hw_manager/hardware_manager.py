@@ -13,7 +13,6 @@
 # under the License.
 
 from ironic_python_agent import hardware
-from oslo_concurrency import processutils
 
 from proliantutils.hpssa import manager as hpssa_manager
 
@@ -22,25 +21,62 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
 
     HARDWARE_MANAGER_VERSION = "3"
 
-    def get_clean_steps(self):
-        pass
+    def get_clean_steps(self, node, ports):
+        """Return the clean steps supported by this hardware manager.
+
+        This method returns the clean steps that are supported by
+        proliant hardware manager.  This method is invoked on every
+        hardware manager by Ironic Python Agent to give this information
+        back to Ironic.
+
+        :param node: A dictionary of the node object
+        :param ports: A list of dictionaries containing information of ports
+            for the node
+        :returns: A list of dictionaries, each item containing the step name,
+            interface and priority for the clean step.
+        """
+        return [{'step': 'create_configuration',
+                 'interface': 'raid',
+                 'priority': 0},
+                {'step': 'delete_configuration',
+                 'interface': 'raid',
+                 'priority': 0}]
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
 
-    def erase_block_device(self, block_device):
-        npass = 3
-        cmd = ('shred', '--force', '--zero', '--verbose',
-               '--iterations', npass, block_device.name)
-        processutils.execute(*cmd)
+    def create_configuration(self, node, ports):
+        """Create RAID configuration on the bare metal.
 
-    def erase_devices(self):
-        block_devices = self.list_block_devices()
-        for block_device in block_devices:
-            self.erase_block_device(block_device)
+        This method creates the desired RAID configuration as read from
+        node['target_raid_config'].
 
-    def create_raid_configuration(self, raid_config):
-        return hpssa_manager.create_configuration(raid_config=raid_config)
+        :param node: A dictionary of the node object
+        :param ports: A list of dictionaries containing information of ports
+            for the node
+        :returns: The current RAID configuration of the below format.
+            raid_config = {
+                'logical_disks': [{
+                    'size_gb': 100,
+                    'raid_level': 1,
+                    'physical_disks': [
+                        '5I:0:1',
+                        '5I:0:2'],
+                    'controller': 'Smart array controller'
+                    },
+                ]
+            }
+        """
+        target_raid_config = node.get('target_raid_config', {}).copy()
+        return hpssa_manager.create_configuration(
+            raid_config=target_raid_config)
 
-    def delete_raid_configuration(self):
-        hpssa_manager.delete_configuration()
+    def delete_configuration(self, node, ports):
+        """Deletes RAID configuration on the bare metal.
+
+        This method deletes all the RAID disks on the bare metal.
+        :param node: A dictionary of the node object
+        :param ports: A list of dictionaries containing information of ports
+            for the node
+        """
+        return hpssa_manager.delete_configuration()
