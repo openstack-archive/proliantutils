@@ -13,7 +13,6 @@
 # under the License.
 
 from ironic_python_agent import hardware
-from oslo_concurrency import processutils
 
 from proliantutils.hpssa import manager as hpssa_manager
 
@@ -22,25 +21,21 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
 
     HARDWARE_MANAGER_VERSION = "3"
 
-    def get_clean_steps(self):
-        pass
+    def get_clean_steps(self, node, ports):
+        return [{'step': 'create_configuration',
+                 'interface': 'raid',
+                 'priority': 0},
+                {'step': 'delete_configuration',
+                 'interface': 'raid',
+                 'priority': 0}]
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
 
-    def erase_block_device(self, block_device):
-        npass = 3
-        cmd = ('shred', '--force', '--zero', '--verbose',
-               '--iterations', npass, block_device.name)
-        processutils.execute(*cmd)
+    def create_configuration(self, node, ports):
+        target_raid_config = node.get('target_raid_config', {}).copy()
+        return hpssa_manager.create_configuration(
+            raid_config=target_raid_config)
 
-    def erase_devices(self):
-        block_devices = self.list_block_devices()
-        for block_device in block_devices:
-            self.erase_block_device(block_device)
-
-    def create_raid_configuration(self, raid_config):
-        return hpssa_manager.create_configuration(raid_config=raid_config)
-
-    def delete_raid_configuration(self):
-        hpssa_manager.delete_configuration()
+    def delete_configuration(self, node, ports):
+        return hpssa_manager.delete_configuration()
