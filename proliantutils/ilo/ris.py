@@ -1125,6 +1125,10 @@ class RISOperations(operations.IloOperations):
         """
         response, vm_device_uri = self._get_vm_device_status(device)
 
+        # Check if virtual media is connected.
+        if response.get('Inserted') is False:
+            return
+
         # Update required property
         vm_settings = dict()
         vm_settings['Image'] = None

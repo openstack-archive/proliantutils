@@ -1437,6 +1437,31 @@ GET_VM_STATUS_FLOPPY_INSERTED = """
 }
 """
 
+RESP_VM_STATUS_CDROM_INSERTED = """
+{
+    "Description": "Virtual Removable Media",
+    "links": {
+        "self": {"href": "/rest/v1/Managers/1/VirtualMedia/2"
+        }
+    },
+    "Type": "VirtualMedia.0.9.5",
+    "Image": "http://foo/foo", "ConnectedVia": "NotConnected",
+    "MediaTypes": [
+        "CD",
+        "DVD"
+    ],
+    "Oem": {
+        "Hp": {
+        "Type": "HpiLOVirtualMedia.0.9.5",
+        "BootOnNextServerReset": false
+        }
+    },
+    "WriteProtected": true,
+    "Inserted": true,
+    "Name": "VirtualMedia"
+}
+"""
+
 RESP_VM_STATUS_CDROM_EMPTY = """
 {
     "Description": "Virtual Removable Media",
