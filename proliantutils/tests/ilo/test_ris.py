@@ -559,7 +559,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_eject_virtual_media(self, get_vm_device_mock, patch_mock):
         vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
 
-        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
         device_uri = cdrom_resp["links"]["self"]["href"]
         get_vm_device_mock.return_value = (cdrom_resp, device_uri)
 
@@ -573,10 +573,23 @@ class IloRisTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
+    def test_eject_virtual_media_cdrom_empty(
+            self, get_vm_device_mock, patch_mock):
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        device_uri = cdrom_resp["links"]["self"]["href"]
+        get_vm_device_mock.return_value = (cdrom_resp, device_uri)
+
+        self.client.eject_virtual_media(device='CDROM')
+
+        get_vm_device_mock.assert_called_once_with('CDROM')
+        self.assertFalse(patch_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_get_vm_device_status')
     def test_eject_virtual_media_fail(self, get_vm_device_mock, patch_mock):
         vm_uri = '/rest/v1/Managers/1/VirtualMedia/2'
 
-        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_EMPTY)
+        cdrom_resp = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_INSERTED)
         device_uri = cdrom_resp["links"]["self"]["href"]
         get_vm_device_mock.return_value = (cdrom_resp, device_uri)
 
