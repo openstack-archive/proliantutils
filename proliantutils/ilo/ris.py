@@ -62,7 +62,7 @@ class RISOperations(operations.IloOperations):
         start_url = url.geturl()
 
         if request_headers is None:
-            request_headers = dict()
+            request_headers = {}
 
         # Use self.login/self.password and Basic Auth
         if self.login is not None and self.password is not None:
@@ -141,7 +141,7 @@ class RISOperations(operations.IloOperations):
         HTTP response codes could be 500, 404, 202 etc.
         """
         if not isinstance(request_headers, dict):
-            request_headers = dict()
+            request_headers = {}
         request_headers['Content-Type'] = 'application/json'
         return self._rest_op('PATCH', suburi, request_headers, request_body)
 
@@ -151,7 +151,7 @@ class RISOperations(operations.IloOperations):
         HTTP response codes could be 500, 404, 202 etc.
         """
         if not isinstance(request_headers, dict):
-            request_headers = dict()
+            request_headers = {}
         request_headers['Content-Type'] = 'application/json'
         return self._rest_op('PUT', suburi, request_headers, request_body)
 
@@ -162,7 +162,7 @@ class RISOperations(operations.IloOperations):
         ExtendedError, or it could be empty.
         """
         if not isinstance(request_headers, dict):
-            request_headers = dict()
+            request_headers = {}
         request_headers['Content-Type'] = 'application/json'
         return self._rest_op('POST', suburi, request_headers, request_body)
 
@@ -370,7 +370,7 @@ class RISOperations(operations.IloOperations):
 
     def _get_bios_hash_password(self, bios_password):
         """Get the hashed BIOS password."""
-        request_headers = dict()
+        request_headers = {}
         if bios_password:
             bios_password_hash = hashlib.sha256((bios_password.encode()).
                                                 hexdigest().upper())
@@ -557,7 +557,7 @@ class RISOperations(operations.IloOperations):
         secure_boot_uri = system['Oem']['Hp']['links']['SecureBoot']['href']
 
         # Change the property required
-        new_secure_boot_settings = dict()
+        new_secure_boot_settings = {}
         new_secure_boot_settings[property] = value
 
         # perform the patch
@@ -713,7 +713,7 @@ class RISOperations(operations.IloOperations):
                  in the bios boot mode.
         """
         if(self._validate_uefi_boot_mode() is True):
-            iscsi_info = dict()
+            iscsi_info = {}
             iscsi_info['iSCSITargetName'] = target_name
             iscsi_info['iSCSIBootLUN'] = lun
             iscsi_info['iSCSITargetIpAddress'] = ip_address
@@ -940,7 +940,7 @@ class RISOperations(operations.IloOperations):
             msg = ('"LicenseService" section in Manager/Oem/Hp does not exist')
             raise exception.IloCommandNotSupportedError(msg)
 
-        lic_key = dict()
+        lic_key = {}
         lic_key['LicenseKey'] = key
 
         # Perform POST to activate license
@@ -1008,7 +1008,7 @@ class RISOperations(operations.IloOperations):
         # BOOT_OPTION = BOOT_ALWAYS | BOOT_ONCE | NO_BOOT
         # WRITE_PROTECT = YES | NO
         # IMAGE_INSERTED = YES | NO
-        response_data = dict()
+        response_data = {}
 
         if response.get('WriteProtected', False):
             response_data['WRITE_PROTECT'] = 'YES'
@@ -1074,7 +1074,7 @@ class RISOperations(operations.IloOperations):
         response, vm_device_uri = self._get_vm_device_status(device)
 
         # Update required property
-        vm_settings = dict()
+        vm_settings = {}
         vm_settings['Oem'] = (
             {'Hp': {'BootOnNextServerReset': boot_option_map[boot_option]}})
 
@@ -1104,7 +1104,7 @@ class RISOperations(operations.IloOperations):
             self.eject_virtual_media(device)
 
         # Update required property
-        vm_settings = dict()
+        vm_settings = {}
         vm_settings['Image'] = url
 
         # Perform the patch operation
@@ -1130,7 +1130,7 @@ class RISOperations(operations.IloOperations):
             return
 
         # Update required property
-        vm_settings = dict()
+        vm_settings = {}
         vm_settings['Image'] = None
 
         # perform the patch operation

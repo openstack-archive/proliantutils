@@ -193,7 +193,7 @@ def get_configuration():
     """
     server = objects.Server()
     logical_drives = server.get_logical_drives()
-    raid_config = dict()
+    raid_config = {}
     raid_config['logical_disks'] = []
 
     for logical_drive in logical_drives:
