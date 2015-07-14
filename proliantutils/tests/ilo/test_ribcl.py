@@ -318,7 +318,7 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertEqual(result, 'CDROM')
         self.assertTrue(request_ilo_mock.called)
 
-    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_set_persistent_boot')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_update_persistent_boot_uefi_cdrom(self,
                                                request_ilo_mock,
@@ -329,7 +329,7 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertTrue(request_ilo_mock.called)
         set_persist_boot_mock.assert_called_once_with(['Boot000B'])
 
-    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_set_persistent_boot')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_update_persistent_boot_uefi_hdd(self,
                                              request_ilo_mock,
@@ -340,7 +340,7 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertTrue(request_ilo_mock.called)
         set_persist_boot_mock.assert_called_once_with(['Boot0007'])
 
-    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_set_persistent_boot')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_update_persistent_boot_uefi_nic(self,
                                              request_ilo_mock,
@@ -367,7 +367,7 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertRaises(exception.IloInvalidInputError,
                           self.ilo.update_persistent_boot, ['Other'])
 
-    @mock.patch.object(ribcl.RIBCLOperations, 'set_persistent_boot')
+    @mock.patch.object(ribcl.RIBCLOperations, '_set_persistent_boot')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_update_persistent_boot_bios(self,
                                          request_ilo_mock,

@@ -1780,3 +1780,1293 @@ RESP_VM_STATUS_CDROM_MISSING = """
     "Name": "VirtualMedia"
 }
 """
+
+RESP_BODY_FOR_SYSTEM_WITH_CDROM = """
+{
+    "AssetTag": "",
+    "AvailableActions": [
+        {
+            "Action": "Reset",
+            "Capabilities": [
+                {
+                    "AllowableValues": [
+                        "On",
+                        "ForceOff",
+                        "ForceRestart",
+                        "Nmi",
+                        "PushPowerButton"
+                    ],
+                    "PropertyName": "ResetType"
+                }
+            ]
+        }
+    ],
+    "Bios": {
+        "Current": {
+            "VersionString": "I36 v1.40 (01/28/2015)"
+        }
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Once",
+        "BootSourceOverrideSupported": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiTarget"
+        ],
+        "BootSourceOverrideTarget": "Cd",
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverrideSupported": [
+            "HD.Emb.1.2",
+            "Generic.USB.1.1",
+            "NIC.FlexLOM.1.1.IPv4",
+            "NIC.FlexLOM.1.1.IPv6",
+            "CD.Virtual.2.1"
+        ]
+    },
+    "Description": "Computer System View",
+    "HostCorrelation": {
+        "HostMACAddress": [
+            "6c:c2:17:39:fe:80",
+            "6c:c2:17:39:fe:88"
+        ],
+        "HostName": "",
+        "IPAddress": [
+            "",
+            ""
+        ]
+    },
+    "IndicatorLED": "Off",
+    "Manufacturer": "HP",
+    "Memory": {
+        "TotalSystemMemoryGB": 16
+    },
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "AvailableActions": [
+                {
+                    "Action": "PowerButton",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "Press",
+                                "PressAndHold"
+                            ],
+                            "PropertyName": "PushType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                },
+                {
+                    "Action": "SystemReset",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "ColdBoot"
+                            ],
+                            "PropertyName": "ResetType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                }
+            ],
+            "Battery": [],
+            "Bios": {
+                "Backup": {
+                    "Date": "v1.40 (01/28/2015)",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "Current": {
+                    "Date": "01/28/2015",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "UefiClass": 2
+            },
+            "DeviceDiscoveryComplete": {
+                "AMSDeviceDiscovery": "NoAMS",
+                "SmartArrayDiscovery": "Initial",
+                "vAuxDeviceDiscovery": "DataIncomplete",
+                "vMainDeviceDiscovery": "ServerOff"
+            },
+            "PostState": "PowerOff",
+            "PowerAllocationLimit": 500,
+            "PowerAutoOn": "PowerOn",
+            "PowerOnDelay": "Minimum",
+            "PowerRegulatorMode": "Dynamic",
+            "PowerRegulatorModesSupported": [
+                "OSControl",
+                "Dynamic",
+                "Max",
+                "Min"
+            ],
+            "ServerSignature": 0,
+            "Type": "HpComputerSystemExt.0.10.1",
+            "VirtualProfile": "Inactive",
+            "VirtualUUID": null,
+            "links": {
+                "BIOS": {
+                    "href": "/rest/v1/systems/1/bios"
+                },
+                "MEMORY": {
+                    "href": "/rest/v1/Systems/1/Memory"
+                },
+                "PCIDevices": {
+                    "href": "/rest/v1/Systems/1/PCIDevices"
+                },
+                "PCISlots": {
+                    "href": "/rest/v1/Systems/1/PCISlots"
+                },
+                "SecureBoot": {
+                    "href": "/rest/v1/Systems/1/SecureBoot"
+                }
+            }
+        }
+    },
+    "Power": "Off",
+    "Processors": {
+        "Count": 1,
+        "ProcessorFamily": "Intel(R) Xeon(R) CPU E5-2609 v3 @ 1.90GHz",
+        "Status": {
+            "HealthRollUp": "OK"
+        }
+    },
+    "SKU": "727021-B21",
+    "SerialNumber": "SGH449WNL3",
+    "Status": {
+        "Health": "OK",
+        "State": "Disabled"
+    },
+    "SystemType": "Physical",
+    "Type": "ComputerSystem.0.9.6",
+    "UUID": "30373237-3132-4753-4834-3439574E4C33",
+    "links": {
+        "Chassis": [
+            {
+                "href": "/rest/v1/Chassis/1"
+            }
+        ],
+        "Logs": {
+            "href": "/rest/v1/Systems/1/Logs"
+        },
+        "ManagedBy": [
+            {
+                "href": "/rest/v1/Managers/1"
+            }
+        ],
+        "self": {
+            "href": "/rest/v1/Systems/1"
+        }
+    }
+}
+"""
+
+RESP_BODY_WITH_UEFI_SHELL = """
+{
+    "AssetTag": "",
+    "AvailableActions": [
+        {
+            "Action": "Reset",
+            "Capabilities": [
+                {
+                    "AllowableValues": [
+                        "On",
+                        "ForceOff",
+                        "ForceRestart",
+                        "Nmi",
+                        "PushPowerButton"
+                    ],
+                    "PropertyName": "ResetType"
+                }
+            ]
+        }
+    ],
+    "Bios": {
+        "Current": {
+            "VersionString": "I36 v1.40 (01/28/2015)"
+        }
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Once",
+        "BootSourceOverrideSupported": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiTarget"
+        ],
+        "BootSourceOverrideTarget": "UefiShell",
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverrideSupported": [
+            "HD.Emb.1.2",
+            "Generic.USB.1.1",
+            "NIC.FlexLOM.1.1.IPv4",
+            "NIC.FlexLOM.1.1.IPv6",
+            "CD.Virtual.2.1"
+        ]
+    },
+    "Description": "Computer System View",
+    "HostCorrelation": {
+        "HostMACAddress": [
+            "6c:c2:17:39:fe:80",
+            "6c:c2:17:39:fe:88"
+        ],
+        "HostName": "",
+        "IPAddress": [
+            "",
+            ""
+        ]
+    },
+    "IndicatorLED": "Off",
+    "Manufacturer": "HP",
+    "Memory": {
+        "TotalSystemMemoryGB": 16
+    },
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "AvailableActions": [
+                {
+                    "Action": "PowerButton",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "Press",
+                                "PressAndHold"
+                            ],
+                            "PropertyName": "PushType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                },
+                {
+                    "Action": "SystemReset",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "ColdBoot"
+                            ],
+                            "PropertyName": "ResetType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                }
+            ],
+            "Battery": [],
+            "Bios": {
+                "Backup": {
+                    "Date": "v1.40 (01/28/2015)",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "Current": {
+                    "Date": "01/28/2015",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "UefiClass": 2
+            },
+            "DeviceDiscoveryComplete": {
+                "AMSDeviceDiscovery": "NoAMS",
+                "SmartArrayDiscovery": "Initial",
+                "vAuxDeviceDiscovery": "DataIncomplete",
+                "vMainDeviceDiscovery": "ServerOff"
+            },
+            "PostState": "PowerOff",
+            "PowerAllocationLimit": 500,
+            "PowerAutoOn": "PowerOn",
+            "PowerOnDelay": "Minimum",
+            "PowerRegulatorMode": "Dynamic",
+            "PowerRegulatorModesSupported": [
+                "OSControl",
+                "Dynamic",
+                "Max",
+                "Min"
+            ],
+            "ServerSignature": 0,
+            "Type": "HpComputerSystemExt.0.10.1",
+            "VirtualProfile": "Inactive",
+            "VirtualUUID": null,
+            "links": {
+                "BIOS": {
+                    "href": "/rest/v1/systems/1/bios"
+                },
+                "MEMORY": {
+                    "href": "/rest/v1/Systems/1/Memory"
+                },
+                "PCIDevices": {
+                    "href": "/rest/v1/Systems/1/PCIDevices"
+                },
+                "PCISlots": {
+                    "href": "/rest/v1/Systems/1/PCISlots"
+                },
+                "SecureBoot": {
+                    "href": "/rest/v1/Systems/1/SecureBoot"
+                }
+            }
+        }
+    },
+    "Power": "Off",
+    "Processors": {
+        "Count": 1,
+        "ProcessorFamily": "Intel(R) Xeon(R) CPU E5-2609 v3 @ 1.90GHz",
+        "Status": {
+            "HealthRollUp": "OK"
+        }
+    },
+    "SKU": "727021-B21",
+    "SerialNumber": "SGH449WNL3",
+    "Status": {
+        "Health": "OK",
+        "State": "Disabled"
+    },
+    "SystemType": "Physical",
+    "Type": "ComputerSystem.0.9.6",
+    "UUID": "30373237-3132-4753-4834-3439574E4C33",
+    "links": {
+        "Chassis": [
+            {
+                "href": "/rest/v1/Chassis/1"
+            }
+        ],
+        "Logs": {
+            "href": "/rest/v1/Systems/1/Logs"
+        },
+        "ManagedBy": [
+            {
+                "href": "/rest/v1/Managers/1"
+            }
+        ],
+        "self": {
+            "href": "/rest/v1/Systems/1"
+        }
+    }
+}
+"""
+
+
+RESP_BODY_FOR_SYSTEM_WITHOUT_BOOT = """
+{
+    "AssetTag": "",
+    "AvailableActions": [
+        {
+            "Action": "Reset",
+            "Capabilities": [
+                {
+                    "AllowableValues": [
+                        "On",
+                        "ForceOff",
+                        "ForceRestart",
+                        "Nmi",
+                        "PushPowerButton"
+                    ],
+                    "PropertyName": "ResetType"
+                }
+            ]
+        }
+    ],
+    "Bios": {
+        "Current": {
+            "VersionString": "I36 v1.40 (01/28/2015)"
+        }
+    },
+    "Description": "Computer System View",
+    "HostCorrelation": {
+        "HostMACAddress": [
+            "6c:c2:17:39:fe:80",
+            "6c:c2:17:39:fe:88"
+        ],
+        "HostName": "",
+        "IPAddress": [
+            "",
+            ""
+        ]
+    },
+    "IndicatorLED": "Off",
+    "Manufacturer": "HP",
+    "Memory": {
+        "TotalSystemMemoryGB": 16
+    },
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "AvailableActions": [
+                {
+                    "Action": "PowerButton",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "Press",
+                                "PressAndHold"
+                            ],
+                            "PropertyName": "PushType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                },
+                {
+                    "Action": "SystemReset",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "ColdBoot"
+                            ],
+                            "PropertyName": "ResetType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                }
+            ],
+            "Battery": [],
+            "Bios": {
+                "Backup": {
+                    "Date": "v1.40 (01/28/2015)",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "Current": {
+                    "Date": "01/28/2015",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "UefiClass": 2
+            },
+            "DeviceDiscoveryComplete": {
+                "AMSDeviceDiscovery": "NoAMS",
+                "SmartArrayDiscovery": "Initial",
+                "vAuxDeviceDiscovery": "DataIncomplete",
+                "vMainDeviceDiscovery": "ServerOff"
+            },
+            "PostState": "PowerOff",
+            "PowerAllocationLimit": 500,
+            "PowerAutoOn": "PowerOn",
+            "PowerOnDelay": "Minimum",
+            "PowerRegulatorMode": "Dynamic",
+            "PowerRegulatorModesSupported": [
+                "OSControl",
+                "Dynamic",
+                "Max",
+                "Min"
+            ],
+            "ServerSignature": 0,
+            "Type": "HpComputerSystemExt.0.10.1",
+            "VirtualProfile": "Inactive",
+            "VirtualUUID": null,
+            "links": {
+                "BIOS": {
+                    "href": "/rest/v1/systems/1/bios"
+                },
+                "MEMORY": {
+                    "href": "/rest/v1/Systems/1/Memory"
+                },
+                "PCIDevices": {
+                    "href": "/rest/v1/Systems/1/PCIDevices"
+                },
+                "PCISlots": {
+                    "href": "/rest/v1/Systems/1/PCISlots"
+                },
+                "SecureBoot": {
+                    "href": "/rest/v1/Systems/1/SecureBoot"
+                }
+            }
+        }
+    },
+    "Power": "Off",
+    "Processors": {
+        "Count": 1,
+        "ProcessorFamily": "Intel(R) Xeon(R) CPU E5-2609 v3 @ 1.90GHz",
+        "Status": {
+            "HealthRollUp": "OK"
+        }
+    },
+    "SKU": "727021-B21",
+    "SerialNumber": "SGH449WNL3",
+    "Status": {
+        "Health": "OK",
+        "State": "Disabled"
+    },
+    "SystemType": "Physical",
+    "Type": "ComputerSystem.0.9.6",
+    "UUID": "30373237-3132-4753-4834-3439574E4C33",
+    "links": {
+        "Chassis": [
+            {
+                "href": "/rest/v1/Chassis/1"
+            }
+        ],
+        "Logs": {
+            "href": "/rest/v1/Systems/1/Logs"
+        },
+        "ManagedBy": [
+            {
+                "href": "/rest/v1/Managers/1"
+            }
+        ],
+        "self": {
+            "href": "/rest/v1/Systems/1"
+        }
+    }
+}
+"""
+
+SYSTEM_WITH_CDROM_CONT = """
+{
+    "AssetTag": "",
+    "AvailableActions": [
+        {
+            "Action": "Reset",
+            "Capabilities": [
+                {
+                    "AllowableValues": [
+                        "On",
+                        "ForceOff",
+                        "ForceRestart",
+                        "Nmi",
+                        "PushPowerButton"
+                    ],
+                    "PropertyName": "ResetType"
+                }
+            ]
+        }
+    ],
+    "Bios": {
+        "Current": {
+            "VersionString": "I36 v1.40 (01/28/2015)"
+        }
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Continuous",
+        "BootSourceOverrideSupported": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiTarget"
+        ],
+        "BootSourceOverrideTarget": "Cd",
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverrideSupported": [
+            "HD.Emb.1.2",
+            "Generic.USB.1.1",
+            "NIC.FlexLOM.1.1.IPv4",
+            "NIC.FlexLOM.1.1.IPv6",
+            "CD.Virtual.2.1"
+        ]
+    },
+    "Description": "Computer System View",
+    "HostCorrelation": {
+        "HostMACAddress": [
+            "6c:c2:17:39:fe:80",
+            "6c:c2:17:39:fe:88"
+        ],
+        "HostName": "",
+        "IPAddress": [
+            "",
+            ""
+        ]
+    },
+    "IndicatorLED": "Off",
+    "Manufacturer": "HP",
+    "Memory": {
+        "TotalSystemMemoryGB": 16
+    },
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "AvailableActions": [
+                {
+                    "Action": "PowerButton",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "Press",
+                                "PressAndHold"
+                            ],
+                            "PropertyName": "PushType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                },
+                {
+                    "Action": "SystemReset",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "ColdBoot"
+                            ],
+                            "PropertyName": "ResetType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                }
+            ],
+            "Battery": [],
+            "Bios": {
+                "Backup": {
+                    "Date": "v1.40 (01/28/2015)",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "Current": {
+                    "Date": "01/28/2015",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "UefiClass": 2
+            },
+            "DeviceDiscoveryComplete": {
+                "AMSDeviceDiscovery": "NoAMS",
+                "SmartArrayDiscovery": "Initial",
+                "vAuxDeviceDiscovery": "DataIncomplete",
+                "vMainDeviceDiscovery": "ServerOff"
+            },
+            "PostState": "PowerOff",
+            "PowerAllocationLimit": 500,
+            "PowerAutoOn": "PowerOn",
+            "PowerOnDelay": "Minimum",
+            "PowerRegulatorMode": "Dynamic",
+            "PowerRegulatorModesSupported": [
+                "OSControl",
+                "Dynamic",
+                "Max",
+                "Min"
+            ],
+            "ServerSignature": 0,
+            "Type": "HpComputerSystemExt.0.10.1",
+            "VirtualProfile": "Inactive",
+            "VirtualUUID": null,
+            "links": {
+                "BIOS": {
+                    "href": "/rest/v1/systems/1/bios"
+                },
+                "MEMORY": {
+                    "href": "/rest/v1/Systems/1/Memory"
+                },
+                "PCIDevices": {
+                    "href": "/rest/v1/Systems/1/PCIDevices"
+                },
+                "PCISlots": {
+                    "href": "/rest/v1/Systems/1/PCISlots"
+                },
+                "SecureBoot": {
+                    "href": "/rest/v1/Systems/1/SecureBoot"
+                }
+            }
+        }
+    },
+    "Power": "Off",
+    "Processors": {
+        "Count": 1,
+        "ProcessorFamily": "Intel(R) Xeon(R) CPU E5-2609 v3 @ 1.90GHz",
+        "Status": {
+            "HealthRollUp": "OK"
+        }
+    },
+    "SKU": "727021-B21",
+    "SerialNumber": "SGH449WNL3",
+    "Status": {
+        "Health": "OK",
+        "State": "Disabled"
+    },
+    "SystemType": "Physical",
+    "Type": "ComputerSystem.0.9.6",
+    "UUID": "30373237-3132-4753-4834-3439574E4C33",
+    "links": {
+        "Chassis": [
+            {
+                "href": "/rest/v1/Chassis/1"
+            }
+        ],
+        "Logs": {
+            "href": "/rest/v1/Systems/1/Logs"
+        },
+        "ManagedBy": [
+            {
+                "href": "/rest/v1/Managers/1"
+            }
+        ],
+        "self": {
+            "href": "/rest/v1/Systems/1"
+        }
+    }
+}
+"""
+
+SYSTEM_WITH_UEFISHELL_CONT = """
+{
+    "AssetTag": "",
+    "AvailableActions": [
+        {
+            "Action": "Reset",
+            "Capabilities": [
+                {
+                    "AllowableValues": [
+                        "On",
+                        "ForceOff",
+                        "ForceRestart",
+                        "Nmi",
+                        "PushPowerButton"
+                    ],
+                    "PropertyName": "ResetType"
+                }
+            ]
+        }
+    ],
+    "Bios": {
+        "Current": {
+            "VersionString": "I36 v1.40 (01/28/2015)"
+        }
+    },
+    "Boot": {
+        "BootSourceOverrideEnabled": "Continuous",
+        "BootSourceOverrideSupported": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiTarget"
+        ],
+        "BootSourceOverrideTarget": "UefiShell",
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverrideSupported": [
+            "HD.Emb.1.2",
+            "Generic.USB.1.1",
+            "NIC.FlexLOM.1.1.IPv4",
+            "NIC.FlexLOM.1.1.IPv6",
+            "CD.Virtual.2.1"
+        ]
+    },
+    "Description": "Computer System View",
+    "HostCorrelation": {
+        "HostMACAddress": [
+            "6c:c2:17:39:fe:80",
+            "6c:c2:17:39:fe:88"
+        ],
+        "HostName": "",
+        "IPAddress": [
+            "",
+            ""
+        ]
+    },
+    "IndicatorLED": "Off",
+    "Manufacturer": "HP",
+    "Memory": {
+        "TotalSystemMemoryGB": 16
+    },
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "AvailableActions": [
+                {
+                    "Action": "PowerButton",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "Press",
+                                "PressAndHold"
+                            ],
+                            "PropertyName": "PushType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                },
+                {
+                    "Action": "SystemReset",
+                    "Capabilities": [
+                        {
+                            "AllowableValues": [
+                                "ColdBoot"
+                            ],
+                            "PropertyName": "ResetType"
+                        },
+                        {
+                            "AllowableValues": [
+                                "/Oem/Hp"
+                            ],
+                            "PropertyName": "Target"
+                        }
+                    ]
+                }
+            ],
+            "Battery": [],
+            "Bios": {
+                "Backup": {
+                    "Date": "v1.40 (01/28/2015)",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "Current": {
+                    "Date": "01/28/2015",
+                    "Family": "I36",
+                    "VersionString": "I36 v1.40 (01/28/2015)"
+                },
+                "UefiClass": 2
+            },
+            "DeviceDiscoveryComplete": {
+                "AMSDeviceDiscovery": "NoAMS",
+                "SmartArrayDiscovery": "Initial",
+                "vAuxDeviceDiscovery": "DataIncomplete",
+                "vMainDeviceDiscovery": "ServerOff"
+            },
+            "PostState": "PowerOff",
+            "PowerAllocationLimit": 500,
+            "PowerAutoOn": "PowerOn",
+            "PowerOnDelay": "Minimum",
+            "PowerRegulatorMode": "Dynamic",
+            "PowerRegulatorModesSupported": [
+                "OSControl",
+                "Dynamic",
+                "Max",
+                "Min"
+            ],
+            "ServerSignature": 0,
+            "Type": "HpComputerSystemExt.0.10.1",
+            "VirtualProfile": "Inactive",
+            "VirtualUUID": null,
+            "links": {
+                "BIOS": {
+                    "href": "/rest/v1/systems/1/bios"
+                },
+                "MEMORY": {
+                    "href": "/rest/v1/Systems/1/Memory"
+                },
+                "PCIDevices": {
+                    "href": "/rest/v1/Systems/1/PCIDevices"
+                },
+                "PCISlots": {
+                    "href": "/rest/v1/Systems/1/PCISlots"
+                },
+                "SecureBoot": {
+                    "href": "/rest/v1/Systems/1/SecureBoot"
+                }
+            }
+        }
+    },
+    "Power": "Off",
+    "Processors": {
+        "Count": 1,
+        "ProcessorFamily": "Intel(R) Xeon(R) CPU E5-2609 v3 @ 1.90GHz",
+        "Status": {
+            "HealthRollUp": "OK"
+        }
+    },
+    "SKU": "727021-B21",
+    "SerialNumber": "SGH449WNL3",
+    "Status": {
+        "Health": "OK",
+        "State": "Disabled"
+    },
+    "SystemType": "Physical",
+    "Type": "ComputerSystem.0.9.6",
+    "UUID": "30373237-3132-4753-4834-3439574E4C33",
+    "links": {
+        "Chassis": [
+            {
+                "href": "/rest/v1/Chassis/1"
+            }
+        ],
+        "Logs": {
+            "href": "/rest/v1/Systems/1/Logs"
+        },
+        "ManagedBy": [
+            {
+                "href": "/rest/v1/Managers/1"
+            }
+        ],
+        "self": {
+            "href": "/rest/v1/Systems/1"
+        }
+    }
+}
+"""
+
+UEFI_BOOT_DEVICE_ORDER_PXE = ['NIC.LOM.1.1.IPv4',
+                              'NIC.LOM.1.1.IPv6',
+                              'HD.Slot.1.2',
+                              'Generic.USB.1.1',
+                              'CD.Virtual.2.1',
+                              'FD.Virtual.1.1']
+
+UEFI_BOOT_DEVICE_ORDER_HDD = ['HD.Slot.1.2',
+                              'NIC.LOM.1.1.IPv4',
+                              'NIC.LOM.1.1.IPv6',
+                              'Generic.USB.1.1',
+                              'CD.Virtual.2.1',
+                              'FD.Virtual.1.1']
+
+UEFI_BOOT_DEVICE_ORDER_CD = ['CD.Virtual.2.1',
+                             'NIC.LOM.1.1.IPv4',
+                             'NIC.LOM.1.1.IPv6',
+                             'Generic.USB.1.1',
+                             'HD.Slot.1.2',
+                             'FD.Virtual.1.1']
+
+UEFI_BOOT_DEVICE_ORDER_ERR = ['FAKE.Virtual.2.1',
+                              'CD.Virtual.2.1',
+                              'NIC.LOM.1.1.IPv4',
+                              'NIC.LOM.1.1.IPv6',
+                              'Generic.USB.1.1',
+                              'HD.Slot.1.2',
+                              'FD.Virtual.1.1']
+
+UEFI_BOOT_SOURCES_ERR = '''
+[
+    {
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC \
+                           (3863BB43683C,0x0)/IPv4(0.0.0.0)",
+        "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port \
+                       331i Adapter - NIC (PXE IPv4) ",
+        "StructuredBootString": "NIC.LOM.1.1.IPv4",
+        "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)"
+        },
+    {
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+                           (3863BB43683C,0x0)/IPv6(0000:0000:0000:0000:\
+                           0000:0000:0000:0000)",
+        "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port \
+                       331i Adapter - NIC (PXE IPv6) ",
+        "StructuredBootString": "NIC.LOM.1.1.IPv6",
+        "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)"
+        },
+    {
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                           (0x0,0x0)",
+        "StructuredBootString": "HD.Slot.1.2",
+        "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)"
+        },
+    {
+        "UEFIDevicePath": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+        "BootString": "Generic USB Boot",
+        "StructuredBootString": "Generic.USB.1.1",
+        "CorrelatableID": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+        },
+    {
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)\
+                           /USB(0x0,0x0)",
+        "BootString": "iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM",
+        "StructuredBootString": "CD.Virtual.2.1",
+        "CorrelatableID": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                           (0x0,0x0)"
+        },
+    {
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x4)/USB\
+                           (0x1,0x0)",
+        "BootString": "iLO Virtual USB 1 : HP iLO Virtual USB Key",
+        "StructuredBootString": "FD.Virtual.1.1",
+        "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x2)/Pci(0x0,0x4)/USB(0x1,\
+                           0x0)"
+        }
+    ]
+'''
+
+UEFI_PERS_BOOT_DEVICES = ["HD.Slot.1.1",
+                          "HD.Slot.1.2",
+                          "NIC.LOM.1.1.IPv4",
+                          "NIC.LOM.1.1.IPv6",
+                          "Generic.USB.1.1",
+                          "CD.Virtual.2.1"
+                          ]
+
+BOOT_PERS_DEV_ORDER_MISSING = """
+
+{
+    "AttributeRegistry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BootSources": [
+        {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:0)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x0)"
+        },
+        {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:1)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.2",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x1)"
+        },
+        {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                         331i Adapter - NIC (PXE IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv4",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+                                        (C4346BB7EF30,0x0)/IPv4(0.0.0.0)"
+        },
+        {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                          331i Adapter - NIC (PXE IPv6) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv6",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x0)/IPv6(0000:0000:0000:0000:0000:0000:0000:0000)"
+        },
+        {
+            "BootString": "Generic USB Boot",
+            "CorrelatableID": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+            "StructuredBootString": "Generic.USB.1.1",
+            "UEFIDevicePath": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+        },
+        {
+            "BootString": "iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)",
+            "StructuredBootString": "CD.Virtual.2.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)"
+        }
+    ],
+    "DefaultBootOrder": [
+        "Floppy",
+        "Cd",
+        "Usb",
+        "EmbeddedStorage",
+        "PcieSlotStorage",
+        "EmbeddedFlexLOM",
+        "PcieSlotNic",
+        "UefiShell"
+    ],
+    "Description": "This is the Server Boot Order Current Settings",
+    "DesiredBootDevices": [
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        }
+    ],
+    "Modified": "2015-05-26T23:38:24+00:00",
+    "Name": "Boot Order Current Settings",
+    "SettingsResult": {
+        "ETag": "0DEA61A1609C51EED0628E3B0BC633DD",
+        "Messages": [
+            {
+                "MessageArgs": [
+                    "PersistentBootConfigOrder[0"
+                ],
+                "MessageID": "Base.1.0:PropertyValueNotInList"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ],
+        "Time": "2015-05-14T02:38:40+00:00"
+    },
+    "Type": "HpServerBootSettings.1.2.0",
+    "links": {
+        "BaseConfigs": {
+            "href": "/rest/v1/systems/1/bios/Boot/BaseConfigs"
+        },
+        "Settings": {
+            "href": "/rest/v1/systems/1/bios/Boot/Settings"
+        },
+        "self": {
+            "href": "/rest/v1/systems/1/bios/Boot"
+        }
+    }
+}
+
+"""
+
+UEFI_BootSources = '''
+[
+    {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:0)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x0)"
+    },
+    {
+            "BootString": "Slot 1 : Smart Array P840 Controller - 279.37 GiB,\
+                                      RAID 0 Logical Drive(Target:0, Lun:1)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "HD.Slot.1.2",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/Scsi\
+                                                                (0x0,0x1)"
+    },
+    {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                         331i Adapter - NIC (PXE IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv4",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+                                        (C4346BB7EF30,0x0)/IPv4(0.0.0.0)"
+    },
+    {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
+                                          331i Adapter - NIC (PXE IPv6) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv6",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x0)/IPv6(0000:0000:0000:0000:0000:0000:0000:0000)"
+    },
+    {
+            "BootString": "Generic USB Boot",
+            "CorrelatableID": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+            "StructuredBootString": "Generic.USB.1.1",
+            "UEFIDevicePath": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+    },
+    {
+            "BootString": "iLO Virtual USB 2 : HP iLO Virtual USB CD/DVD ROM",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)",
+            "StructuredBootString": "CD.Virtual.2.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1D,0x0)/USB(0x0,0x0)/USB\
+                                                                (0x0,0x0)"
+    }
+]
+'''
+
+UEFI_BOOTSOURCES_MISSING = """
+{
+    "AttributeRegistry": "HpBiosAttributeRegistryP89.1.1.00",
+    "DefaultBootOrder": [
+        "Floppy",
+        "Cd",
+        "Usb",
+        "EmbeddedStorage",
+        "PcieSlotStorage",
+        "EmbeddedFlexLOM",
+        "PcieSlotNic",
+        "UefiShell"
+    ],
+    "Description": "This is the Server Boot Order Current Settings",
+    "DesiredBootDevices": [
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        }
+    ],
+    "Modified": "2015-05-26T23:38:24+00:00",
+    "Name": "Boot Order Current Settings",
+    "PersistentBootConfigOrder": [
+        "HD.Slot.1.1",
+        "HD.Slot.1.2",
+        "NIC.LOM.1.1.IPv4",
+        "NIC.LOM.1.1.IPv6",
+        "Generic.USB.1.1",
+        "CD.Virtual.2.1"
+    ],
+    "SettingsResult": {
+        "ETag": "0DEA61A1609C51EED0628E3B0BC633DD",
+        "Messages": [
+            {
+                "MessageArgs": [
+                    "PersistentBootConfigOrder[0"
+                ],
+                "MessageID": "Base.1.0:PropertyValueNotInList"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ],
+        "Time": "2015-05-14T02:38:40+00:00"
+    },
+    "Type": "HpServerBootSettings.1.2.0",
+    "links": {
+        "BaseConfigs": {
+            "href": "/rest/v1/systems/1/bios/Boot/BaseConfigs"
+        },
+        "Settings": {
+            "href": "/rest/v1/systems/1/bios/Boot/Settings"
+        },
+        "self": {
+            "href": "/rest/v1/systems/1/bios/Boot"
+        }
+    }
+}
+"""

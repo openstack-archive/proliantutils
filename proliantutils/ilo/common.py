@@ -39,3 +39,10 @@ def wait_for_ilo_after_reset(ilo_object):
     else:
         msg = ('iLO is not up after reset.')
         raise exception.IloConnectionError(msg)
+
+
+def isDisk(result):
+    """Checks if result has a disk related strings."""
+
+    disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
+    return any(e in result for e in disk_identifier)
