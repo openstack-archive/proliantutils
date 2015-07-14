@@ -602,6 +602,75 @@ class IloRisTestCase(testtools.TestCase):
         get_vm_device_mock.assert_called_once_with('CDROM')
         patch_mock.assert_called_once_with(vm_uri, None, vm_patch)
 
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_not_set(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        ret = self.client.get_one_time_boot()
+        get_host_details_mock.assert_called_once_with()
+        self.assertEqual(ret, 'Normal')
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_cdrom(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESP_BODY_FOR_SYSTEM_WITH_CDROM)
+        get_host_details_mock.return_value = system_data
+        ret = self.client.get_one_time_boot()
+        get_host_details_mock.assert_called_once_with()
+        self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_exc(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESP_BODY_FOR_SYSTEM_WITHOUT_BOOT)
+        get_host_details_mock.return_value = system_data
+        self.assertRaises(exception.IloError,
+                          self.client.get_one_time_boot)
+        get_host_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_set_one_time_boot_cdrom(self, update_persistent_boot_mock):
+        self.client.set_one_time_boot('cdrom')
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'],
+                                                            persistent=False)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_persistent_boot_device_cdrom(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.SYSTEM_WITH_CDROM_CONT)
+        get_host_details_mock.return_value = system_data
+        ret = self.client.get_persistent_boot_device()
+        get_host_details_mock.assert_called_once_with()
+        self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_persistent_boot_device_exc(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESP_BODY_FOR_SYSTEM_WITHOUT_BOOT)
+        get_host_details_mock.return_value = system_data
+        self.assertRaises(exception.IloError,
+                          self.client.get_persistent_boot_device)
+        get_host_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_persistent_boot_device_bios(self, get_host_details_mock,
+                                             validate_uefi_boot_mode_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        validate_uefi_boot_mode_mock.return_value = False
+        ret = self.client.get_persistent_boot_device()
+        get_host_details_mock.assert_called_once_with()
+        self.assertEqual(ret, None)
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_update_persistent_boot_cdrom(self, update_persistent_boot_mock):
+        self.client.update_persistent_boot(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'],
+                                                            persistent=True)
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_update_persistent_boot_exc(self, update_persistent_boot_mock):
+        self.assertRaises(exception.IloError,
+                          self.client.update_persistent_boot, ['fake'])
+        self.assertFalse(update_persistent_boot_mock.called)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
@@ -1199,3 +1268,196 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         ilo_details_mock.assert_called_once_with()
         collection_mock.assert_called_once_with(vmedia_uri)
         get_mock.assert_called_once_with(member_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_once(self, rest_patch_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Once',
+                                     'BootSourceOverrideTarget': 'Cd'}
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        self.client._update_persistent_boot(['cdrom'], persistent=False)
+        rest_patch_mock.assert_called_once_with(systems_uri, None,
+                                                new_boot_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_for_continuous(self, rest_patch_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                                     'BootSourceOverrideTarget': 'Cd'}
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        self.client._update_persistent_boot(['cdrom'], persistent=True)
+        rest_patch_mock.assert_called_once_with(systems_uri, None,
+                                                new_boot_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_for_UefiShell(self, rest_patch_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                                     'BootSourceOverrideTarget': 'UefiShell'}
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        self.client._update_persistent_boot(['UefiShell'], persistent=True)
+        rest_patch_mock.assert_called_once_with(systems_uri, None,
+                                                new_boot_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_fail(self, rest_patch_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                                     'BootSourceOverrideTarget': 'FakeDevice'}
+        rest_patch_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        self.assertRaises(exception.IloError,
+                          self.client._update_persistent_boot,
+                          ['FakeDevice'], persistent=True)
+        rest_patch_mock.assert_called_once_with(systems_uri, None,
+                                                new_boot_settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_sources')
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_order')
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def _test_get_persistent_boot_device_uefi(self, get_host_details_mock,
+                                              validate_uefi_boot_mode_mock,
+                                              boot_devices_mock,
+                                              boot_sources_mock,
+                                              boot_devices,
+                                              boot_sources,
+                                              exp_ret_value=None):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        validate_uefi_boot_mode_mock.return_value = True
+        boot_devices_mock.return_value = boot_devices
+        boot_sources_mock.return_value = boot_sources
+
+        ret = self.client.get_persistent_boot_device()
+        get_host_details_mock.assert_called_once_with()
+        validate_uefi_boot_mode_mock.assert_called_once_with()
+        boot_devices_mock.assert_called_once_with()
+        boot_sources_mock.assert_called_once_with()
+        self.assertEqual(ret, exp_ret_value)
+
+    def test_get_persistent_boot_device_uefi_pxe(self):
+        boot_devs = ris_outputs.UEFI_BOOT_DEVICE_ORDER_PXE
+        boot_srcs = json.loads(ris_outputs.UEFI_BOOT_SOURCES)
+
+        self._test_get_persistent_boot_device_uefi(boot_devices=boot_devs,
+                                                   boot_sources=boot_srcs,
+                                                   exp_ret_value='NETWORK')
+
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_sources')
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_order')
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_persistent_boot_device_uefi_cd(self, get_host_details_mock,
+                                                validate_uefi_boot_mode_mock,
+                                                boot_devices_mock,
+                                                boot_sources_mock):
+        boot_devs = ris_outputs.UEFI_BOOT_DEVICE_ORDER_CD
+        boot_srcs = json.loads(ris_outputs.UEFI_BOOT_SOURCES)
+
+        self._test_get_persistent_boot_device_uefi(boot_devices=boot_devs,
+                                                   boot_sources=boot_srcs,
+                                                   exp_ret_value='CDROM')
+
+    def test_get_persistent_boot_device_uefi_hdd(self):
+        boot_devs = ris_outputs.UEFI_BOOT_DEVICE_ORDER_HDD
+        boot_srcs = json.loads(ris_outputs.UEFI_BOOT_SOURCES)
+
+        self._test_get_persistent_boot_device_uefi(boot_devices=boot_devs,
+                                                   boot_sources=boot_srcs,
+                                                   exp_ret_value='HDD')
+
+    def test_get_persistent_boot_device_uefi_none(self):
+        boot_devs = ris_outputs.UEFI_BOOT_DEVICE_ORDER_ERR
+        boot_srcs = json.loads(ris_outputs.UEFI_BOOT_SOURCES)
+
+        self._test_get_persistent_boot_device_uefi(boot_devices=boot_devs,
+                                                   boot_sources=boot_srcs,
+                                                   exp_ret_value=None)
+
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_sources')
+    @mock.patch.object(ris.RISOperations, '_get_persistent_boot_order')
+    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_persistent_boot_device_uefi_exp(self, get_host_details_mock,
+                                                 validate_uefi_boot_mode_mock,
+                                                 boot_devices_mock,
+                                                 boot_sources_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        validate_uefi_boot_mode_mock.return_value = True
+        boot_devices_mock.return_value = ris_outputs.UEFI_BOOT_DEVICE_ORDER_HDD
+        boot_srcs = json.loads(ris_outputs.UEFI_BOOT_SOURCES_ERR)
+        boot_sources_mock.return_value = boot_srcs
+
+        self.assertRaises(exception.IloError,
+                          self.client.get_persistent_boot_device)
+        get_host_details_mock.assert_called_once_with()
+        validate_uefi_boot_mode_mock.assert_called_once_with()
+        boot_devices_mock.assert_called_once_with()
+        boot_sources_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_persistent_boot_order(self, check_bios_mock, boot_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_settings
+        ret = self.client._get_persistent_boot_order()
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        self.assertEqual(ret, ris_outputs.UEFI_PERS_BOOT_DEVICES)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_persistent_boot_order_exc(self, check_bios_mock, boot_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_settings = json.loads(ris_outputs.BOOT_PERS_DEV_ORDER_MISSING)
+        boot_mock.return_value = boot_settings
+        self.assertRaises(exception.IloError,
+                          self.client._get_persistent_boot_order)
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_persistent_boot_sources(self, check_bios_mock, boot_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
+        boot_mock.return_value = boot_settings
+        exp_return = json.loads(ris_outputs.UEFI_BootSources)
+        ret = self.client._get_persistent_boot_sources()
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        self.assertEqual(ret, exp_return)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_persistent_boot_sources_exc(self, check_bios_mock,
+                                              boot_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_settings = json.loads(ris_outputs.UEFI_BOOTSOURCES_MISSING)
+        boot_mock.return_value = boot_settings
+        self.assertRaises(exception.IloError,
+                          self.client._get_persistent_boot_sources)
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
