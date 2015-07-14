@@ -1140,3 +1140,204 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_persistent_boot_sources(self):
+        """Get details of persistent boot devices and boot URI
+
+        :returns details of persistent boot sources and boot URI for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+
+        # Get the Boot resource.
+        boot_settings = self._get_bios_boot_resource(bios_settings)
+
+        # Get the BootSources resource
+        boot_sources = [{}]
+        try:
+            boot_sources = boot_settings['BootSources']
+        except KeyError:
+            msg = ("BootSources resource not found.")
+            raise exception.IloError(msg)
+
+        return boot_sources
+
+    def _get_persistent_boot_order(self):
+        """Get persistent boot device order and Boot Settings URI
+
+        :returns Boot Settings URI Get headers, Boot Settings URI
+         and persistent boot device order for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+
+        boot_settings = self._get_bios_boot_resource(bios_settings)
+
+        try:
+            boot_devices = boot_settings['PersistentBootConfigOrder']
+        except KeyError:
+            msg = ("PersistentBootConfigOrder resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return boot_devices
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns persistent boot device for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        device_map = {'Pxe': 'NETWORK',
+                      'Cd': 'CDROM',
+                      'Hdd': 'HDD',
+                      'Usb': 'Usb',
+                      'Utilities': 'UTILITIES',
+                      'Diags': 'DIAGS',
+                      'BiosSetup': 'BIOSSETUP',
+                      'UefiShell': 'UEFISHELL',
+                      }
+
+        system = self._get_host_details()
+        try:
+            if system['Boot']['BootSourceOverrideEnabled'] == 'Continuous':
+                return device_map[system['Boot']['BootSourceOverrideTarget']]
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        # Check if we are in BIOS boot mode.
+        # There is no resource to fetch boot device order for BIOS boot mode
+        if not self._validate_uefi_boot_mode():
+            return None
+
+        # Get persistent boot device order for UEFI
+        boot_devices = self._get_persistent_boot_order()
+        boot_sources = self._get_persistent_boot_sources()
+
+        boot_string = ""
+        try:
+            for source in boot_sources:
+                if (source["StructuredBootString"] == boot_devices[0]):
+                    boot_string = source["BootString"]
+                    break
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        if 'HP iLO Virtual USB CD' in boot_string:
+            return 'CDROM'
+
+        elif ('NIC' in boot_string or
+              'PXE' in boot_string or
+              "iSCSI" in boot_string):
+            return 'NETWORK'
+
+        elif common.isDisk(boot_string):
+            return 'HDD'
+
+        else:
+            return None
+
+    def _update_persistent_boot(self, device_type=[], persistent=False):
+        """Changes the persistent boot device order in BIOS boot mode for host
+
+        :param device_type: ordered list of boot devices
+        :param persistent: Boolean flag to indicate if the device to be set as
+                           a persistent boot device
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        device_conversion = {'NETWORK': 'Pxe',
+                             'CDROM': 'Cd',
+                             'HDD': 'Hdd',
+                             }
+
+        tenure = 'Once'
+        new_device = device_type[0]
+
+        # If it is a standard device, we need to convert in RIS convention
+        if device_type[0].upper() in device_conversion:
+            new_device = device_conversion[device_type[0].upper()]
+
+        if persistent:
+            tenure = 'Continuous'
+
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
+                                     'BootSourceOverrideTarget': new_device}
+        systems_uri = "/rest/v1/Systems/1"
+
+        status, headers, response = self._rest_patch(systems_uri, None,
+                                                     new_boot_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def update_persistent_boot(self, device_type=[]):
+        """Changes the persistent boot device order for the host
+
+        :param device_type: ordered list of boot devices
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        valid_devices = ['NETWORK',
+                         'HDD',
+                         'CDROM']
+
+        # Check if the input is valid
+        for item in device_type:
+            if item.upper() not in valid_devices:
+                raise exception.IloInvalidInputError(
+                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
+
+        self._update_persistent_boot(device_type, persistent=True)
+
+    def set_one_time_boot(self, device):
+        """Configures a single boot from a specific device.
+
+        :param device: Device to be set as a one time boot device
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        self._update_persistent_boot([device], persistent=False)
+
+    def get_one_time_boot(self):
+        """Retrieves the current setting for the one time boot.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        device_map = {'Pxe': 'NETWORK',
+                      'Cd': 'CDROM',
+                      'Hdd': 'HDD',
+                      'Usb': 'USB',
+                      'Utilities': 'UTILITIES',
+                      'Diags': 'DIAGS',
+                      'BiosSetup': 'BIOSSETUP',
+                      'UefiShell': 'UEFISHELL',
+                      }
+
+        system = self._get_host_details()
+        try:
+            if system['Boot']['BootSourceOverrideEnabled'] == 'Once':
+                return device_map[system['Boot']['BootSourceOverrideTarget']]
+            else:
+                # value returned by RIBCL if one-time boot setting are absent
+                return 'Normal'
+
+        except KeyError as e:
+            msg = "get_one_time_boot failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
