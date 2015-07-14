@@ -1199,3 +1199,45 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         ilo_details_mock.assert_called_once_with()
         collection_mock.assert_called_once_with(vmedia_uri)
         get_mock.assert_called_once_with(member_uri)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_not_set(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        ret = self.client.get_one_time_boot()
+        get_host_details_mock.assert_called_once()
+        self.assertEqual(ret, 'Normal')
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_cdrom(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESP_BODY_FOR_SYSTEM_WITH_CDROM)
+        get_host_details_mock.return_value = system_data
+        ret = self.client.get_one_time_boot()
+        get_host_details_mock.assert_called_once()
+        self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_one_time_boot_exc(self, get_host_details_mock):
+        system_data = json.loads(ris_outputs.RESP_BODY_FOR_SYSTEM_WITHOUT_BOOT)
+        get_host_details_mock.return_value = system_data
+        self.assertRaises(exception.IloError,
+                          self.client.get_one_time_boot)
+        get_host_details_mock.assert_called_once()
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_set_one_time_boot_cdrom(self, update_persistent_boot_mock):
+        self.client.set_one_time_boot('cdrom')
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'],
+                                                            persistent=False)
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_update_persistent_boot_cdrom(self, update_persistent_boot_mock):
+        self.client.update_persistent_boot(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'],
+                                                            persistent=True)
+
+    @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
+    def test_update_persistent_boot_exc(self, update_persistent_boot_mock):
+        self.assertRaises(exception.IloError,
+                          self.client.update_persistent_boot, ['fake'])
+        self.assertFalse(update_persistent_boot_mock.called)

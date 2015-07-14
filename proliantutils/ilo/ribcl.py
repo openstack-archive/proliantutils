@@ -434,7 +434,7 @@ class RIBCLOperations(operations.IloOperations):
         elif 'NIC' in value or 'PXE' in value:
             return 'NETWORK'
 
-        elif self._isDisk(value):
+        elif common.isDisk(value):
             return 'HDD'
 
         else:
@@ -528,15 +528,11 @@ class RIBCLOperations(operations.IloOperations):
         all_nics = pxe_nic_list + nic_list + iscsi_nic_list
         return all_nics
 
-    def _isDisk(self, result):
-        disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
-        return any(e in result for e in disk_identifier)
-
     def _get_disk_boot_devices(self, result):
         disk_list = []
         try:
             for item in result:
-                if self._isDisk(item["DESCRIPTION"]):
+                if common.isDisk(item["DESCRIPTION"]):
                     disk_list.append(item["value"])
         except KeyError as e:
             msg = "_get_disk_boot_devices failed with the KeyError:%s"
