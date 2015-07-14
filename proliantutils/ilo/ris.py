@@ -1140,3 +1140,261 @@ class RISOperations(operations.IloOperations):
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
+
+    def _get_persistent_boot_sources(self):
+        """Get details of persistent boot devices and boot URI
+
+        :returns details of persistent boot sources and boot URI for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+
+        # Get the Boot resource.
+        boot_settings = self._get_bios_boot_resource(bios_settings)
+
+        # Get the BootSources resource
+        boot_sources = [{}]
+        try:
+            boot_sources = boot_settings['BootSources']
+        except KeyError:
+            msg = ("BootSources resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return boot_sources
+
+    def _get_persistent_boot_order(self):
+        """Get persistent boot device order and Boot Settings URI
+
+        :returns Boot Settings URI Get headers, Boot Settings URI
+         and persistent boot device order for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+
+        # Check if the BIOS resource if exists.
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+
+        boot_settings = self._get_bios_boot_resource(bios_settings)
+
+        # Get the Boot Settings resource.
+        boot_settings_uri = ""
+        try:
+            boot_settings_uri = boot_settings['links']['Settings']['href']
+        except KeyError:
+            msg = ("Boot Settings resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        status, headers, boot_data = self._rest_get(boot_settings_uri)
+        if status != 200:
+            msg = self._get_extended_error(boot_data)
+            raise exception.IloError(msg)
+
+        try:
+            persistent_boot_devices = boot_data['PersistentBootConfigOrder']
+        except KeyError:
+            msg = ("PersistentBootConfigOrder resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return headers, boot_settings_uri, persistent_boot_devices
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns persistent boot device for the system
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, settings_uri, boot_devices = self._get_persistent_boot_order()
+        boot_sources = self._get_persistent_boot_sources()
+
+        boot_string = ""
+        try:
+            for source in boot_sources:
+                if (source["StructuredBootString"] == boot_devices[0]):
+                    boot_string = source["BootString"]
+                    break
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)(msg)
+
+        if 'HP iLO Virtual USB CD' in boot_string:
+            return 'CDROM'
+
+        elif 'NIC' in boot_string or 'PXE' in boot_string:
+            return 'NETWORK'
+
+        elif common.isDisk(boot_string):
+            return 'HDD'
+
+        else:
+            return None
+
+    def _get_virtual_boot_devices(self, sources):
+        """Returns list of structured boot string for virtual boot devices
+
+        :param sources: List of dictionary of boot sources
+        :raises: IloError, on an error from iLO.
+        """
+        virtual_list = []
+        dev_desc = "HP iLO Virtual USB CD"
+        try:
+            for item in sources:
+                if dev_desc in item["BootString"]:
+                    virtual_list.append(item["StructuredBootString"])
+        except KeyError as e:
+            msg = "_get_virtual_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        return virtual_list
+
+    def _get_disk_boot_devices(self, sources):
+        """Returns list of structured boot string for disk based boot devices
+
+        :param sources: List of dictionary of boot sources
+        :raises: IloError, on an error from iLO.
+        """
+
+        disk_list = []
+        try:
+            for item in sources:
+                if common.isDisk(item["BootString"]):
+                    disk_list.append(item["StructuredBootString"])
+        except KeyError as e:
+            msg = "_get_disk_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        return disk_list
+
+    def _get_nic_boot_devices(self, sources):
+        """Returns list of structured boot string for NIC based boot devices
+
+        :param sources: List of dictionary of boot sources
+        :raises: IloError, on an error from iLO.
+        """
+
+        nw_identifier = "NIC"
+        pxe_enabled = "PXE"
+        iscsi_identifier = "iSCSI"
+        nic_list = []
+        pxe_nic_list = []
+        iscsi_nic_list = []
+        try:
+            for item in sources:
+                if pxe_enabled in item["BootString"]:
+                    # Keep IPv4 at top"
+                    if "IPv4" in item["BootString"]:
+                        pxe_nic_list.insert(0, item["StructuredBootString"])
+                    else:
+                        pxe_nic_list.append(item["StructuredBootString"])
+                elif iscsi_identifier in item["BootString"]:
+                    iscsi_nic_list.append(item["StructuredBootString"])
+                elif nw_identifier in item["BootString"]:
+                    nic_list.append(item["StructuredBootString"])
+        except KeyError as e:
+            msg = "_get_nic_boot_devices failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        all_nics = pxe_nic_list + nic_list + iscsi_nic_list
+        return all_nics
+
+    def _set_persistent_boot_order(self, settings_uri, devices=[]):
+        """Set persistent boot device order
+
+        : param settings_uri: Boot Settings URI
+        : param devices: ordered list of boot devices
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+
+        new_boot_settings = {}
+        new_boot_settings['PersistentBootConfigOrder'] = devices
+        status, headers, response = self._rest_patch(settings_uri, None,
+                                                     new_boot_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def update_persistent_boot_bios_mode(self, device_type=[]):
+        """Changes the persistent boot device order in BIOS boot mode for host
+
+        :param device_type: ordered list of boot devices
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        device_conversion = {'NETWORK': 'Pxe',
+                             'CDROM': 'Cd',
+                             'HDD': 'Hdd',
+                            }
+
+        new_device =  device_conversion[device_type[0].upper()]
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                                     'BootSourceOverrideTarget': new_device}
+        systems_uri = "/rest/v1/Systems/1"
+
+        status, headers, response = self._rest_patch(systems_uri, None,
+                                                     new_boot_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def update_persistent_boot(self, device_type=[]):
+        """Changes the persistent boot device order for the host
+
+        :param device_type: ordered list of boot devices
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        import pdb
+        pdb.set_trace()
+
+        valid_devices = ['NETWORK',
+                         'HDD',
+                         'CDROM']
+
+        # Check if the input is valid
+        for item in device_type:
+            if item.upper() not in valid_devices:
+                raise exception.IloInvalidInputError(
+                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
+
+        boot_sources = self._get_persistent_boot_sources()
+        headers, settings_uri, boot_devices = self._get_persistent_boot_order()
+
+        # Check if BIOS resource settings supports patch
+        self._validate_if_patch_supported(headers, settings_uri)
+
+        device_list = []
+        for item in device_type:
+            dev = item.upper()
+            if dev == 'NETWORK':
+                nic_list = self._get_nic_boot_devices(boot_sources)
+                device_list.extend(nic_list)
+            if dev == 'HDD':
+                disk_list = self._get_disk_boot_devices(boot_sources)
+                device_list.extend(disk_list)
+            if dev == 'CDROM':
+                virtual_list = self._get_virtual_boot_devices(boot_sources)
+                device_list.extend(virtual_list)
+
+            if not device_list:
+                platform = self.get_product_name()
+                msg = ("\'%(device)s\' is not configured as boot device on "
+                       "this system of type %(platform)s."
+                       % {'device': device_type[0], 'platform': platform})
+                raise (exception.IloInvalidInputError(msg))
+
+        for item in boot_devices:
+            if item not in device_list:
+                device_list.append(item)
+
+        self._set_persistent_boot_order(settings_uri, device_list)
+        self.update_persistent_boot_bios_mode(device_type)

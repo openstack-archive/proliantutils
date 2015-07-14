@@ -180,11 +180,6 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('set_pending_boot_mode', 'UEFI')
 
     @mock.patch.object(client.IloClient, '_call_method')
-    def test_get_persistent_boot(self, call_mock):
-        self.client.get_persistent_boot()
-        call_mock.assert_called_once_with('get_persistent_boot')
-
-    @mock.patch.object(client.IloClient, '_call_method')
     def test_get_persistent_boot_device(self, call_mock):
         self.client.get_persistent_boot_device()
         call_mock.assert_called_once_with('get_persistent_boot_device')
