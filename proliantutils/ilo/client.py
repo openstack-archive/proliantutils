@@ -25,7 +25,9 @@ SUPPORTED_RIS_METHODS = [
     'get_current_boot_mode',
     'get_host_power_status',
     'get_http_boot_url',
+    'get_one_time_boot',
     'get_pending_boot_mode',
+    'get_persistent_boot_device',
     'get_product_name',
     'get_secure_boot_mode',
     'get_vm_status',
@@ -34,11 +36,13 @@ SUPPORTED_RIS_METHODS = [
     'reset_ilo_credential',
     'reset_secure_boot_keys',
     'set_http_boot_url',
+    'set_one_time_boot',
     'set_pending_boot_mode',
     'set_secure_boot_mode',
     'get_server_capabilities',
     'set_iscsi_boot_info',
-    'set_vm_status'
+    'set_vm_status',
+    'update_persistent_boot',
     ]
 
 
@@ -184,17 +188,9 @@ class IloClient(operations.IloOperations):
         """Sets the boot mode of the system for next boot."""
         return self._call_method('set_pending_boot_mode', value)
 
-    def get_persistent_boot(self):
-        """Retrieves the boot order of the host."""
-        return self._call_method('get_persistent_boot')
-
     def get_persistent_boot_device(self):
         """Get the current persistent boot device set for the host."""
         return self._call_method('get_persistent_boot_device')
-
-    def set_persistent_boot(self, values=[]):
-        """Configures to boot from a specific device."""
-        return self._call_method('set_persistent_boot', values)
 
     def update_persistent_boot(self, device_type=[]):
         """Updates persistent boot based on the boot mode."""

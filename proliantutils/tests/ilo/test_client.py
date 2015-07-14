@@ -180,11 +180,6 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('set_pending_boot_mode', 'UEFI')
 
     @mock.patch.object(client.IloClient, '_call_method')
-    def test_get_persistent_boot(self, call_mock):
-        self.client.get_persistent_boot()
-        call_mock.assert_called_once_with('get_persistent_boot')
-
-    @mock.patch.object(client.IloClient, '_call_method')
     def test_get_persistent_boot_device(self, call_mock):
         self.client.get_persistent_boot_device()
         call_mock.assert_called_once_with('get_persistent_boot_device')
@@ -427,3 +422,51 @@ class IloClientTestCase(testtools.TestCase):
                                          device='FLOPPY')
         insert_virtual_media_mock.assert_called_once_with("http://ilo/fpy.iso",
                                                           "FLOPPY")
+
+    @mock.patch.object(ris.RISOperations, 'get_one_time_boot')
+    def test_get_one_time_boot_gen9(self, get_one_time_boot_mock):
+        self.client.model = 'Gen9'
+        self.client.get_one_time_boot()
+        get_one_time_boot_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_one_time_boot')
+    def test_get_one_time_boot_gen8(self, get_one_time_boot_mock):
+        self.client.model = 'Gen8'
+        self.client.get_one_time_boot()
+        get_one_time_boot_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'set_one_time_boot')
+    def test_set_one_time_boot_gen9(self, set_one_time_boot_mock):
+        self.client.model = 'Gen9'
+        self.client.set_one_time_boot('cdrom')
+        set_one_time_boot_mock.assert_called_once_with('cdrom')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_one_time_boot')
+    def test_set_one_time_boot_gen8(self, set_one_time_boot_mock):
+        self.client.model = 'Gen8'
+        self.client.set_one_time_boot('cdrom')
+        set_one_time_boot_mock.assert_called_once_with('cdrom')
+
+    @mock.patch.object(ris.RISOperations, 'update_persistent_boot')
+    def test_update_persistent_boot_gen9(self, update_persistent_boot_mock):
+        self.client.model = 'Gen9'
+        self.client.update_persistent_boot(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'])
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'update_persistent_boot')
+    def test_update_persistent_boot_gen8(self, update_persistent_boot_mock):
+        self.client.model = 'Gen8'
+        self.client.update_persistent_boot(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'])
+
+    @mock.patch.object(ris.RISOperations, 'get_persistent_boot_device')
+    def test_get_persistent_boot_device_gen9(self, get_pers_boot_device_mock):
+        self.client.model = 'Gen9'
+        self.client.get_persistent_boot_device()
+        get_pers_boot_device_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_persistent_boot_device')
+    def test_get_persistent_boot_device_gen8(self, get_pers_boot_device_mock):
+        self.client.model = 'Gen8'
+        self.client.get_persistent_boot_device()
+        get_pers_boot_device_mock.assert_called_once_with()

@@ -412,7 +412,7 @@ class RIBCLOperations(operations.IloOperations):
             'SET_PENDING_BOOT_MODE', 'SERVER_INFO', 'write', dic)
         return data
 
-    def get_persistent_boot(self):
+    def _get_persistent_boot(self):
         """Retrieves the current boot mode settings."""
         data = self._execute_command(
             'GET_PERSISTENT_BOOT', 'SERVER_INFO', 'read')
@@ -421,7 +421,7 @@ class RIBCLOperations(operations.IloOperations):
 
     def get_persistent_boot_device(self):
         """Get the current persistent boot device set for the host."""
-        result = self.get_persistent_boot()
+        result = self._get_persistent_boot()
         boot_mode = self._check_boot_mode(result)
 
         if boot_mode == 'bios':
@@ -434,13 +434,13 @@ class RIBCLOperations(operations.IloOperations):
         elif 'NIC' in value or 'PXE' in value:
             return 'NETWORK'
 
-        elif self._isDisk(value):
+        elif common.isDisk(value):
             return 'HDD'
 
         else:
             return None
 
-    def set_persistent_boot(self, values=[]):
+    def _set_persistent_boot(self, values=[]):
         """Configures a boot from a specific device."""
 
         xml = self._create_dynamic_xml(
@@ -471,10 +471,10 @@ class RIBCLOperations(operations.IloOperations):
                 raise exception.IloInvalidInputError(
                     "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
 
-        result = self.get_persistent_boot()
+        result = self._get_persistent_boot()
         boot_mode = self._check_boot_mode(result)
         if boot_mode == 'bios':
-            self.set_persistent_boot(device_type)
+            self._set_persistent_boot(device_type)
             return
 
         device_list = []
@@ -497,7 +497,7 @@ class RIBCLOperations(operations.IloOperations):
                    % {'device': device_type[0], 'platform': platform})
             raise (exception.IloInvalidInputError(msg))
 
-        self.set_persistent_boot(device_list)
+        self._set_persistent_boot(device_list)
 
     def _check_boot_mode(self, result):
 
@@ -528,15 +528,11 @@ class RIBCLOperations(operations.IloOperations):
         all_nics = pxe_nic_list + nic_list + iscsi_nic_list
         return all_nics
 
-    def _isDisk(self, result):
-        disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
-        return any(e in result for e in disk_identifier)
-
     def _get_disk_boot_devices(self, result):
         disk_list = []
         try:
             for item in result:
-                if self._isDisk(item["DESCRIPTION"]):
+                if common.isDisk(item["DESCRIPTION"]):
                     disk_list.append(item["value"])
         except KeyError as e:
             msg = "_get_disk_boot_devices failed with the KeyError:%s"
