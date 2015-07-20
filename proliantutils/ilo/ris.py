@@ -1312,3 +1312,13 @@ class RISOperations(operations.IloOperations):
         except KeyError as e:
             msg = "get_one_time_boot failed with the KeyError:%s"
             raise exception.IloError((msg) % e)
+
+    def update_firmware(self, file_url):
+        """Updates the given firmware on the server
+
+        :param file_url: url of the firmware file
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                not supported on the server
+        """
+        pass

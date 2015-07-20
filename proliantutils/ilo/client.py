@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
@@ -42,6 +43,7 @@ SUPPORTED_RIS_METHODS = [
     'get_server_capabilities',
     'set_iscsi_boot_info',
     'set_vm_status',
+    'update_firmware',
     'update_persistent_boot',
     ]
 
@@ -60,10 +62,18 @@ class IloClient(operations.IloOperations):
 
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
-        object = self.ribcl
-        if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
-            object = self.ris
-        method = getattr(object, method_name)
+        the_operation_object = self.ribcl
+
+        if ('Gen9' in self.model):
+            if (method_name in SUPPORTED_RIS_METHODS):
+                the_operation_object = self.ris
+        else:  # Gen8
+            if (method_name == 'update_firmware'):
+                ilo_fw_ver = the_operation_object.get_ilo_firmware_version()
+                if (ilo_fw_ver >= 2.0):
+                    the_operation_object = self.ris
+
+        method = getattr(the_operation_object, method_name)
         return method(*args, **kwargs)
 
     def get_all_licenses(self):
@@ -362,3 +372,24 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def process_firmware_image(self, compact_firmware_file):
+        """Processes the firmware file.
+
+        Processing the firmware file entails extracting the firmware file
+        from its compact format.
+        :param compact_firmware_file: firmware file to extract from
+        :returns: core firmware file
+        """
+        fw_img_extractor = common.get_fw_extractor(compact_firmware_file)
+        return fw_img_extractor.extract()
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server
+
+        :param url: location of the firmware
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                on the server
+        """
+        return self._call_method('update_firmware', url)
