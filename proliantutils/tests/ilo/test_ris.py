@@ -761,6 +761,46 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.update_persistent_boot, ['fake'])
         self.assertFalse(update_persistent_boot_mock.called)
 
+    @mock.patch.object(
+        ris.RISOperations, '_get_firmware_update_service_resource',
+        autospec=True)
+    @mock.patch.object(ris.RISOperations, '_rest_post', autospec=True)
+    def test_update_firmware(self, _rest_post_mock,
+                             _get_firmware_update_service_resource_mock):
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        _rest_post_mock.return_value = 200, 'some-headers', 'response'
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client.update_firmware('fw_file_url')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        _get_firmware_update_service_resource_mock.assert_called_once_with(
+            self.client)
+        _rest_post_mock.assert_called_once_with(
+            self.client, mock.ANY, None, {'Action': 'InstallFromURI',
+                                          'FirmwareURI': 'fw_file_url',
+                                          })
+
+    @mock.patch.object(
+        ris.RISOperations, '_get_firmware_update_service_resource',
+        autospec=True)
+    @mock.patch.object(ris.RISOperations, '_rest_post', autospec=True)
+    def test_update_firmware_throws_if_post_operation_fails(
+            self, _rest_post_mock, _get_firmware_update_service_resource_mock):
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        _rest_post_mock.return_value = 500, 'some-headers', 'response'
+        # -----------------------------------------------------------------------
+        # WHEN & THEN
+        # -----------------------------------------------------------------------
+        self.assertRaises(
+            exception.IloError, self.client.update_firmware, 'fw_file_url')
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
@@ -1457,3 +1497,42 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client._get_persistent_boot_devices)
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details', autospec=True)
+    def test__get_firmware_update_service_resource_traverses_manager_as(
+            self, _get_ilo_details_mock):
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        manager_mock = mock.MagicMock(spec=dict, autospec=True)
+        _get_ilo_details_mock.return_value = (manager_mock, 'some_uri')
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client._get_firmware_update_service_resource()
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        manager_mock.__getitem__.assert_called_once_with('Oem')
+        manager_mock.__getitem__().__getitem__.assert_called_once_with('Hp')
+        (manager_mock.__getitem__().__getitem__().__getitem__.
+         assert_called_once_with('links'))
+        (manager_mock.__getitem__().__getitem__().__getitem__().
+         __getitem__.assert_called_once_with('UpdateService'))
+        (manager_mock.__getitem__().__getitem__().__getitem__().
+         __getitem__().__getitem__.assert_called_once_with('href'))
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details', autospec=True)
+    def test__get_firmware_update_service_resource_throws_if_not_found(
+            self, _get_ilo_details_mock):
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        manager_mock = mock.MagicMock(spec=dict)
+        _get_ilo_details_mock.return_value = (manager_mock, 'some_uri')
+        manager_mock.__getitem__.side_effect = KeyError('not found')
+        # -----------------------------------------------------------------------
+        # WHEN & THEN
+        # -----------------------------------------------------------------------
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_firmware_update_service_resource)

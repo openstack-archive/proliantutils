@@ -1312,3 +1312,37 @@ class RISOperations(operations.IloOperations):
         except KeyError as e:
             msg = "get_one_time_boot failed with the KeyError:%s"
             raise exception.IloError((msg) % e)
+
+    def _get_firmware_update_service_resource(self):
+        """Gets the firmware update service uri.
+
+        :returns: firmware update service uri
+        :raises: IloCommandNotSupportedError, for not finding the uri
+        """
+        manager, uri = self._get_ilo_details()
+        try:
+            fw_uri = manager['Oem']['Hp']['links']['UpdateService']['href']
+        except KeyError:
+            msg = ("Firmware Update Service resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+        return fw_uri
+
+    def update_firmware(self, file_url):
+        """Updates the given firmware on the server
+
+        :param file_url: url of the firmware file
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                not supported on the server
+        """
+        fw_update_uri = self._get_firmware_update_service_resource()
+        action_data = {
+            'Action': 'InstallFromURI',
+            'FirmwareURI': file_url,
+        }
+        # perform the POST
+        status, headers, response = self._rest_post(
+            fw_update_uri, None, action_data)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)

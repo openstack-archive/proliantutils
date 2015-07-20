@@ -20,6 +20,7 @@ import mock
 import testtools
 
 from proliantutils.ilo import client
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
@@ -75,6 +76,63 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen9'
         self.client._call_method('reset_ilo')
         ilo_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_ilo_firmware_version')
+    @mock.patch.object(ris.RISOperations, 'update_firmware')
+    def test__call_method_invokes_ris_version_for_fw_version_gte_2(
+            self, ris_update_fw_mock, get_ilo_firmware_version_mock):
+        # only for ``update_firmware`` call
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        self.client.model = 'Gen8'
+        get_ilo_firmware_version_mock.return_value = 2.05
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client._call_method('update_firmware')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        ris_update_fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_ilo_firmware_version')
+    @mock.patch.object(ribcl.RIBCLOperations, 'update_firmware')
+    def test__call_method_invokes_ribcl_version_for_fw_version_le_2(
+            self, ribcl_update_fw_mock, get_ilo_firmware_version_mock):
+        # only for ``update_firmware`` call
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        self.client.model = 'Gen8'
+        get_ilo_firmware_version_mock.return_value = 1.05
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client._call_method('update_firmware')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        ribcl_update_fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_ilo_firmware_version')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_power_status')
+    def test__call_method_checks_fw_ver_for_update_firmware_call_only(
+            self, ribcl_host_power_status_mock, get_ilo_firmware_version_mock):
+        # any random call other than ``update_firmware`` call
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        self.client.model = 'Gen8'
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client._call_method('get_host_power_status')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        ribcl_host_power_status_mock.assert_called_once_with()
+        self.assertFalse(get_ilo_firmware_version_mock.called)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_http_boot_url(self, call_mock):
@@ -470,3 +528,38 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.get_persistent_boot_device()
         get_pers_boot_device_mock.assert_called_once_with()
+
+    @mock.patch.object(common, 'get_fw_extractor')
+    def test_process_firmware_image_calls_extract_of_fw_extractor_object(
+            self, get_extractor_mock):
+        # process_firmware_image calls extract on the firmware_processor
+        # instance
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        some_compact_fw_file = 'some_compact_fw_file.scexe'
+        get_extractor_mock.return_value.extract.return_value = (
+            'core_fw_file.bin')
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        return_result = self.client.process_firmware_image(
+            some_compact_fw_file)
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        get_extractor_mock.assert_called_once_with(some_compact_fw_file)
+        get_extractor_mock.return_value.extract.assert_called_once_with()
+        self.assertEqual(return_result, 'core_fw_file.bin')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_update_firmware(self, _call_method_mock):
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client.update_firmware('fake-url')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        _call_method_mock.assert_called_once_with('update_firmware',
+                                                  'fake-url')
