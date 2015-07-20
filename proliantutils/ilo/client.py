@@ -43,6 +43,7 @@ SUPPORTED_RIS_METHODS = [
     'get_server_capabilities',
     'set_iscsi_boot_info',
     'set_vm_status',
+    'update_firmware',
     'update_persistent_boot',
     ]
 
@@ -373,3 +374,16 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def update_firmware(self, firmware_url, component_type):
+        """Updates the given firmware on the server
+
+        :param firmware_url: location of the firmware
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        return self._call_method(
+            'update_firmware', firmware_url, component_type)

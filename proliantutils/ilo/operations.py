@@ -320,3 +320,15 @@ class IloOperations(object):
                  on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def update_firmware(self, firmware_url, component_type):
+        """Updates the given firmware on the server
+
+        :param firmware_url: location of the firmware file
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
