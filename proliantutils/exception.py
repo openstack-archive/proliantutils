@@ -127,3 +127,13 @@ class HPSSAOperationError(HPSSAException):
 
     message = ("An error was encountered while doing hpssa configuration: "
                "%(reason)s.")
+
+
+class ImageExtractionFailed(ProliantUtilsException):
+    message = "Failed to extract image %(image_ref)s, reason: %(reason)s"
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message % kwargs
+
+        super(ImageExtractionFailed, self).__init__(message)

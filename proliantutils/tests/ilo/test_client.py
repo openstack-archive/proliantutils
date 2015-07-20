@@ -470,3 +470,15 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.get_persistent_boot_device()
         get_pers_boot_device_mock.assert_called_once_with()
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_update_firmware(self, _call_method_mock):
+        # | GIVEN |
+        some_url = 'some-url'
+        some_component_type = 'ilo'
+        # | WHEN |
+        self.client.update_firmware(some_url, some_component_type)
+        # | THEN |
+        _call_method_mock.assert_called_once_with('update_firmware',
+                                                  some_url,
+                                                  some_component_type)

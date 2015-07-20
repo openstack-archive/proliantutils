@@ -18,6 +18,7 @@ over RIBCL scripting language
 """
 
 import copy
+import os
 import re
 import xml.etree.ElementTree as etree
 
@@ -29,6 +30,7 @@ import six
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 
@@ -86,7 +88,7 @@ class RIBCLOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-    def _request_ilo(self, root):
+    def _request_ilo(self, root, extra_headers=None):
         """Send RIBCL XML data to iLO.
 
         This function sends the XML request to the ILO and
@@ -100,6 +102,9 @@ class RIBCLOperations(operations.IloOperations):
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
         headers = {"Content-length": len(xml)}
+        if extra_headers:
+            headers.update(extra_headers)
+
         kwargs = {'headers': headers, 'data': xml}
         if self.cacert is not None:
             kwargs['verify'] = self.cacert
@@ -1040,6 +1045,71 @@ class RIBCLOperations(operations.IloOperations):
         etree.SubElement(element, 'ACTIVATE', KEY=key)
         d = self._request_ilo(root)
         self._parse_output(d)
+
+    @firmware_controller.check_firmware_update_component
+    def update_firmware(self, filename, component_type):
+        """Updates the given firmware on the server for the given component.
+
+        :param filename: location of the raw firmware file. Extraction of the
+                         firmware file (if in compact format) is expected to
+                         happen prior to this invocation.
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        fw_img_processor = firmware_controller.FirmwareImageUploader(filename)
+
+        LOG.debug(self._('Uploading firmware file: %s ...'), filename)
+        cookie = fw_img_processor.upload_file_to((self.host, self.port),
+                                                 self.timeout)
+        LOG.debug(self._('Uploading firmware file: %s ... done'), filename)
+
+        root = self._get_firmware_update_xml_for_file_and_component(
+            filename, component_type)
+        element = root.find('LOGIN/RIB_INFO')
+        etree.SubElement(element, 'TPM_ENABLED', VALUE='Yes')
+        extra_headers = {'Cookie': cookie}
+
+        LOG.debug(self._('Flashing firmware file: %s ...'), filename)
+        d = self._request_ilo(root, extra_headers=extra_headers)
+
+        # wait till the firmware update completes.
+        common.wait_for_ribcl_firmware_update_to_complete(self)
+        self._parse_output(d)
+        LOG.info(self._('Flashing firmware file: %s ... done'), filename)
+
+    def _get_firmware_update_xml_for_file_and_component(
+            self, filename, component):
+        """Creates the dynamic xml for flashing the device firmware via iLO.
+
+        This method creates the dynamic xml for flashing the firmware, based
+        on the component type so passed.
+        :param filename: location of the raw firmware file.
+        :param component_type: Type of component to be applied to.
+        :returns: the etree.Element for the root of the RIBCL XML
+                  for flashing the device (component) firmware.
+        """
+        if component == 'ilo':
+            cmd_name = 'UPDATE_RIB_FIRMWARE'
+        else:
+            # Note(deray): Not explicitly checking for all other supported
+            # devices (components), as those checks have already happened
+            # in the invoking methods and may seem redundant here.
+            cmd_name = 'UPDATE_FIRMWARE'
+
+        fwlen = os.path.getsize(filename)
+        root = self._create_dynamic_xml(cmd_name,
+                                        'RIB_INFO',
+                                        'write',
+                                        subelements={
+                                            'IMAGE_LOCATION': filename,
+                                            'IMAGE_LENGTH': str(fwlen)
+                                        })
+        return root
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

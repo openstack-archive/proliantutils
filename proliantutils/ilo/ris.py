@@ -27,6 +27,7 @@ from six.moves.urllib import parse as urlparse
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 
@@ -1350,3 +1351,96 @@ class RISOperations(operations.IloOperations):
         except KeyError as e:
             msg = "get_one_time_boot failed with the KeyError:%s"
             raise exception.IloError((msg) % e)
+
+    def _get_firmware_update_service_resource(self):
+        """Gets the firmware update service uri.
+
+        :returns: firmware update service uri
+        :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, for not finding the uri
+        """
+        manager, uri = self._get_ilo_details()
+        try:
+            fw_uri = manager['Oem']['Hp']['links']['UpdateService']['href']
+        except KeyError:
+            msg = ("Firmware Update Service resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+        return fw_uri
+
+    @firmware_controller.check_firmware_update_component
+    def update_firmware(self, file_url, component_type):
+        """Updates the given firmware on the server for the given component.
+
+        :param file_url: location of the raw firmware file. Extraction of the
+                         firmware file (if in compact format) is expected to
+                         happen prior to this invocation.
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        fw_update_uri = self._get_firmware_update_service_resource()
+        action_data = {
+            'Action': 'InstallFromURI',
+            'FirmwareURI': file_url,
+        }
+
+        # perform the POST
+        LOG.debug(self._('Flashing firmware file: %s ...'), file_url)
+        status, headers, response = self._rest_post(
+            fw_update_uri, None, action_data)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+        # wait till the firmware update completes.
+        common.wait_for_ris_firmware_update_to_complete(self)
+
+        try:
+            state, percent = self.get_firmware_update_progress()
+        except exception.IloError:
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+            return
+
+        if state == "ERROR":
+            msg = 'Error in firmware update'
+            LOG.error(self._(msg))  # noqa
+            raise exception.IloError(msg)
+        elif state == "UNKNOWN":
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+        else:  # "COMPLETED" | "IDLE"
+            LOG.info(self._('Flashing firmware file: %s ... done'), file_url)
+
+    def get_firmware_update_progress(self):
+        """Get the progress of the firmware update.
+
+        :returns: firmware update state, one of the following values:
+                  "IDLE", "UPLOADING", "PROGRESSING", "COMPLETED", "ERROR".
+                  If the update resource is not found, then "UNKNOWN".
+        :returns: firmware update progress percent
+        :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if not able to reach iLO.
+        """
+        try:
+            fw_update_uri = self._get_firmware_update_service_resource()
+        except exception.IloError as e:
+            LOG.debug(self._('Progress of firmware update not known: %s'),
+                      str(e))
+            return "UNKNOWN", "UNKNOWN"
+
+        # perform the GET
+        status, headers, response = self._rest_get(fw_update_uri)
+        if status != 200:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+        fw_update_state = response.get('State')
+        fw_update_progress_percent = response.get('ProgressPercent')
+        LOG.debug(self._('Flashing firmware file ... in progress %d%%'),
+                  fw_update_progress_percent)
+        return fw_update_state, fw_update_progress_percent

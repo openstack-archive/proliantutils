@@ -6808,3 +6808,25 @@ ACTIVATE_LICENSE_FAIL_XML = '''
      />
 </RIBCL>
 '''
+
+UPDATE_ILO_FIRMWARE_INPUT_XML = '''
+<RIBCL VERSION="2.0">
+    <LOGIN PASSWORD="%s" USER_LOGIN="%s">
+        <RIB_INFO MODE="write">
+            <UPDATE_RIB_FIRMWARE IMAGE_LENGTH="%d" IMAGE_LOCATION="%s" />
+            <TPM_ENABLED VALUE="Yes" />
+        </RIB_INFO>
+    </LOGIN>
+</RIBCL>
+'''
+
+UPDATE_NONILO_FIRMWARE_INPUT_XML = '''
+<RIBCL VERSION="2.0">
+    <LOGIN PASSWORD="%s" USER_LOGIN="%s">
+        <RIB_INFO MODE="write">
+            <UPDATE_FIRMWARE IMAGE_LENGTH="%d" IMAGE_LOCATION="%s" />
+            <TPM_ENABLED VALUE="Yes" />
+        </RIB_INFO>
+    </LOGIN>
+</RIBCL>
+'''

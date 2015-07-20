@@ -16,7 +16,9 @@
 """Test class for RIBCL Module."""
 
 import json
+import re
 import unittest
+import xml.etree.ElementTree as ET
 
 import mock
 import requests
@@ -706,6 +708,80 @@ class IloRibclTestCase(unittest.TestCase):
         request_mock.return_value = constants.ACTIVATE_LICENSE_FAIL_XML
         self.assertRaises(exception.IloError, self.ilo.activate_license, 'key')
         self.assertTrue(request_mock.called)
+
+    @mock.patch.object(
+        ribcl.firmware_controller.FirmwareImageUploader, 'upload_file_to')
+    @mock.patch.object(ribcl, 'os', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_request_ilo', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_parse_output', autospec=True)
+    @mock.patch.object(common, 'wait_for_ribcl_firmware_update_to_complete',
+                       lambda x: None)
+    def test_update_ilo_firmware(self, _parse_output_mock, _request_ilo_mock,
+                                 os_mock, upload_file_to_mock):
+        # | GIVEN |
+        upload_file_to_mock.return_value = 'hickory-dickory-dock'
+        os_mock.path.getsize.return_value = 12345
+        # | WHEN |
+        self.ilo.update_firmware('raw_fw_file.bin', 'ilo')
+        # | THEN |
+        upload_file_to_mock.assert_called_once_with(
+            (self.ilo.host, self.ilo.port), self.ilo.timeout)
+
+        root_xml_string = constants.UPDATE_ILO_FIRMWARE_INPUT_XML % (
+            self.ilo.password, self.ilo.login, 12345, 'raw_fw_file.bin')
+        root_xml_string = re.sub('\n\s*', '', root_xml_string)
+
+        ((ribcl_obj, xml_elem), the_ext_header_dict) = (
+            _request_ilo_mock.call_args)
+
+        self.assertEqual(root_xml_string,
+                         ET.tostring(xml_elem).decode('latin-1'))
+        self.assertDictEqual(the_ext_header_dict['extra_headers'],
+                             {'Cookie': 'hickory-dickory-dock'})
+
+        _parse_output_mock.assert_called_once_with(
+            self.ilo, _request_ilo_mock.return_value)
+
+    @mock.patch.object(
+        ribcl.firmware_controller.FirmwareImageUploader, 'upload_file_to')
+    @mock.patch.object(ribcl, 'os', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_request_ilo', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_parse_output', autospec=True)
+    @mock.patch.object(common, 'wait_for_ribcl_firmware_update_to_complete',
+                       lambda x: None)
+    def test_update_other_component_firmware(self, _parse_output_mock,
+                                             _request_ilo_mock, os_mock,
+                                             upload_file_to_mock):
+        # | GIVEN |
+        upload_file_to_mock.return_value = 'hickory-dickory-dock'
+        os_mock.path.getsize.return_value = 12345
+        # | WHEN |
+        self.ilo.update_firmware('raw_fw_file.bin', 'power_pic')
+        # | THEN |
+        upload_file_to_mock.assert_called_once_with(
+            (self.ilo.host, self.ilo.port), self.ilo.timeout)
+
+        root_xml_string = constants.UPDATE_NONILO_FIRMWARE_INPUT_XML % (
+            self.ilo.password, self.ilo.login, 12345, 'raw_fw_file.bin')
+        root_xml_string = re.sub('\n\s*', '', root_xml_string)
+
+        ((ribcl_obj, xml_elem), the_ext_header_dict) = (
+            _request_ilo_mock.call_args)
+
+        self.assertEqual(root_xml_string,
+                         ET.tostring(xml_elem).decode('latin-1'))
+        self.assertDictEqual(the_ext_header_dict['extra_headers'],
+                             {'Cookie': 'hickory-dickory-dock'})
+
+        _parse_output_mock.assert_called_once_with(
+            self.ilo, _request_ilo_mock.return_value)
+
+    def test_update_firmware_throws_error_for_invalid_component(self):
+        # | WHEN | & | THEN |
+        self.assertRaises(exception.InvalidInputError,
+                          self.ilo.update_firmware,
+                          'raw_fw_file.bin',
+                          'invalid_component')
 
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
