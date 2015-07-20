@@ -17,6 +17,7 @@
 over RIBCL scripting language
 """
 
+import os
 import re
 import xml.etree.ElementTree as etree
 
@@ -30,7 +31,6 @@ from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
-
 
 POWER_STATE = {
     'ON': 'Yes',
@@ -72,7 +72,7 @@ class RIBCLOperations(operations.IloOperations):
         LOG.debug("RIBCLOperations object created for host {}".format(
             self.host))
 
-    def _request_ilo(self, root):
+    def _request_ilo(self, root, extra_headers=None):
         """Send RIBCL XML data to iLO.
 
         This function sends the XML request to the ILO and
@@ -86,6 +86,9 @@ class RIBCLOperations(operations.IloOperations):
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
         headers = {"Content-length": len(xml)}
+        if extra_headers:
+            headers.update(extra_headers)
+
         kwargs = {'headers': headers, 'data': xml}
         if self.cacert is not None:
             kwargs['verify'] = self.cacert
@@ -948,6 +951,25 @@ class RIBCLOperations(operations.IloOperations):
             except KeyError:
                 return None
 
+    def get_ilo_firmware_version(self):
+        """Gets the ilo firmware version for server capabilities
+
+        Parses the get_host_health_data() to retrieve the firmware details.
+        Client interface uses it for decision making based on firmware
+        version of iLO. It's not there as part of Operations' API.
+
+        :returns: iLO firmware version number (float value)
+        """
+        data = self.get_host_health_data()
+        fw_ver_details = self._get_ilo_firmware_version(data)
+        if fw_ver_details:
+            try:
+                return float(fw_ver_details.get('ilo_firmware_version').
+                             split()[0])
+            except ValueError:
+                return None
+        return None
+
     def _get_number_of_gpu_devices_connected(self, data):
         """Gets the number of GPU devices connected to the server
 
@@ -981,6 +1003,35 @@ class RIBCLOperations(operations.IloOperations):
         element = root.find('LOGIN/RIB_INFO/LICENSE')
         etree.SubElement(element, 'ACTIVATE', KEY=key)
         d = self._request_ilo(root)
+        self._parse_output(d)
+
+    def update_firmware(self, filename):
+        """Updates the given firmware on the server
+
+        :param filename: location of the raw firmware file.
+        extraction of the firmware file (if in compact format)
+        is expected to happen prior to this invocation.
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                not supported on the server
+        """
+        fw_img_processor = common.FirmwareImageProcessor(filename)
+        cookie = fw_img_processor.upload_file_to((self.host, self.port),
+                                                 self.timeout)
+
+        fwlen = os.path.getsize(filename)
+        root = self._create_dynamic_xml('UPDATE_RIB_FIRMWARE',
+                                        'RIB_INFO',
+                                        'write',
+                                        subelements={
+                                            'IMAGE_LOCATION': filename,
+                                            'IMAGE_LENGTH': str(fwlen)
+                                        })
+        element = root.find('LOGIN/RIB_INFO')
+        etree.SubElement(element, 'TPM_ENABLED', VALUE='Yes')
+
+        extra_headers = {'Cookie': cookie}
+        d = self._request_ilo(root, extra_headers=extra_headers)
         self._parse_output(d)
 
 # The below block of code is there only for backward-compatibility
