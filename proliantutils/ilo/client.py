@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
@@ -43,6 +44,7 @@ SUPPORTED_RIS_METHODS = [
     'get_server_capabilities',
     'set_iscsi_boot_info',
     'set_vm_status',
+    'update_firmware',
     'update_persistent_boot',
     ]
 
@@ -67,14 +69,24 @@ class IloClient(operations.IloOperations):
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
         the_operation_object = self.ribcl
-        if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
-            the_operation_object = self.ris
+
+        if ('Gen9' in self.model):
+            if (method_name in SUPPORTED_RIS_METHODS):
+                the_operation_object = self.ris
+        else:  # Gen8
+            # TODO(deray): need to check if RIS works for all the calls
+            # above 2.0, then we can blindly use RIS for all operations
+            # if the firmware version is above 2.0 on Gen8.
+            if (method_name == 'update_firmware'):
+                ilo_fw_ver = the_operation_object.get_ilo_firmware_version()
+                if (ilo_fw_ver >= 2.0):
+                    the_operation_object = self.ris
+
         method = getattr(the_operation_object, method_name)
 
         LOG.debug(self._("Using %(class)s for method %(method)s."),
                   {'class': type(the_operation_object).__name__,
                    'method': method_name})
-
         return method(*args, **kwargs)
 
     def get_all_licenses(self):
@@ -373,3 +385,38 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def process_firmware_image(self, compact_firmware_file):
+        """Processes the firmware file.
+
+        Processing the firmware file entails extracting the firmware file
+        from its compact format.
+        :param compact_firmware_file: firmware file to extract from
+        :returns: core firmware file
+        :returns: to_upload, boolean to indicate whether to upload or not
+        """
+        fw_img_extractor = common.get_fw_extractor(compact_firmware_file)
+        raw_fw_file_path = fw_img_extractor.extract()
+
+        # Need to check if this processing is for RIS or RIBCL based systems.
+        # Even if its for ribcl, if the firmware version is above 2.0, then
+        # RIS `update_firmware` operation will kick in.
+        # For RIS based firmware update command the raw firmware file needs
+        # to be on a http store, and hence requires the upload to happen
+        # for the firmware file.
+        to_upload = False
+        if (('Gen9' in self.model) or
+                (self.ribcl.get_ilo_firmware_version() >= 2.0)):
+            to_upload = True
+
+        return raw_fw_file_path, to_upload
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server
+
+        :param url: location of the firmware
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                on the server
+        """
+        return self._call_method('update_firmware', url)
