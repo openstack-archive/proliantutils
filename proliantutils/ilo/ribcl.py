@@ -17,7 +17,11 @@
 over RIBCL scripting language
 """
 
+# import os
+# import random
 import re
+# import socket
+# import subprocess
 import xml.etree.ElementTree as etree
 
 from oslo_utils import strutils
@@ -30,6 +34,7 @@ from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import operations
 
+b = lambda x: x
 
 POWER_STATE = {
     'ON': 'Yes',
@@ -974,6 +979,84 @@ class RIBCLOperations(operations.IloOperations):
         root = self._create_dynamic_xml('LICENSE', 'RIB_INFO', 'write')
         element = root.find('LOGIN/RIB_INFO/LICENSE')
         etree.SubElement(element, 'ACTIVATE', KEY=key)
+        d = self._request_ilo(root)
+        self._parse_output(d)
+
+    def update_firmware(self, filename):
+        """Updates the given firmware on the server
+
+        :param filename: location of the firmware file
+        :raise IloError: on an error from iLO
+        :raise IloCommandNotSupportedError: if the command is not supported
+                on the server
+        """
+        # filename = filename
+        # filename = 'http://10.10.1.36:8080/v1/
+        # AUTH_c49e4d8d44814dfda9cf9793b67b56a6/mycontainer/ilo4_230_p25.bin?
+        # temp_url_sig=99cbfa4b55385d5fa79d8fd7f6187911ca0f77e8&temp_url_expires=1436990796'
+        # Backwards compatibility
+#         if filename == 'latest':
+#             version = 'latest'
+#             filename = None
+
+#         if filename and version:
+#             raise ValueError("Supply a filename or a version number,
+#                              not both")
+
+#         if not (filename or version):
+#             raise ValueError("Supply a filename or a version number")
+
+        # current_version = self.get_fw_version()
+#         data = self.get_host_health_data()
+#         current_version = self._get_ilo_firmware_version(data)
+
+#         ilo = current_version['ilo_firmware_version'].lower()
+#         value of ilo = '1.05 Feb 22 2012'
+
+#         if not filename:
+#             config = hpilo_fw.config(self.firmware_mirror)
+#             if version == 'latest':
+#                 if ilo not in config:
+#                     raise IloError("Cannot update %s to the latest
+#                                     version automatically" % ilo)
+#                 version = config[ilo]['version']
+#             iversion = '%s %s' % (ilo, version)
+#             if iversion not in config:
+#                 raise ValueError("Unknown firmware version: %s" % version)
+#             if current_version['firmware_version'] >= version:
+#                 return "Already up-to-date"
+#             hpilo_fw.download(iversion, progress=progress)
+#             filename = config[iversion]['file']
+#         else:
+#             filename = hpilo_fw.parse(filename, ilo)
+
+        # fwlen = os.path.getsize(filename)
+        fwlen = 16784156
+        root = self._create_dynamic_xml('UPDATE_RIB_FIRMWARE',
+                                        'RIB_INFO',
+                                        'write',
+                                        subelements={
+                                            'IMAGE_LOCATION': filename,
+                                            'IMAGE_LENGTH': str(fwlen)})
+
+        # ?? etree.SubElement(root, 'TPM_ENABLED', VALUE='Yes')
+        element = root.find('LOGIN/RIB_INFO')
+        etree.SubElement(element, 'TPM_ENABLED', VALUE='Yes')
+
+#         element = root.find('LOGIN/RIB_INFO/UPDATE_RIB_FIRMWARE')
+#         element.tail = '$EMBED:%s$' % filename
+
+        # etree.dump(root)
+
+#         if self.protocol == ILO_LOCAL:
+#             return self._request(root, progress)[1]
+#         elif self.protocol == ILO_RAW:
+#             inner.tail = '$EMBED:%s$' % filename
+#             return self._request(root, progress)[1]
+#         else:
+#             self._upload_file(filename, progress)
+#             return self._request(root, progress)[1]
+
         d = self._request_ilo(root)
         self._parse_output(d)
 
