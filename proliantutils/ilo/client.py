@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
@@ -43,6 +44,7 @@ SUPPORTED_RIS_METHODS = [
     'set_iscsi_boot_info',
     'set_vm_status',
     'update_persistent_boot',
+    'update_firmware',
     ]
 
 
@@ -362,3 +364,25 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def process_firmware_image(self, compact_firmware_file):
+        """Processes the firmware file.
+
+        Processing the firmware file entails extracting the firmware file
+        from its compact format.
+        :param compact_firmware_file: firmware file to extract from
+        :return: core firmware file
+        """
+        fw_img_processor = common.FirmwareImageProcessor.get_processor(
+            compact_firmware_file)
+        return fw_img_processor.extract()
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server
+
+        :param url: location of the firmware
+        :raise IloError: on an error from iLO
+        :raise IloCommandNotSupportedError: if the command is not supported
+                on the server
+        """
+        return self._call_method('update_firmware', url)

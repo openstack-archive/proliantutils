@@ -20,6 +20,7 @@ import mock
 import testtools
 
 from proliantutils.ilo import client
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
@@ -470,3 +471,38 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.get_persistent_boot_device()
         get_pers_boot_device_mock.assert_called_once_with()
+
+    @mock.patch.object(common.FirmwareImageProcessor, 'get_processor')
+    def test_process_firmware_image_calls_extract_of_fw_processor_object(
+            self, mock_get_processor):
+        # process_firmware_image calls extract on the firmware_processor
+        # instance
+        # -----------------------------------------------------------------------
+        # GIVEN
+        # -----------------------------------------------------------------------
+        some_compact_fw_file = 'some_compact_fw_file.scexe'
+        mock_fw_img_processor = mock_get_processor.return_value
+        mock_fw_img_processor.extract.return_value = 'core_fw_file.bin'
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        return_result = self.client.process_firmware_image(
+            some_compact_fw_file)
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        mock_get_processor.assert_called_once_with(some_compact_fw_file)
+        mock_fw_img_processor.extract.assert_called_once_with()
+        self.assertEqual(return_result, 'core_fw_file.bin')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_update_firmware(self, mock_call_method):
+        # -----------------------------------------------------------------------
+        # WHEN
+        # -----------------------------------------------------------------------
+        self.client.update_firmware('fake-url')
+        # -----------------------------------------------------------------------
+        # THEN
+        # -----------------------------------------------------------------------
+        mock_call_method.assert_called_once_with('update_firmware',
+                                                 'fake-url')
