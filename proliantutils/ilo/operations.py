@@ -313,3 +313,22 @@ class IloOperations(object):
                  on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def process_firmware_image(self, compact_firmware_file):
+        """Processes the firmware file.
+
+        Processing the firmware file entails extracting the firmware file
+        from its compact format.
+        :param compact_firmware_file: firmware file to extract from
+        :returns: core firmware file
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def update_firmware(self, url):
+        """Updates the given firmware on the server
+
+        :param url: location of the firmware
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                on the server
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
