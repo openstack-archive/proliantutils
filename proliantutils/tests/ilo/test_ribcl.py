@@ -16,8 +16,11 @@
 """Test class for RIBCL Module."""
 
 import json
+import re
 import unittest
+import xml.etree.ElementTree as ET
 
+import ddt
 import mock
 import requests
 from requests.packages import urllib3
@@ -88,6 +91,7 @@ class IloRibclTestCaseInitTestCase(unittest.TestCase):
             urllib3_exceptions.InsecureRequestWarning)
 
 
+@ddt.ddt
 class IloRibclTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -595,6 +599,29 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsInstance(ilo_firmware, dict)
         self.assertEqual(expected_ilo, ilo_firmware)
 
+    @ddt.data(({'ilo_firmware_version': '2.02 Sep 05 2014'}, 2.02),
+              ({'ilo_firmware_version': '2 Sep 05 2014'}, 2.0),
+              ({'ilo_firmware_version': 'Aug 21 2015'}, None),
+              ({'ilo_firmware_version': '2.02'}, 2.02),
+              (None, None),
+              )
+    @ddt.unpack
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    @mock.patch.object(ribcl.RIBCLOperations, '_get_ilo_firmware_version')
+    def test_get_ilo_firmware_version(
+            self, ver_returned_by__get_fw_version, fw_version_float,
+            _get_ilo_firmware_version_mock, get_host_health_data_mock):
+        # | GIVEN |
+        _get_ilo_firmware_version_mock.return_value = (
+            ver_returned_by__get_fw_version)
+        # | WHEN |
+        returned_version = self.ilo.get_ilo_firmware_version()
+        # | THEN |
+        get_host_health_data_mock.assert_called_once_with()
+        _get_ilo_firmware_version_mock.assert_called_once_with(
+            get_host_health_data_mock.return_value)
+        self.assertEqual(fw_version_float, returned_version)
+
     def test__get_number_of_gpu_devices_connected(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
@@ -706,6 +733,76 @@ class IloRibclTestCase(unittest.TestCase):
         request_mock.return_value = constants.ACTIVATE_LICENSE_FAIL_XML
         self.assertRaises(exception.IloError, self.ilo.activate_license, 'key')
         self.assertTrue(request_mock.called)
+
+    @mock.patch.object(
+        ribcl.firmware_controller.FirmwareImageUploader, 'upload_file_to')
+    @mock.patch.object(ribcl, 'os', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_request_ilo', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_parse_output', autospec=True)
+    def test_update_ilo_firmware(self, _parse_output_mock, _request_ilo_mock,
+                                 os_mock, upload_file_to_mock):
+        # | GIVEN |
+        upload_file_to_mock.return_value = 'hickory-dickory-dock'
+        os_mock.path.getsize.return_value = 12345
+        # | WHEN |
+        self.ilo.update_firmware('raw_fw_file.bin', 'ilo')
+        # | THEN |
+        upload_file_to_mock.assert_called_once_with(
+            (self.ilo.host, self.ilo.port), self.ilo.timeout)
+
+        root_xml_string = constants.UPDATE_ILO_FIRMWARE_INPUT_XML % (
+            self.ilo.password, self.ilo.login, 12345, 'raw_fw_file.bin')
+        root_xml_string = re.sub('\n\s*', '', root_xml_string)
+
+        ((ribcl_obj, xml_elem), the_ext_header_dict) = (
+            _request_ilo_mock.call_args)
+
+        self.assertEqual(root_xml_string,
+                         ET.tostring(xml_elem).decode('latin-1'))
+        self.assertDictEqual(the_ext_header_dict['extra_headers'],
+                             {'Cookie': 'hickory-dickory-dock'})
+
+        _parse_output_mock.assert_called_once_with(
+            self.ilo, _request_ilo_mock.return_value)
+
+    @mock.patch.object(
+        ribcl.firmware_controller.FirmwareImageUploader, 'upload_file_to')
+    @mock.patch.object(ribcl, 'os', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_request_ilo', autospec=True)
+    @mock.patch.object(ribcl.IloClient, '_parse_output', autospec=True)
+    def test_update_non_ilo_firmware(self, _parse_output_mock,
+                                     _request_ilo_mock, os_mock,
+                                     upload_file_to_mock):
+        # | GIVEN |
+        upload_file_to_mock.return_value = 'hickory-dickory-dock'
+        os_mock.path.getsize.return_value = 12345
+        # | WHEN |
+        self.ilo.update_firmware('raw_fw_file.bin', 'power_pic')
+        # | THEN |
+        upload_file_to_mock.assert_called_once_with(
+            (self.ilo.host, self.ilo.port), self.ilo.timeout)
+
+        root_xml_string = constants.UPDATE_NONILO_FIRMWARE_INPUT_XML % (
+            self.ilo.password, self.ilo.login, 12345, 'raw_fw_file.bin')
+        root_xml_string = re.sub('\n\s*', '', root_xml_string)
+
+        ((ribcl_obj, xml_elem), the_ext_header_dict) = (
+            _request_ilo_mock.call_args)
+
+        self.assertEqual(root_xml_string,
+                         ET.tostring(xml_elem).decode('latin-1'))
+        self.assertDictEqual(the_ext_header_dict['extra_headers'],
+                             {'Cookie': 'hickory-dickory-dock'})
+
+        _parse_output_mock.assert_called_once_with(
+            self.ilo, _request_ilo_mock.return_value)
+
+    def test_update_firmware_throws_error_for_invalid_component(self):
+        # | WHEN | & | THEN |
+        self.assertRaises(exception.InvalidInputError,
+                          self.ilo.update_firmware,
+                          'raw_fw_file.bin',
+                          'invalid_component')
 
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
