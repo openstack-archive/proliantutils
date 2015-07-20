@@ -105,16 +105,21 @@ class IloInvalidInputError(IloError):
         super(IloInvalidInputError, self).__init__(message)
 
 
-class HPSSAException(ProliantUtilsException):
+class ProliantUtilsExceptionWithKeywordArgs(ProliantUtilsException):
 
-    message = "An exception occured in hpssa module"
+    message = "An exception occurred in proliantutils module"
 
     def __init__(self, message=None, **kwargs):
         if not message:
             message = self.message
 
         message = message % kwargs
-        super(HPSSAException, self).__init__(message)
+        super(ProliantUtilsExceptionWithKeywordArgs, self).__init__(message)
+
+
+class HPSSAException(ProliantUtilsExceptionWithKeywordArgs):
+
+    message = "An exception occured in hpssa module"
 
 
 class PhysicalDisksNotFoundError(HPSSAException):

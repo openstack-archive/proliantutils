@@ -43,6 +43,7 @@ SUPPORTED_RIS_METHODS = [
     'get_server_capabilities',
     'set_iscsi_boot_info',
     'set_vm_status',
+    'update_firmware',
     'update_persistent_boot',
     ]
 
@@ -67,14 +68,14 @@ class IloClient(operations.IloOperations):
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
         the_operation_object = self.ribcl
+
         if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
-            the_operation_object = self.ris
+                the_operation_object = self.ris
         method = getattr(the_operation_object, method_name)
 
         LOG.debug(self._("Using %(class)s for method %(method)s."),
                   {'class': type(the_operation_object).__name__,
                    'method': method_name})
-
         return method(*args, **kwargs)
 
     def get_all_licenses(self):
@@ -373,3 +374,15 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def update_firmware(self, firmware_url, component_type):
+        """Updates the given firmware on the server
+
+        :param firmware_url: location of the firmware
+        :param component_type: Type of component to be applied to.
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                on the server
+        """
+        return self._call_method(
+            'update_firmware', firmware_url, component_type)

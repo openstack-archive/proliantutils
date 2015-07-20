@@ -14,31 +14,76 @@
 
 """Common functionalities used by both RIBCL and RIS."""
 
+import os
+import stat
 import time
 
 from proliantutils import exception
 
-# Max number of times an operation to be retried
-RETRY_COUNT = 10
 
+def wait_for_operation_to_complete(has_operation_completed, tries=10,
+                                   delay_bw_retries=5, failover_msg=(
+        "Operation didn't go through even after multiple attempts.")):
+    """Attempts the provided operation for a specified number of times.
 
-def wait_for_ilo_after_reset(ilo_object):
-    """Checks if iLO is up after reset."""
-
-    retry_count = RETRY_COUNT
-    # Delay for 10 sec, for the reset operation to take effect.
+    If it runs out of attempts, then it raises an exception.
+    On success, it breaks out of the loop.
+    :param has_operation_completed: the method to retry and it needs to
+        return a boolean to indicate success or failure.
+    :param tries: number of times the operation to be called.
+    :param delay_bw_retries: delay in seconds before attempting after
+        each failure.
+    :param failover_msg: the msg with which the exception gets raised
+        in case of failure upon exhausting all the attempts.
+    :raises: IloError, if failure happens even after all the attempts.
+    """
+    retry_count = tries
+    # Delay for 10 secs, before beginning any attempt
     time.sleep(10)
 
     while retry_count:
         try:
-            ilo_object.get_product_name()
-            break
+            if has_operation_completed():
+                break
         except exception.IloError:
-            retry_count -= 1
-            time.sleep(5)
+            pass
+        time.sleep(delay_bw_retries)
+        retry_count -= 1
     else:
-        msg = ('iLO is not up after reset.')
-        raise exception.IloConnectionError(msg)
+        raise exception.IloError(failover_msg)
+
+
+def wait_for_ilo_after_reset(ilo_object):
+    """Continuously polls for iLO to come up after reset."""
+
+    wait_for_operation_to_complete(
+        lambda: ilo_object.get_product_name() is not None,
+        failover_msg='iLO is not up after reset.'
+    )
+
+
+def wait_for_firmware_update_to_complete(ris_object):
+    """Continuously polls for iLO firmware update to complete."""
+
+    p_state = ['IDLE']
+    c_state = ['IDLE']
+
+    def inprogress_operation_completed():
+        curr_state, curr_percent = ris_object.get_firmware_update_progress()
+        p_state[0] = c_state[0]
+        c_state[0] = curr_state
+        if (((p_state[0] == 'PROGRESSING') and (c_state[0] in
+                                                ['COMPLETED', 'ERROR',
+                                                 'UNKNOWN', 'IDLE']))
+                or (p_state[0] == 'IDLE' and c_state[0] == 'ERROR')):
+            return True
+        return False
+
+    wait_for_operation_to_complete(
+        inprogress_operation_completed,
+        delay_bw_retries=30,
+        failover_msg='iLO firmware update has failed.'
+    )
 
 
 def isDisk(result):
@@ -46,3 +91,23 @@ def isDisk(result):
 
     disk_identifier = ["Logical Drive", "HDD", "Storage", "LogVol"]
     return any(e in result for e in disk_identifier)
+
+
+def get_filename_and_extension_of(target_file):
+    """Gets the base filename and extension of the target file.
+
+    :param target_file: the complete path of the target file
+    :returns: base filename and extension
+    """
+    base_target_filename = os.path.basename(target_file)
+    file_name, file_ext_with_dot = os.path.splitext(base_target_filename)
+    return file_name, file_ext_with_dot
+
+
+def add_exec_permission_to(target_file):
+    """Add executable permissions to the file
+
+    :param target_file: the target file whose permission is changed
+    """
+    mode = os.stat(target_file).st_mode
+    os.chmod(target_file, mode | stat.S_IXUSR)
