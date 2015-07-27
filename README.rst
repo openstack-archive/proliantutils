@@ -1,17 +1,40 @@
+proliantutils
+=============
 
-==============
-Proliant Utils
-==============
+**proliantutils** is a set of utility libraries for interfacing and managing
+various components (like iLO, HPSSA) for HP Proliant Servers.  This library
+is used by iLO drivers in Ironic for managing Proliant Servers (the
+library can be used for other purposes also).
 
-Proliant Management Tools provides python libraries for interfacing and 
-managing various devices(like iLO) present in HP Proliant Servers.
+Please use launchpad_ to report bugs and ask questions.
 
-Currently, this module offers a library to interface to iLO4 using RIBCL.
+.. _launchpad: https://bugs.launchpad.net/proliantutils
 
-#!/usr/bin/python
+Installation
+------------
 
-    from proliantutils.ilo import ribcl
+Install the module from PyPI_.  If you are using Ironic, install the module
+on Ironic conductor node::
 
-    ilo_client = ribcl.IloClient('1.2.3.4', 'Administrator', 'password')
-    print ilo_client.get_host_power_status()
+  pip install proliantutils
 
+.. _PyPI: https://pypi.python.org/pypi/proliantutils
+
+Some GNU/Linux distributions provide *python-proliantutils* package.
+
+Usage
+-----
+
+iLO
+~~~
+
+For interfacing with the iLO, use *IloClient* object::
+
+  >>> from proliantutils.ilo import client
+  >>> ilo_client = client.IloClient('10.10.1.57', 'Administrator', 'password')
+  >>> ilo_client.get_host_power_status()
+  'OFF'
+  >>>
+
+For operations supported on the client object, please refer
+*proliantutils.ilo.operations*.
