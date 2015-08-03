@@ -581,7 +581,7 @@ class RISOperations(operations.IloOperations):
         val = val.rstrip() if val.endswith(" ") else val+" "
         self._change_bios_setting({'CustomPostMessage': val})
 
-    def _validate_uefi_boot_mode(self):
+    def _is_boot_mode_uefi(self):
         """Checks if the system is in uefi boot mode.
 
         :return: 'True' if the boot mode is uefi else 'False'
@@ -640,8 +640,13 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        self._change_secure_boot_settings('SecureBootEnable',
-                                          secure_boot_enable)
+        if self._is_boot_mode_uefi():
+            self._change_secure_boot_settings('SecureBootEnable',
+                                              secure_boot_enable)
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedInBiosError(msg)
 
     def reset_secure_boot_keys(self):
         """Reset secure boot keys to manufacturing defaults.
@@ -650,7 +655,12 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        self._change_secure_boot_settings('ResetToDefaultKeys', True)
+        if self._is_boot_mode_uefi():
+            self._change_secure_boot_settings('ResetToDefaultKeys', True)
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedInBiosError(msg)
 
     def clear_secure_boot_keys(self):
         """Reset all keys.
@@ -659,7 +669,12 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        self._change_secure_boot_settings('ResetAllKeys', True)
+        if self._is_boot_mode_uefi():
+            self._change_secure_boot_settings('ResetAllKeys', True)
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedInBiosError(msg)
 
     def get_host_power_status(self):
         """Request the power state of the server.
@@ -679,7 +694,7 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedInBiosError, if the system is
                  in the bios boot mode.
         """
-        if(self._validate_uefi_boot_mode() is True):
+        if(self._is_boot_mode_uefi() is True):
             return self._get_bios_setting('UefiShellStartupUrl')
         else:
             msg = 'get_http_boot_url is not supported in the BIOS boot mode'
@@ -693,7 +708,7 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedInBiosError, if the system is
                  in the bios boot mode.
         """
-        if(self._validate_uefi_boot_mode() is True):
+        if(self._is_boot_mode_uefi() is True):
             self._change_bios_setting({'UefiShellStartupUrl': url})
         else:
             msg = 'set_http_boot_url is not supported in the BIOS boot mode'
@@ -719,7 +734,7 @@ class RISOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedInBiosError, if the system is
                  in the bios boot mode.
         """
-        if(self._validate_uefi_boot_mode() is True):
+        if(self._is_boot_mode_uefi() is True):
             iscsi_info = {}
             iscsi_info['iSCSITargetName'] = target_name
             iscsi_info['iSCSIBootLUN'] = lun
@@ -1200,7 +1215,7 @@ class RISOperations(operations.IloOperations):
 
         # Check if we are in BIOS boot mode.
         # There is no resource to fetch boot device order for BIOS boot mode
-        if not self._validate_uefi_boot_mode():
+        if not self._is_boot_mode_uefi():
             return None
 
         # Get persistent boot device order for UEFI

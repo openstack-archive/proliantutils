@@ -65,48 +65,48 @@ class IloRisTestCase(testtools.TestCase):
         self.client = ris.RISOperations("1.2.3.4", "Administrator", "Admin")
 
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_get_http_boot_url_uefi(self, _validate_uefi_boot_mode_mock,
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_get_http_boot_url_uefi(self, _uefi_boot_mode_mock,
                                     get_bios_settings_mock):
         get_bios_settings_mock.return_value = ris_outputs.HTTP_BOOT_URL
-        _validate_uefi_boot_mode_mock.return_value = True
+        _uefi_boot_mode_mock.return_value = True
         result = self.client.get_http_boot_url()
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
         self.assertEqual(
             'http://10.10.1.30:8081/startup.nsh', result['UefiShellStartupUrl']
             )
 
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_set_http_boot_url_uefi(self, _validate_uefi_boot_mode_mock,
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_http_boot_url_uefi(self, _uefi_boot_mode_mock,
                                     change_bios_setting_mock):
-        _validate_uefi_boot_mode_mock.return_value = True
+        _uefi_boot_mode_mock.return_value = True
         self.client.set_http_boot_url('http://10.10.1.30:8081/startup.nsh')
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
         change_bios_setting_mock.assert_called_once_with({
             "UefiShellStartupUrl": "http://10.10.1.30:8081/startup.nsh"
             })
 
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_get_http_boot_url_bios(self, _validate_uefi_boot_mode_mock):
-        _validate_uefi_boot_mode_mock.return_value = False
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_get_http_boot_url_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
                           self.client.get_http_boot_url)
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
 
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_set_http_boot_url_bios(self, _validate_uefi_boot_mode_mock):
-        _validate_uefi_boot_mode_mock.return_value = False
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_http_boot_url_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
                           self.client.set_http_boot_url,
                           'http://10.10.1.30:8081/startup.nsh')
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_set_iscsi_boot_info_uefi(self, _validate_uefi_boot_mode_mock,
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
                                       change_iscsi_settings_mock):
-        _validate_uefi_boot_mode_mock.return_value = True
+        _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {
             'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
             'iSCSIBootLUN': '1',
@@ -116,19 +116,19 @@ class IloRisTestCase(testtools.TestCase):
             'C4346BB7EF30',
             'iqn.2011-07.com.example.server:test1',
             '1', '10.10.1.30')
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
         change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
                                                            iscsi_variables)
 
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
-    def test_set_iscsi_boot_info_bios(self, _validate_uefi_boot_mode_mock):
-        _validate_uefi_boot_mode_mock.return_value = False
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
         mac = 'C4346BB7EF30'
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
                           self.client.set_iscsi_boot_info, mac,
                           'iqn.2011-07.com.example.server:test1',
                           '1', '10.10.1.30')
-        _validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_rest_get')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
@@ -215,20 +215,65 @@ class IloRisTestCase(testtools.TestCase):
         self.assertRaises(exception.IloError, self.client.reset_ilo)
         get_mock.assert_called_once_with(uri)
 
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
-    def test_reset_secure_boot_keys(self, change_mock):
+    def test_reset_secure_boot_keys(self, change_mock,
+                                    _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = True
         self.client.reset_secure_boot_keys()
+        _uefi_boot_mode_mock.assert_called_once_with()
         change_mock.assert_called_once_with('ResetToDefaultKeys', True)
 
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
-    def test_clear_secure_boot_keys(self, change_mock):
+    def test_reset_secure_boot_keys_bios(self, change_mock,
+                                         _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.reset_secure_boot_keys)
+
+        _uefi_boot_mode_mock.assert_called_once_with()
+        self.assertFalse(change_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
+    def test_clear_secure_boot_keys(self, change_mock,
+                                    _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = True
         self.client.clear_secure_boot_keys()
+        _uefi_boot_mode_mock.assert_called_once_with()
         change_mock.assert_called_once_with('ResetAllKeys', True)
 
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
-    def test_set_secure_boot_mode(self, change_mock):
+    def test_clear_secure_boot_keys_bios(self, change_mock,
+                                         _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.clear_secure_boot_keys)
+
+        _uefi_boot_mode_mock.assert_called_once_with()
+        self.assertFalse(change_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
+    def test_set_secure_boot_mode(self, change_mock,
+                                  _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = True
         self.client.set_secure_boot_mode(True)
+        _uefi_boot_mode_mock.assert_called_once_with()
         change_mock.assert_called_once_with('SecureBootEnable', True)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(ris.RISOperations, '_change_secure_boot_settings')
+    def test_set_secure_boot_mode_bios(self, change_mock,
+                                       _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.set_secure_boot_mode, True)
+
+        _uefi_boot_mode_mock.assert_called_once_with()
+        self.assertFalse(change_mock.called)
 
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_product_name(self, get_details_mock):
@@ -664,34 +709,34 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.get_persistent_boot_device)
         get_host_details_mock.assert_called_once_with()
 
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_persistent_boot_device_bios(self, get_host_details_mock,
-                                             validate_uefi_boot_mode_mock):
+                                             _uefi_boot_mode_mock):
         system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_host_details_mock.return_value = system_data
-        validate_uefi_boot_mode_mock.return_value = False
+        _uefi_boot_mode_mock.return_value = False
         ret = self.client.get_persistent_boot_device()
         get_host_details_mock.assert_called_once_with()
         self.assertEqual(ret, None)
 
     @mock.patch.object(ris.RISOperations, '_get_persistent_boot_devices')
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def _test_get_persistent_boot_device_uefi(self, get_host_details_mock,
-                                              validate_uefi_boot_mode_mock,
+                                              _uefi_boot_mode_mock,
                                               boot_devices_mock,
                                               boot_devices,
                                               boot_sources,
                                               exp_ret_value=None):
         system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_host_details_mock.return_value = system_data
-        validate_uefi_boot_mode_mock.return_value = True
+        _uefi_boot_mode_mock.return_value = True
         boot_devices_mock.return_value = boot_sources, boot_devices
 
         ret = self.client.get_persistent_boot_device()
         get_host_details_mock.assert_called_once_with()
-        validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
         boot_devices_mock.assert_called_once_with()
         self.assertEqual(ret, exp_ret_value)
 
@@ -703,10 +748,10 @@ class IloRisTestCase(testtools.TestCase):
                                                    boot_sources=boot_srcs,
                                                    exp_ret_value='NETWORK')
 
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_persistent_boot_device_uefi_cd(self, get_host_details_mock,
-                                                validate_uefi_boot_mode_mock):
+                                                _uefi_boot_mode_mock):
         boot_devs = ris_outputs.UEFI_BOOT_DEVICE_ORDER_CD
         boot_srcs = json.loads(ris_outputs.UEFI_BootSources)
 
@@ -731,14 +776,14 @@ class IloRisTestCase(testtools.TestCase):
                                                    exp_ret_value=None)
 
     @mock.patch.object(ris.RISOperations, '_get_persistent_boot_devices')
-    @mock.patch.object(ris.RISOperations, '_validate_uefi_boot_mode')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_persistent_boot_device_uefi_exp(self, get_host_details_mock,
-                                                 validate_uefi_boot_mode_mock,
+                                                 _uefi_boot_mode_mock,
                                                  boot_devices_mock):
         system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_host_details_mock.return_value = system_data
-        validate_uefi_boot_mode_mock.return_value = True
+        _uefi_boot_mode_mock.return_value = True
         devices = ris_outputs.UEFI_BOOT_DEVICE_ORDER_HDD
         sources = json.loads(ris_outputs.UEFI_BOOT_SOURCES_ERR)
         boot_devices_mock.return_value = sources, devices
@@ -746,7 +791,7 @@ class IloRisTestCase(testtools.TestCase):
         self.assertRaises(exception.IloError,
                           self.client.get_persistent_boot_device)
         get_host_details_mock.assert_called_once_with()
-        validate_uefi_boot_mode_mock.assert_called_once_with()
+        _uefi_boot_mode_mock.assert_called_once_with()
         boot_devices_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
@@ -769,15 +814,15 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.client = ris.RISOperations("1.2.3.4", "admin", "Admin")
 
     @mock.patch.object(ris.RISOperations, 'get_current_boot_mode')
-    def test__validate_uefi_boot_mode_uefi(self, get_current_boot_mode_mock):
+    def test__is_boot_mode_uefi_uefi(self, get_current_boot_mode_mock):
         get_current_boot_mode_mock.return_value = 'UEFI'
-        result = self.client._validate_uefi_boot_mode()
+        result = self.client._is_boot_mode_uefi()
         self.assertTrue(result)
 
     @mock.patch.object(ris.RISOperations, 'get_current_boot_mode')
-    def test__validate_uefi_boot_mode_bios(self, get_current_boot_mode_mock):
+    def test__is_boot_mode_uefi_bios(self, get_current_boot_mode_mock):
         get_current_boot_mode_mock.return_value = 'LEGACY'
-        result = self.client._validate_uefi_boot_mode()
+        result = self.client._is_boot_mode_uefi()
         self.assertFalse(result)
 
     @mock.patch.object(requests, 'get')
