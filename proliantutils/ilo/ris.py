@@ -28,6 +28,7 @@ from six.moves.urllib import parse as urlparse
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import operations
+from proliantutils import log
 
 """ Currently this class supports only secure boot and firmware settings
 related API's .
@@ -40,6 +41,8 @@ DEVICE_COMMON_TO_RIS = {'NETWORK': 'Pxe',
                         }
 DEVICE_RIS_TO_COMMON = dict(
     (v, k) for (k, v) in DEVICE_COMMON_TO_RIS.items())
+
+LOG = log.get_logger(__name__)
 
 
 class RISOperations(operations.IloOperations):
@@ -60,6 +63,9 @@ class RISOperations(operations.IloOperations):
         # Just disable the warning if user intentionally did this.
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
+
+        LOG.debug("RISOperations object created for host {}".format(
+            self.host))
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
