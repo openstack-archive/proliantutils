@@ -17,6 +17,7 @@ from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils import log
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
@@ -45,6 +46,8 @@ SUPPORTED_RIS_METHODS = [
     'update_persistent_boot',
     ]
 
+LOG = log.getLogger(__name__)
+
 
 class IloClient(operations.IloOperations):
 
@@ -60,10 +63,12 @@ class IloClient(operations.IloOperations):
 
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
-        object = self.ribcl
+        the_operation_object = self.ribcl
         if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
-            object = self.ris
-        method = getattr(object, method_name)
+            the_operation_object = self.ris
+        method = getattr(the_operation_object, method_name)
+
+        LOG.debug('calling %s method..' % method_name)
         return method(*args, **kwargs)
 
     def get_all_licenses(self):

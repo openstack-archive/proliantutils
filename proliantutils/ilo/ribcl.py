@@ -29,6 +29,7 @@ import six
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import operations
+from proliantutils import log
 
 
 POWER_STATE = {
@@ -42,6 +43,8 @@ BOOT_MODE_CMDS = [
     'GET_SUPPORTED_BOOT_MODE',
     'SET_PENDING_BOOT_MODE'
 ]
+
+LOG = log.getLogger(__name__)
 
 
 class RIBCLOperations(operations.IloOperations):
@@ -65,6 +68,8 @@ class RIBCLOperations(operations.IloOperations):
         # Just disable the warning if user intentionally did this.
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
+
+        LOG.debug('ribcl operations object created')
 
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
