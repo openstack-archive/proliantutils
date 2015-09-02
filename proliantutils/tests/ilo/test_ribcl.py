@@ -29,6 +29,36 @@ from proliantutils.ilo import ribcl
 from proliantutils.tests.ilo import ribcl_sample_outputs as constants
 
 
+class MaskedRequestDataTestCase(unittest.TestCase):
+
+    def setUp(self):
+        super(MaskedRequestDataTestCase, self).setUp()
+        self.maskedRequestData = ribcl.MaskedRequestData({})
+
+    def test___str__with_user_credential_present(self):
+        xml_data = (
+            '<RIBCL VERSION="2.0">'
+            '<LOGIN PASSWORD="password" USER_LOGIN="admin">'
+            '<RIB_INFO MODE="read">')
+        masked_xml_data = (
+            '\'<RIBCL VERSION="2.0">'
+            '<LOGIN PASSWORD="*****" USER_LOGIN="*****">'
+            '<RIB_INFO MODE="read">\'')
+        self.maskedRequestData.request_data = {'headers': 'some-headers',
+                                               'data': xml_data,
+                                               'verify': False}
+        self.assertIn(masked_xml_data, str(self.maskedRequestData))
+
+    def test___str__with_user_credential_not_present(self):
+        xml_data = (
+            '<RIBCL VERSION="2.0">'
+            '<RIB_INFO MODE="read">')
+        self.maskedRequestData.request_data = {'headers': 'some-headers',
+                                               'data': xml_data,
+                                               'verify': True}
+        self.assertIn(xml_data, str(self.maskedRequestData))
+
+
 class IloRibclTestCaseInitTestCase(unittest.TestCase):
 
     @mock.patch.object(urllib3, 'disable_warnings')
