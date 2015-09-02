@@ -17,6 +17,7 @@
 over RIBCL scripting language
 """
 
+import copy
 import re
 import xml.etree.ElementTree as etree
 
@@ -47,6 +48,23 @@ BOOT_MODE_CMDS = [
 LOG = log.get_logger(__name__)
 
 
+class MaskedRequestData:
+
+    def __init__(self, request_data):
+        self.request_data = request_data
+
+    def __str__(self):
+        request_data_copy = copy.deepcopy(self.request_data)
+        xml_data = request_data_copy.get('data')
+        if xml_data:
+            xml_data = re.sub(r'USER_LOGIN="(.*)"', r'USER_LOGIN="*****"',
+                              xml_data)
+            xml_data = re.sub(r'PASSWORD="(.*)"', r'PASSWORD="*****"',
+                              xml_data)
+            request_data_copy['data'] = xml_data
+        return str(request_data_copy)
+
+
 class RIBCLOperations(operations.IloOperations):
     """iLO class for RIBCL interface for iLO.
 
@@ -69,9 +87,6 @@ class RIBCLOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RIBCLOperations object created for host {}".format(
-            self.host))
-
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
 
@@ -93,9 +108,15 @@ class RIBCLOperations(operations.IloOperations):
             kwargs['verify'] = False
 
         try:
+            LOG.debug(self._("POST %(url)s with request data: "
+                             "%(request_data)s"),
+                      {'url': urlstr,
+                       'request_data': MaskedRequestData(kwargs)})
             response = requests.post(urlstr, **kwargs)
             response.raise_for_status()
         except Exception as e:
+            LOG.exception(self._("An error occurred while "
+                                 "contacting iLO. Error: %s"), e)
             raise exception.IloConnectionError(e)
         return response.text
 
@@ -253,13 +274,26 @@ class RIBCLOperations(operations.IloOperations):
                             platform = self.get_product_name()
                             msg = ("%(cmd)s is not supported on %(platform)s" %
                                    {'cmd': cmd, 'platform': platform})
+                            LOG.error(self._("Got invalid response with "
+                                             "message: '%(message)s'"),
+                                      {'message': msg})
                             raise (exception.IloCommandNotSupportedError
                                    (msg, status))
                     else:
+                        LOG.error(self._("Got invalid response with "
+                                         "message: '%(message)s'"),
+                                  {'message': msg})
                         raise exception.IloClientInternalError(msg, status)
                 if (status in exception.IloLoginFailError.statuses or
                         msg in exception.IloLoginFailError.messages):
+                    LOG.error(self._("Got invalid response with "
+                                     "message: '%(message)s'"),
+                              {'message': msg})
                     raise exception.IloLoginFailError(msg, status)
+
+                LOG.error(self._("Got invalid response with "
+                                 "message: '%(message)s'"),
+                          {'message': msg})
                 raise exception.IloError(msg, status)
 
     def _execute_command(self, create_command, tag_info, mode, dic={}):
@@ -272,6 +306,7 @@ class RIBCLOperations(operations.IloOperations):
             create_command, tag_info, mode, dic)
         d = self._request_ilo(xml)
         data = self._parse_output(d)
+        LOG.debug(self._("Received response data: %s"), data)
         return data
 
     def get_all_licenses(self):
