@@ -25,6 +25,13 @@ class IloOperations(object):
     python as described in HP iLO 4 Scripting and Command Line Guide.
 
     """
+    def _(self, msg):
+        """Prepends host information if available to msg and returns it."""
+        try:
+            return "[iLO %s] %s" % (self.host, msg)
+        except AttributeError:
+            return msg
+
     def get_all_licenses(self):
         """Retrieve license type, key, installation date, etc."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
