@@ -64,15 +64,18 @@ class RISOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RISOperations object created for host {}".format(
-            self.host))
-
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
 
         url = urlparse.urlparse('https://' + self.host + suburi)
         # Used for logging on redirection error.
         start_url = url.geturl()
+
+        LOG.debug(self._("%(operation)s %(url)s "
+                         "with headers '%(header)s' and body '%(body)s'"),
+                  {'operation': operation, 'url': url.geturl(),
+                   'header': request_headers,
+                   'body': request_body})
 
         if request_headers is None:
             request_headers = {}
@@ -98,6 +101,8 @@ class RISOperations(operations.IloOperations):
             try:
                 response = request_method(url.geturl(), **kwargs)
             except Exception as e:
+                LOG.exception(self._("An error occured while "
+                                     "contacting iLO. Error: %s"), e)
                 raise exception.IloConnectionError(e)
 
             # NOTE:Do not assume every HTTP operation will return a JSON body.
@@ -112,12 +117,17 @@ class RISOperations(operations.IloOperations):
             if response.status_code == 301 and 'location' in response.headers:
                 url = urlparse.urlparse(response.headers['location'])
                 redir_count -= 1
+                LOG.debug(self._("Request redirected to %s."), url.geturl())
             else:
                 break
         else:
             # Redirected for 5th time. Throw error
-            msg = ("URL Redirected 5 times continuously. "
-                   "URL incorrect: %s" % start_url)
+            msg = (self._("URL Redirected 5 times continuously. "
+                          "URL incorrect: %(start_url)s") %
+                   {'host': self.host, 'start_url': start_url})
+            LOG.error(self._("URL Redirected 5 times continuously. "
+                             "URL incorrect: %(start_url)s") %
+                      {'host': self.host, 'start_url': start_url})
             raise exception.IloConnectionError(msg)
 
         response_body = {}
@@ -134,9 +144,16 @@ class RISOperations(operations.IloOperations):
                 try:
                     gzipper = gzip.GzipFile(
                         fileobj=six.BytesIO(response.text))
+                    LOG.debug(self._("Recieved compressed response "
+                                     "for url %(url)s."),
+                              {'url': url.geturl()})
                     uncompressed_string = gzipper.read().decode('UTF-8')
                     response_body = json.loads(uncompressed_string)
                 except Exception as e:
+                    LOG.error(self._("Got invalid response "
+                                     "'%(response)s' for url %(url)s."),
+                              {'url': url.geturl(),
+                               'response': response.text})
                     raise exception.IloError(e)
 
         return response.status_code, response.headers, response_body

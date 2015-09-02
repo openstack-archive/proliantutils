@@ -69,9 +69,6 @@ class RIBCLOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RIBCLOperations object created for host {}".format(
-            self.host))
-
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
 
