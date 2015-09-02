@@ -64,7 +64,7 @@ class RISOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RISOperations object created for host {}".format(
+        LOG.debug("RISOperations object created for iLO {}".format(
             self.host))
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
@@ -73,6 +73,12 @@ class RISOperations(operations.IloOperations):
         url = urlparse.urlparse('https://' + self.host + suburi)
         # Used for logging on redirection error.
         start_url = url.geturl()
+
+        LOG.debug("Request for doing %(operation)s on url %(url)s for "
+                  "iLO %(host)s with headers '%(header)s' and body '%(body)s'",
+                  {'operation': operation, 'url': url.geturl(),
+                   'host': self.host, 'header': request_headers,
+                   'body': request_body})
 
         if request_headers is None:
             request_headers = {}
@@ -93,11 +99,19 @@ class RISOperations(operations.IloOperations):
             else:
                 kwargs['verify'] = False
 
+            # Don't print headers as it has authentication info.
+            LOG.debug("Hitting url %(url)s for iLO %(host)s with "
+                      "body '%(body)s'",
+                      {'url': url.geturl(), 'body': kwargs['data'],
+                       'host': self.host})
             request_method = getattr(requests, operation.lower())
             response = None
             try:
                 response = request_method(url.geturl(), **kwargs)
             except Exception as e:
+                LOG.exception("An error occured while contacting iLO "
+                              "%(host)s. Error: %(error)s",
+                              {'host': self.host, 'error': e})
                 raise exception.IloConnectionError(e)
 
             # NOTE:Do not assume every HTTP operation will return a JSON body.
@@ -112,12 +126,16 @@ class RISOperations(operations.IloOperations):
             if response.status_code == 301 and 'location' in response.headers:
                 url = urlparse.urlparse(response.headers['location'])
                 redir_count -= 1
+                LOG.debug("Request redirected to %(url)s for iLO %(host)s.",
+                          {'url': url.geturl(), 'host': self.host})
             else:
                 break
         else:
             # Redirected for 5th time. Throw error
-            msg = ("URL Redirected 5 times continuously. "
-                   "URL incorrect: %s" % start_url)
+            msg = ("URL Redirected 5 times continuously for iLO %(host)s. "
+                   "URL incorrect: %(start_url)s" %
+                   {'host': self.host, 'start_url': start_url})
+            LOG.error(msg)
             raise exception.IloConnectionError(msg)
 
         response_body = {}
@@ -134,9 +152,16 @@ class RISOperations(operations.IloOperations):
                 try:
                     gzipper = gzip.GzipFile(
                         fileobj=six.BytesIO(response.text))
+                    LOG.debug("Recieved compressed response for iLO %(host)s "
+                              "for url %(url)s.", {'host': self.host,
+                                                   'url': url.geturl()})
                     uncompressed_string = gzipper.read().decode('UTF-8')
                     response_body = json.loads(uncompressed_string)
                 except Exception as e:
+                    LOG.error("Got invalid response '%s' for iLO %(host)s "
+                              "for url %(url)s.",
+                              {'host': self.host, 'url': url.geturl(),
+                               'response': response.text})
                     raise exception.IloError(e)
 
         return response.status_code, response.headers, response_body
