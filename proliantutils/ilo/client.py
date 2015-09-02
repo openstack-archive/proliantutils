@@ -60,8 +60,8 @@ class IloClient(operations.IloOperations):
                                      cacert=cacert)
         self.info = {'address': host, 'username': login, 'password': password}
         self.model = self.ribcl.get_product_name()
-        LOG.debug("IloClient object created for host {} [model: {}]".format(
-            host, self.model))
+        LOG.debug("[iLO %(host)s] IloClient object created. "
+                  "Model: %(model)s", {'host': host, 'model': self.model})
 
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
@@ -70,9 +70,10 @@ class IloClient(operations.IloOperations):
             the_operation_object = self.ris
         method = getattr(the_operation_object, method_name)
 
-        LOG.debug("Calling {} method of {} for host {}".format(
-            method_name, type(the_operation_object).__name__,
-            the_operation_object.host))
+        LOG.debug("[iLO %(host)s] Using %(class)s for method %(method)s.",
+                  {'host': the_operation_object.host,
+                   'class': type(the_operation_object).__name__,
+                   'method': method_name})
 
         return method(*args, **kwargs)
 
