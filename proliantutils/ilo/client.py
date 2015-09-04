@@ -46,7 +46,7 @@ SUPPORTED_RIS_METHODS = [
     'update_persistent_boot',
     ]
 
-LOG = log.get_logger(__name__)
+LOG = log.get_ilo_contextual_logger(__name__)
 
 
 class IloClient(operations.IloOperations):
@@ -70,9 +70,8 @@ class IloClient(operations.IloOperations):
             the_operation_object = self.ris
         method = getattr(the_operation_object, method_name)
 
-        LOG.debug("Calling {} method of {} for host {}".format(
-            method_name, type(the_operation_object).__name__,
-            the_operation_object.host))
+        LOG.d(the_operation_object.host, "Calling {} method of {}".format(
+            method_name, type(the_operation_object).__name__))
 
         return method(*args, **kwargs)
 

@@ -42,7 +42,7 @@ DEVICE_COMMON_TO_RIS = {'NETWORK': 'Pxe',
 DEVICE_RIS_TO_COMMON = dict(
     (v, k) for (k, v) in DEVICE_COMMON_TO_RIS.items())
 
-LOG = log.get_logger(__name__)
+LOG = log.get_ilo_contextual_logger(__name__)
 
 
 class RISOperations(operations.IloOperations):
@@ -64,8 +64,7 @@ class RISOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RISOperations object created for host {}".format(
-            self.host))
+        LOG.d(self.host, "RISOperations object created.")
 
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""

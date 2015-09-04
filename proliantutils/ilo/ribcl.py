@@ -44,7 +44,7 @@ BOOT_MODE_CMDS = [
     'SET_PENDING_BOOT_MODE'
 ]
 
-LOG = log.get_logger(__name__)
+LOG = log.get_ilo_contextual_logger(__name__)
 
 
 class RIBCLOperations(operations.IloOperations):
@@ -69,8 +69,7 @@ class RIBCLOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
-        LOG.debug("RIBCLOperations object created for host {}".format(
-            self.host))
+        LOG.d(self.host, "RIBCLOperations object created.")
 
     def _request_ilo(self, root):
         """Send RIBCL XML data to iLO.
