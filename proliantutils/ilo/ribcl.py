@@ -847,6 +847,15 @@ class RIBCLOperations(operations.IloOperations):
                             local_gb = int(local_bytes / (1024 * 1024 * 1024))
                             if minimum >= local_gb or minimum == 0:
                                 minimum = local_gb
+
+        # Return disk size 1 less than the actual disk size. This prevents
+        # the deploy to fail from Nova when root_gb is same as local_gb
+        # in Ironic. When the disk size is used as root_device hints,
+        # then it should be given as the actual size i.e.
+        # ironic (node.properties['local_gb'] + 1) else root device
+        # hint will fail.
+        if minimum:
+            minimum = minimum - 1
         return minimum
 
     def get_value_as_list(self, dictionary, key):

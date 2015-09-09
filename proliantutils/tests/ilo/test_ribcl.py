@@ -513,14 +513,14 @@ class IloRibclTestCase(unittest.TestCase):
         json_data = json.loads(data)
         local_gb = self.ilo._parse_storage_embedded_health(json_data)
         self.assertTrue(type(local_gb), int)
-        self.assertEqual("99", str(local_gb))
+        self.assertEqual("98", str(local_gb))
 
     def test__parse_storage_embedded_health_controller_list(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT_LIST_STORAGE
         json_data = json.loads(data)
         local_gb = self.ilo._parse_storage_embedded_health(json_data)
         self.assertTrue(type(local_gb), int)
-        self.assertEqual("99", str(local_gb))
+        self.assertEqual("98", str(local_gb))
 
     def test__parse_storage_embedded_health_no_logical_drive(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT_NO_LOGICAL_DRIVE
@@ -579,7 +579,7 @@ class IloRibclTestCase(unittest.TestCase):
                                'properties': {
                                'memory_mb': 32768,
                                'cpu_arch': 'x86_64',
-                               'local_gb': 99,
+                               'local_gb': 98,
                                'cpus': 2}
                                }
         properties = self.ilo.get_essential_properties()
