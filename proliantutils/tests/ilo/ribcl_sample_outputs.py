@@ -6692,6 +6692,74 @@ GET_EMBEDDED_HEALTH_OUTPUT_NO_LOGICAL_DRIVE = '''
     }
 }
 '''
+GET_EMBEDDED_HEALTH_PROCESSORS_DATA_MISSING = '''
+{
+    "GET_EMBEDDED_HEALTH_DATA": {
+        "PROCESSORS": {
+             "PROCESSOR": [
+                {
+                    "EXECUTION_TECHNOLOGY": {
+                        "VALUE": "8/8cores; threads"
+                    },
+                    "INTERNAL_L1_CACHE": {
+                        "VALUE": "64KB"
+                    },
+                    "INTERNAL_L2_CACHE": {
+                        "VALUE": "256KB"
+                    },
+                    "INTERNAL_L3_CACHE": {
+                        "VALUE": "16384KB"
+                    },
+                    "LABEL": {
+                        "VALUE": "Proc1"
+                    },
+                    "MEMORY_TECHNOLOGY": {
+                        "VALUE": "64-bitCapable"
+                    },
+                    "NAME": {
+                        "VALUE": "Intel(R)Xeon(R)CPUE7-4820v2@2.00GHz"
+                    },
+                    "SPEED": {
+                        "VALUE": "2000MHz"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                },
+                {
+                    "EXECUTION_TECHNOLOGY": {
+                        "VALUE": "8/8cores;16threads"
+                    },
+                    "INTERNAL_L1_CACHE": {
+                        "VALUE": "64KB"
+                    },
+                    "INTERNAL_L2_CACHE": {
+                        "VALUE": "256KB"
+                    },
+                    "INTERNAL_L3_CACHE": {
+                        "VALUE": "16384KB"
+                    },
+                    "LABEL": {
+                        "VALUE": "Proc2"
+                    },
+                    "MEMORY_TECHNOLOGY": {
+                        "VALUE": "64-bitCapable"
+                    },
+                    "NAME": {
+                        "VALUE": "Intel(R)Xeon(R)CPUE7-4820v2@2.00GHz"
+                    },
+                    "SPEED": {
+                        "VALUE": "2000MHz"
+                    },
+                    "STATUS": {
+                        "VALUE": "OK"
+                    }
+                }
+            ]
+        }
+    }
+}
+'''
 
 FIRMWARE_EMBEDDED_HEALTH_OUTPUT = '''
 {

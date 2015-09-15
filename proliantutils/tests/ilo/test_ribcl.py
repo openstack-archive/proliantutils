@@ -484,9 +484,16 @@ class IloRibclTestCase(unittest.TestCase):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         cpus, cpu_arch = self.ilo._parse_processor_embedded_health(json_data)
-        self.assertEqual('2', str(cpus))
+        self.assertEqual('32', str(cpus))
         self.assertEqual('x86_64', cpu_arch)
         self.assertTrue(type(cpus), int)
+
+    def test__parse_processor_embedded_health_missing(self):
+        data = constants.GET_EMBEDDED_HEALTH_PROCESSORS_DATA_MISSING
+        json_data = json.loads(data)
+        self.assertRaises(exception.IloError,
+                          self.ilo._parse_processor_embedded_health,
+                          json_data)
 
     def test__parse_memory_embedded_health(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
@@ -580,7 +587,7 @@ class IloRibclTestCase(unittest.TestCase):
                                'memory_mb': 32768,
                                'cpu_arch': 'x86_64',
                                'local_gb': 98,
-                               'cpus': 2}
+                               'cpus': 32}
                                }
         properties = self.ilo.get_essential_properties()
         self.assertIsInstance(properties, dict)

@@ -803,7 +803,22 @@ class RIBCLOperations(operations.IloOperations):
         if processor is None:
             msg = "Unable to get cpu data. Error: Data missing"
             raise exception.IloError(msg)
-        cpus = len(processor)
+        cpus = 0
+        for proc in processor:
+            for val in proc.values():
+                processor_detail = val['VALUE']
+                proc_core_threads = processor_detail.split('; ')
+                for x in proc_core_threads:
+                    if "thread" in x:
+                        v = x.split()
+                        try:
+                            cpus = cpus + int(v[0])
+                        except ValueError:
+                            msg = ("Unable to get cpu data. "
+                                   "The Value %s returned couldn't be "
+                                   "manipulated to get number of "
+                                   "actual processors" % processor_detail)
+                            raise exception.IloError(msg)
         cpu_arch = 'x86_64'
         return cpus, cpu_arch
 
