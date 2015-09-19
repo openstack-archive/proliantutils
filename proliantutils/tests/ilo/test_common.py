@@ -32,6 +32,7 @@ class IloCommonModuleTestCase(unittest.TestCase):
         self.ribcl = ribcl.RIBCLOperations("x.x.x.x", "admin", "Admin",
                                            60, 443)
 
+    @mock.patch.object(time, 'sleep', lambda x: None)
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     def test_wait_for_ilo_after_reset_ribcl_ok(self, name_mock):
         name_mock.return_value = ribcl_output.GET_PRODUCT_NAME
