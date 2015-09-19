@@ -20,6 +20,7 @@ from proliantutils import exception
 
 # Max number of times an operation to be retried
 RETRY_COUNT = 10
+RETRY_INTERVAL = 10
 
 
 def wait_for_ilo_after_reset(ilo_object):
@@ -27,7 +28,7 @@ def wait_for_ilo_after_reset(ilo_object):
 
     retry_count = RETRY_COUNT
     # Delay for 10 sec, for the reset operation to take effect.
-    time.sleep(10)
+    time.sleep(RETRY_INTERVAL)
 
     while retry_count:
         try:
