@@ -485,9 +485,12 @@ class LogicalDrive(object):
         # It requires space to be stripped.
         size = self.properties['Size'].replace(' ', '')
         try:
+            # TODO(rameshg87): Reduce the disk size by 1 to make sure Ironic
+            # has enough space to write a config drive. Remove this when
+            # Ironic doesn't need it.
             self.size_gb = int(strutils.string_to_bytes(size,
                                                         return_int=True) /
-                               (1024*1024*1024))
+                               (1024*1024*1024)) - 1
         except ValueError:
             msg = ("hpssacli returned unknown size '%(size)s' for logical "
                    "disk '%(logical_disk)s' of RAID array '%(array)s' in "

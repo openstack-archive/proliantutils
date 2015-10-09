@@ -81,7 +81,7 @@ class ServerTest(testtools.TestCase):
         logical_drive = array.logical_drives[0]
         self.assertEqual('1', logical_drive.id)
         self.assertEqual(logical_drive.parent, array)
-        self.assertEqual(558, logical_drive.size_gb)
+        self.assertEqual(557, logical_drive.size_gb)
         self.assertEqual(constants.RAID_1, logical_drive.raid_level)
         self.assertIsInstance(logical_drive.properties, dict)
 
@@ -325,7 +325,7 @@ class LogicalDriveTest(testtools.TestCase):
         server = objects.Server()
         logical_drive = server.controllers[0].raid_arrays[0].logical_drives[0]
         ret = logical_drive.get_logical_drive_dict()
-        self.assertEqual(558, ret['size_gb'])
+        self.assertEqual(557, ret['size_gb'])
         self.assertEqual('1', ret['raid_level'])
         self.assertEqual('0x600508b1001c321c',
                          ret['root_device_hint']['wwn'])

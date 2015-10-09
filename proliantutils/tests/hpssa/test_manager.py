@@ -238,7 +238,7 @@ class ManagerTestCases(testtools.TestCase):
 
         raid_info_returned = manager.get_configuration()
 
-        ld1_expected = {'size_gb': 558,
+        ld1_expected = {'size_gb': 557,
                         'raid_level': '1',
                         'controller': 'Smart Array P822 in Slot 2',
                         'physical_disks': ['5I:1:1',
