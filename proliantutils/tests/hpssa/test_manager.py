@@ -201,6 +201,35 @@ class ManagerTestCases(testtools.TestCase):
             'array', 'A', 'create', 'type=logicaldrive', 'raid=1',
             'size=51200')
 
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_max_as_size_gb(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.NO_DRIVES_HPSSA_7_DISKS
+        one_drive = raid_constants.ONE_DRIVE_RAID_1_50_GB
+        two_drives = raid_constants.TWO_DRIVES_50GB_RAID1_MAXGB_RAID5
+        get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
+        raid_info = {'logical_disks': [{'size_gb': 50,
+                                        'raid_level': '1',
+                                        'disk_type': 'hdd'},
+                                       {'size_gb': 'MAX',
+                                        'raid_level': '5',
+                                        'disk_type': 'hdd'}]}
+        raid_info = manager.create_configuration(raid_info)
+        ld1 = raid_info['logical_disks'][0]
+        ld2 = raid_info['logical_disks'][1]
+        self.assertEqual('Smart Array P822 in Slot 3', ld1['controller'])
+        self.assertEqual('Smart Array P822 in Slot 3', ld2['controller'])
+        self.assertEqual(sorted(['5I:1:1', '5I:1:2']),
+                         sorted(ld1['physical_disks']))
+        self.assertEqual(sorted(['5I:1:3', '5I:1:4', '6I:1:5']),
+                         sorted(ld2['physical_disks']))
+        controller_exec_cmd_mock.assert_any_call(
+            'create', 'type=logicaldrive', 'drives=5I:1:1,5I:1:2',
+            'raid=1', 'size=51200')
+        controller_exec_cmd_mock.assert_any_call(
+            'create', 'type=logicaldrive', 'drives=5I:1:3,5I:1:4,6I:1:5',
+            'raid=5')
+
     @mock.patch.object(manager, 'get_configuration')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_configuration(self, controller_exec_cmd_mock,

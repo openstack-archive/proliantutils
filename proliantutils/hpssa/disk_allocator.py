@@ -69,11 +69,22 @@ def allocate_disks(logical_disk, server, raid_config):
         physical_drives = controller.unassigned_physical_drives
         physical_drives = _get_criteria_matching_disks(logical_disk,
                                                        physical_drives)
-        physical_drives = [x for x in physical_drives
-                           if x.size_gb >= size_gb]
+
+        if size_gb != "MAX":
+            # If we want to allocate for a logical disk for which size_gb is
+            # mentioned, we take the smallest physical drives which is required
+            # to match the criteria.
+            reverse_sort = False
+            physical_drives = [x for x in physical_drives
+                               if x.size_gb >= size_gb]
+        else:
+            # If we want to allocate for a logical disk for which size_gb is
+            # MAX, we take the largest physical drives available.
+            reverse_sort = True
 
         if len(physical_drives) >= number_of_physical_disks:
-            selected_drives = sorted(physical_drives, key=lambda x: x.size_gb)
+            selected_drives = sorted(physical_drives, key=lambda x: x.size_gb,
+                                     reverse=reverse_sort)
             selected_drive_ids = [x.id for x in selected_drives]
             logical_disk['controller'] = controller.id
             physical_disks = selected_drive_ids[:number_of_physical_disks]

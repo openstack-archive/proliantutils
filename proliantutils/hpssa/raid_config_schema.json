@@ -13,10 +13,16 @@
                         "description": "RAID level for the logical disk. Required."
                     },
                     "size_gb": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "exclusiveMinimum": true,
-                        "description": "Size (Integer) for the logical disk. Required."
+                        "anyOf": [{
+                                   "type": "integer",
+                                   "minimum": 0,
+                                   "exclusiveMinimum": true
+                                  },
+                                  {
+                                   "type": "string",
+                                   "enum": [ "MAX" ]
+                                  }],
+                        "description": "Size in GiB (Integer) for the logical disk. Use 'MAX' as size_gb if this logical disk is supposed to use the rest of the space available. Required."
                     },
                     "volume_name": {
                         "type": "string",
