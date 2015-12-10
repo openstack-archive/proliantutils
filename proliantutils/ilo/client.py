@@ -56,32 +56,27 @@ class IloClient:
     _cache_ilo = {}
     _lock = threading.Lock()
     
-    def __init__(self, *args, **kwargs):
-
-        _ = lambda x,k: kwargs.get(x,k)
+    def __init__(self, host, login, password, timeout=60, port=443):
  
-        host = self.addressval = _("ilo_address", None)
-        login = _("ilo_username", None)
-        password = _("ilo_password", None)
-        timeout =  _("client_timeout",60)
-        port = _("client_port",443)
+        self.addressval = host
+        cache_val = (login,password,timeout,port)
 
-        LOG.debug("Acquiring lock before IloClient object creation for %s ." % self.addressval)
+        LOG.debug("Acquiring lock before creating IloClient object for %s ." % self.addressval)
       
         with IloClient._lock:
          
             if self.addressval not in IloClient.ilo_instance:
-                LOG.debug("IloClient object created for %s ." % self.addressval)
                 IloClient.ilo_instance[self.addressval] = IloClient._IloClient(host,login,password,timeout,port)
-                IloClient._cache_ilo[self.addressval] = kwargs
+                IloClient._cache_ilo[self.addressval] = cache_val
+                LOG.debug("IloClient object created for %s ." % self.addressval)
 
             else:
-                if not cmp(IloClient._cache_ilo[self.addressval], kwargs):
+                if not cmp(IloClient._cache_ilo[self.addressval], cache_val):
                     LOG.debug("Using existing IloClient object for %s ." % self.addressval)
                 else:
                     LOG.debug("Updating existing IloClient object for %s due to changed credentials" % self.addressval)
                     IloClient.ilo_instance[self.addressval] = IloClient._IloClient(host,login,password,timeout,port)
-                    IloClient._cache_ilo[self.addressval] = kwargs
+                    IloClient._cache_ilo[self.addressval] = cache_val
         LOG.debug("Released lock after IloClient object creation for %s ." % self.addressval)
            
 

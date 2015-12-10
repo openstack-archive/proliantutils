@@ -1,0 +1,26 @@
+ubuntu@vinay-devstack-vm:/opt/stack/proliantutils$ python test_ilo.py 2>/dev/null
+################################################################
+Test case - 1
+    This test case runs the 5 ILO operations on both code flows
+    for 3 times and derives the results.
+################################################################
+        Running test on new code flow
+        =============================
+        14.6956188679
+
+        Running test on old code flow
+        =============================
+        29.2710149288
+
+################################################################
+Test case - 2
+    This test case runs the 5 ILO operations on both code flows
+    for 3 times and derives the results.
+################################################################
+        Running test on new code flow
+        =============================
+Executeed in 23 seconds
+        Running test on old code flow
+        =============================
+Executeed in 48 seconds
+
