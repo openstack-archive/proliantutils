@@ -14,6 +14,7 @@
 """IloClient module"""
 
 import threading
+
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
@@ -51,34 +52,40 @@ LOG = log.get_logger(__name__)
 
 
 class IloClient:
-    
     ilo_instance = {}
     _cache_ilo = {}
     _lock = threading.Lock()
-    
-    def __init__(self, host, login, password, timeout=60, port=443):
- 
-        self.addressval = host
-        cache_val = (login,password,timeout,port)
 
-        LOG.debug("Acquiring lock before creating IloClient object for %s ." % self.addressval)
-      
+    def __init__(self, host, login, password, timeout=60, port=443):
+
+        self.addressval = host
+        cache_val = (login, password, timeout, port)
+
+        LOG.debug("Acquiring lock before _IloClient object"
+                  "creation for %s ." % self.addressval)
+
         with IloClient._lock:
-         
+
             if self.addressval not in IloClient.ilo_instance:
-                IloClient.ilo_instance[self.addressval] = IloClient._IloClient(host,login,password,timeout,port)
+                IloClient.ilo_instance[self.addressval] = (
+                    IloClient._IloClient(host, login, password, timeout, port))
                 IloClient._cache_ilo[self.addressval] = cache_val
-                LOG.debug("IloClient object created for %s ." % self.addressval)
+                LOG.debug("IloClient object created for %s ." % (
+                          self.addressval))
 
             else:
                 if not cmp(IloClient._cache_ilo[self.addressval], cache_val):
-                    LOG.debug("Using existing IloClient object for %s ." % self.addressval)
+                    LOG.debug("Using existing IloClient object for %s ."
+                              % self.addressval)
                 else:
-                    LOG.debug("Updating existing IloClient object for %s due to changed credentials" % self.addressval)
-                    IloClient.ilo_instance[self.addressval] = IloClient._IloClient(host,login,password,timeout,port)
+                    LOG.debug("Updating existing IloClient object for %s due "
+                              " to changed credentials" % self.addressval)
+                    IloClient.ilo_instance[self.addressval] = (
+                        IloClient._IloClient(host, login, password,
+                                             timeout, port))
                     IloClient._cache_ilo[self.addressval] = cache_val
-        LOG.debug("Released lock after IloClient object creation for %s ." % self.addressval)
-           
+        LOG.debug("Released lock after IloClient object "
+                  "creation for %s ." % self.addressval)
 
     def __getattr__(self, method):
         if hasattr(IloClient.ilo_instance[self.addressval], method):
@@ -89,11 +96,12 @@ class IloClient:
         def __init__(self, host, login, password, timeout=60, port=443,
                      bios_password=None, cacert=None):
             self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
-                                           port, cacert=cacert)
+                                               port, cacert=cacert)
             self.ris = ris.RISOperations(host, login, password,
                                          bios_password=bios_password,
                                          cacert=cacert)
-            self.info = {'address': host, 'username': login, 'password': password}
+            self.info = {'address': host, 'username': login,
+                         'password': password}
             self.host = host
             self.model = self.ribcl.get_product_name()
             LOG.debug(self._("IloClient object created. "
@@ -102,7 +110,9 @@ class IloClient:
         def _call_method(self, method_name, *args, **kwargs):
             """Call the corresponding method using either RIBCL or RIS."""
             the_operation_object = self.ribcl
-            if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
+            if ('Gen9' in self.model) and (
+                    method_name in SUPPORTED_RIS_METHODS):
+
                 the_operation_object = self.ris
             method = getattr(the_operation_object, method_name)
 
@@ -126,11 +136,11 @@ class IloClient:
 
         def get_http_boot_url(self):
             """Request the http boot url.
-   
+
             :returns: URL for http boot.
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command
+                     is not supported on the server.
             """
             return self._call_method('get_http_boot_url')
 
@@ -139,8 +149,8 @@ class IloClient:
 
             :param url: URL for http boot.
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command
+                     is not supported on the server.
             """
             return self._call_method('set_http_boot_url', url)
 
@@ -164,9 +174,9 @@ class IloClient:
             :raises: IloCommandNotSupportedInBiosError, if the system is
                      in the bios boot mode.
             """
-            return self._call_method('set_iscsi_boot_info', mac, target_name, lun,
-                                     ip_address, port, auth_method, username,
-                                     password)
+            return self._call_method('set_iscsi_boot_info', mac, target_name,
+                                     lun, ip_address, port, auth_method,
+                                     username, password)
 
         def get_one_time_boot(self):
             """Retrieves the current setting for the one time boot."""
@@ -187,7 +197,7 @@ class IloClient:
             return self._call_method('press_pwr_btn')
 
         def hold_pwr_btn(self):
-            """Simulate a physical press and hold of the server power button."""
+            """Simulate a physical press and hold of the power button."""
             return self._call_method('hold_pwr_btn')
 
         def set_host_power(self, power):
@@ -202,7 +212,7 @@ class IloClient:
             return self._call_method('set_one_time_boot', value)
 
         def insert_virtual_media(self, url, device='FLOPPY'):
-            """Notifies iLO of the location of a virtual media diskette image."""
+            """Notifies the location of a virtual media diskette to iLO."""
             return self._call_method('insert_virtual_media', url, device)
 
         def eject_virtual_media(self, device='FLOPPY'):
@@ -216,7 +226,7 @@ class IloClient:
             boot options for booting from the virtual media.
             """
             return self._call_method('set_vm_status', device, boot_option,
-                                 write_protect)
+                                     write_protect)
 
         def get_current_boot_mode(self):
             """Retrieves the current boot mode settings."""
@@ -248,7 +258,8 @@ class IloClient:
 
         def set_secure_boot_mode(self, secure_boot_enable):
             """Enable/Disable secure boot on the server."""
-            return self._call_method('set_secure_boot_mode', secure_boot_enable)
+            return self._call_method('set_secure_boot_mode',
+                                     secure_boot_enable)
 
         def reset_secure_boot_keys(self):
             """Reset secure boot keys to manufacturing defaults."""
@@ -263,8 +274,8 @@ class IloClient:
 
             :param password: The password to be set.
             :raises: IloError, if account not found or on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command
+                     is not supported on the server.
             """
             return self._call_method('reset_ilo_credential', password)
 
@@ -272,17 +283,17 @@ class IloClient:
             """Resets the iLO.
 
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command is not
+                     supported on the server.
             """
             return self._call_method('reset_ilo')
 
         def reset_bios_to_default(self):
             """Resets the BIOS settings to default values.
- 
+
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command
+                     is not supported on the server.
             """
             return self._call_method('reset_bios_to_default')
 
@@ -303,87 +314,90 @@ class IloClient:
             :raises: IloError, on an error from iLO.
             """
             return self._call_method('get_host_health_data', data)
-    
+
         def get_host_health_present_power_reading(self, data=None):
             """Request the power consumption of the server.
-    
+
             :param: the data to retrieve from the server, defaults to None.
             :returns: the dictionary containing the power readings.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
-            return self._call_method('get_host_health_present_power_reading', data)
-    
+            return self._call_method('get_host_health_present_power_reading',
+                                     data)
+
         def get_host_health_power_supplies(self, data=None):
             """Request the health power supply information.
-    
+
             :param: the data to retrieve from the server, defaults to None.
             :returns: the dictionary containing the power supply information.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
             return self._call_method('get_host_health_power_supplies', data)
-    
+
         def get_host_health_fan_sensors(self, data=None):
             """Get the health Fan Sensor Report.
-    
+
             :param: the data to retrieve from the server, defaults to None.
             :returns: the dictionary containing the fan sensor information.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
             return self._call_method('get_host_health_fan_sensors', data)
-    
+
         def get_host_health_temperature_sensors(self, data=None):
             """Get the health Temp Sensor report.
-    
+
             :param: the data to retrieve from the server, defaults to None.
             :returns: the dictionary containing the temperature sensors
                 information.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
-            return self._call_method('get_host_health_temperature_sensors', data)
-    
+            return self._call_method('get_host_health_temperature_sensors',
+                                     data)
+
         def get_host_health_at_a_glance(self, data=None):
             """Get the health at a glance Report.
-    
+
             :param: the data to retrieve from the server, defaults to None.
-            :returns: the dictionary containing the health at a glance information.
+            :returns: the dictionary containing the health at a glance
+                      information.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
             return self._call_method('get_host_health_at_a_glance', data)
-    
+
         def get_host_power_readings(self):
             """Retrieves the host power readings.
-    
+
             :param: the data to retrieve from the server, defaults to None.
             :returns: the dictionary containing the power readings.
             :raises: IloConnectionError if failed connecting to the iLO.
             :raises: IloError, on an error from iLO.
             """
             return self._call_method('get_host_power_readings')
-    
+
         def get_essential_properties(self):
             """Get the essential scheduling properties
-    
+
             :returns: a dictionary containing memory size, disk size,
                       number of cpus, cpu arch, port numbers and
                       mac addresses.
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command is not
+                     supported on the server.
             """
             return self._call_method('get_essential_properties')
-    
+
         def get_server_capabilities(self):
             """Get hardware properties which can be used for scheduling
-    
+
             :return: a dictionary of server capabilities.
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command is not
+                     supported on the server.
             """
             capabilities = {}
             if 'Gen9' in self.model:
@@ -398,13 +412,13 @@ class IloClient:
                 capabilities.update({'nic_capacity': nic_capacity})
             if capabilities:
                 return capabilities
-    
+
         def activate_license(self, key):
             """Activates iLO license.
-    
+
             :param key: iLO license key.
             :raises: IloError, on an error from iLO.
-            :raises: IloCommandNotSupportedError, if the command is not supported
-                     on the server.
+            :raises: IloCommandNotSupportedError, if the command is
+                     not supported on the server.
             """
             return self._call_method('activate_license', key)

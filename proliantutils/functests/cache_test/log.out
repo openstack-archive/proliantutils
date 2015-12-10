@@ -1,0 +1,730 @@
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] IloClient object created. Model: ProLiant SL230s Gen8   
+DEBUG:proliantutils.ilo.client_new:IloClient object created for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] IloClient object created. Model: ProLiant SL230s Gen8   
+DEBUG:proliantutils.ilo.client:IloClient object created for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_product_name :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client_new:Acquiring lock before creating IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client_new:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:new : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client_new:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_product_name :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_product_name.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 182}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_PRODUCT_NAME\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_PRODUCT_NAME': {'PRODUCT_NAME': {'VALUE': 'ProLiant SL230s Gen8   '}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_host_power_status :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_host_power_status.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_HOST_POWER_STATUS\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'GET_HOST_POWER': {'HOST_POWER': 'ON'}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_one_time_boot :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_one_time_boot.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 183}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_ONE_TIME_BOOT\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'ONE_TIME_BOOT': {'BOOT_TYPE': {'VALUE': 'Normal'}}, 'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_current_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_current_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 187}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_CURRENT_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'GET_CURRENT_BOOT_MODE': {'BOOT_MODE': {'VALUE': 'LEGACY'}}, 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}}
+DEBUG:proliantutils.ilo.client:Acquiring lock before _IloClient objectcreation for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Using existing IloClient object for 10.10.1.57 .
+DEBUG:proliantutils.ilo.client:Released lock after IloClient object creation for 10.10.1.57 .
+INFO:test_ilo:old : Running get_supported_boot_mode :
+DEBUG:proliantutils.ilo.client:[iLO 10.10.1.57] Using RIBCLOperations for method get_supported_boot_mode.
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] POST https://10.10.1.57:443/ribcl with request data: {'headers': {'Content-length': 189}, 'data': '<RIBCL\r\n VERSION="2.0"\r\n>\r\n<LOGIN\r\n PASSWORD="*****"\r\n USER_LOGIN="*****"\r\n>\r\n<SERVER_INFO\r\n MODE="read"\r\n>\r\n<GET_SUPPORTED_BOOT_MODE\r\n />\r\n</SERVER_INFO>\r\n</LOGIN>\r\n</RIBCL>\r\n', 'verify': False}
+INFO:requests.packages.urllib3.connectionpool:Starting new HTTPS connection (1): 10.10.1.57
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:requests.packages.urllib3.connectionpool:"POST /ribcl HTTP/1.1" 200 None
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
+DEBUG:proliantutils.ilo.ribcl:[iLO 10.10.1.57] Received response data: {'VERSION': '2.23', 'RESPONSE': {'STATUS': '0x0000', 'MESSAGE': 'No error'}, 'GET_SUPPORTED_BOOT_MODE': {'SUPPORTED_BOOT_MODE': {'VALUE': 'LEGACY_ONLY'}}}
