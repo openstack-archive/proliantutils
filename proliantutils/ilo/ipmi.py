@@ -62,18 +62,17 @@ def get_nic_capacity(driver_info):
                         the BMC.
     :returns: the max capacity supported by the NIC adapter.
     """
-    i = 0
     value = None
-    while i < 255:
-        cmd = "fru print %s" % hex(i)
-        out = _exec_ipmitool(driver_info, cmd)
-        if out and 'port' in out and 'Adapter' in out:
-            value = _parse_ipmi_nic_capacity(out)
-            if value is not None:
-                break
-        i = i + 1
-    return value
+    cmd = "fru print"
+    out = _exec_ipmitool(driver_info, cmd)
+    if out:
+        for line in out.split('\n'):
+            if line and 'port' in line and 'Adapter' in line: 
+                value = _parse_ipmi_nic_capacity(line)
+                if value is not None:
+                    break
 
+    return value
 
 def _parse_ipmi_nic_capacity(nic_out):
     """Parse the FRU output for NIC capacity
