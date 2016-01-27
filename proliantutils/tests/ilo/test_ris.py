@@ -409,7 +409,7 @@ class IloRisTestCase(testtools.TestCase):
         uri = '/rest/v1/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
-        expected_ilo_firm = (2, 20)
+        expected_ilo_firm = (2, 20,)
         self.assertIsInstance(ilo_firm, tuple)
         self.assertEqual(expected_ilo_firm, ilo_firm)
 

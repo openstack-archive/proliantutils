@@ -361,10 +361,9 @@ class IloClient(operations.IloOperations):
         else:
             capabilities = self.ribcl.get_server_capabilities()
             major_minor = self.ribcl.get_ilo_firmware_version_as_major_minor()
-        if any(major_minor):
-            nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
-        else:
-            nic_capacity = None
+        # NOTE(vmud213): Even if both are None, pass it on to get_nic_capacity.
+        # This is required for backward compatibility.
+        nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
         if nic_capacity:
             capabilities.update({'nic_capacity': nic_capacity})
         if capabilities:
