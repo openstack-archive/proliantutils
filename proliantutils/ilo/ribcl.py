@@ -47,6 +47,8 @@ BOOT_MODE_CMDS = [
     'SET_PENDING_BOOT_MODE'
 ]
 
+ILO_VER_STR_PATTERN = r"\d+\.\d+"
+
 LOG = log.get_logger(__name__)
 
 
@@ -1025,17 +1027,19 @@ class RIBCLOperations(operations.IloOperations):
         firmware_details = self._get_firmware_embedded_health(data)
         if firmware_details:
             try:
-                # Note(vmud213):This logic works only for released
-                # versions. For debug iLO firmware versions this logic
-                # may not work as the format of the string differs.
+                # Note(vmud213):This logic works for all strings
+                # that contain the version info as <major>.<minor>
                 # Formats of the strings:
                 #    Release version ->  "2.50 Feb 18  2016"
                 #    Debug version   ->  "iLO 4 v2.50"
-                # TODO(vmud213) Make changes to account for debug version.
+                #    random version  ->  "XYZ ABC 2.30"
                 ilo_version_str = firmware_details['iLO']
-                version_str = ilo_version_str.split()[0]
-                major, minor = version_str.split('.')
-                return (major, minor)
+                pattern = re.search(ILO_VER_STR_PATTERN, ilo_version_str)
+                if pattern:
+                    matched = pattern.group(0)
+                    if matched:
+                        return(tuple(matched.split('.')))
+                return (None, None)
             except Exception:
                 return (None, None)
         else:

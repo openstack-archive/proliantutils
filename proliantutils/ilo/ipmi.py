@@ -96,6 +96,8 @@ def get_nic_capacity(driver_info, ilo_fw):
     value = None
     ilo_fw_rev = get_ilo_version(ilo_fw) or DEFAULT_FW_REV
 
+    # Note(vmud213): iLO firmware versions >= 2.3 support reading the FRU
+    # information in a single call instead of iterating over each FRU id.
     if ilo_fw_rev < MIN_SUGGESTED_FW_REV:
         for i in range(0xff):
             # Note(vmud213): We can discard FRU ID's between 0x6e and 0xee
