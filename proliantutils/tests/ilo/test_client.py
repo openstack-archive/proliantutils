@@ -275,7 +275,10 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info)
+        nic_mock.assert_called_once_with(
+            self.client.info, capabilities.get('ilo_firmware_version',
+                                               None)
+        )
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
@@ -295,13 +298,33 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info)
+        nic_mock.assert_called_once_with(
+            self.client.info, capabilities.get('ilo_firmware_version',
+                                               None)
+        )
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
                                  'pci_gpu_devices': '2'}
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_firmware(self, cap_mock, nic_mock):
+        nic_mock.return_value = None
+        cap_mock.return_value = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        expected_capabilities = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        capabilities = self.client.get_server_capabilities()
+        self.assertEqual(expected_capabilities, capabilities)
+        nic_mock.assert_called_once_with(
+            self.client.info,
+            None
+        )
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
     @mock.patch.object(ribcl.RIBCLOperations,
@@ -323,7 +346,11 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info)
+        nic_mock.assert_called_once_with(
+            self.client.info,
+            capabilities.get('ilo_firmware_version',
+                             None)
+        )
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -352,7 +379,11 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info)
+        nic_mock.assert_called_once_with(
+            self.client.info,
+            capabilities.get('ilo_firmware_version',
+                             None)
+        )
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
