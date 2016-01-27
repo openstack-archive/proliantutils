@@ -403,6 +403,28 @@ class IloRisTestCase(testtools.TestCase):
         self.assertEqual(expected_caps, capabilities)
 
     @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_get_ilo_firmware_version_as_major_minor(
+            self, get_ilo_details_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
+        uri = '/rest/v1/Managers/1'
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = (2, 20)
+        self.assertIsInstance(ilo_firm, tuple)
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_get_ilo_firmware_version_as_major_minor_no_data(
+            self, get_ilo_details_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_NO_FIRMWARE)
+        uri = '/rest/v1/Managers/1'
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = (None, None)
+        self.assertIsInstance(ilo_firm, tuple)
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
     def test__get_ilo_firmware_version(self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
         uri = '/rest/v1/Managers/1'

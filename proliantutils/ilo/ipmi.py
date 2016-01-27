@@ -25,6 +25,9 @@ DRIVER.
 
 import subprocess
 
+MIN_SUGGESTED_FW_REV = 2.3
+DEFAULT_FW_REV = 2.1
+
 
 def _exec_ipmitool(driver_info, command):
     """Execute the ipmitool command.
@@ -50,7 +53,33 @@ def _exec_ipmitool(driver_info, command):
     return out
 
 
-def get_nic_capacity(driver_info):
+def get_ilo_version(ilo_fw_tup):
+    """Gets the float value of the firmware version
+
+    Converts a tuple with major and minor numbers to a float value.
+
+    :param ilo_fw_tup: Tuple containing the major and minor versions
+    :returns: float value constructed from major and minor numbers.
+    """
+
+    fw_rev = None
+    if not any(ilo_fw_tup):
+        return None
+
+    try:
+        (major, minor) = ilo_fw_tup
+        if all(ilo_fw_tup):
+            fw_rev = float('.'.join(str(m) for m in ilo_fw_tup))
+        elif minor:
+            fw_rev = float('.'.join(["0", str(minor)]))
+        else:
+            fw_rev = float('.'.join([str(major), "0"]))
+    except Exception:
+        return None
+    return fw_rev
+
+
+def get_nic_capacity(driver_info, ilo_fw):
     """Gets the FRU data to see if it is NIC data
 
     Gets the FRU data in loop from 0-255 FRU Ids
@@ -60,18 +89,35 @@ def get_nic_capacity(driver_info):
 
     :param driver_info: Contains the access credentials to access
                         the BMC.
+    :param ilo_fw: a tuple containing major and minor versions of firmware
     :returns: the max capacity supported by the NIC adapter.
     """
-    i = 0
+    i = 0x0
     value = None
-    while i < 255:
-        cmd = "fru print %s" % hex(i)
+    ilo_fw_rev = get_ilo_version(ilo_fw) or DEFAULT_FW_REV
+
+    if ilo_fw_rev < MIN_SUGGESTED_FW_REV:
+        for i in range(0xff):
+            # Note(vmud213): We can discard FRU ID's between 0x6e and 0xee
+            # as they don't contain any NIC related information
+            if (i < 0x6e) or (i > 0xee):
+                cmd = "fru print %s" % hex(i)
+                out = _exec_ipmitool(driver_info, cmd)
+                if out and 'port' in out and 'Adapter' in out:
+                    value = _parse_ipmi_nic_capacity(out)
+                    if value is not None:
+                        break
+            else:
+                continue
+    else:
+        cmd = "fru print"
         out = _exec_ipmitool(driver_info, cmd)
-        if out and 'port' in out and 'Adapter' in out:
-            value = _parse_ipmi_nic_capacity(out)
-            if value is not None:
-                break
-        i = i + 1
+        if out:
+            for line in out.split('\n'):
+                if line and 'port' in line and 'Adapter' in line:
+                    value = _parse_ipmi_nic_capacity(line)
+                    if value is not None:
+                        break
     return value
 
 
