@@ -356,9 +356,14 @@ class IloClient(operations.IloOperations):
             data = self.ribcl.get_host_health_data()
             gpu = self.ribcl._get_number_of_gpu_devices_connected(data)
             capabilities.update(gpu)
+            major_minor = self.ris.get_ilo_firmware_version_as_major_minor()
         else:
             capabilities = self.ribcl.get_server_capabilities()
-        nic_capacity = ipmi.get_nic_capacity(self.info)
+            major_minor = self.ribcl.get_ilo_firmware_version_as_major_minor()
+        if any(major_minor):
+            nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
+        else:
+            nic_capacity = None
         if nic_capacity:
             capabilities.update({'nic_capacity': nic_capacity})
         if capabilities:

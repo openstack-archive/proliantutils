@@ -1006,6 +1006,27 @@ class RIBCLOperations(operations.IloOperations):
             except KeyError:
                 return None
 
+    def get_ilo_firmware_version_as_major_minor(self):
+        """Gets the ilo firmware version for server capabilities
+
+        Parse the get_host_health_data() to retreive the firmware
+        details.
+
+        :param data: the output returned by get_host_health_data()
+        :returns: a tuple of major and minor versions of iLO firmware.
+
+        """
+        data = self.get_host_health_data()
+        firmware_details = self._get_firmware_embedded_health(data)
+        if firmware_details:
+            try:
+                ilo_version_str = firmware_details['iLO']
+                version_str = ilo_version_str.split()[0]
+                major, minor = version_str.split('.')
+                return (major, minor)
+            except Exception:
+                return (None, None)
+
     def _get_number_of_gpu_devices_connected(self, data):
         """Gets the number of GPU devices connected to the server
 
