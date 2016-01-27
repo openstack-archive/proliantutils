@@ -950,20 +950,17 @@ class RISOperations(operations.IloOperations):
     def get_ilo_firmware_version_as_major_minor(self):
         """Gets the ilo firmware version for server capabilities
 
-        :returns: a tuple of major and minor versions of iLO firmware.
+        :returns: String with the format "<major>.<minor>" or None.
 
         """
         try:
             manager, reset_uri = self._get_ilo_details()
-            ilo_fw_maj = (
-                manager['Oem']['Hp']['Firmware']['Current']['MajorVersion']
+            ilo_fw_ver_str = (
+                manager['Oem']['Hp']['Firmware']['Current']['VersionString']
             )
-            ilo_fw_min = (
-                manager['Oem']['Hp']['Firmware']['Current']['MinorVersion']
-            )
-            return (ilo_fw_maj, ilo_fw_min)
+            return common.get_major_minor(ilo_fw_ver_str)
         except Exception:
-            return (None, None)
+            return None
 
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling

@@ -270,7 +270,7 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
     def test_get_server_capabilities(self, cap_mock, maj_min_mock, nic_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
-        tup_val = maj_min_mock.return_value = (u'2', u'10',)
+        str_val = maj_min_mock.return_value = "2.10"
         nic_mock.return_value = '10Gb'
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
@@ -283,7 +283,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2',
                                  'nic_capacity': '10Gb'}
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, tup_val)
+        nic_mock.assert_called_once_with(self.client.info, str_val)
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
 
@@ -294,7 +294,7 @@ class IloClientTestCase(testtools.TestCase):
     def test_get_server_capabilities_no_nic(self, cap_mock, maj_min_mock,
                                             nic_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
-        tup_val = maj_min_mock.return_value = (u'2', u'10',)
+        str_val = maj_min_mock.return_value = '2.10'
         nic_mock.return_value = None
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
@@ -306,7 +306,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'server_model': 'Gen8',
                                  'pci_gpu_devices': '2'}
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, tup_val)
+        nic_mock.assert_called_once_with(self.client.info, str_val)
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
 
@@ -316,7 +316,7 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
     def test_get_server_capabilities_no_firmware(self, cap_mock,
                                                  maj_min_mock, nic_mock):
-        maj_min_mock.return_value = (None, None,)
+        maj_min_mock.return_value = None
         nic_mock.return_value = None
         cap_mock.return_value = {'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
@@ -326,7 +326,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_capabilities, capabilities)
-        nic_mock.assert_not_called()
+        nic_mock.assert_called_once_with(self.client.info, None)
 
     @mock.patch.object(ris.RISOperations,
                        'get_ilo_firmware_version_as_major_minor')
@@ -341,7 +341,7 @@ class IloClientTestCase(testtools.TestCase):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         host_mock.return_value = json_data
-        tup_val = mm_mock.return_value = (u'2', u'10',)
+        str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         nic_mock.return_value = None
         gpu_mock.return_value = {'pci_gpu_devices': 2}
@@ -351,7 +351,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, tup_val)
+        nic_mock.assert_called_once_with(self.client.info, str_val)
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -373,7 +373,7 @@ class IloClientTestCase(testtools.TestCase):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         host_mock.return_value = json_data
-        tup_val = mm_mock.return_value = (u'2', u'10',)
+        str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         gpu_mock.return_value = {'pci_gpu_devices': 2}
         nic_mock.return_value = '10Gb'
@@ -383,7 +383,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, tup_val)
+        nic_mock.assert_called_once_with(self.client.info, str_val)
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',

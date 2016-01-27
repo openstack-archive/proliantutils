@@ -191,3 +191,27 @@ class IloCommonModuleTestCase(unittest.TestCase):
         os_mock.stat.assert_called_once_with(any_file)
         os_mock.chmod.assert_called_once_with(
             any_file, os_mock.stat().st_mode | stat_mock.S_IXUSR)
+
+    def test_get_major_minor_lt_suggested_min(self):
+        ver_str = "iLO 4 v2.05"
+        actual = "2.05"
+        expected = common.get_major_minor(ver_str)
+        self.assertEqual(actual, expected)
+
+    def test_get_major_minor_eq_suggested_min(self):
+        ver_str = "iLO 4 v2.30"
+        actual = "2.30"
+        expected = common.get_major_minor(ver_str)
+        self.assertEqual(actual, expected)
+
+    def test_get_major_minor_gt_suggested_min(self):
+        ver_str = "iLO 4 v2.5"
+        actual = "2.5"
+        expected = common.get_major_minor(ver_str)
+        self.assertEqual(actual, expected)
+
+    def test_get_major_minor_unexpected(self):
+        ver_str = "iLO 4 v"
+        actual = None
+        expected = common.get_major_minor(ver_str)
+        self.assertEqual(actual, expected)

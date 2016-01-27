@@ -15,6 +15,7 @@
 """Common functionalities used by both RIBCL and RIS."""
 
 import os
+import re
 import stat
 import time
 
@@ -23,6 +24,8 @@ from proliantutils import log
 
 
 LOG = log.get_logger(__name__)
+
+ILO_VER_STR_PATTERN = r"\d+\.\d+"
 
 
 def wait_for_operation_to_complete(
@@ -187,3 +190,28 @@ def add_exec_permission_to(target_file):
     """
     mode = os.stat(target_file).st_mode
     os.chmod(target_file, mode | stat.S_IXUSR)
+
+
+def get_major_minor(ilo_ver_str):
+    """Extract the major and minor number from the passed string
+
+    :param ilo_ver_str: the string that contains the version information
+    :returns: String of the form "<major>.<minor>" or None
+    """
+    if not ilo_ver_str:
+        return None
+    try:
+        # Note(vmud213):This logic works for all strings
+        # that contain the version info as <major>.<minor>
+        # Formats of the strings:
+        #    Release version ->  "2.50 Feb 18  2016"
+        #    Debug version   ->  "iLO 4 v2.50"
+        #    random version  ->  "XYZ ABC 2.30"
+        pattern = re.search(ILO_VER_STR_PATTERN, ilo_ver_str)
+        if pattern:
+            matched = pattern.group(0)
+            if matched:
+                return matched
+            return None
+    except Exception:
+        return None

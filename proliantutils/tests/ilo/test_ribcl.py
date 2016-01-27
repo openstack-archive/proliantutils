@@ -601,9 +601,26 @@ class IloRibclTestCase(unittest.TestCase):
     def test_get_ilo_firmware_version_as_major_minor(self, mock_health_data):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         mock_health_data.return_value = json.loads(data)
-        expected_ilo = (u'2', u'02',)
+        expected_ilo = '2.02'
         ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
-        self.assertIsInstance(ilo_firmware, tuple)
+        self.assertEqual(expected_ilo, ilo_firmware)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_ilo_firmware_version_as_major_minor_eq_suggested(
+            self, mock_health_data):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_EQ_SUGGESTED
+        mock_health_data.return_value = json.loads(data)
+        expected_ilo = '2.30'
+        ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
+        self.assertEqual(expected_ilo, ilo_firmware)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_ilo_firmware_version_as_major_minor_gt_suggested(
+            self, mock_health_data):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_GT_SUGGESTED
+        mock_health_data.return_value = json.loads(data)
+        expected_ilo = '2.54'
+        ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
         self.assertEqual(expected_ilo, ilo_firmware)
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
@@ -611,19 +628,17 @@ class IloRibclTestCase(unittest.TestCase):
             self, mock_health_data):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT_UNEXPECTED_FORMAT
         mock_health_data.return_value = json.loads(data)
-        expected_ilo = (None, None,)
+        expected_ilo = None
         ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
-        self.assertIsInstance(ilo_firmware, tuple)
         self.assertEqual(expected_ilo, ilo_firmware)
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
     def test_get_ilo_firmware_version_as_major_minor_no_firmware(
             self, mock_health_data):
-        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_UNEXPECTED_FORMAT
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_NO_FIRMWARE
         mock_health_data.return_value = json.loads(data)
-        expected_ilo = (None, None,)
+        expected_ilo = None
         ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
-        self.assertIsInstance(ilo_firmware, tuple)
         self.assertEqual(expected_ilo, ilo_firmware)
 
     def test__get_number_of_gpu_devices_connected(self):

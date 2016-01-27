@@ -53,30 +53,24 @@ def _exec_ipmitool(driver_info, command):
     return out
 
 
-def get_ilo_version(ilo_fw_tup):
+def get_ilo_version(ilo_fw_str):
     """Gets the float value of the firmware version
 
-    Converts a tuple with major and minor numbers to a float value.
+    Converts a string with major and minor numbers to a float value.
 
-    :param ilo_fw_tup: Tuple containing the major and minor versions
+    :param ilo_fw_tup: String containing the major and minor versions
+                       of the form <major>.<minor>
     :returns: float value constructed from major and minor numbers.
     """
 
-    fw_rev = None
-    if not any(ilo_fw_tup):
+    if not ilo_fw_str:
         return None
 
     try:
-        (major, minor) = ilo_fw_tup
-        if all(ilo_fw_tup):
-            fw_rev = float('.'.join(str(m) for m in ilo_fw_tup))
-        elif minor:
-            fw_rev = float('.'.join(["0", str(minor)]))
-        else:
-            fw_rev = float('.'.join([str(major), "0"]))
+        major_minor_val = float(ilo_fw_str)
     except Exception:
         return None
-    return fw_rev
+    return major_minor_val
 
 
 def get_nic_capacity(driver_info, ilo_fw):
@@ -96,6 +90,8 @@ def get_nic_capacity(driver_info, ilo_fw):
     value = None
     ilo_fw_rev = get_ilo_version(ilo_fw) or DEFAULT_FW_REV
 
+    # Note(vmud213): iLO firmware versions >= 2.3 support reading the FRU
+    # information in a single call instead of iterating over each FRU id.
     if ilo_fw_rev < MIN_SUGGESTED_FW_REV:
         for i in range(0xff):
             # Note(vmud213): We can discard FRU ID's between 0x6e and 0xee

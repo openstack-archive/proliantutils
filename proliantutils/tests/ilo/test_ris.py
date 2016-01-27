@@ -409,19 +409,37 @@ class IloRisTestCase(testtools.TestCase):
         uri = '/rest/v1/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
-        expected_ilo_firm = (2, 20)
-        self.assertIsInstance(ilo_firm, tuple)
+        expected_ilo_firm = "2.04"
         self.assertEqual(expected_ilo_firm, ilo_firm)
 
     @mock.patch.object(ris.RISOperations, '_get_ilo_details')
-    def test_get_ilo_firmware_version_as_major_minor_no_data(
+    def test_get_ilo_firmware_version_as_major_minor_suggested_min(
+            self, get_ilo_details_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_EQ_SUGGESTED)
+        uri = '/rest/v1/Managers/1'
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = "2.30"
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_get_ilo_firmware_version_as_major_minor_gt_suggested_min(
+            self, get_ilo_details_mock):
+        ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_GT_SUGGESTED)
+        uri = '/rest/v1/Managers/1'
+        get_ilo_details_mock.return_value = (ilo_details, uri)
+        ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = "2.54"
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
+    @mock.patch.object(ris.RISOperations, '_get_ilo_details')
+    def test_get_ilo_firmware_version_as_major_minor_no_firmware(
             self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_NO_FIRMWARE)
         uri = '/rest/v1/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
-        expected_ilo_firm = (None, None)
-        self.assertIsInstance(ilo_firm, tuple)
+        expected_ilo_firm = None
         self.assertEqual(expected_ilo_firm, ilo_firm)
 
     @mock.patch.object(ris.RISOperations, '_get_ilo_details')

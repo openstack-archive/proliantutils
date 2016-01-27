@@ -32,40 +32,40 @@ class IloIpmiTestCase(unittest.TestCase):
                      'username': "admin",
                      'password': "Admin"}
 
-    def test_get_ilo_version_valid(self):
-        in_vals = (u'2', u'30',)
+    def test_get_ilo_version_valid_1(self):
+        in_vals = '2.03'
+        expected = 2.03
+        actual = ipmi.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_valid_2(self):
+        in_vals = '2.3'
         expected = 2.30
         actual = ipmi.get_ilo_version(in_vals)
         self.assertEqual(actual, expected)
 
-    def test_get_ilo_version_no_minor(self):
-        in_vals = (u'2', None,)
-        expected = 2.0
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_no_major(self):
-        in_vals = (None, u'2',)
-        expected = 0.2
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_no_major_no_minor(self):
-        in_vals = (None, None,)
+    def test_get_ilo_version_invalid(self):
+        in_vals = 'x.y'
         expected = None
         actual = ipmi.get_ilo_version(in_vals)
         self.assertEqual(actual, expected)
 
-    def test_get_ilo_version_exception(self):
-        in_vals = ("text", 2,)
+    def test_get_ilo_version_appended_spaces(self):
+        in_vals = ' 2.50 '
+        expected = 2.5
+        actual = ipmi.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_none(self):
+        in_vals = None
         expected = None
         actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(expected, actual)
+        self.assertEqual(actual, expected)
 
     @mock.patch.object(ipmi, '_parse_ipmi_nic_capacity')
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_lt_suggested(self, ipmi_mock, parse_mock):
-        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_STR
         ipmi_mock.return_value = constants.NIC_FRU_OUT
         parse_mock.return_value = "1Gb"
         expected_out = "1Gb"
@@ -78,7 +78,7 @@ class IloIpmiTestCase(unittest.TestCase):
     def test_get_nic_capacity_fw_lt_suggested_none(self,
                                                    ipmi_mock,
                                                    parse_mock):
-        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_STR
         ipmi_mock.return_value = constants.NIC_FRU_OUT
         parse_mock.return_value = None
         actual_out = ipmi.get_nic_capacity(self.info, fw_rev)
@@ -89,7 +89,7 @@ class IloIpmiTestCase(unittest.TestCase):
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_lt_suggested_out_of_range_check(
             self, ipmi_mock, parse_mock):
-        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_STR
         actual_out = ipmi.get_nic_capacity(self.info, fw_rev)
         format_call_args = map(lambda x: x[0][1],
                                ipmi_mock.call_args_list)
@@ -100,7 +100,7 @@ class IloIpmiTestCase(unittest.TestCase):
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_lt_suggested_in_range_check(
             self, ipmi_mock, parse_mock):
-        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_STR
         actual_out = ipmi.get_nic_capacity(self.info, fw_rev)
         format_call_args = map(lambda x: x[0][1],
                                ipmi_mock.call_args_list)
@@ -110,7 +110,7 @@ class IloIpmiTestCase(unittest.TestCase):
     @mock.patch.object(ipmi, '_parse_ipmi_nic_capacity')
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_suggested(self, ipmi_mock, parse_mock):
-        fw_rev = constants.MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.MIN_SUGGESTED_FW_STR
         ipmi_mock.return_value = constants.NIC_FRU_OUT_ALL
         parse_mock.return_value = "1Gb"
         expected_out = "1Gb"
@@ -122,7 +122,7 @@ class IloIpmiTestCase(unittest.TestCase):
     @mock.patch.object(ipmi, '_parse_ipmi_nic_capacity')
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_suggested_none(self, ipmi_mock, parse_mock):
-        fw_rev = constants.MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.MIN_SUGGESTED_FW_STR
         ipmi_mock.return_value = constants.NIC_FRU_OUT_ALL
         parse_mock.return_value = None
         actual_out = ipmi.get_nic_capacity(self.info, fw_rev)
@@ -132,7 +132,7 @@ class IloIpmiTestCase(unittest.TestCase):
     @mock.patch.object(ipmi, '_parse_ipmi_nic_capacity')
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_gt_suggested(self, ipmi_mock, parse_mock):
-        fw_rev = constants.GREATER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.GREATER_THAN_MIN_SUGGESTED_FW_STR
         ipmi_mock.return_value = constants.NIC_FRU_OUT_ALL
         parse_mock.return_value = "1Gb"
         expected_out = "1Gb"
@@ -145,7 +145,7 @@ class IloIpmiTestCase(unittest.TestCase):
     def test_get_nic_capacity_fw_lt_suggested_loop_N_times(self,
                                                            ipmi_mock,
                                                            parse_mock):
-        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_TUP
+        fw_rev = constants.LESSER_THAN_MIN_SUGGESTED_FW_STR
         ipmi_mock.side_effect = ["Device not present", "Device not present",
                                  "Device not present", "Device not present",
                                  "Device not present", "Device not present",
