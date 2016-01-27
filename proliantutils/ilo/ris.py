@@ -961,9 +961,9 @@ class RISOperations(operations.IloOperations):
             ilo_fw_min = (
                 manager['Oem']['Hp']['Firmware']['Current']['MinorVersion']
             )
-            return (ilo_fw_maj, ilo_fw_min)
+            return (ilo_fw_maj, ilo_fw_min,)
         except Exception:
-            return (None, None)
+            return (None, None,)
 
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling

@@ -326,7 +326,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_capabilities, capabilities)
-        nic_mock.assert_not_called()
+        nic_mock.assert_called_once_with(self.client.info, (None, None))
 
     @mock.patch.object(ris.RISOperations,
                        'get_ilo_firmware_version_as_major_minor')
