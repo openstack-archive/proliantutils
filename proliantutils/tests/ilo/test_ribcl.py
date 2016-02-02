@@ -627,11 +627,16 @@ class IloRibclTestCase(unittest.TestCase):
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    def test_get_server_capabilities_gen8(self, health_data_mock, server_mock):
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       '_get_server_supported_boot_modes')
+    def test_get_server_capabilities_gen8(self, boot_mock,
+                                          health_data_mock, server_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         health_data_mock.return_value = json_data
         server_mock.return_value = 'ProLiant DL580 Gen8'
+        boot_mock.return_value = {'boot_mode_bios': False,
+                                  'boot_mode_uefi': True}
         capabilities = self.ilo.get_server_capabilities()
         self.assertIsInstance(capabilities, dict)
         self.assertIn('ilo_firmware_version', capabilities)
@@ -644,7 +649,10 @@ class IloRibclTestCase(unittest.TestCase):
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
     @mock.patch.object(ribcl.RIBCLOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ribcl.RIBCLOperations, '_get_rom_firmware_version')
-    def test_get_server_capabilities_gen8_no_firmware(self, rom_mock, ilo_mock,
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       '_get_server_supported_boot_modes')
+    def test_get_server_capabilities_gen8_no_firmware(self, boot_mock,
+                                                      rom_mock, ilo_mock,
                                                       health_data_mock,
                                                       server_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
@@ -653,6 +661,7 @@ class IloRibclTestCase(unittest.TestCase):
         server_mock.return_value = 'ProLiant DL580 Gen8'
         ilo_mock.return_value = None
         rom_mock.return_value = None
+        boot_mock.return_value = None
         capabilities = self.ilo.get_server_capabilities()
         self.assertIsInstance(capabilities, dict)
         self.assertNotIn('ilo_firmware_version', capabilities)
@@ -687,6 +696,34 @@ class IloRibclTestCase(unittest.TestCase):
         boot_mock.return_value = 'unknown'
         expected_boot_mode = {'BootMode': None}
         boot_mode = self.ilo._get_server_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode')
+    def test__get_server_supported_boot_modes_Uefi(self, boot_mock):
+        boot_mock.return_value = 'UEFI_ONLY'
+        expected_boot_mode = {'boot_mode_uefi': True, 'boot_mode_bios': False}
+        boot_mode = self.ilo._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode')
+    def test__get_server_supported_boot_modes_bios(self, boot_mock):
+        boot_mock.return_value = 'LEGACY_ONLY'
+        expected_boot_mode = {'boot_mode_uefi': False, 'boot_mode_bios': True}
+        boot_mode = self.ilo._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode')
+    def test__get_server_supported_boot_modes_bios_uefi(self, boot_mock):
+        boot_mock.return_value = 'LEGACY_UEFI'
+        expected_boot_mode = {'boot_mode_uefi': True, 'boot_mode_bios': True}
+        boot_mode = self.ilo._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode')
+    def test__get_server_supported_boot_modes_none(self, boot_mock):
+        boot_mock.return_value = 'unknown'
+        expected_boot_mode = {}
+        boot_mode = self.ilo._get_server_supported_boot_modes()
         self.assertEqual(expected_boot_mode, boot_mode)
 
     def test__get_nic_boot_devices(self):
