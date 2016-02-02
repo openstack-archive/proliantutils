@@ -36,6 +36,7 @@ SUPPORTED_RIS_METHODS = [
     'get_product_name',
     'get_secure_boot_mode',
     'get_server_capabilities',
+    'get_supported_boot_mode',
     'get_vm_status',
     'hold_pwr_btn',
     'insert_virtual_media',
@@ -49,7 +50,6 @@ SUPPORTED_RIS_METHODS = [
     'set_one_time_boot',
     'set_pending_boot_mode',
     'set_secure_boot_mode',
-    'get_server_capabilities',
     'set_iscsi_boot_info',
     'unset_iscsi_boot_info',
     'set_vm_status',
@@ -547,6 +547,7 @@ class IloClient(operations.IloOperations):
             nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
             if nic_capacity:
                 capabilities.update({'nic_capacity': nic_capacity})
+
         if capabilities:
             return capabilities
 

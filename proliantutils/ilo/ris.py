@@ -19,6 +19,7 @@ import hashlib
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import firmware_controller
+from proliantutils.ilo import mappings
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils import rest
@@ -57,7 +58,10 @@ LOG = log.get_logger(__name__)
 
 
 class RISOperations(rest.RestConnectorBase, operations.IloOperations):
+    """iLO class for RIS interface of iLO.
 
+    Implements the class used for REST based RIS services to talk to the iLO.
+    """
     def __init__(self, host, login, password, bios_password=None,
                  cacert=None):
         super(RISOperations, self).__init__(host, login, password,
@@ -821,6 +825,25 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         # Change the Boot Mode
         self._change_bios_setting(boot_properties)
 
+    def get_supported_boot_mode(self):
+        """Retrieves the supported boot mode.
+
+        :returns: any one of the following proliantutils.ilo.constants:
+
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
+            SUPPORTED_BOOT_MODE_UEFI_ONLY,
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI
+
+        """
+        system = self._get_host_details()
+        bios_uefi_class_val = 0  # value for bios_only boot mode
+        if ('Bios' in system['Oem']['Hp'] and
+                'UefiClass' in system['Oem']['Hp']['Bios']):
+            bios_uefi_class_val = (system['Oem']['Hp']
+                                         ['Bios']['UefiClass'])
+        return mappings.GET_SUPPORTED_BOOT_MODE_RIS_MAP.get(
+            bios_uefi_class_val)
+
     def reset_ilo_credential(self, password):
         """Resets the iLO password.
 
@@ -979,6 +1002,12 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        boot_modes = common.get_supported_boot_modes(
+            self.get_supported_boot_mode())
+        capabilities.update({
+            'boot_mode_bios': boot_modes.boot_mode_bios,
+            'boot_mode_uefi': boot_modes.boot_mode_uefi})
+
         if self._get_tpm_capability():
             capabilities['trusted_boot'] = 'true'
 
