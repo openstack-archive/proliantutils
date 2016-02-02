@@ -87,6 +87,38 @@ class IloRisTestCase(testtools.TestCase):
             "UefiShellStartupUrl": "http://10.10.1.30:8081/startup.nsh"
             })
 
+    @mock.patch.object(ris.RISOperations, '_check_uefi_class')
+    def test_get_server_supported_boot_modes_Uefi(self, boot_mock):
+        boot_mock.return_value = 3
+        expected_boot_mode = {'boot_mode_uefi': True,
+                              'boot_mode_bios': False}
+        boot_mode = self.client._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ris.RISOperations, '_check_uefi_class')
+    def test_get_server_supported_boot_modes_bios(self, boot_mock):
+        boot_mock.return_value = 0
+        expected_boot_mode = {'boot_mode_uefi': False,
+                              'boot_mode_bios': True}
+        boot_mode = self.client._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ris.RISOperations, '_check_uefi_class')
+    def test_get_server_supported_boot_modes_bios_uefi(self, boot_mock):
+        boot_mock.return_value = 2
+        expected_boot_mode = {'boot_mode_uefi': True,
+                              'boot_mode_bios': True}
+        boot_mode = self.client._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
+    @mock.patch.object(ris.RISOperations, '_check_uefi_class')
+    def test_get_server_supported_boot_modes_none(self, boot_mock):
+        boot_mock.return_value = 1
+        expected_boot_mode = { 'boot_mode_uefi': False,
+                               'boot_mode_bios': False}
+        boot_mode = self.client._get_server_supported_boot_modes()
+        self.assertEqual(expected_boot_mode, boot_mode)
+
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_get_http_boot_url_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
@@ -389,13 +421,18 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
-    def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock):
+    @mock.patch.object(ris.RISOperations, '_get_server_supported_boot_modes')
+    def test_get_server_capabilities(self, boot_mock, get_details_mock,
+                                     ilo_firm_mock, secure_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        boot_mock.return_value = {'boot_mode_bios': False,
+                                  'boot_mode_uefi': True}
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         secure_mock.return_value = False
         expected_caps = {'secure_boot': 'true',
+                         'boot_mode_bios': False,
+                         'boot_mode_uefi': True,
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
                          'server_model': u'ProLiant BL460c Gen9'}
