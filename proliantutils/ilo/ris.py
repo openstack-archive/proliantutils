@@ -47,7 +47,10 @@ LOG = log.get_logger(__name__)
 
 
 class RISOperations(operations.IloOperations):
+    """iLO class for RIS interface for iLO.
 
+    Implements the class used for REST based RIS services to talk to the iLO.
+    """
     def __init__(self, host, login, password, bios_password=None,
                  cacert=None):
         self.host = host
@@ -823,6 +826,48 @@ class RISOperations(operations.IloOperations):
 
         # Change the Boot Mode
         self._change_bios_setting(boot_properties)
+
+    class SUPPORTED_BOOT_MODE(object):
+        # Mapping of respective returned boot modes to standard common values
+        LEGACY_BIOS_ONLY = 0
+        UEFI_ONLY = 3
+        LEGACY_BIOS_AND_UEFI = 2
+
+    def get_supported_boot_mode(self):
+        """Retrieves the supported boot mode.
+
+        :returns: any one of the following:
+            ilo_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+                if the supported boot mode is BIOS only. Integer(0).
+            ilo_operation_object.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+                if the supported boot mode is only UEFI. Integer(3).
+            ilo_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+                if the supported boot mode is both BIOS and UEFI. Integer(2).
+        The actual data type of the returned value is integer. Users of this
+        method are expected to verify (assert) the returned value as stated
+        above.
+        """
+        system = self._get_host_details()
+        value_for_bios_uefi_class = self.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY
+        if ('Bios' in system['Oem']['Hp'] and
+                'UefiClass' in system['Oem']['Hp']['Bios']):
+            value_for_bios_uefi_class = (system['Oem']['Hp']
+                                         ['Bios']['UefiClass'])
+        return value_for_bios_uefi_class
+
+    def get_server_supported_boot_modes(self):
+        """Retrieves the server supported boot modes
+
+        It retrieves the server supported boot modes as a dictionary of items
+        as::
+            {
+              'boot_mode_bios': True/False,
+              'boot_mode_uefi': True/False
+            }
+        :returns: Dictionary - with true/false set accordingly for UEFI and
+                  legacy BIOS boot modes.
+        """
+        return common.get_server_supported_boot_modes(self)
 
     def reset_ilo_credential(self, password):
         """Resets the iLO password.

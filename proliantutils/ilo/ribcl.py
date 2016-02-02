@@ -444,11 +444,46 @@ class RIBCLOperations(operations.IloOperations):
             'GET_PENDING_BOOT_MODE', 'SERVER_INFO', 'read')
         return data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE']
 
+    class SUPPORTED_BOOT_MODE(object):
+        # Mapping of respective returned boot modes to standard common values
+        LEGACY_BIOS_ONLY = 'LEGACY_ONLY'
+        UEFI_ONLY = 'UEFI_ONLY'
+        LEGACY_BIOS_AND_UEFI = 'LEGACY_UEFI'
+
     def get_supported_boot_mode(self):
-        """Retrieves the supported boot mode."""
+        """Retrieves the supported boot mode.
+
+        :returns: any one of the following:
+            ilo_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+                if the supported boot mode is BIOS only.
+                String value: 'LEGACY_ONLY'
+            ilo_operation_object.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+                if the supported boot mode is only UEFI.
+                String value: 'UEFI_ONLY'
+            ilo_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+                if the supported boot mode is both BIOS and UEFI.
+                String value: 'LEGACY_UEFI'
+        The actual data type of the returned value is of type string. Users of
+        this method are expected to verify (assert) the returned value as
+        stated above.
+        """
         data = self._execute_command(
             'GET_SUPPORTED_BOOT_MODE', 'SERVER_INFO', 'read')
         return data['GET_SUPPORTED_BOOT_MODE']['SUPPORTED_BOOT_MODE']['VALUE']
+
+    def get_server_supported_boot_modes(self):
+        """Retrieves the server supported boot modes
+
+        It retrieves the server supported boot modes as a dictionary of items
+        as::
+            {
+              'boot_mode_bios': True/False,
+              'boot_mode_uefi': True/False
+            }
+        :returns: Dictionary - with true/false set accordingly for UEFI and
+                  legacy BIOS boot modes.
+        """
+        return common.get_server_supported_boot_modes(self)
 
     def set_pending_boot_mode(self, value):
         """Configures the boot mode of the system from a specific boot mode."""
@@ -764,23 +799,6 @@ class RIBCLOperations(operations.IloOperations):
         return_value = {'properties': properties, 'macs': macs}
         return return_value
 
-    def _get_server_boot_modes(self):
-        """Gets boot modes supported by the server
-
-        :returns: a dictionary of supported boot modes or None.
-        :raises:IloError, if iLO returns an error in command execution.
-        """
-        bootmode = self.get_supported_boot_mode()
-        if bootmode == 'LEGACY_ONLY':
-            BootMode = ['LEGACY']
-        elif bootmode == 'LEGACY_UEFI':
-            BootMode = ['LEGACY', 'UEFI']
-        elif bootmode == 'UEFI_ONLY':
-            BootMode = ['UEFI']
-        else:
-            BootMode = None
-        return {'BootMode': BootMode}
-
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -788,9 +806,6 @@ class RIBCLOperations(operations.IloOperations):
                   versions, server model.
         :raises: IloError, if iLO returns an error in command execution.
         """
-
-        # Commenting out the BootMode as we dont plan to add it for Kilo.
-        # BootMode = self._get_server_boot_modes()
         capabilities = {}
         data = self.get_host_health_data()
         ilo_firmware = self._get_ilo_firmware_version(data)

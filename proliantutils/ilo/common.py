@@ -215,3 +215,30 @@ def get_major_minor(ilo_ver_str):
             return None
     except Exception:
         return None
+
+
+def get_server_supported_boot_modes(the_operation_object):
+    """Retrieves the server supported boot modes
+
+    It retrieves the server supported boot modes as a dictionary of items
+    as::
+        {
+          'boot_mode_bios': True/False,
+          'boot_mode_uefi': True/False
+        }
+    :param the_operation_object: the ris/ribcl object
+    :returns: Dictionary - with true/false set accordingly for UEFI and
+              legacy BIOS boot modes.
+    """
+    boot_capability = {'boot_mode_bios': False, 'boot_mode_uefi': False}
+    boot_mode = the_operation_object.get_supported_boot_mode()
+    if boot_mode == the_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY:
+        boot_capability['boot_mode_bios'] = True
+    elif boot_mode == the_operation_object.SUPPORTED_BOOT_MODE.UEFI_ONLY:
+        boot_capability['boot_mode_uefi'] = True
+    elif (boot_mode ==
+          the_operation_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI):
+        boot_capability['boot_mode_bios'] = True
+        boot_capability['boot_mode_uefi'] = True
+
+    return boot_capability

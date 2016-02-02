@@ -31,6 +31,8 @@ SUPPORTED_RIS_METHODS = [
     'get_persistent_boot_device',
     'get_product_name',
     'get_secure_boot_mode',
+    'get_supported_boot_mode',
+    'get_server_supported_boot_modes',
     'get_vm_status',
     'insert_virtual_media',
     'reset_bios_to_default',
@@ -65,11 +67,15 @@ class IloClient(operations.IloOperations):
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
 
-    def _call_method(self, method_name, *args, **kwargs):
-        """Call the corresponding method using either RIBCL or RIS."""
+    def _get_ilo_operation_object(self, method_name):
         the_operation_object = self.ribcl
         if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
             the_operation_object = self.ris
+        return the_operation_object
+
+    def _call_method(self, method_name, *args, **kwargs):
+        """Call the corresponding method using either RIBCL or RIS."""
+        the_operation_object = self._get_ilo_operation_object(method_name)
         method = getattr(the_operation_object, method_name)
 
         LOG.debug(self._("Using %(class)s for method %(method)s."),
@@ -193,8 +199,44 @@ class IloClient(operations.IloOperations):
         return self._call_method('get_pending_boot_mode')
 
     def get_supported_boot_mode(self):
-        """Retrieves the supported boot mode."""
-        return self._call_method('get_supported_boot_mode')
+        """Retrieves the supported boot mode.
+
+        :returns: any one of the following:
+            client_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+                if the supported boot mode is BIOS only.
+            client_object.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+                if the supported boot mode is only UEFI.
+            client_object.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+                if the supported boot mode is both BIOS and UEFI.
+        The actual data type of the returned value will vary depending upon
+        the iLO operation object (RIS / RIBCL). Users of this method are
+        expected to verify (assert) the returned value as stated above.
+        """
+        boot_mode = self._call_method('get_supported_boot_mode')
+        # Note(deray): This ``SUPPORTED_BOOT_MODE`` attribute needs to be set
+        # here for the client object. This will be set to the nested class
+        # ``SUPPORTED_BOOT_MODE``of the corresponding operation object
+        # (RIS / RIBCL object) and the it's inherent attributes like,
+        # ``LEGACY_BIOS_ONLY``, ``UEFI_ONLY`` and ``LEGACY_BIOS_AND_UEFI``
+        # will assume their operation object specific data types.
+        the_operation_object = (
+            self._get_ilo_operation_object('get_supported_boot_mode'))
+        self.SUPPORTED_BOOT_MODE = the_operation_object.SUPPORTED_BOOT_MODE
+        return boot_mode
+
+    def get_server_supported_boot_modes(self):
+        """Retrieves the server supported boot modes as dictionary values.
+
+        It retrieves the server supported boot modes as a dictionary of items
+        as::
+            {
+              'boot_mode_bios': True/False,
+              'boot_mode_uefi': True/False
+            }
+        :returns: Dictionary - with true/false set accordingly for UEFI and
+                  legacy BIOS boot modes.
+        """
+        return self._call_method('get_server_supported_boot_modes')
 
     def set_pending_boot_mode(self, value):
         """Sets the boot mode of the system for next boot."""
@@ -361,6 +403,10 @@ class IloClient(operations.IloOperations):
         else:
             capabilities = self.ribcl.get_server_capabilities()
             major_minor = self.ribcl.get_ilo_firmware_version_as_major_minor()
+
+        boot_modes = self.get_server_supported_boot_modes()
+        if boot_modes:
+            capabilities.update(boot_modes)
 
         # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
         # as we still want to try getting nic capacity through ipmitool
