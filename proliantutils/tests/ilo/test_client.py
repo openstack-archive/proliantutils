@@ -459,6 +459,11 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_pending_boot_mode')
 
     @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_supported_boot_mode(self, call_mock):
+        self.client.get_supported_boot_mode()
+        call_mock.assert_called_once_with('get_supported_boot_mode')
+
+    @mock.patch.object(client.IloClient, '_call_method')
     def test_set_pending_boot_mode(self, call_mock):
         self.client.set_pending_boot_mode('UEFI')
         call_mock.assert_called_once_with('set_pending_boot_mode', 'UEFI')
@@ -598,8 +603,26 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(ribcl.RIBCLOperations,
                        'get_ilo_firmware_version_as_major_minor')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
-    def test_get_server_capabilities_no_firmware(self, cap_mock,
-                                                 maj_min_mock, nic_mock):
+    def test_get_server_capabilities_no_firmware(self, cap_mock, maj_min_mock,
+                                                 nic_mock):
+        maj_min_mock.return_value = None
+        nic_mock.return_value = None
+        cap_mock.return_value = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        expected_capabilities = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2'}
+        capabilities = self.client.get_server_capabilities()
+        self.assertEqual(expected_capabilities, capabilities)
+        nic_mock.assert_called_once_with(self.client.info, None)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_boot_modes(
+            self, cap_mock, maj_min_mock, nic_mock):
         maj_min_mock.return_value = None
         nic_mock.return_value = None
         cap_mock.return_value = {'rom_firmware_version': 'x',
@@ -621,6 +644,8 @@ class IloClientTestCase(testtools.TestCase):
         str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         nic_mock.return_value = None
+
+        # gpu_mock.return_value = {'pci_gpu_devices': 2}
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -640,8 +665,7 @@ class IloClientTestCase(testtools.TestCase):
                        'get_ilo_firmware_version_as_major_minor')
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
-    def test_get_server_capabilities_Gen9(self, cap_mock, nic_mock,
-                                          mm_mock):
+    def test_get_server_capabilities_Gen9(self, cap_mock, nic_mock, mm_mock):
         str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         nic_mock.return_value = '10Gb'
@@ -673,6 +697,33 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_server_capabilities()
         self.assertFalse(ipmi_mock.called)
         self.assertTrue(cap_mock.called)
+
+    @mock.patch.object(ris.RISOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    @mock.patch.object(ris.RISOperations,
+                       '_get_number_of_gpu_devices_connected')
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_boot_modes_Gen9(
+            self, cap_mock, nic_mock, gpu_mock,
+            host_mock, mm_mock):
+        str_val = mm_mock.return_value = '2.10'
+        self.client.model = 'Gen9'
+        nic_mock.return_value = None
+        gpu_mock.return_value = None
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'secure_boot': 'true'}
+        capabilities = self.client.get_server_capabilities()
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(self.client.info, str_val)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'secure_boot': 'true'}
+        self.assertEqual(expected_capabilities, capabilities)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_activate_license(self, call_mock):
