@@ -147,6 +147,10 @@ class IloOperations(object):
         """Retrieves the supported boot mode."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
+    def get_server_supported_boot_modes(self):
+        """Retrieves the server supported boot modes as dict."""
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
     def set_pending_boot_mode(self, value):
         """Sets the boot mode of the system for next boot."""
         raise exception.IloCommandNotSupportedError(ERRMSG)

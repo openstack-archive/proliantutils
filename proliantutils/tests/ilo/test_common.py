@@ -227,3 +227,45 @@ class IloCommonModuleTestCase(unittest.TestCase):
         actual = None
         expected = common.get_major_minor(ver_str)
         self.assertEqual(actual, expected)
+
+    @ddt.data((ribcl.RIBCLOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+               {'boot_mode_bios': True, 'boot_mode_uefi': False}),
+              (ribcl.RIBCLOperations.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+               {'boot_mode_bios': False, 'boot_mode_uefi': True}),
+              (ribcl.RIBCLOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+               {'boot_mode_bios': True, 'boot_mode_uefi': True}))
+    @ddt.unpack
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    def test_get_server_supported_boot_modes_for_ribcl_object(
+            self, returned_boot_mode_value, expected_boot_modes,
+            get_supported_boot_mode_mock):
+        # | GIVEN |
+        the_operation_object = self.ribcl
+        get_supported_boot_mode_mock.return_value = returned_boot_mode_value
+        # | WHEN |
+        actual_boot_modes = (
+            common.get_server_supported_boot_modes(the_operation_object))
+        # | THEN |
+        self.assertDictEqual(expected_boot_modes, actual_boot_modes)
+
+    @ddt.data((ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+               {'boot_mode_bios': True, 'boot_mode_uefi': False}),
+              (ris.RISOperations.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+               {'boot_mode_bios': False, 'boot_mode_uefi': True}),
+              (ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+               {'boot_mode_bios': True, 'boot_mode_uefi': True}))
+    @ddt.unpack
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    def test_get_server_supported_boot_modes_for_ris_object(
+            self, returned_boot_mode_value, expected_boot_modes,
+            get_supported_boot_mode_mock):
+        # | GIVEN |
+        the_operation_object = self.ris
+        get_supported_boot_mode_mock.return_value = returned_boot_mode_value
+        # | WHEN |
+        actual_boot_modes = (
+            common.get_server_supported_boot_modes(the_operation_object))
+        # | THEN |
+        self.assertDictEqual(expected_boot_modes, actual_boot_modes)
