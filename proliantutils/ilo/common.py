@@ -14,18 +14,24 @@
 
 """Common functionalities used by both RIBCL and RIS."""
 
+import collections
 import os
 import re
 import stat
 import time
 
 from proliantutils import exception
+from proliantutils.ilo import constants
 from proliantutils import log
 
 
 LOG = log.get_logger(__name__)
 
 ILO_VER_STR_PATTERN = r"\d+\.\d+"
+
+# Representation of supported boot modes
+SupportedBootModes = collections.namedtuple(
+    'SupportedBootModes', ['boot_mode_bios', 'boot_mode_uefi'])
 
 
 def wait_for_operation_to_complete(
@@ -218,3 +224,31 @@ def get_major_minor(ilo_ver_str):
             return None
     except Exception:
         return None
+
+
+def get_supported_boot_modes(supported_boot_mode_constant):
+    """Retrieves the server supported boot modes
+
+    It retrieves the server supported boot modes as a namedtuple
+    containing 'boot_mode_bios' as 'true'/'false' (in string format)
+    and 'boot_mode_uefi' again as true'/'false'.
+    :param supported_boot_mode_constant: supported boot_mode constant
+    :returns: A namedtuple containing ``boot_mode_bios`` and
+        ``boot_mode_uefi`` with 'true'/'false' set accordingly for
+        legacy BIOS and UEFI boot modes.
+    """
+    boot_mode_bios = 'false'
+    boot_mode_uefi = 'false'
+    if (supported_boot_mode_constant ==
+            constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY):
+        boot_mode_bios = 'true'
+    elif (supported_boot_mode_constant ==
+            constants.SUPPORTED_BOOT_MODE_UEFI_ONLY):
+        boot_mode_uefi = 'true'
+    elif (supported_boot_mode_constant ==
+            constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI):
+        boot_mode_bios = 'true'
+        boot_mode_uefi = 'true'
+
+    return SupportedBootModes(boot_mode_bios=boot_mode_bios,
+                              boot_mode_uefi=boot_mode_uefi)

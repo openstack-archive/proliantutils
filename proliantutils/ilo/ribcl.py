@@ -31,6 +31,7 @@ import six
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import firmware_controller
+from proliantutils.ilo import mappings
 from proliantutils.ilo import operations
 from proliantutils import log
 
@@ -472,10 +473,21 @@ class RIBCLOperations(operations.IloOperations):
         return data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE']
 
     def get_supported_boot_mode(self):
-        """Retrieves the supported boot mode."""
+        """Retrieves the supported boot mode.
+
+        :returns: any one of the following proliantutils.ilo.constants:
+
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
+            SUPPORTED_BOOT_MODE_UEFI_ONLY,
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI
+
+        """
         data = self._execute_command(
             'GET_SUPPORTED_BOOT_MODE', 'SERVER_INFO', 'read')
-        return data['GET_SUPPORTED_BOOT_MODE']['SUPPORTED_BOOT_MODE']['VALUE']
+        supported_boot_mode = (
+            data['GET_SUPPORTED_BOOT_MODE']['SUPPORTED_BOOT_MODE']['VALUE'])
+        return mappings.GET_SUPPORTED_BOOT_MODE_RIBCL_MAP.get(
+            supported_boot_mode)
 
     def set_pending_boot_mode(self, value):
         """Configures the boot mode of the system from a specific boot mode."""
@@ -791,23 +803,6 @@ class RIBCLOperations(operations.IloOperations):
         return_value = {'properties': properties, 'macs': macs}
         return return_value
 
-    def _get_server_boot_modes(self):
-        """Gets boot modes supported by the server
-
-        :returns: a dictionary of supported boot modes or None.
-        :raises:IloError, if iLO returns an error in command execution.
-        """
-        bootmode = self.get_supported_boot_mode()
-        if bootmode == 'LEGACY_ONLY':
-            BootMode = ['LEGACY']
-        elif bootmode == 'LEGACY_UEFI':
-            BootMode = ['LEGACY', 'UEFI']
-        elif bootmode == 'UEFI_ONLY':
-            BootMode = ['UEFI']
-        else:
-            BootMode = None
-        return {'BootMode': BootMode}
-
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -815,9 +810,6 @@ class RIBCLOperations(operations.IloOperations):
                   versions, server model.
         :raises: IloError, if iLO returns an error in command execution.
         """
-
-        # Commenting out the BootMode as we dont plan to add it for Kilo.
-        # BootMode = self._get_server_boot_modes()
         capabilities = {}
         data = self.get_host_health_data()
         ilo_firmware = self._get_ilo_firmware_version(data)
@@ -828,6 +820,11 @@ class RIBCLOperations(operations.IloOperations):
             capabilities.update(rom_firmware)
         capabilities.update({'server_model': self.get_product_name()})
         capabilities.update(self._get_number_of_gpu_devices_connected(data))
+        boot_modes = common.get_supported_boot_modes(
+            self.get_supported_boot_mode())
+        capabilities.update({
+            'boot_mode_bios': boot_modes.boot_mode_bios,
+            'boot_mode_uefi': boot_modes.boot_mode_uefi})
         return capabilities
 
     def _parse_memory_embedded_health(self, data):

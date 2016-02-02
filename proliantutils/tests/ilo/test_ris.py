@@ -17,6 +17,7 @@
 
 import json
 
+import ddt
 import mock
 from requests.packages import urllib3
 from requests.packages.urllib3 import exceptions as urllib3_exceptions
@@ -24,6 +25,7 @@ import testtools
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import constants
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
 
@@ -56,6 +58,7 @@ class IloRisTestCaseInitTestCase(testtools.TestCase):
             urllib3_exceptions.InsecureRequestWarning)
 
 
+@ddt.ddt
 class IloRisTestCase(testtools.TestCase):
 
     def setUp(self):
@@ -334,6 +337,35 @@ class IloRisTestCase(testtools.TestCase):
         self.assertRaises(exception.IloInvalidInputError,
                           self.client.set_pending_boot_mode, 'invalid')
 
+    @ddt.data((0, constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY),
+              (3, constants.SUPPORTED_BOOT_MODE_UEFI_ONLY),
+              (2, constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI))
+    @ddt.unpack
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode(
+            self, raw_boot_mode_value, expected_boot_mode_value,
+            _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'Bios':
+                                     {'UefiClass': raw_boot_mode_value}}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(expected_boot_mode_value, actual_val)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode_returns_legacy_bios_if_bios_atrrib_absent(
+            self, _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'blahblah': 1234}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
+                         actual_val)
+
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_collection')
     def test_reset_ilo_credential(self, collection_mock, patch_mock):
@@ -412,17 +444,20 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_tpm_capability')
     @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock, gpu_mock, tpm_mock,
-                                     cpu_vt_mock, nvdimm_n_mock,
+                                     secure_mock, boot_mode_mock, gpu_mock,
+                                     tpm_mock, cpu_vt_mock, nvdimm_n_mock,
                                      bios_sriov_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
+        boot_mode_mock.return_value = (
+            constants.SUPPORTED_BOOT_MODE_UEFI_ONLY)
         cpu_vt_mock.return_value = True
         secure_mock.return_value = False
         nvdimm_n_mock.return_value = True
@@ -435,7 +470,9 @@ class IloRisTestCase(testtools.TestCase):
                          'pci_gpu_devices': 2,
                          'trusted_boot': 'true',
                          'cpu_vt': 'true',
-                         'nvdimm_n': 'true'}
+                         'nvdimm_n': 'true',
+                         'boot_mode_bios': 'false',
+                         'boot_mode_uefi': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -446,19 +483,19 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_tpm_capability')
     @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
-    def test_get_server_capabilities_tp_absent(self,
-                                               get_details_mock,
-                                               ilo_firm_mock, secure_mock,
-                                               gpu_mock, tpm_mock,
-                                               cpu_vt_mock, nvdimm_n_mock,
-                                               bios_sriov_mock):
+    def test_get_server_capabilities_tp_absent(
+            self, get_details_mock, ilo_firm_mock, secure_mock, boot_mode_mock,
+            gpu_mock, tpm_mock, cpu_vt_mock, nvdimm_n_mock, bios_sriov_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
+        boot_mode_mock.return_value = (
+            constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI)
         secure_mock.return_value = False
         nvdimm_n_mock.return_value = True
         tpm_mock.return_value = False
@@ -471,7 +508,9 @@ class IloRisTestCase(testtools.TestCase):
                          'pci_gpu_devices': 2,
                          'cpu_vt': 'true',
                          'nvdimm_n': 'true',
-                         'sriov_enabled': 'true'}
+                         'sriov_enabled': 'true',
+                         'boot_mode_bios': 'true',
+                         'boot_mode_uefi': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 

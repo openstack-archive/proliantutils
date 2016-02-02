@@ -22,6 +22,7 @@ import mock
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import constants
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ribcl_sample_outputs as ribcl_output
@@ -227,3 +228,15 @@ class IloCommonModuleTestCase(unittest.TestCase):
         actual = None
         expected = common.get_major_minor(ver_str)
         self.assertEqual(actual, expected)
+
+    @ddt.data((constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
+               ('true', 'false')),
+              (constants.SUPPORTED_BOOT_MODE_UEFI_ONLY,
+               ('false', 'true')),
+              (constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI,
+               ('true', 'true')))
+    @ddt.unpack
+    def test_get_supported_boot_modes(self, boot_mode_value,
+                                      expected_boot_modes):
+        actual_boot_modes = common.get_supported_boot_modes(boot_mode_value)
+        self.assertEqual(expected_boot_modes, actual_boot_modes)
