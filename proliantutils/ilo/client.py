@@ -343,6 +343,35 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method('get_essential_properties')
 
+    def _get_server_supported_boot_modes(self):
+        """Retrieves the server supported boot modes
+
+        It retrieves the server supported boot modes as a dictionary of items
+        as::
+            {
+              'boot_mode_bios': True/False,
+              'boot_mode_uefi': True/False
+            }
+        :returns: Dictionary - with true/false set accordingly for UEFI and
+                  legacy BIOS boot modes.
+        """
+        boot_capability = {'boot_mode_bios': False, 'boot_mode_uefi': False}
+        if 'Gen9' in self.model:
+            the_operation_object = self.ris
+        else:
+            the_operation_object = self.ribcl
+
+        boot_mode = the_operation_object.get_supported_boot_mode()
+        if boot_mode == the_operation_object.LEGACY_BIOS_ONLY:
+            boot_capability['boot_mode_bios'] = True
+        elif boot_mode == the_operation_object.UEFI_ONLY:
+            boot_capability['boot_mode_uefi'] = True
+        elif boot_mode == the_operation_object.LEGACY_BIOS_AND_UEFI:
+            boot_capability['boot_mode_bios'] = True
+            boot_capability['boot_mode_uefi'] = True
+
+        return boot_capability
+
     def get_server_capabilities(self):
         """Get hardware properties which can be used for scheduling
 
@@ -361,6 +390,10 @@ class IloClient(operations.IloOperations):
         else:
             capabilities = self.ribcl.get_server_capabilities()
             major_minor = self.ribcl.get_ilo_firmware_version_as_major_minor()
+
+        boot_modes = self._get_server_supported_boot_modes()
+        if boot_modes:
+            capabilities.update(boot_modes)
 
         # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
         # as we still want to try getting nic capacity through ipmitool

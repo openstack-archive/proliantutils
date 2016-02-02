@@ -20,6 +20,7 @@ import re
 import unittest
 import xml.etree.ElementTree as ET
 
+import ddt
 import mock
 import requests
 from requests.packages import urllib3
@@ -90,6 +91,7 @@ class IloRibclTestCaseInitTestCase(unittest.TestCase):
             urllib3_exceptions.InsecureRequestWarning)
 
 
+@ddt.ddt
 class IloRibclTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -296,6 +298,23 @@ class IloRibclTestCase(unittest.TestCase):
             self.ilo.get_pending_boot_mode()
         except exception.IloCommandNotSupportedError as e:
             self.assertIn('ProLiant DL380 G7', str(e))
+
+    @ddt.data(ribcl.RIBCLOperations.LEGACY_BIOS_ONLY,
+              ribcl.RIBCLOperations.UEFI_ONLY,
+              ribcl.RIBCLOperations.LEGACY_BIOS_AND_UEFI)
+    @mock.patch.object(
+        ribcl.RIBCLOperations, '_execute_command', autospec=True)
+    def test_get_supported_boot_mode_for_diff_supported_boot_mode_types(
+            self, expected_boot_mode_value, _execute_command_mock):
+        # | GIVEN |
+        ret_val = {'GET_SUPPORTED_BOOT_MODE':
+                   {'SUPPORTED_BOOT_MODE':
+                    {'VALUE': expected_boot_mode_value}}}
+        _execute_command_mock.return_value = ret_val
+        # | WHEN |
+        actual_val = self.ilo.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(expected_boot_mode_value, actual_val)
 
     @mock.patch.object(common, 'wait_for_ilo_after_reset')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')

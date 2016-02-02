@@ -18,6 +18,7 @@
 import base64
 import json
 
+import ddt
 import mock
 import requests
 from requests.packages import urllib3
@@ -58,6 +59,7 @@ class IloRisTestCaseInitTestCase(testtools.TestCase):
             urllib3_exceptions.InsecureRequestWarning)
 
 
+@ddt.ddt
 class IloRisTestCase(testtools.TestCase):
 
     def setUp(self):
@@ -314,6 +316,32 @@ class IloRisTestCase(testtools.TestCase):
     def test_set_pending_boot_mode_invalid_mode(self):
         self.assertRaises(exception.IloInvalidInputError,
                           self.client.set_pending_boot_mode, 'invalid')
+
+    @ddt.data(ris.RISOperations.LEGACY_BIOS_ONLY,
+              ris.RISOperations.UEFI_ONLY,
+              ris.RISOperations.LEGACY_BIOS_AND_UEFI)
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode_for_diff_supported_boot_mode_types(
+            self, expected_boot_mode_value, _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'Bios':
+                                     {'UefiClass': expected_boot_mode_value}}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(expected_boot_mode_value, actual_val)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode_returns_legacy_bios_if_bios_atrrib_absent(
+            self, _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'blahblah': 1234}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(self.client.LEGACY_BIOS_ONLY, actual_val)
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_collection')

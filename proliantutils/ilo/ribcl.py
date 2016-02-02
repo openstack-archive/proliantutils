@@ -444,6 +444,11 @@ class RIBCLOperations(operations.IloOperations):
             'GET_PENDING_BOOT_MODE', 'SERVER_INFO', 'read')
         return data['GET_PENDING_BOOT_MODE']['BOOT_MODE']['VALUE']
 
+    # Mapping of respective returned boot modes to common values
+    LEGACY_BIOS_ONLY = 'LEGACY_ONLY'
+    UEFI_ONLY = 'UEFI_ONLY'
+    LEGACY_BIOS_AND_UEFI = 'LEGACY_UEFI'
+
     def get_supported_boot_mode(self):
         """Retrieves the supported boot mode."""
         data = self._execute_command(

@@ -47,7 +47,10 @@ LOG = log.get_logger(__name__)
 
 
 class RISOperations(operations.IloOperations):
+    """iLO class for RIS interface for iLO.
 
+    Implements the class used for REST based RIS services to talk to the iLO.
+    """
     def __init__(self, host, login, password, bios_password=None,
                  cacert=None):
         self.host = host
@@ -824,6 +827,21 @@ class RISOperations(operations.IloOperations):
         # Change the Boot Mode
         self._change_bios_setting(boot_properties)
 
+    # Mapping of respective returned boot modes to common values
+    LEGACY_BIOS_ONLY = 0
+    UEFI_ONLY = 3
+    LEGACY_BIOS_AND_UEFI = 2
+
+    def get_supported_boot_mode(self):
+        """Retrieves the supported boot mode."""
+        system = self._get_host_details()
+        value_for_bios_uefi_class = self.LEGACY_BIOS_ONLY
+        if ('Bios' in system['Oem']['Hp'] and
+                'UefiClass' in system['Oem']['Hp']['Bios']):
+            value_for_bios_uefi_class = (system['Oem']['Hp']
+                                         ['Bios']['UefiClass'])
+        return value_for_bios_uefi_class
+
     def reset_ilo_credential(self, password):
         """Resets the iLO password.
 
@@ -984,6 +1002,7 @@ class RISOperations(operations.IloOperations):
             # If an error is raised dont populate the capability
             # secure_boot
             pass
+
         return capabilities
 
     def activate_license(self, key):

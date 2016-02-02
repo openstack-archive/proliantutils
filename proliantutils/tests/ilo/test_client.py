@@ -16,6 +16,7 @@
 
 import json
 
+import ddt
 import mock
 import testtools
 
@@ -51,6 +52,7 @@ class IloClientInitTestCase(testtools.TestCase):
         self.assertEqual('product', c.model)
 
 
+@ddt.ddt
 class IloClientTestCase(testtools.TestCase):
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
@@ -264,14 +266,59 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_host_health_at_a_glance',
                                           'fake-data')
 
+    @ddt.data((ris.RISOperations.LEGACY_BIOS_ONLY,
+               {'boot_mode_bios': True, 'boot_mode_uefi': False}),
+              (ris.RISOperations.UEFI_ONLY,
+               {'boot_mode_bios': False, 'boot_mode_uefi': True}),
+              (ris.RISOperations.LEGACY_BIOS_AND_UEFI,
+               {'boot_mode_bios': True, 'boot_mode_uefi': True}))
+    @ddt.unpack
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    def test__get_server_supported_boot_modes_from_ris_object(
+            self, returned_boot_mode_value, expected_boot_mode_values,
+            get_supported_boot_mode_mock):
+        # | GIVEN |
+        self.client.model = 'Gen9'
+        get_supported_boot_mode_mock.return_value = returned_boot_mode_value
+        # | WHEN |
+        actual_val = self.client._get_server_supported_boot_modes()
+        # | THEN |
+        self.assertDictEqual(expected_boot_mode_values, actual_val)
+
+    @ddt.data((ribcl.RIBCLOperations.LEGACY_BIOS_ONLY,
+               {'boot_mode_bios': True, 'boot_mode_uefi': False}),
+              (ribcl.RIBCLOperations.UEFI_ONLY,
+               {'boot_mode_bios': False, 'boot_mode_uefi': True}),
+              (ribcl.RIBCLOperations.LEGACY_BIOS_AND_UEFI,
+               {'boot_mode_bios': True, 'boot_mode_uefi': True}))
+    @ddt.unpack
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    def test__get_server_supported_boot_modes_from_ribcl_object(
+            self, returned_boot_mode_value, expected_boot_mode_values,
+            get_supported_boot_mode_mock):
+        # | GIVEN |
+        self.client.model = 'Gen8'
+        get_supported_boot_mode_mock.return_value = returned_boot_mode_value
+        # | WHEN |
+        actual_val = self.client._get_server_supported_boot_modes()
+        # | THEN |
+        self.assertDictEqual(expected_boot_mode_values, actual_val)
+
     @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(client.IloClient, '_get_server_supported_boot_modes',
+                       autospec=True)
     @mock.patch.object(ribcl.RIBCLOperations,
                        'get_ilo_firmware_version_as_major_minor')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
-    def test_get_server_capabilities(self, cap_mock, maj_min_mock, nic_mock):
+    def test_get_server_capabilities(self, cap_mock, maj_min_mock,
+                                     boot_modes_mock, nic_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
         str_val = maj_min_mock.return_value = "2.10"
         nic_mock.return_value = '10Gb'
+        boot_modes_mock.return_value = {'boot_mode_bios': True,
+                                        'boot_mode_uefi': False}
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
@@ -281,6 +328,8 @@ class IloClientTestCase(testtools.TestCase):
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
                                  'pci_gpu_devices': '2',
+                                 'boot_mode_bios': True,
+                                 'boot_mode_uefi': False,
                                  'nic_capacity': '10Gb'}
         cap_mock.assert_called_once_with()
         nic_mock.assert_called_once_with(self.client.info, str_val)
@@ -288,14 +337,18 @@ class IloClientTestCase(testtools.TestCase):
         self.assertEqual(info, self.client.info)
 
     @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(client.IloClient, '_get_server_supported_boot_modes',
+                       autospec=True)
     @mock.patch.object(ribcl.RIBCLOperations,
                        'get_ilo_firmware_version_as_major_minor')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
     def test_get_server_capabilities_no_nic(self, cap_mock, maj_min_mock,
-                                            nic_mock):
+                                            boot_modes_mock, nic_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
         str_val = maj_min_mock.return_value = '2.10'
         nic_mock.return_value = None
+        boot_modes_mock.return_value = {'boot_mode_bios': True,
+                                        'boot_mode_uefi': False}
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
@@ -304,26 +357,57 @@ class IloClientTestCase(testtools.TestCase):
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
-                                 'pci_gpu_devices': '2'}
+                                 'pci_gpu_devices': '2',
+                                 'boot_mode_bios': True,
+                                 'boot_mode_uefi': False}
         cap_mock.assert_called_once_with()
         nic_mock.assert_called_once_with(self.client.info, str_val)
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
 
     @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(client.IloClient, '_get_server_supported_boot_modes',
+                       autospec=True)
     @mock.patch.object(ribcl.RIBCLOperations,
                        'get_ilo_firmware_version_as_major_minor')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
-    def test_get_server_capabilities_no_firmware(self, cap_mock,
-                                                 maj_min_mock, nic_mock):
+    def test_get_server_capabilities_no_firmware(self, cap_mock, maj_min_mock,
+                                                 boot_modes_mock, nic_mock):
         maj_min_mock.return_value = None
         nic_mock.return_value = None
+        boot_modes_mock.return_value = {'boot_mode_bios': True,
+                                        'boot_mode_uefi': False}
         cap_mock.return_value = {'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
                                  'pci_gpu_devices': '2'}
         expected_capabilities = {'rom_firmware_version': 'x',
                                  'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2',
+                                 'boot_mode_bios': True,
+                                 'boot_mode_uefi': False}
+        capabilities = self.client.get_server_capabilities()
+        self.assertEqual(expected_capabilities, capabilities)
+        nic_mock.assert_called_once_with(self.client.info, None)
+
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_boot_modes(
+            self, cap_mock, maj_min_mock, boot_modes_mock, nic_mock):
+        maj_min_mock.return_value = None
+        nic_mock.return_value = None
+        boot_modes_mock.return_value = "SOME_NON_MAPPED_UNKNOWN_VALUE"
+        cap_mock.return_value = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
                                  'pci_gpu_devices': '2'}
+        expected_capabilities = {'rom_firmware_version': 'x',
+                                 'server_model': 'Gen8',
+                                 'pci_gpu_devices': '2',
+                                 'boot_mode_bios': False,
+                                 'boot_mode_uefi': False}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_capabilities, capabilities)
         nic_mock.assert_called_once_with(self.client.info, None)
@@ -334,8 +418,11 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(ribcl.RIBCLOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(client.IloClient, '_get_server_supported_boot_modes',
+                       autospec=True)
     @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
-    def test_get_server_capabilities_no_nic_Gen9(self, cap_mock, nic_mock,
+    def test_get_server_capabilities_no_nic_Gen9(self, cap_mock,
+                                                 boot_modes_mock, nic_mock,
                                                  gpu_mock, host_mock, mm_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
@@ -344,39 +431,9 @@ class IloClientTestCase(testtools.TestCase):
         str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         nic_mock.return_value = None
+        boot_modes_mock.return_value = {'boot_mode_bios': True,
+                                        'boot_mode_uefi': True}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
-        cap_mock.return_value = {'ilo_firmware_version': '2.10',
-                                 'rom_firmware_version': 'x',
-                                 'server_model': 'Gen9',
-                                 'secure_boot': 'true'}
-        capabilities = self.client.get_server_capabilities()
-        cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
-        expected_capabilities = {'ilo_firmware_version': '2.10',
-                                 'rom_firmware_version': 'x',
-                                 'server_model': 'Gen9',
-                                 'pci_gpu_devices': 2,
-                                 'secure_boot': 'true'}
-        self.assertEqual(expected_capabilities, capabilities)
-        self.assertEqual(info, self.client.info)
-
-    @mock.patch.object(ris.RISOperations,
-                       'get_ilo_firmware_version_as_major_minor')
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    @mock.patch.object(ribcl.RIBCLOperations,
-                       '_get_number_of_gpu_devices_connected')
-    @mock.patch.object(ipmi, 'get_nic_capacity')
-    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
-    def test_get_server_capabilities_Gen9(self, cap_mock, nic_mock,
-                                          gpu_mock, host_mock, mm_mock):
-        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
-        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
-        json_data = json.loads(data)
-        host_mock.return_value = json_data
-        str_val = mm_mock.return_value = '2.10'
-        self.client.model = 'Gen9'
-        gpu_mock.return_value = {'pci_gpu_devices': 2}
-        nic_mock.return_value = '10Gb'
         cap_mock.return_value = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -389,7 +446,86 @@ class IloClientTestCase(testtools.TestCase):
                                  'server_model': 'Gen9',
                                  'pci_gpu_devices': 2,
                                  'secure_boot': 'true',
+                                 'boot_mode_bios': True,
+                                 'boot_mode_uefi': True}
+        self.assertEqual(expected_capabilities, capabilities)
+        self.assertEqual(info, self.client.info)
+
+    @mock.patch.object(ris.RISOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       '_get_number_of_gpu_devices_connected')
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(client.IloClient, '_get_server_supported_boot_modes',
+                       autospec=True)
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_Gen9(self, cap_mock,
+                                          boot_modes_mock, nic_mock,
+                                          gpu_mock, host_mock, mm_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        host_mock.return_value = json_data
+        str_val = mm_mock.return_value = '2.10'
+        self.client.model = 'Gen9'
+        gpu_mock.return_value = {'pci_gpu_devices': 2}
+        nic_mock.return_value = '10Gb'
+        boot_modes_mock.return_value = {'boot_mode_bios': True,
+                                        'boot_mode_uefi': True}
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'secure_boot': 'true'}
+        capabilities = self.client.get_server_capabilities()
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(self.client.info, str_val)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': 2,
+                                 'secure_boot': 'true',
+                                 'boot_mode_bios': True,
+                                 'boot_mode_uefi': True,
                                  'nic_capacity': '10Gb'}
+        self.assertEqual(expected_capabilities, capabilities)
+        self.assertEqual(info, self.client.info)
+
+    @mock.patch.object(ris.RISOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       '_get_number_of_gpu_devices_connected')
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
+    def test_get_server_capabilities_no_boot_modes_Gen9(
+            self, cap_mock, boot_modes_mock, nic_mock, gpu_mock,
+            host_mock, mm_mock):
+        info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        json_data = json.loads(data)
+        host_mock.return_value = json_data
+        str_val = mm_mock.return_value = '2.10'
+        self.client.model = 'Gen9'
+        nic_mock.return_value = None
+        boot_modes_mock.return_value = "SOME_NON_MAPPED_UNKNOWN_VALUE"
+        gpu_mock.return_value = {'pci_gpu_devices': 2}
+        cap_mock.return_value = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'secure_boot': 'true'}
+        capabilities = self.client.get_server_capabilities()
+        cap_mock.assert_called_once_with()
+        nic_mock.assert_called_once_with(self.client.info, str_val)
+        expected_capabilities = {'ilo_firmware_version': '2.10',
+                                 'rom_firmware_version': 'x',
+                                 'server_model': 'Gen9',
+                                 'pci_gpu_devices': 2,
+                                 'secure_boot': 'true',
+                                 'boot_mode_bios': False,
+                                 'boot_mode_uefi': False}
         self.assertEqual(expected_capabilities, capabilities)
         self.assertEqual(info, self.client.info)
 
