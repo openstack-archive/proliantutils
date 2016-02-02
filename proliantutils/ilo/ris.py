@@ -341,6 +341,15 @@ class RISOperations(operations.IloOperations):
 
         return system
 
+    def _check_uefi_class(self, properties=[]):
+
+        system = self._get_host_details()
+        uefi_class = 1
+        if ('Bios' in system['Oem']['Hp'] and
+                'UefiClass' in system['Oem']['Hp']['Bios']):
+            uefi_class = system['Oem']['Hp']['Bios']['UefiClass']
+        return uefi_class
+
     def _check_bios_resource(self, properties=[]):
         """Check if the bios resource exists."""
 
@@ -946,6 +955,26 @@ class RISOperations(operations.IloOperations):
         ilo_firmware_version = manager['Firmware']['Current']['VersionString']
         return {'ilo_firmware_version': ilo_firmware_version}
 
+    def _get_server_supported_boot_modes(self):
+        """Retrieves the Uefi class from server.
+
+        :returns: Dictinary - with true/false for Uefi and legacy boot modes.
+
+        """
+        boot_capability = {}
+        boot_mode = self._check_uefi_class()
+        if boot_mode == 0:
+            boot_capability.update({'boot_mode_bios': True})
+            boot_capability.update({'boot_mode_uefi': False})
+        elif boot_mode == 3:
+            boot_capability.update({'boot_mode_bios': False})
+            boot_capability.update({'boot_mode_uefi': True})
+        elif boot_mode == 2:
+            boot_capability.update({'boot_mode_bios': True})
+            boot_capability.update({'boot_mode_uefi': True})
+
+        return boot_capability
+
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -968,6 +997,12 @@ class RISOperations(operations.IloOperations):
             # If an error is raised dont populate the capability
             # secure_boot
             pass
+
+        boot_type = {}
+        boot_type = self._get_server_supported_boot_modes()
+        if boot_type and len(boot_type):
+            capabilities.update(boot_type)
+
         return capabilities
 
     def activate_license(self, key):
