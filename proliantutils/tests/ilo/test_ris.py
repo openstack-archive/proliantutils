@@ -18,6 +18,7 @@
 import base64
 import json
 
+import ddt
 import mock
 import requests
 from requests.packages import urllib3
@@ -58,6 +59,7 @@ class IloRisTestCaseInitTestCase(testtools.TestCase):
             urllib3_exceptions.InsecureRequestWarning)
 
 
+@ddt.ddt
 class IloRisTestCase(testtools.TestCase):
 
     def setUp(self):
@@ -315,6 +317,62 @@ class IloRisTestCase(testtools.TestCase):
     def test_set_pending_boot_mode_invalid_mode(self):
         self.assertRaises(exception.IloInvalidInputError,
                           self.client.set_pending_boot_mode, 'invalid')
+
+    @ddt.data(ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+              ris.RISOperations.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+              ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI)
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode_for_all_supported_boot_mode_types(
+            self, expected_boot_mode_value, _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'Bios':
+                                     {'UefiClass': expected_boot_mode_value}}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(expected_boot_mode_value, actual_val)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details', autospec=True)
+    def test_get_supported_boot_mode_returns_legacy_bios_if_bios_atrrib_absent(
+            self, _get_host_details_mock):
+        # | GIVEN |
+        system_val = {'Oem': {'Hp': {'blahblah': 1234}}}
+        _get_host_details_mock.return_value = system_val
+        # | WHEN |
+        actual_val = self.client.get_supported_boot_mode()
+        # | THEN |
+        self.assertEqual(
+            self.client.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY, actual_val)
+
+    @mock.patch.object(common, 'get_server_supported_boot_modes',
+                       autospec=True)
+    def test_get_server_supported_boot_modes_invokes_common_method(
+            self, get_server_supported_boot_modes_mock):
+        # | WHEN |
+        self.client.get_server_supported_boot_modes()
+        # | THEN |
+        get_server_supported_boot_modes_mock.assert_called_once_with(
+            self.client)
+
+    @ddt.data((ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_ONLY,
+               {'boot_mode_bios': True, 'boot_mode_uefi': False}),
+              (ris.RISOperations.SUPPORTED_BOOT_MODE.UEFI_ONLY,
+               {'boot_mode_bios': False, 'boot_mode_uefi': True}),
+              (ris.RISOperations.SUPPORTED_BOOT_MODE.LEGACY_BIOS_AND_UEFI,
+               {'boot_mode_bios': True, 'boot_mode_uefi': True}))
+    @ddt.unpack
+    @mock.patch.object(ris.RISOperations, 'get_supported_boot_mode',
+                       autospec=True)
+    def test_get_server_supported_boot_modes_full_flow(
+            self, returned_boot_mode_value, expected_boot_modes,
+            get_supported_boot_mode_mock):
+        # | GIVEN |
+        get_supported_boot_mode_mock.return_value = returned_boot_mode_value
+        # | WHEN |
+        actual_boot_modes = self.client.get_server_supported_boot_modes()
+        # | THEN |
+        self.assertDictEqual(expected_boot_modes, actual_boot_modes)
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_collection')
