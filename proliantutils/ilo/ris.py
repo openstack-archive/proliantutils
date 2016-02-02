@@ -342,6 +342,20 @@ class RISOperations(operations.IloOperations):
 
         return system
 
+    def _check_uefi_class(self, properties=[]):
+        # The System object Systems/1 has UefiClass property
+        # Uefi class value of -
+        # UefiClass = 3 means only UEFI mode is supported
+        # UefiClass = 2 means UEFI and Legacy mode is supported
+        # UefiClass = 0 means only Legacy mode is supported
+
+        system = self._get_host_details()
+        uefi_class = 1
+        if ('Bios' in system['Oem']['Hp'] and
+                'UefiClass' in system['Oem']['Hp']['Bios']):
+            uefi_class = system['Oem']['Hp']['Bios']['UefiClass']
+        return uefi_class
+
     def _check_bios_resource(self, properties=[]):
         """Check if the bios resource exists."""
 
@@ -965,6 +979,24 @@ class RISOperations(operations.IloOperations):
         except Exception:
             return (None, None)
 
+    def _get_server_supported_boot_modes(self):
+        """Retrieves the Uefi class from server.
+
+        :returns: Dictinary - with true/false for Uefi and legacy boot modes.
+
+        """
+        boot_capability = {'boot_mode_bios': False, 'boot_mode_uefi': False}
+        boot_mode = self._check_uefi_class()
+        if boot_mode == 0:
+            boot_capability.update({'boot_mode_bios': True})
+        elif boot_mode == 3:
+            boot_capability.update({'boot_mode_uefi': True})
+        elif boot_mode == 2:
+            boot_capability.update({'boot_mode_bios': True})
+            boot_capability.update({'boot_mode_uefi': True})
+
+        return boot_capability
+
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -987,6 +1019,11 @@ class RISOperations(operations.IloOperations):
             # If an error is raised dont populate the capability
             # secure_boot
             pass
+
+        boot_type = self._get_server_supported_boot_modes()
+        if boot_type:
+            capabilities.update(boot_type)
+
         return capabilities
 
     def activate_license(self, key):

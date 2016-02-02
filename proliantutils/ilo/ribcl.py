@@ -781,6 +781,30 @@ class RIBCLOperations(operations.IloOperations):
             BootMode = None
         return {'BootMode': BootMode}
 
+    def _get_server_supported_boot_modes(self):
+        """Gets boot modes supported by the server
+
+        returns: Dictinary - with true/false for Uefi and legacy boot modes.
+
+        raises:IloError, if iLO returns an error in command execution.
+        """
+        boot_capability = {'boot_mode_bios': False, 'boot_mode_uefi': False}
+        try:
+            bootmode = self.get_supported_boot_mode()
+        except ValueError:
+            msg = "Unable to read the supported boot modes Error: Data missing"
+            raise exception.IloError(msg)
+
+        if bootmode == 'LEGACY_ONLY':
+            boot_capability.update({'boot_mode_bios': True})
+        elif bootmode == 'LEGACY_UEFI':
+            boot_capability.update({'boot_mode_bios': True})
+            boot_capability.update({'boot_mode_uefi': True})
+        elif bootmode == 'UEFI_ONLY':
+            boot_capability.update({'boot_mode_uefi': True})
+
+        return boot_capability
+
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -801,6 +825,10 @@ class RIBCLOperations(operations.IloOperations):
             capabilities.update(rom_firmware)
         capabilities.update({'server_model': self.get_product_name()})
         capabilities.update(self._get_number_of_gpu_devices_connected(data))
+
+        boot_type = self._get_server_supported_boot_modes()
+        if boot_type:
+            capabilities.update(boot_type)
         return capabilities
 
     def _parse_memory_embedded_health(self, data):
