@@ -1,6 +1,101 @@
 CHANGES
 =======
 
+* Support for iLO based firmware update
+* Reduce logical disk size returned by 1
+
+2.1.5
+-----
+
+* Add logging for RIS and RIBCL modules
+* HPSSA: Support 'MAX' as size_gb for logical disks
+* Fix slow test test_wait_for_ilo_after_reset_ribcl_ok
+* Fix ribcl to return correct number of processors
+* Make proliantutils return 1 size less than actual disk size
+* Providing logging infrastructure in proliantutils
+
+2.1.4
+-----
+
+* Fixes tox Warning issue
+* Fix to allow Secure Boot API calls only in UEFI boot mode
+
+2.1.3
+-----
+
+* Update documentation
+* IPA: Update proliant hardware manager
+* Add RIS support for updating boot device
+
+2.1.2
+-----
+
+* RIS: Check if virtual media is attached before ejecting
+
+2.1.1
+-----
+
+* Check if virtual media is attached before ejecting
+* Change dict() to {}
+* Adding RIS support for virtual media interfaces
+* Add support for certificate based authentication
+* Add iSCSI boot support in RIS
+* Activate iLO license
+* Fix gate failures
+* parsing storage data fails in some scenarios
+* test cases for get_nic_capacity and ipmi.py
+* Python 3 compatibility
+* Missing argument in set_http_boot_url
+* update_persistent_boot to 'NETWORK' fails on Gen9
+
+2.1.0
+-----
+
+* ILO: Add nic_capacity to capabilities
+* Bug Fixes
+
+2.0.2
+-----
+
+* Adding functionality required by ilo-inspection
+* RIS:Add get_pending_boot_mode
+* Fallback to RIBCL
+* Refactor code in RIS
+* Fix exceptions
+* ILO: (PART-1) Test cases for RIS Operations
+* ILO:Check if iLO is up after reset_ilo
+* ILO: Add unit tests for ris.RISOperations._rest_op
+* ILO: Support for configuring httpboot through RIS
+* ILO: Add empty unit test files for ris
+* ILO: Add support for GET_EMBEDDED_HEALTH
+* HPSSA: Add support for sharing physical disks
+* HPSSA: create and get should return physical disks info
+* HPSSA: Handle all storage units
+* HPSSA: Add support for nested RAID levels
+* Support CDROM in get/set persistent boot methods
+* HPSSA: Add disk allocator
+* HPSSA: RAID creation should return current config
+* ILO: Update get_persistent_boot for UEFI
+* HPSSA: Move test outputs to a single file
+* HPSSA: Fix the disk sorting issue on create
+* Add Proliant Hardware Manager for IPA
+* Update ris module to be consistent with operations
+
+2.0.1
+-----
+
+* Add hpssa module to proliantutils
+* Add cleaning operations
+
+2.0.0
+-----
+
+* Fix broken backward compatibility
+* Fix boot mode exceptions for Gen 7 servers
+* Initial Support to RIS
+* Add hacking and fix pep8 issues
+* Fix pep8 errors in ribcl and its test module
+* Add tox for proliantutils module
 * Fix update_persistent_boot for Gen9 servers
 * Backout changes from 18bbcad
 * Add system health methods to ribcl module
@@ -10,5 +105,7 @@ CHANGES
 * Add boot mode commands to ribcl module
 * Add support for pbr
 * Add documentation to ribcl module
+* HPSSA: Add functional tests for create
+* HPSSA: Fixes for issue found during functional testing
 * Submit ribcl ilo module
 * Initial commit
