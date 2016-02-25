@@ -597,6 +597,35 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsInstance(ilo_firmware, dict)
         self.assertEqual(expected_ilo, ilo_firmware)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_ilo_firmware_version_as_major_minor(self, mock_health_data):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        mock_health_data.return_value = json.loads(data)
+        expected_ilo = (u'2', u'02',)
+        ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
+        self.assertIsInstance(ilo_firmware, tuple)
+        self.assertEqual(expected_ilo, ilo_firmware)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_ilo_firmware_version_as_major_minor_unexpected(
+            self, mock_health_data):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_UNEXPECTED_FORMAT
+        mock_health_data.return_value = json.loads(data)
+        expected_ilo = (None, None,)
+        ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
+        self.assertIsInstance(ilo_firmware, tuple)
+        self.assertEqual(expected_ilo, ilo_firmware)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
+    def test_get_ilo_firmware_version_as_major_minor_no_firmware(
+            self, mock_health_data):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_UNEXPECTED_FORMAT
+        mock_health_data.return_value = json.loads(data)
+        expected_ilo = (None, None,)
+        ilo_firmware = self.ilo.get_ilo_firmware_version_as_major_minor()
+        self.assertIsInstance(ilo_firmware, tuple)
+        self.assertEqual(expected_ilo, ilo_firmware)
+
     def test__get_number_of_gpu_devices_connected(self):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
