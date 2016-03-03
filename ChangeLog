@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+2.1.7
+-----
+
+* Add support to get NIC info for any version
+* Fix issue with certain firmware versions
+
 2.1.6
 -----
 
