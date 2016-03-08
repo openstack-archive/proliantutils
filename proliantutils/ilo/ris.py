@@ -43,6 +43,11 @@ DEVICE_COMMON_TO_RIS = {'NETWORK': 'Pxe',
 DEVICE_RIS_TO_COMMON = dict(
     (v, k) for (k, v) in DEVICE_COMMON_TO_RIS.items())
 
+POWER_STATE = {
+    'ON': 'On',
+    'OFF': 'ForceOff',
+}
+
 LOG = log.get_logger(__name__)
 
 
@@ -709,6 +714,82 @@ class RISOperations(operations.IloOperations):
 
         data = self._get_host_details()
         return data['Power'].upper()
+
+    def reset_server(self):
+        """Resets the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+
+        power_settings = {"Action": "Reset",
+                          "ResetType": "ForceRestart"}
+        systems_uri = "/rest/v1/Systems/1"
+
+        status, headers, response = self._rest_post(systems_uri, None,
+                                                    power_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def _press_pwr_btn(self, pushType="Press"):
+        """Simulates a physical press of the server power button.
+
+        :args pushType: Type of power button press to simulate
+        :raises: IloError, on an error from iLO.
+        """
+        power_settings = {"Action": "PowerButton",
+                          "Target": "/Oem/Hp"}
+
+        power_settings['PushType'] = pushType
+        systems_uri = "/rest/v1/Systems/1"
+
+        status, headers, response = self._rest_post(systems_uri, None,
+                                                    power_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+
+    def press_pwr_btn(self):
+        """Simulates a physical press of the server power button.
+
+        :args pushType: Type of power button press to simulate
+        :raises: IloError, on an error from iLO.
+        """
+        self._press_pwr_btn(pushType="Press")
+
+    def hold_pwr_btn(self):
+        """Simulate a physical press and hold of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        self._press_pwr_btn(pushType="PressAndHold")
+
+    def set_host_power(self, power):
+        """Toggle the power button of server.
+
+        :param power: 'ON' or 'OFF'
+        :raises: IloError, on an error from iLO.
+        """
+        if power.upper() not in POWER_STATE:
+            raise exception.IloInvalidInputError(
+                "Invalid input. The expected input is ON or OFF.")
+
+        # Check current power status, do not act if it's in requested state.
+        cur_status = self.get_host_power_status()
+
+        if cur_status == power.upper():
+            return
+
+        dic = {"Action": "Reset"}
+        dic['ResetType'] = POWER_STATE[power.upper()]
+
+        systems_uri = "/rest/v1/Systems/1"
+
+        status, headers, response = self._rest_post(systems_uri, None,
+                                                    dic)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
 
     def get_http_boot_url(self):
         """Request the http boot url from system in uefi boot mode.
