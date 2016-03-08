@@ -948,6 +948,62 @@ class IloRisTestCase(testtools.TestCase):
         self.assertRaises(exception.IloError,
                           self.client.get_firmware_update_progress)
 
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_set_host_power_no_change(self, host_power_status_mock):
+        host_power_status_mock.return_value = 'ON'
+        self.client.set_host_power('on')
+        host_power_status_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_set_host_power_exc(self, host_power_status_mock):
+        self.assertRaises(exception.IloInvalidInputError,
+                          self.client.set_host_power, 'invalid')
+
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_set_host_power_change(self, host_power_status_mock,
+                                   perform_power_op_mock):
+        host_power_status_mock.return_value = 'ON'
+        self.client.set_host_power('off')
+        host_power_status_mock.assert_called_once_with()
+        perform_power_op_mock.assert_called_once_with('ForceOff')
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_perform_power_op(self, rest_post_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_pow_settings = {"Action": "Reset", "ResetType": "ForceRestart"}
+        rest_post_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                       ris_outputs.REST_POST_RESPONSE)
+        self.client.reset_server()
+        rest_post_mock.assert_called_once_with(systems_uri, None,
+                                               new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_perform_power_op_fail(self, rest_post_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_pow_settings = {"Action": "Reset", "ResetType": "ForceRestart"}
+        rest_post_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                       ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client.reset_server)
+        rest_post_mock.assert_called_once_with(systems_uri, None,
+                                               new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    def test_reset_server(self, mock_perform_power):
+        self.client.reset_server()
+        mock_perform_power.assert_called_once_with("ForceRestart")
+
+    @mock.patch.object(ris.RISOperations, '_press_pwr_btn')
+    def test_hold_pwr_btn(self, press_pwr_btn_mock):
+        self.client.hold_pwr_btn()
+        press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
+
+    @mock.patch.object(ris.RISOperations, '_press_pwr_btn')
+    def test_press_pwr_btn(self, press_pwr_btn_mock):
+        self.client.hold_pwr_btn()
+        press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
@@ -1673,3 +1729,28 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         # | WHEN | & | THEN |
         self.assertRaises(exception.IloCommandNotSupportedError,
                           self.client._get_firmware_update_service_resource)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_press_pwr_btn(self, rest_post_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_pow_settings = {"Action": "PowerButton",
+                            "Target": "/Oem/Hp",
+                            "PushType": "Press"}
+        rest_post_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                       ris_outputs.REST_POST_RESPONSE)
+        self.client._press_pwr_btn()
+        rest_post_mock.assert_called_once_with(systems_uri, None,
+                                               new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_press_pwr_btn_patch_fail(self, rest_post_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        new_pow_settings = {"Action": "PowerButton",
+                            "Target": "/Oem/Hp",
+                            "PushType": "Press"}
+        rest_post_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                       ris_outputs.REST_FAILURE_OUTPUT)
+        self.assertRaises(exception.IloError,
+                          self.client._press_pwr_btn, 'Press')
+        rest_post_mock.assert_called_once_with(systems_uri, None,
+                                               new_pow_settings)
