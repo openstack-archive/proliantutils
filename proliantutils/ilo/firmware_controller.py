@@ -50,7 +50,7 @@ LOG = log.get_logger(__name__)
 SUPPORTED_FIRMWARE_UPDATE_COMPONENTS = ['ilo', 'cpld', 'power_pic', 'bios',
                                         'chassis']
 # Supported raw firmware file extensions
-RAW_FIRMWARE_EXTNS = ['.hex', '.bin', '.vme']
+RAW_FIRMWARE_EXTNS = ['.hex', '.bin', '.vme', '.flash']
 
 
 def check_firmware_update_component(func):

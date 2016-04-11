@@ -106,11 +106,11 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
         _extract_rpm_file_mock.assert_called_once_with(
             fw_img_extractor, 'some_target_file', 'some_extract_path')
 
-    def test_no_op_extract_gets_invoked_for_raw_firmware_file(self):
+    @ddt.data('any_file.hex', 'any_file.bin', 'any_file.vme', 'any_file.flash')
+    def test_no_op_extract_gets_invoked_for_raw_firmware_file(self,
+                                                              any_raw_file):
         # no_op extract when fw_img_extractor is initialized
         # with raw firmware file
-        # | GIVEN |
-        any_raw_file = 'any_file.bin'
         # | WHEN |
         fw_img_extractor = firmware_controller.get_fw_extractor(any_raw_file)
         return_result, is_extracted = fw_img_extractor.extract()
