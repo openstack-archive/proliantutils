@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """Test Class for Firmware controller."""
+import distutils.spawn
 import os
 import shutil
 import tempfile
@@ -36,6 +37,19 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
         self.any_scexe_file = 'any_file.scexe'
         self.any_rpm_file = 'any_file.rpm'
         self.any_raw_fw_file = 'any_fw_file.bin'
+
+    @ddt.data('absolute_path_to_exe', None)
+    @mock.patch.object(firmware_controller, 'shutil', spec=['which'])
+    @mock.patch.object(distutils.spawn, 'find_executable', autospec=True)
+    def test_find_executable_returns(self, expected_ret_val,
+                                     find_executable_mock, shutil_mock):
+        # | GIVEN |
+        find_executable_mock.return_value = expected_ret_val
+        shutil_mock.which.return_value = expected_ret_val
+        # | WHEN |
+        actual_ret_val = firmware_controller.find_executable('executable')
+        #  | THEN |
+        self.assertEqual(expected_ret_val, actual_ret_val)
 
     @ddt.data('ilo', 'cpld', 'power_pic', 'bios', 'chassis')
     def test_check_firmware_update_component_passes_for_valid_component(
@@ -142,6 +156,8 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
 
     @mock.patch.object(firmware_controller, 'os', autospec=True)
     @mock.patch.object(firmware_controller, 'subprocess', autospec=True)
+    @mock.patch.object(
+        firmware_controller, 'find_executable', lambda x: mock.ANY)
     def test__extract_rpm_file_creates_dir_if_extract_path_doesnt_exist(
             self, subprocess_mock, os_mock):
         # | GIVEN |
@@ -162,6 +178,8 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
 
     @mock.patch.object(firmware_controller, 'os', autospec=True)
     @mock.patch.object(firmware_controller, 'subprocess', autospec=True)
+    @mock.patch.object(
+        firmware_controller, 'find_executable', lambda x: mock.ANY)
     def test__extract_rpm_file_doesnt_create_dir_if_extract_path_present(
             self, subprocess_mock, os_mock):
         # extract_rpm_file doesn't create dir if extract path
@@ -184,6 +202,29 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
 
     @mock.patch.object(firmware_controller, 'os', autospec=True)
     @mock.patch.object(firmware_controller, 'subprocess', autospec=True)
+    def test__extract_rpm_file_raises_exception_if_rpm_or_cpio_exec_not_found(
+            self, subprocess_mock, os_mock):
+        # | GIVEN |
+        any_rpm_firmware_file = 'any_file.rpm'
+        any_extract_path = 'any_extract_path'
+        return_values_for_find_executable_stub = (
+            [None, 'absolute_path_to_cpio'],      # `rpm2cpio` not present
+            ['absolute_path_to_rpm2cpio', None]   # `cpio` not present
+        )
+
+        # | WHEN | & | THEN |
+        for input in return_values_for_find_executable_stub:
+            with mock.patch.object(
+                    firmware_controller, 'find_executable') as find_mock:
+                find_mock.side_effect = input
+                self.assertRaises(exception.ImageExtractionFailed,
+                                  firmware_controller._extract_rpm_file, None,
+                                  any_rpm_firmware_file, any_extract_path)
+
+    @mock.patch.object(firmware_controller, 'os', autospec=True)
+    @mock.patch.object(firmware_controller, 'subprocess', autospec=True)
+    @mock.patch.object(
+        firmware_controller, 'find_executable', lambda x: mock.ANY)
     def test__extract_rpm_file_issues_commands_as(self,
                                                   subprocess_mock,
                                                   os_mock):
@@ -215,6 +256,8 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
 
     @mock.patch.object(firmware_controller, 'os', autospec=True)
     @mock.patch.object(firmware_controller, 'subprocess', autospec=True)
+    @mock.patch.object(
+        firmware_controller, 'find_executable', lambda x: mock.ANY)
     def test__extract_rpm_file_raises_exception_if_it_fails(self,
                                                             subprocess_mock,
                                                             os_mock):
@@ -224,7 +267,7 @@ class FirmwareControllerModuleTestCase(unittest.TestCase):
 
         rpm2cpio_mock = mock.MagicMock()
         cpio_mock = mock.MagicMock()
-        cpio_mock.communicate.side_effect = Exception('foo')
+        cpio_mock.communicate.side_effect = ValueError
         subsequent_popen_call_returns = [rpm2cpio_mock, cpio_mock]
         subprocess_mock.Popen = mock.MagicMock(
             side_effect=subsequent_popen_call_returns)
