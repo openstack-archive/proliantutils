@@ -38,13 +38,15 @@ INTERFACE_TYPE_MAP = {'SCSI': INTERFACE_TYPE_SCSI,
                       'SAS': INTERFACE_TYPE_SAS,
                       'SATA': INTERFACE_TYPE_SATA,
                       'SATASSD': INTERFACE_TYPE_SATA,
-                      'SASSSD': INTERFACE_TYPE_SAS}
+                      'SASSSD': INTERFACE_TYPE_SAS,
+                      'Solid State SAS': INTERFACE_TYPE_SAS}
 
 DISK_TYPE_MAP = {'SCSI': DISK_TYPE_HDD,
                  'SAS': DISK_TYPE_HDD,
                  'SATA': DISK_TYPE_HDD,
                  'SATASSD': DISK_TYPE_SSD,
-                 'SASSSD': DISK_TYPE_SSD}
+                 'SASSSD': DISK_TYPE_SSD,
+                 'Solid State SAS': DISK_TYPE_SSD}
 
 RAID_LEVEL_MIN_DISKS = {RAID_0: 2,
                         RAID_1: 2,

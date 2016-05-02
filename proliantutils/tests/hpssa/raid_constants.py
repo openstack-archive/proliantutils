@@ -204,6 +204,135 @@ Smart Array P822 in Slot 2
       Model: SRCv24x6G
 '''
 
+HPSSA_DRIVES_SSD = '''
+Smart Array P822 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDVTF0BRH5T0MO
+   Cache Serial Number: PBKUD0BRH5T3I6
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.68
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 15 secs
+   Cache Board Present: True
+   Cache Status: OK
+   Drive Write Cache: Disabled
+   Total Cache Size: 2.0 GB
+   Total Cache Memory Available: 1.8 GB
+   No-Battery Write Cache: Disabled
+   Cache Backup Power Source: Capacitors
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 88
+   Cache Module Temperature (C): 37
+   Capacitor Temperature  (C): 21
+   Number of Ports: 6 (2 Internal / 4 External )
+   Driver Name: hpsa
+   Driver Version: 3.4.4
+   Driver Supports HP SSD Smart Path: True
+
+
+
+   unassigned
+
+      physicaldrive 5I:1:1
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 500 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+      physicaldrive 6I:1:5
+         Port: 6I
+         Box: 1
+         Bay: 5
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 400 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7H2BR0000B41800V8
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 32
+         Maximum Temperature (C): 41
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+      physicaldrive 6I:1:6
+         Port: 6I
+         Box: 1
+         Bay: 6
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 600 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G4WD0000N4180GEJ
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+      physicaldrive 6I:1:7
+         Port: 6I
+         Box: 1
+         Bay: 7
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: Solid State SAS
+         Size: 200 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G54Q0000N4180W34
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 31
+         Maximum Temperature (C): 39
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+
+   SEP (Vendor ID PMCSIERA, Model SRCv24x6G) 380
+      Device Number: 380
+      Firmware Version: RevB
+      WWID: 5001438028842E1F
+      Vendor ID: PMCSIERA
+      Model: SRCv24x6G
+'''
+
 HPSSA_ONE_DRIVE = '''
 Smart Array P822 in Slot 2
    Bus Interface: PCI
