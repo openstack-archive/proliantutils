@@ -53,6 +53,24 @@ SUPPORTED_FIRMWARE_UPDATE_COMPONENTS = ['ilo', 'cpld', 'power_pic', 'bios',
 RAW_FIRMWARE_EXTNS = ['.hex', '.bin', '.vme', '.flash']
 
 
+def find_executable(executable_name):
+    """Tries to find executable in PATH environment
+
+    It uses ``shutil.which`` method in Python3 and
+    ``distutils.spawn.find_executable`` method in Python2.7 to find the
+    absolute path to the 'name' executable.
+    :param executable_name: name of the executable
+    :returns: Returns the absolute path to the executable or None if not found.
+    """
+    if six.PY3:
+        executable_abs = shutil.which(executable_name)
+    else:
+        import distutils.spawn
+        executable_abs = distutils.spawn.find_executable(executable_name)
+
+    return executable_abs
+
+
 def check_firmware_update_component(func):
     """Checks the firmware update component."""
     @six.wraps(func)
@@ -338,6 +356,12 @@ def _extract_rpm_file(self, target_file, extract_path):
         os.makedirs(extract_path)
     os.chdir(extract_path)
 
+    if find_executable('rpm2cpio') is None:
+        raise exception.ImageExtractionFailed(
+            image_ref=target_file, reason='Command `rpm2cpio` not found.')
+    if find_executable('cpio') is None:
+        raise exception.ImageExtractionFailed(
+            image_ref=target_file, reason='Command `cpio` not found.')
     try:
         rpm2cpio = subprocess.Popen('rpm2cpio ' + target_file,
                                     shell=True,
@@ -345,10 +369,10 @@ def _extract_rpm_file(self, target_file, extract_path):
         cpio = subprocess.Popen('cpio -idm', shell=True,
                                 stdin=rpm2cpio.stdout)
         out, err = cpio.communicate()
-    except Exception:
+    except (OSError, ValueError) as e:
         raise exception.ImageExtractionFailed(
             image_ref=target_file,
-            reason='Unexpected error in extracting file.')
+            reason='Unexpected error in extracting file. ' + str(e))
 
 
 def _get_firmware_file(path):
