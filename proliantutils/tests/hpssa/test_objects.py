@@ -11,9 +11,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import subprocess
 
 import mock
-from oslo_concurrency import processutils
 import testtools
 
 from proliantutils import exception
@@ -174,34 +174,31 @@ class ServerTest(testtools.TestCase):
 @mock.patch.object(objects.Server, '_get_all_details')
 class ControllerTest(testtools.TestCase):
 
-    @mock.patch.object(processutils, 'execute')
-    def test_execute_cmd(self, processutils_mock, get_all_details_mock):
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_execute_cmd(self, mock_popen, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = ('stdout', 'stderr')
 
         server = objects.Server()
         controller = server.controllers[0]
-
-        processutils_mock.return_value = ('stdout', 'stderr')
 
         stdout, stderr = controller.execute_cmd('foo', 'bar')
 
-        processutils_mock.assert_called_once_with("hpssacli",
-                                                  "controller",
-                                                  "slot=2",
-                                                  "foo",
-                                                  "bar")
+        mock_popen.assert_called_once_with(["hpssacli", "controller", "slot=2",
+                                           "foo", "bar"], stdin=-1, stdout=-1)
         self.assertEqual(stdout, 'stdout')
         self.assertEqual(stderr, 'stderr')
 
-    @mock.patch.object(processutils, 'execute')
-    def test_execute_cmd_fails(self, processutils_mock, get_all_details_mock):
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_execute_cmd_fails(self, mock_popen, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
         server = objects.Server()
         controller = server.controllers[0]
 
-        processutils_mock.side_effect = OSError
+        mock_popen.side_effect = OSError
 
         self.assertRaises(exception.HPSSAOperationError,
                           controller.execute_cmd,
@@ -372,71 +369,70 @@ class LogicalDriveTest(testtools.TestCase):
 @mock.patch.object(objects.Server, '_get_all_details')
 class ArrayTest(testtools.TestCase):
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_okay(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_okay(self, mock_popen,
                                  get_all_details_mock):
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        execute_mock.return_value = (
-            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         logical_disk = {'size_gb': 500, 'raid_level': '5'}
         server = objects.Server()
         ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
             logical_disk)
         self.assertTrue(ret_val)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_max_size_gb_okay(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_max_size_gb_okay(self, mock_popen,
                                              get_all_details_mock):
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        execute_mock.return_value = (
-            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         logical_disk = {'size_gb': 'MAX', 'raid_level': '5'}
         server = objects.Server()
         ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
             logical_disk)
         self.assertTrue(ret_val)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_not_enough_space(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_not_enough_space(self, mock_popen,
                                              get_all_details_mock):
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = (
+            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        execute_mock.return_value = (
-            raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK, None)
         logical_disk = {'size_gb': 1500, 'raid_level': '5'}
         server = objects.Server()
         ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
             logical_disk)
         self.assertFalse(ret_val)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_invalid_raid_level(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_invalid_raid_level(self, mock_popen,
                                                get_all_details_mock):
+        mock_popen.return_value.returncode = 0
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        exc = processutils.ProcessExecutionError(
-            stdout=raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK_INVALID,
-            stderr=None,
-            exit_code=1)
-        execute_mock.side_effect = exc
+        exc = subprocess.CalledProcessError(1, ["foo", "bar"])
+        mock_popen.side_effect = exc
         logical_disk = {'size_gb': 1500, 'raid_level': '1'}
         server = objects.Server()
         ret_val = server.controllers[0].raid_arrays[0].can_accomodate(
             logical_disk)
         self.assertFalse(ret_val)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_some_other_error(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_some_other_error(self, mock_popen,
                                              get_all_details_mock):
+        mock_popen.return_value.returncode = 0
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        exc = processutils.ProcessExecutionError(
-            stdout=raid_constants.ARRAY_ACCOMODATE_LOGICAL_DISK_INVALID,
-            stderr=None,
-            exit_code=2)
-        execute_mock.side_effect = exc
+        exc = subprocess.CalledProcessError(2, ["foo", "bar"])
+        mock_popen.side_effect = exc
         logical_disk = {'size_gb': 1500, 'raid_level': '1'}
         server = objects.Server()
         self.assertRaises(
@@ -444,12 +440,13 @@ class ArrayTest(testtools.TestCase):
             server.controllers[0].raid_arrays[0].can_accomodate,
             logical_disk)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_oserror(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_oserror(self, mock_popen,
                                     get_all_details_mock):
+        mock_popen.return_value.returncode = 0
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
         get_all_details_mock.return_value = current_config
-        execute_mock.side_effect = OSError
+        mock_popen.side_effect = OSError
         logical_disk = {'size_gb': 1500, 'raid_level': '1'}
         server = objects.Server()
         self.assertRaises(
@@ -457,18 +454,19 @@ class ArrayTest(testtools.TestCase):
             server.controllers[0].raid_arrays[0].can_accomodate,
             logical_disk)
 
-    @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_map_raid_level(self, execute_mock,
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test_can_accomodate_map_raid_level(self, mock_popen,
                                            get_all_details_mock):
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = ("", None)
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
-        execute_mock.return_value = ("", None)
         get_all_details_mock.return_value = current_config
         logical_disk = {'size_gb': 1500, 'raid_level': '5+0'}
         server = objects.Server()
         server.controllers[0].raid_arrays[0].can_accomodate(logical_disk)
-        execute_mock.assert_called_once_with(
-            "hpssacli", "controller", "slot=2", "array", mock.ANY, "create",
-            "type=logicaldrive", "raid=50", "size=?")
+        mock_popen.assert_called_once_with(
+            ["hpssacli", "controller", "slot=2", "array", mock.ANY, "create",
+             "type=logicaldrive", "raid=50", "size=?"], stdin=-1, stdout=-1)
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
@@ -529,26 +527,27 @@ class PhysicalDriveTest(testtools.TestCase):
 
 class PrivateMethodsTestCase(testtools.TestCase):
 
-    @mock.patch.object(processutils, 'execute')
-    def test__hpssacli(self, execute_mock):
-        execute_mock.return_value = ("stdout", "stderr")
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test__hpssacli(self, mock_popen):
+        mock_popen.return_value.returncode = 0
+        mock_popen.return_value.communicate.return_value = ("stdout", "stderr")
         stdout, stderr = objects._hpssacli("foo", "bar",
                                            check_exit_code=[0, 1, 2, 3])
-        execute_mock.assert_called_once_with(
-            "hpssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
+        self.assertTrue(mock_popen.called)
         self.assertEqual("stdout", stdout)
         self.assertEqual("stderr", stderr)
 
-    @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error(self, execute_mock):
-        execute_mock.side_effect = OSError
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test__hpssacli_raises_error(self, mock_popen):
+        mock_popen.side_effect = OSError
         self.assertRaises(exception.HPSSAOperationError,
                           objects._hpssacli, "foo", "bar")
 
-    @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error_no_transform(self, execute_mock):
-        execute_mock.side_effect = OSError
+    @mock.patch.object(subprocess, 'Popen', autospec=True)
+    def test__hpssacli_raises_error_no_transform(self, mock_popen):
+        mock_popen.side_effect = OSError
         self.assertRaises(OSError,
                           objects._hpssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
-        execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+        mock_popen.assert_called_once_with(["hpssacli", "foo", "bar"],
+                                           stdin=-1, stdout=-1)

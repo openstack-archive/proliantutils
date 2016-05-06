@@ -13,9 +13,9 @@
 # under the License.
 
 import re
+import subprocess
 import time
 
-from oslo_concurrency import processutils
 from oslo_utils import strutils
 
 from proliantutils import exception
@@ -120,7 +120,7 @@ def _hpssacli(*args, **kwargs):
     """Wrapper function for executing hpssacli command.
 
     :param args: args to be provided to hpssacli command
-    :param kwargs: kwargs to be sent to processutils except the
+    :param kwargs: kwargs to be sent to subprocess.Popen except the
         following:
         - dont_transform_to_hpssa_exception - Set to True if this
           method shouldn't transform other exceptions to hpssa
@@ -130,7 +130,7 @@ def _hpssacli(*args, **kwargs):
         the process.
     :raises: HPSSAOperationError, if some error was encountered and
         dont_dont_transform_to_hpssa_exception was set to False.
-    :raises: OSError or processutils.ProcessExecutionError if execution
+    :raises: OSError or subprocess.CalledProcessError if execution
         failed and dont_dont_transform_to_hpssa_exception was set to True.
     """
 
@@ -138,10 +138,13 @@ def _hpssacli(*args, **kwargs):
         'dont_transform_to_hpssa_exception', False)
     kwargs.pop('dont_transform_to_hpssa_exception', None)
 
+    arg = list(args)
+    arg.insert(0, "hpssacli")
     try:
-        stdout, stderr = processutils.execute("hpssacli",
-                                              *args, **kwargs)
-    except (OSError, processutils.ProcessExecutionError) as e:
+        process = subprocess.Popen(arg, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+        stdout, stderr = process.communicate('y')
+    except (OSError, subprocess.CalledProcessError) as e:
         if not dont_transform_to_hpssa_exception:
             raise exception.HPSSAOperationError(reason=e)
         else:
@@ -349,7 +352,7 @@ class Controller(object):
 
         :params args: a tuple consisting of sub-commands to be appended
             after specifying the controller in hpssacli command.
-        :param kwargs: kwargs to be passed to execute() in processutils
+        :param kwargs: kwargs to be passed to subprocess.Popen
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
 
@@ -447,7 +450,6 @@ class RaidArray(object):
             logical_disk['raid_level'], logical_disk['raid_level'])
         args = ("array", self.id, "create", "type=logicaldrive",
                 "raid=%s" % raid_level, "size=?")
-
         if logical_disk['size_gb'] != "MAX":
             desired_disk_size = logical_disk['size_gb']
         else:
@@ -456,14 +458,14 @@ class RaidArray(object):
         try:
             stdout, stderr = self.parent.execute_cmd(
                 *args, dont_transform_to_hpssa_exception=True)
-        except processutils.ProcessExecutionError as ex:
+        except subprocess.CalledProcessError as ex:
             # hpssacli returns error code 1 when RAID level of the
             # logical disk is not supported on the array.
             # If that's the case, just return saying the logical disk
             # cannot be accomodated in the array.
             # If exist_code is not 1, then it's some other error that we
             # don't expect to appear and hence raise it back.
-            if ex.exit_code == 1:
+            if ex.returncode == 1:
                 return False
             else:
                 raise exception.HPSSAOperationError(reason=ex)
