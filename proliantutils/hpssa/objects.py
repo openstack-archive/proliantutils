@@ -14,6 +14,7 @@
 
 import re
 import time
+import subprocess
 
 from oslo_concurrency import processutils
 from oslo_utils import strutils
@@ -137,10 +138,13 @@ def _hpssacli(*args, **kwargs):
     dont_transform_to_hpssa_exception = kwargs.get(
         'dont_transform_to_hpssa_exception', False)
     kwargs.pop('dont_transform_to_hpssa_exception', None)
-
+    
+    arg = list(args)
+    arg.insert(0, "hpssacli")
     try:
-        stdout, stderr = processutils.execute("hpssacli",
-                                              *args, **kwargs)
+        process = subprocess.Popen(arg, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+        stdout, stderr = process.communicate('y')
     except (OSError, processutils.ProcessExecutionError) as e:
         if not dont_transform_to_hpssa_exception:
             raise exception.HPSSAOperationError(reason=e)
