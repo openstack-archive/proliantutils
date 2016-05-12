@@ -3727,3 +3727,151 @@ UEFI_BOOTSOURCES_MISSING = """
     }
 }
 """
+PCI_DEVICE_DETAILS_NO_GPU = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/PCIDevices",
+    "@odata.id": "/redfish/v1/Systems/1/PCIDevices/",
+    "@odata.type": "#HpServerPciDeviceCollection.HpServerPciDeviceCollection",
+    "Description": " PciDevices view",
+    "Items": [
+    {
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/\
+1/PCIDevices/Members/$entity",
+        "@odata.id": "/redfish/v1/Systems/1/PCIDevices/6/",
+        "@odata.type": "#HpServerPciDevice.1.0.0.HpServerPciDevice",
+        "BusNumber": 132,
+        "ClassCode": 6,
+        "DeviceID": 34631,
+        "DeviceInstance": 2,
+        "DeviceLocation": "PCI Slot",
+        "DeviceNumber": 0,
+        "DeviceSubInstance": 1,
+        "DeviceType": "Other PCI Device",
+        "FunctionNumber": 0,
+        "Id": "6",
+        "Name": "PCIe Controller",
+        "SegmentNumber": 0,
+        "StructuredName": "PCI.Slot.2.1",
+        "SubclassCode": 4,
+        "SubsystemDeviceID": 34631,
+        "SubsystemVendorID": 4277,
+        "Type": "HpServerPciDevice.1.0.0",
+        "UEFIDevicePath": "PciRoot(0x1)/Pci(0x3,0x0)/Pci(0x0,0x0)",
+        "VendorID": 4277,
+        "links": {
+            "self": {
+                "href": "/rest/v1/Systems/1/PCIDevices/6"
+            }
+        }
+    }
+    ]
+}
+"""
+
+PCI_GPU_LIST = """
+[
+    {
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/PCIDevices/Members/$entity",
+        "@odata.id": "/redfish/v1/Systems/1/PCIDevices/6/",
+        "@odata.type": "#HpServerPciDevice.1.0.0.HpServerPciDevice",
+        "BusNumber": 5,
+        "ClassCode": 3,
+        "DeviceID": 26528,
+        "DeviceInstance": 3,
+        "DeviceLocation": "PCI Slot",
+        "DeviceNumber": 0,
+        "DeviceSubInstance": 1,
+        "DeviceType": "Other PCI Device",
+        "FunctionNumber": 0,
+        "Id": "6",
+        "Name": "HAWAII XTGL",
+        "SegmentNumber": 0,
+        "StructuredName": "PCI.Slot.3.1",
+        "SubclassCode": 128,
+        "SubsystemDeviceID": 821,
+        "SubsystemVendorID": 4098,
+        "Type": "HpServerPciDevice.1.0.0",
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+Pci(0x8,0x0)/Pci(0x0,0x0)",
+        "VendorID": 4098,
+        "links": {
+            "self": {
+                "href": "/rest/v1/Systems/1/PCIDevices/6"
+            }
+        }
+    }
+]
+"""
+
+PCI_DEVICE_DETAILS = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/PCIDevices",
+    "@odata.id": "/redfish/v1/Systems/1/PCIDevices/",
+    "@odata.type": "#HpServerPciDeviceCollection.HpServerPciDeviceCollection",
+    "Description": " PciDevices view",
+    "Items": [
+    {
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/\
+1/PCIDevices/Members/$entity",
+        "@odata.id": "/redfish/v1/Systems/1/PCIDevices/6/",
+        "@odata.type": "#HpServerPciDevice.1.0.0.HpServerPciDevice",
+        "BusNumber": 132,
+        "ClassCode": 6,
+        "DeviceID": 34631,
+        "DeviceInstance": 2,
+        "DeviceLocation": "PCI Slot",
+        "DeviceNumber": 0,
+        "DeviceSubInstance": 1,
+        "DeviceType": "Other PCI Device",
+        "FunctionNumber": 0,
+        "Id": "6",
+        "Name": "PCIe Controller",
+        "SegmentNumber": 0,
+        "StructuredName": "PCI.Slot.2.1",
+        "SubclassCode": 4,
+        "SubsystemDeviceID": 34631,
+        "SubsystemVendorID": 4277,
+        "Type": "HpServerPciDevice.1.0.0",
+        "UEFIDevicePath": "PciRoot(0x1)/Pci(0x3,0x0)/Pci(0x0,0x0)",
+        "VendorID": 4277,
+        "links": {
+            "self": {
+                "href": "/rest/v1/Systems/1/PCIDevices/6"
+            }
+        }
+    },
+    {
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/PCIDevices/Members/$entity",
+        "@odata.id": "/redfish/v1/Systems/1/PCIDevices/6/",
+        "@odata.type": "#HpServerPciDevice.1.0.0.HpServerPciDevice",
+        "BusNumber": 5,
+        "ClassCode": 3,
+        "DeviceID": 26528,
+        "DeviceInstance": 3,
+        "DeviceLocation": "PCI Slot",
+        "DeviceNumber": 0,
+        "DeviceSubInstance": 1,
+        "DeviceType": "Other PCI Device",
+        "FunctionNumber": 0,
+        "Id": "6",
+        "Name": "HAWAII XTGL",
+        "SegmentNumber": 0,
+        "StructuredName": "PCI.Slot.3.1",
+        "SubclassCode": 128,
+        "SubsystemDeviceID": 821,
+        "SubsystemVendorID": 4098,
+        "Type": "HpServerPciDevice.1.0.0",
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x0)/Pci(0x0,0x0)/\
+Pci(0x8,0x0)/Pci(0x0,0x0)",
+        "VendorID": 4098,
+        "links": {
+            "self": {
+                "href": "/rest/v1/Systems/1/PCIDevices/6"
+            }
+        }
+    }
+  ]
+}
+"""
