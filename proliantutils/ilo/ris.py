@@ -371,6 +371,39 @@ class RISOperations(operations.IloOperations):
                    ' does not exist')
             raise exception.IloCommandNotSupportedError(msg)
 
+    def _check_pci_resource(self):
+        """Check if the pci resource exists."""
+
+        system = self._get_host_details()
+        if ('links' in system['Oem']['Hp'] and
+                'PCIDevices' in system['Oem']['Hp']['links']):
+            # Get the BIOS URI and Settings
+            pci_uri = system['Oem']['Hp']['links']['PCIDevices']['href']
+            status, headers, pci_device_list = self._rest_get(pci_uri)
+
+            if status >= 300:
+                msg = self._get_extended_error(bios_settings)
+                raise exception.IloError(msg)
+
+            return headers, pci_uri, pci_device_list
+
+        else:
+            msg = ('"links/PCIDevices" section in ComputerSystem/Oem/Hp'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def _get_gpu_pci_devices(self):
+
+        headers, pci_uri, pci_device_list = self._check_pci_resource()
+        SubClassCode = [0, 1, 2, 128]
+        gpu_list = []
+        items = pci_device_list['Items']
+        for item in items:
+            if item['ClassCode'] == 3:
+                if item['SubclassCode'] in SubClassCode:
+                    gpu_list.append(item)
+        return gpu_list
+
     def _get_bios_settings_resource(self, data):
         """Get the BIOS settings resource."""
         try:
@@ -977,6 +1010,7 @@ class RISOperations(operations.IloOperations):
             system['Oem']['Hp']['Bios']['Current']['VersionString'])
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
+        capabilities.update(self._get_number_of_gpu_devices_connected())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1459,3 +1493,9 @@ class RISOperations(operations.IloOperations):
         LOG.debug(self._('Flashing firmware file ... in progress %d%%'),
                   fw_update_progress_percent)
         return fw_update_state, fw_update_progress_percent
+
+    def _get_number_of_gpu_devices_connected(self):
+
+        gpu_devices = self._get_gpu_pci_devices()
+        gpu_devices_count = len(gpu_devices)
+        return {'pci_gpu_devices': gpu_devices_count}
