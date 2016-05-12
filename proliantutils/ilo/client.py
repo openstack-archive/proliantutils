@@ -26,11 +26,13 @@ SUPPORTED_RIS_METHODS = [
     'get_current_boot_mode',
     'get_host_power_status',
     'get_http_boot_url',
+    'get_ilo_firmware_version_as_major_minor',
     'get_one_time_boot',
     'get_pending_boot_mode',
     'get_persistent_boot_device',
     'get_product_name',
     'get_secure_boot_mode',
+    'get_server_capabilities',
     'get_vm_status',
     'hold_pwr_btn',
     'insert_virtual_media',
@@ -355,16 +357,9 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        capabilities = {}
-        if 'Gen9' in self.model:
-            capabilities = self.ris.get_server_capabilities()
-            data = self.ribcl.get_host_health_data()
-            gpu = self.ribcl._get_number_of_gpu_devices_connected(data)
-            capabilities.update(gpu)
-            major_minor = self.ris.get_ilo_firmware_version_as_major_minor()
-        else:
-            capabilities = self.ribcl.get_server_capabilities()
-            major_minor = self.ribcl.get_ilo_firmware_version_as_major_minor()
+        capabilities = self._call_method('get_server_capabilities')
+        major_minor = (
+            self._call_method('get_ilo_firmware_version_as_major_minor'))
 
         # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
         # as we still want to try getting nic capacity through ipmitool
