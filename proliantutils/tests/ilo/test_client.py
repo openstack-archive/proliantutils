@@ -330,17 +330,13 @@ class IloClientTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations,
                        'get_ilo_firmware_version_as_major_minor')
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    @mock.patch.object(ribcl.RIBCLOperations,
+    @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
     def test_get_server_capabilities_no_nic_Gen9(self, cap_mock, nic_mock,
-                                                 gpu_mock, host_mock, mm_mock):
+                                                 gpu_mock, mm_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
-        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
-        json_data = json.loads(data)
-        host_mock.return_value = json_data
         str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         nic_mock.return_value = None
@@ -362,17 +358,13 @@ class IloClientTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations,
                        'get_ilo_firmware_version_as_major_minor')
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    @mock.patch.object(ribcl.RIBCLOperations,
+    @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ris.RISOperations, 'get_server_capabilities')
     def test_get_server_capabilities_Gen9(self, cap_mock, nic_mock,
-                                          gpu_mock, host_mock, mm_mock):
+                                          gpu_mock, mm_mock):
         info = {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"}
-        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
-        json_data = json.loads(data)
-        host_mock.return_value = json_data
         str_val = mm_mock.return_value = '2.10'
         self.client.model = 'Gen9'
         gpu_mock.return_value = {'pci_gpu_devices': 2}
