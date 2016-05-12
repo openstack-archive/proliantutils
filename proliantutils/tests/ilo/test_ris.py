@@ -386,19 +386,23 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations,
+                       '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock):
+                                     secure_mock, gpu_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
+        gpu_mock.return_value = {'pci_gpu_devices': 2}
         secure_mock.return_value = False
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
-                         'server_model': u'ProLiant BL460c Gen9'}
+                         'server_model': u'ProLiant BL460c Gen9',
+                         'pci_gpu_devices': 2}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1679,6 +1683,83 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client._get_persistent_boot_devices)
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_pci_resource(self, get_host_details_mock, get_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        pci_uri = '/rest/v1/Systems/1/PCIDevices'
+        pci_device_list = json.loads(ris_outputs.PCI_DEVICE_DETAILS)
+
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 pci_device_list)
+        self.client._get_pci_resource()
+        get_mock.assert_called_once_with(pci_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_pci_resource_fail(self, get_host_details_mock,
+                                    get_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        pci_uri = '/rest/v1/Systems/1/PCIDevices'
+        pci_device_list = json.loads(ris_outputs.PCI_DEVICE_DETAILS)
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 pci_device_list)
+        self.assertRaises(exception.IloError,
+                          self.client._get_pci_resource)
+        get_mock.assert_called_once_with(pci_uri)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_pci_resource_not_supported(self, get_details_mock):
+        host_response = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        del host_response['Oem']['Hp']['links']['PCIDevices']
+        get_details_mock.return_value = host_response
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_pci_resource)
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_pci_resource')
+    def test__get_gpu_pci_devices(self, pci_mock):
+        pci_mock.return_value = json.loads(ris_outputs.PCI_DEVICE_DETAILS)
+        pci_gpu_list = self.client._get_gpu_pci_devices()
+        self.assertEqual(pci_gpu_list, json.loads(ris_outputs.PCI_GPU_LIST))
+        self.assertTrue(pci_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_pci_resource')
+    def test__get_gpu_pci_devices_returns_empty(self, pci_mock):
+        pci_response = json.loads(ris_outputs.PCI_DEVICE_DETAILS_NO_GPU)
+        pci_mock.return_value = pci_response
+        pci_gpu_list = self.client._get_gpu_pci_devices()
+        self.assertEqual(len(pci_gpu_list), 0)
+        self.assertTrue(pci_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_pci_resource')
+    def test__get_gpu_pci_devices_catch_error(self, pci_mock):
+        msg = ('links/PCIDevices section in ComputerSystem/Oem/Hp'
+               ' does not exist')
+        pci_mock.side_effect = exception.IloCommandNotSupportedError(msg)
+        pci_gpu_list = self.client._get_gpu_pci_devices()
+        self.assertEqual(len(pci_gpu_list), 0)
+        self.assertTrue(pci_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_pci_resource')
+    def test__get_gpu_pci_devices_catch_IloError(self, pci_mock):
+        msg = ('links/PCIDevices section in ComputerSystem/Oem/Hp'
+               ' returned Error')
+        pci_mock.side_effect = exception.IloError(msg)
+        pci_gpu_list = self.client._get_gpu_pci_devices()
+        self.assertEqual(len(pci_gpu_list), 0)
+        self.assertTrue(pci_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_gpu_pci_devices')
+    def test__get_number_of_gpu_devices_connected(self, gpu_list_mock):
+        gpu_list_mock.return_value = json.loads(ris_outputs.PCI_GPU_LIST)
+        expected_gpu_count = {'pci_gpu_devices': 1}
+        gpu_count_returned = self.client._get_number_of_gpu_devices_connected()
+        self.assertEqual(gpu_count_returned, expected_gpu_count)
+        self.assertTrue(gpu_list_mock.called)
 
     @mock.patch.object(ris.RISOperations, '_get_ilo_details', autospec=True)
     def test__get_firmware_update_service_resource_traverses_manager_as(
