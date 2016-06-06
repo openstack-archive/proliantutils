@@ -392,7 +392,7 @@ class Controller(object):
             size_mb = logical_drive_info['size_gb'] * 1024
             cmd_args.append("size=%s" % size_mb)
 
-        self.execute_cmd(*cmd_args)
+        self.execute_cmd(*cmd_args, process_input='y')
 
     def delete_all_logical_drives(self):
         """Deletes all logical drives on trh controller.
