@@ -190,7 +190,8 @@ class ControllerTest(testtools.TestCase):
                                                   "controller",
                                                   "slot=2",
                                                   "foo",
-                                                  "bar")
+                                                  "bar",
+                                                  process_input='y')
         self.assertEqual(stdout, 'stdout')
         self.assertEqual(stderr, 'stderr')
 
@@ -468,7 +469,7 @@ class ArrayTest(testtools.TestCase):
         server.controllers[0].raid_arrays[0].can_accomodate(logical_disk)
         execute_mock.assert_called_once_with(
             "hpssacli", "controller", "slot=2", "array", mock.ANY, "create",
-            "type=logicaldrive", "raid=50", "size=?")
+            "type=logicaldrive", "raid=50", "size=?", process_input='y')
 
 
 @mock.patch.object(objects.Server, '_get_all_details')
@@ -553,7 +554,8 @@ class PrivateMethodsTestCase(testtools.TestCase):
         stdout, stderr = objects._hpssacli("foo", "bar",
                                            check_exit_code=[0, 1, 2, 3])
         execute_mock.assert_called_once_with(
-            "hpssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
+            "hpssacli", "foo", "bar", process_input='y',
+            check_exit_code=[0, 1, 2, 3])
         self.assertEqual("stdout", stdout)
         self.assertEqual("stderr", stderr)
 
@@ -569,4 +571,5 @@ class PrivateMethodsTestCase(testtools.TestCase):
         self.assertRaises(OSError,
                           objects._hpssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
-        execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+        execute_mock.assert_called_once_with("hpssacli", "foo", "bar",
+                                             process_input='y')
