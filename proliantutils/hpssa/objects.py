@@ -140,6 +140,7 @@ def _hpssacli(*args, **kwargs):
 
     try:
         stdout, stderr = processutils.execute("hpssacli",
+                                              process_input='y',
                                               *args, **kwargs)
     except (OSError, processutils.ProcessExecutionError) as e:
         if not dont_transform_to_hpssa_exception:
