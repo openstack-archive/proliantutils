@@ -113,6 +113,11 @@ def create_configuration(raid_config):
                key=lambda x: x['size_gb']) +
         [x for x in raid_config['logical_disks'] if x['size_gb'] == "MAX"])
 
+    if any(logical_disk['share_physical_disks'] is True
+            for logical_disk in logical_disks_sorted
+            if 'share_physical_disks' in logical_disk):
+        logical_disks_sorted = sort_shared_logical_disks(logical_disks_sorted)
+
     # We figure out the new disk created by recording the wwns
     # before and after the create, and then figuring out the
     # newly found wwn from it.
@@ -166,6 +171,82 @@ def create_configuration(raid_config):
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def sort_shared_logical_disks(logical_disks_sorted):
+    # When the share_physical_disks is True make sure we create the volume
+    # which needs more disks first. This avoids the situation of insufficient
+    # disks for some logical volume request.
+    # For example,
+    #   - two logical disk with number of disks - LD1(3), LD2(4)
+    #   - have 4 physical disks
+    # In this case, if we consider LD1 first then LD2 will fail since not
+    # enough disks available to create LD2. So follow a order for allocation
+    # when share_physical_disks is True
+    #
+    # Also RAID1 can share only when there is logical volume with only 2 disks.
+    # So make sure we create RAID 1 when share_physical_disks is True first.
+    #
+    # And RAID 1+0 can share only when the logical volume with even number of
+    # disks.
+
+    logical_disks = [x for x in logical_disks_sorted
+                     if x['raid_level'] != "1"]
+
+    # Sort the logical disks, with shared_physical_disks as True except RAID 1,
+    # in decending order of the number of physical disks needed to create the
+    # logical volume.
+    logical_disks_shared = sorted(
+        (x for x in logical_disks if ('share_physical_disks' in x and
+                                      x['share_physical_disks'] is True)),
+        reverse=True,
+        key=(lambda x: x['number_of_physical_disks']
+             if 'number_of_physical_disks' in x.keys() else
+             constants.RAID_LEVEL_MIN_DISKS[x['raid_level']]))
+
+    # Filter out logical disks of RAID 1+0 when share_physical_disks is True
+    # and number of physical disks needed to create logical volume is odd
+    # and higher than that of RAID 1+0.
+    #
+    # Create logical disks of RAID 1+0 first among the sorted logical disks
+    # based on the number of physical disks, if any, satisfies the above
+    # condition.
+    logical_disks_shared_raid10 = []
+    for x in logical_disks_shared:
+        if x['raid_level'] == "1+0":
+            x_num = int(
+                x['number_of_physical_disks']
+                if 'number_of_physical_disks' in x.keys() else
+                constants.RAID_LEVEL_MIN_DISKS[x['raid_level']])
+            for y in logical_disks_shared:
+                y_num = int(
+                    y['number_of_physical_disks']
+                    if 'number_of_physical_disks' in y.keys() else
+                    constants.RAID_LEVEL_MIN_DISKS[y['raid_level']])
+                if x_num < y_num and y_num % 2 != 0:
+                    logical_disks_shared_raid10.append(x)
+                    break
+
+    if logical_disks_shared_raid10:
+        logical_disks_shared = [x for x in logical_disks_shared
+                                if x not in logical_disks_shared_raid10]
+        logical_disks_shared = (logical_disks_shared_raid10 +
+                                logical_disks_shared)
+
+    # The list should have the logical disks with share_physical_disks as False
+    # first, followed by the logical disks RAID 1 with share_physical_disks as
+    # True and finally the sorted logical disks based on the number of physical
+    # disks.
+    logical_disks_sorted = (
+        [x for x in logical_disks_sorted
+         if not('share_physical_disks' in x and
+                x['share_physical_disks'] is True)] +
+        [x for x in logical_disks_sorted
+         if (x['raid_level'] == "1" and
+             'share_physical_disks' in x and
+             x['share_physical_disks'] is True)] +
+        logical_disks_shared)
+    return logical_disks_sorted
 
 
 def delete_configuration():
