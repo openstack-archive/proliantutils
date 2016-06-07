@@ -94,8 +94,11 @@ def create_configuration(raid_config):
 
     server = objects.Server()
 
-    # Make sure we create the large disks first.  This is avoid the
-    # situation that we avoid giving large disks to smaller requests.
+    # Make sure we create the large disks first when the share_physical_disks
+    # is False.  This is avoid the situation that we avoid giving large disks
+    # to smaller requests. When the share_physical_disks is True we create
+    # volume with more number of physical disks first as we can avoid the
+    # situation where not enough disks to share the disks.
     # For example, consider this:
     #   - two logical disks - LD1(50), LD(100)
     #   - have 4 physical disks - PD1(50), PD2(50), PD3(100), PD4(100)
@@ -106,12 +109,21 @@ def create_configuration(raid_config):
     #
     # Also make sure we create the MAX logical_disks the last to make sure
     # we allot only the remaining space available.
-    logical_disks_sorted = (
-        sorted((x for x in raid_config['logical_disks']
-                if x['size_gb'] != "MAX"),
-               reverse=True,
-               key=lambda x: x['size_gb']) +
-        [x for x in raid_config['logical_disks'] if x['size_gb'] == "MAX"])
+    if not any('share_physical_disks' in logical_disk
+               for logical_disk in raid_config['logical_disks']):
+        logical_disks_sorted = (
+            sorted((x for x in raid_config['logical_disks']
+                   if x['size_gb'] != "MAX"),
+                   reverse=True,
+                   key=lambda x: x['size_gb']) +
+            [x for x in raid_config['logical_disks'] if x['size_gb'] == "MAX"])
+    else:
+        logical_disks_sorted = (
+            sorted((x for x in raid_config['logical_disks']),
+                   reverse=True,
+                   key=(lambda x: x['number_of_physical_disks']
+                        if 'number_of_physical_disks' in x.keys() else
+                        constants.RAID_LEVEL_MIN_DISKS[x['raid_level']])))
 
     # We figure out the new disk created by recording the wwns
     # before and after the create, and then figuring out the

@@ -176,7 +176,7 @@ class ManagerTestCases(testtools.TestCase):
             (None, None)]
         raid_info = {'logical_disks': [{'size_gb': 50,
                                         'share_physical_disks': True,
-                                        'raid_level': '1',
+                                        'raid_level': '0',
                                         'disk_type': 'hdd'},
                                        {'size_gb': 50,
                                         'share_physical_disks': True,
@@ -195,10 +195,10 @@ class ManagerTestCases(testtools.TestCase):
             'create', 'type=logicaldrive', 'drives=5I:1:1,5I:1:2',
             'raid=1', 'size=51200')
         controller_exec_cmd_mock.assert_any_call(
-            'array', 'A', 'create', 'type=logicaldrive', 'raid=1', 'size=?',
+            'array', 'A', 'create', 'type=logicaldrive', 'raid=0', 'size=?',
             dont_transform_to_hpssa_exception=True)
         controller_exec_cmd_mock.assert_any_call(
-            'array', 'A', 'create', 'type=logicaldrive', 'raid=1',
+            'array', 'A', 'create', 'type=logicaldrive', 'raid=0',
             'size=51200')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
