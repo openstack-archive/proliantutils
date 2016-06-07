@@ -1497,7 +1497,7 @@ Available options are:
 
 '''
 
-HPSSA_NO_DRIVES_2_PHYSICAL_DISKS = '''
+HPSSA_NO_DRIVES_3_PHYSICAL_DISKS = '''
 Smart Array P822 in Slot 2
    Bus Interface: PCI
    Slot: 2
@@ -1574,6 +1574,28 @@ Smart Array P822 in Slot 2
          Drive Authentication Status: OK
          Carrier Application Version: 11
          Carrier Bootloader Version: 6
+
+      physicaldrive 5I:1:3
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 500 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
 
    SEP (Vendor ID PMCSIERA, Model SRCv24x6G) 380
       Device Number: 380
@@ -1694,6 +1716,29 @@ Smart Array P822 in Slot 2
          Model: HP      EF0600FARNA
          Current Temperature (C): 37
          Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
+   unassigned
+
+      physicaldrive 5I:1:3
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 500 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G55D0000N4173JLT
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 35
+         Maximum Temperature (C): 43
          PHY Count: 2
          PHY Transfer Rate: 6.0Gbps, Unknown
          Drive Authentication Status: OK
@@ -1849,6 +1894,30 @@ Smart Array P822 in Slot 2
          Drive Authentication Status: OK
          Carrier Application Version: 11
          Carrier Bootloader Version: 6
+
+   unassigned
+
+      physicaldrive 5I:1:3
+         Port: 5I
+         Box: 1
+         Bay: 2
+         Status: OK
+         Drive Type: Data Drive
+         Interface Type: SAS
+         Size: 600 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7H2DM0000B41800Y0
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 37
+         Maximum Temperature (C): 44
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+
 
    SEP (Vendor ID PMCSIERA, Model SRCv24x6G) 380
       Device Number: 380
