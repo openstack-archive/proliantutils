@@ -94,7 +94,7 @@ def create_configuration(raid_config):
 
     server = objects.Server()
 
-    # Make sure we create the large disks first.  This is avoid the
+    # Make sure we create the large disks first. This is avoid the
     # situation that we avoid giving large disks to smaller requests.
     # For example, consider this:
     #   - two logical disks - LD1(50), LD(100)
@@ -108,10 +108,45 @@ def create_configuration(raid_config):
     # we allot only the remaining space available.
     logical_disks_sorted = (
         sorted((x for x in raid_config['logical_disks']
-                if x['size_gb'] != "MAX"),
+               if x['size_gb'] != "MAX"),
                reverse=True,
                key=lambda x: x['size_gb']) +
         [x for x in raid_config['logical_disks'] if x['size_gb'] == "MAX"])
+
+    # When the share_physical_disks is True make sure we create the volume
+    # which needs more disks first. This avoids the situation of insufficient
+    # disks for some logical volume request.
+    # For example,
+    #   - two logical disk with number of disks - LD1(3), LD2(4)
+    #   - have 4 physical disks
+    # In this case, if we consider LD1 first then LD2 will fail since not
+    # enough disks available to create LD2. So follow a order for allocation
+    # when share_physical_disks is True
+    #
+    # Also RAID1 can share only when there is logical volume with only 2 disks.
+    # So make sure we create RAID 1 first.
+    if any(logical_disk['share_physical_disks'] is True
+            for logical_disk in logical_disks_sorted
+            if 'share_physical_disks' in logical_disk):
+
+        logical_disks = [x for x in logical_disks_sorted
+                         if x['raid_level'] != "1"]
+
+        logical_disks_sorted = (
+            [x for x in logical_disks
+             if not('share_physical_disks' in x and
+                    x['share_physical_disks'] is True)] +
+            sorted((x for x in logical_disks
+                   if ('share_physical_disks' in x and
+                       x['share_physical_disks'] is True)),
+                   reverse=True,
+                   key=(lambda x: x['number_of_physical_disks']
+                        if 'number_of_physical_disks' in x.keys() else
+                        constants.RAID_LEVEL_MIN_DISKS[x['raid_level']])))
+
+        logical_disks_sorted = ([x for x in raid_config['logical_disks']
+                                 if x['raid_level'] == "1"] +
+                                logical_disks_sorted)
 
     # We figure out the new disk created by recording the wwns
     # before and after the create, and then figuring out the
