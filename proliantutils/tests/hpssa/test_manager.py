@@ -170,7 +170,7 @@ class ManagerTestCases(testtools.TestCase):
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_configuration_share_physical_disks(
             self, controller_exec_cmd_mock, get_all_details_mock):
-        no_drives = raid_constants.HPSSA_NO_DRIVES_2_PHYSICAL_DISKS
+        no_drives = raid_constants.HPSSA_NO_DRIVES_3_PHYSICAL_DISKS
         one_drive = raid_constants.ONE_DRIVE_RAID_1
         two_drives = raid_constants.TWO_DRIVES_50GB_RAID1
         get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
@@ -180,7 +180,8 @@ class ManagerTestCases(testtools.TestCase):
             (None, None)]
         raid_info = {'logical_disks': [{'size_gb': 50,
                                         'share_physical_disks': True,
-                                        'raid_level': '1',
+                                        'number_of_physical_disks': 2,
+                                        'raid_level': '0',
                                         'disk_type': 'hdd'},
                                        {'size_gb': 50,
                                         'share_physical_disks': True,
@@ -199,10 +200,44 @@ class ManagerTestCases(testtools.TestCase):
             'create', 'type=logicaldrive', 'drives=5I:1:1,5I:1:2',
             'raid=1', 'size=51200', process_input='y')
         controller_exec_cmd_mock.assert_any_call(
-            'array', 'A', 'create', 'type=logicaldrive', 'raid=1', 'size=?',
+            'array', 'A', 'create', 'type=logicaldrive', 'raid=0', 'size=?',
             dont_transform_to_hpssa_exception=True)
         controller_exec_cmd_mock.assert_any_call(
-            'array', 'A', 'create', 'type=logicaldrive', 'raid=1',
+            'array', 'A', 'create', 'type=logicaldrive', 'raid=0',
+            'size=51200', process_input='y')
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_create_configuration_share_nonshare_physical_disks(
+            self, controller_exec_cmd_mock, get_all_details_mock):
+        no_drives = raid_constants.HPSSA_NO_DRIVES_3_PHYSICAL_DISKS
+        one_drive = raid_constants.ONE_DRIVE_RAID_1
+        two_drives = raid_constants.TWO_DRIVES_50GB_RAID1
+        get_all_details_mock.side_effect = [no_drives, one_drive, two_drives]
+        controller_exec_cmd_mock.side_effect = [
+            (None, None),
+            (raid_constants.DRIVE_2_RAID_1_OKAY_TO_SHARE, None),
+            (None, None)]
+        raid_info = {'logical_disks': [{'size_gb': 50,
+                                        'raid_level': '1',
+                                        'disk_type': 'hdd'},
+                                       {'size_gb': 50,
+                                        'share_physical_disks': True,
+                                        'raid_level': '0',
+                                        'disk_type': 'hdd'}]}
+        raid_info = manager.create_configuration(raid_info)
+        ld1 = raid_info['logical_disks'][0]
+        ld2 = raid_info['logical_disks'][1]
+        self.assertEqual('Smart Array P822 in Slot 2', ld1['controller'])
+        self.assertEqual('Smart Array P822 in Slot 2', ld2['controller'])
+        self.assertEqual(sorted(['5I:1:1', '5I:1:2']),
+                         sorted(ld1['physical_disks']))
+        self.assertEqual(sorted(['5I:1:1', '5I:1:2']),
+                         sorted(ld2['physical_disks']))
+        controller_exec_cmd_mock.assert_any_call(
+            'create', 'type=logicaldrive', 'drives=5I:1:1,5I:1:2',
+            'raid=1', 'size=51200', process_input='y')
+        controller_exec_cmd_mock.assert_any_call(
+            'create', 'type=logicaldrive', 'drives=5I:1:3', 'raid=0',
             'size=51200', process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
@@ -233,6 +268,34 @@ class ManagerTestCases(testtools.TestCase):
         controller_exec_cmd_mock.assert_any_call(
             'create', 'type=logicaldrive', 'drives=5I:1:3,5I:1:4,6I:1:5',
             'raid=5', process_input='y')
+
+    def test_sort_shared_logical_disks(self, get_all_details_mock):
+        logical_disk_sorted_expected = [
+            {'size_gb': 500, 'disk_type': 'hdd', 'raid_level': '1'},
+            {'share_physical_disks': True, 'size_gb': 200, 'disk_type': 'hdd',
+             'raid_level': '1+0'},
+            {'share_physical_disks': True, 'size_gb': 450, 'disk_type': 'hdd',
+             'number_of_physical_disks': 5, 'raid_level': '0'},
+            {'share_physical_disks': True, 'size_gb': 200, 'disk_type': 'hdd',
+             'raid_level': '0'}]
+        logical_disks = [{'size_gb': 500,
+                          'disk_type': 'hdd',
+                          'raid_level': '1'},
+                         {'share_physical_disks': True,
+                          'size_gb': 450,
+                          'disk_type': 'hdd',
+                          'number_of_physical_disks': 5,
+                          'raid_level': '0'},
+                         {'share_physical_disks': True,
+                          'size_gb': 200,
+                          'disk_type': 'hdd',
+                          'raid_level': '1+0'},
+                         {'share_physical_disks': True,
+                          'size_gb': 200,
+                          'disk_type': 'hdd',
+                          'raid_level': '0'}]
+        logical_disks_sorted = manager.sort_shared_logical_disks(logical_disks)
+        self.assertEqual(logical_disks_sorted, logical_disk_sorted_expected)
 
     @mock.patch.object(manager, 'get_configuration')
     @mock.patch.object(objects.Controller, 'execute_cmd')
