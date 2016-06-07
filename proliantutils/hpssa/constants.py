@@ -48,7 +48,7 @@ DISK_TYPE_MAP = {'SCSI': DISK_TYPE_HDD,
                  'SASSSD': DISK_TYPE_SSD,
                  'Solid State SAS': DISK_TYPE_SSD}
 
-RAID_LEVEL_MIN_DISKS = {RAID_0: 2,
+RAID_LEVEL_MIN_DISKS = {RAID_0: 1,
                         RAID_1: 2,
                         RAID_1_ADM: 3,
                         RAID_5: 3,
