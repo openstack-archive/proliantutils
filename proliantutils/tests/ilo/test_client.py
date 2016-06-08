@@ -513,3 +513,51 @@ class IloClientTestCase(testtools.TestCase):
         _call_method_mock.assert_called_once_with('update_firmware',
                                                   some_url,
                                                   some_component_type)
+
+    @mock.patch.object(ris.RISOperations, 'hold_pwr_btn')
+    def test_hold_pwr_btn_gen9(self, hold_pwr_btn_mock):
+        self.client.model = 'Gen9'
+        self.client.hold_pwr_btn()
+        self.assertTrue(hold_pwr_btn_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'hold_pwr_btn')
+    def test_hold_pwr_btn_gen8(self, hold_pwr_btn_mock):
+        self.client.model = 'Gen8'
+        self.client.hold_pwr_btn()
+        self.assertTrue(hold_pwr_btn_mock.called)
+
+    @mock.patch.object(ris.RISOperations, 'set_host_power')
+    def test_set_host_power_gen9(self, set_host_power_mock):
+        self.client.model = 'Gen9'
+        self.client.set_host_power('ON')
+        set_host_power_mock.assert_called_once_with('ON')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'set_host_power')
+    def test_set_host_power_gen8(self, set_host_power_mock):
+        self.client.model = 'Gen8'
+        self.client.set_host_power('ON')
+        set_host_power_mock.assert_called_once_with('ON')
+
+    @mock.patch.object(ris.RISOperations, 'press_pwr_btn')
+    def test_press_pwr_btn_gen9(self, press_pwr_btn_mock):
+        self.client.model = 'Gen9'
+        self.client.press_pwr_btn()
+        self.assertTrue(press_pwr_btn_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'press_pwr_btn')
+    def test_press_pwr_btn_gen8(self, press_pwr_btn_mock):
+        self.client.model = 'Gen8'
+        self.client.press_pwr_btn()
+        self.assertTrue(press_pwr_btn_mock.called)
+
+    @mock.patch.object(ris.RISOperations, 'reset_server')
+    def test_reset_server_gen9(self, reset_server_mock):
+        self.client.model = 'Gen9'
+        self.client.reset_server()
+        self.assertTrue(reset_server_mock.called)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'reset_server')
+    def test_reset_server_gen8(self, reset_server_mock):
+        self.client.model = 'Gen8'
+        self.client.reset_server()
+        self.assertTrue(reset_server_mock.called)
