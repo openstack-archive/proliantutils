@@ -230,7 +230,7 @@ class ControllerTest(testtools.TestCase):
                                              "type=logicaldrive",
                                              "drives=5I:1:1,5I:1:2,5I:1:3",
                                              "raid=1",
-                                             "size=51200")
+                                             "size=51200", process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_logical_drive_max_size_gb(self, execute_mock,
@@ -252,7 +252,7 @@ class ControllerTest(testtools.TestCase):
         execute_mock.assert_called_once_with("create",
                                              "type=logicaldrive",
                                              "drives=5I:1:1,5I:1:2,5I:1:3",
-                                             "raid=1")
+                                             "raid=1", process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_logical_drive_with_raid_array(self, execute_mock,
@@ -275,7 +275,7 @@ class ControllerTest(testtools.TestCase):
                                              "create",
                                              "type=logicaldrive",
                                              "raid=1",
-                                             "size=51200")
+                                             "size=51200", process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_logical_drive_raid_level_mapping(self, execute_mock,
@@ -302,7 +302,7 @@ class ControllerTest(testtools.TestCase):
         execute_mock.assert_called_once_with(
             "create", "type=logicaldrive",
             "drives=5I:1:1,5I:1:2,5I:1:3,5I:1:4,5I:1:5,6I:1:6",
-            "raid=50", "size=51200")
+            "raid=50", "size=51200", process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_all_logical_drives(self, execute_mock,
