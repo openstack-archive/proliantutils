@@ -38,7 +38,8 @@ class UtilsTestCase(testtools.TestCase):
     def test_process_firmware_image_throws_for_unknown_firmware_file_format(
             self, get_extractor_mock):
         # | GIVEN |
-        get_extractor_mock.side_effect = exception.InvalidInputError
+        exc = exception.InvalidInputError(reason='unknown firmware error')
+        get_extractor_mock.side_effect = exc
         # | WHEN | & | THEN |
         self.assertRaises(exception.InvalidInputError,
                           utils.process_firmware_image,
@@ -51,7 +52,7 @@ class UtilsTestCase(testtools.TestCase):
             self, get_extractor_mock):
         # | GIVEN |
         exc = exception.ImageExtractionFailed(
-            image_ref='some_file', reason='God only knows!')
+            image_ref='some_file', reason='unknown firmware error')
         get_extractor_mock.return_value.extract.side_effect = exc
         # | WHEN | & | THEN |
         self.assertRaises(exception.ImageExtractionFailed,
