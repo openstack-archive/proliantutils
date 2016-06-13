@@ -38,7 +38,8 @@ class UtilsTestCase(testtools.TestCase):
     def test_process_firmware_image_throws_for_unknown_firmware_file_format(
             self, get_extractor_mock):
         # | GIVEN |
-        get_extractor_mock.side_effect = exception.InvalidInputError
+        exc = exception.InvalidInputError(reason='God only knows!')
+        get_extractor_mock.side_effect = exc
         # | WHEN | & | THEN |
         self.assertRaises(exception.InvalidInputError,
                           utils.process_firmware_image,
