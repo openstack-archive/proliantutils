@@ -24,6 +24,21 @@ class InvalidInputError(Exception):
 
     message = "Invalid Input: %(reason)s"
 
+    # Note(deray): Not mandating the user to provide the ``reason`` attribute
+    # parameter while raising InvalidInputError exception. This is because of
+    # backward-compatibility reasons. See its unit test file to know about its
+    # different ways of usage.
+    def __init__(self, message=None, **kwargs):
+
+        if not message:
+            message = self.message
+
+            if 'reason' not in kwargs:
+                kwargs['reason'] = 'Unknown'
+
+        message = message % kwargs
+        super(InvalidInputError, self).__init__(message)
+
 
 class IloError(ProliantUtilsException):
     """Base Exception.
