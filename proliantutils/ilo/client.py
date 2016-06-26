@@ -13,6 +13,8 @@
 # under the License.
 """IloClient module"""
 
+import collections
+import threading
 from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
@@ -100,6 +102,81 @@ SUPPORTED_REDFISH_METHODS = [
 LOG = log.get_logger(__name__)
 
 
+def Ilo_singleton(cache=True):
+
+    def wrapper(cls):
+        if not cache:
+            return cls
+        else:
+            class IloClientWrapper(object):
+
+                class LatestEntryLastOrderedDict(collections.OrderedDict):
+                    def __setitem__(self, key, value):
+                        if key in self:
+                            del self[key]
+                        super(IloClientWrapper.LatestEntryLastOrderedDict,
+                              self).__setitem__(key, value)
+
+                max_cache_size = 64
+
+                def __init__(self, cls):
+                    self.cls = cls
+                    self._instances = (
+                        IloClientWrapper.LatestEntryLastOrderedDict())
+                    self._lock = threading.Lock()
+
+                def _if_not_exists(self, *oargs):
+                    address = oargs[0]
+                    return (address not in self._instances) or (
+                        oargs != self._instances[address][1])
+
+                def __call__(self, *args, **kwargs):
+                    if not args:
+                        LOG.error("Error creating iLO object.")
+                    address = args[0]
+                    # Register the hit here
+                    if self._if_not_exists(*args):
+                        with self._lock:
+                            LOG.debug("Acquired ILO lock to create object for"
+                                      " node %(address)s.",
+                                      {'address': address})
+                            # To avoid any race condition
+                            if self._if_not_exists(args):
+                                # Check for max_cache_size
+                                # Remove the oldest entry from the cache
+                                if len(self._instances) > (
+                                        self.max_cache_size - 1):
+                                    oldest = self._instances.popitem(
+                                        last=False)
+                                    LOG.debug("Node cache hit the maximum"
+                                              " size. Removing oldest entry"
+                                              " %s" % (oldest[0]))
+                                self._instances[address] = (
+                                    self.cls(*args, **kwargs), args)
+                            else:
+                                LOG.debug("Already created object using ILO"
+                                          " lock for node %(address)s.",
+                                          {'address': address})
+                    else:
+                        LOG.debug("Using existing object for node "
+                                  "%(address)s.", {'address': address})
+                        # Update the cache
+                        self._instances.update(
+                            {address: self._instances[address]})
+                    return self._instances[address][0]
+
+                def delete_node(self, address):
+                    try:
+                        del self._instances[address]
+                    except KeyError:
+                        LOG.debug("Node doesn't exist")
+                    LOG.debug("Keys:%s" % (self._instances.keys()))
+
+            return IloClientWrapper(cls)
+    return wrapper
+
+
+@Ilo_singleton(cache=True)
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
