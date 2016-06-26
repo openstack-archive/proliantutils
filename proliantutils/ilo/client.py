@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """IloClient module"""
+import threading
 
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
@@ -55,7 +56,35 @@ SUPPORTED_RIS_METHODS = [
 
 LOG = log.get_logger(__name__)
 
+ilo_instances = {}
 
+
+def ilo_singleton(cls):
+    _lock = threading.Lock()
+
+    def clswrapper(*args, **kwargs):
+        passed_args = args
+        address = passed_args[0]
+        if (address not in ilo_instances) or (
+                passed_args != ilo_instances[address][1]):
+            with _lock:
+                LOG.debug("Acquired ILO lock to create object for node"
+                          " %(address)s.", {'address': address})
+                if (address not in ilo_instances) or (
+                        passed_args != ilo_instances[address][1]):
+                    ilo_instances[address] = (cls(*args, **kwargs),
+                                              passed_args)
+                else:
+                    LOG.debug("Already created object using ILO lock for"
+                              " node %(address)s.", {'address': address})
+        else:
+            LOG.debug("Using existing object for node %(address)s.",
+                      {'address': address})
+        return ilo_instances[address][0]
+    return clswrapper
+
+
+@ilo_singleton
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
