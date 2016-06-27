@@ -115,8 +115,8 @@ class IloClientTestCase(testtools.TestCase):
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_get_vm_status(self, call_mock):
-        self.client.get_vm_status('CDROM')
-        call_mock.assert_called_once_with('get_vm_status', 'CDROM')
+        self.client.get_vm_status(device='CDROM')
+        call_mock.assert_called_once_with('get_vm_status', device='CDROM')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_press_pwr_btn(self, call_mock):
@@ -146,20 +146,23 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(client.IloClient, '_call_method')
     def test_insert_virtual_media(self, call_mock):
         self.client.insert_virtual_media(url='fake-url', device='FLOPPY')
-        call_mock.assert_called_once_with('insert_virtual_media', 'fake-url',
-                                          'FLOPPY')
+        call_mock.assert_called_once_with('insert_virtual_media',
+                                          url='fake-url',
+                                          device='FLOPPY')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_eject_virtual_media(self, call_mock):
         self.client.eject_virtual_media(device='FLOPPY')
-        call_mock.assert_called_once_with('eject_virtual_media', 'FLOPPY')
+        call_mock.assert_called_once_with('eject_virtual_media',
+                                          device='FLOPPY')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_vm_status(self, call_mock):
         self.client.set_vm_status(device='FLOPPY', boot_option='BOOT_ONCE',
                                   write_protect='YES')
-        call_mock.assert_called_once_with('set_vm_status', 'FLOPPY',
-                                          'BOOT_ONCE', 'YES')
+        call_mock.assert_called_once_with('set_vm_status', device='FLOPPY',
+                                          boot_option='BOOT_ONCE',
+                                          write_protect='YES')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_get_current_boot_mode(self, call_mock):
@@ -383,57 +386,59 @@ class IloClientTestCase(testtools.TestCase):
     def test_eject_virtual_media_gen9(self, eject_virtual_media_mock):
         self.client.model = 'Gen9'
         self.client.eject_virtual_media(device='FLOPPY')
-        eject_virtual_media_mock.assert_called_once_with('FLOPPY')
+        eject_virtual_media_mock.assert_called_once_with(device='FLOPPY')
 
     @mock.patch.object(ribcl.RIBCLOperations, 'eject_virtual_media')
     def test_eject_virtual_media_gen8(self, eject_virtual_media_mock):
         self.client.model = 'Gen8'
         self.client.eject_virtual_media(device='FLOPPY')
-        eject_virtual_media_mock.assert_called_once_with('FLOPPY')
+        eject_virtual_media_mock.assert_called_once_with(device='FLOPPY')
 
     @mock.patch.object(ris.RISOperations, 'get_vm_status')
     def test_get_vm_status_gen9(self, get_vm_status_mock):
         self.client.model = 'Gen9'
         self.client.get_vm_status(device='FLOPPY')
-        get_vm_status_mock.assert_called_once_with('FLOPPY')
+        get_vm_status_mock.assert_called_once_with(device='FLOPPY')
 
     @mock.patch.object(ribcl.RIBCLOperations, 'get_vm_status')
     def test_get_vm_status_gen8(self, get_vm_status_mock):
         self.client.model = 'Gen8'
         self.client.get_vm_status(device='FLOPPY')
-        get_vm_status_mock.assert_called_once_with('FLOPPY')
+        get_vm_status_mock.assert_called_once_with(device='FLOPPY')
 
     @mock.patch.object(ris.RISOperations, 'set_vm_status')
     def test_set_vm_status_gen9(self, set_vm_status_mock):
         self.client.model = 'Gen9'
         self.client.set_vm_status(device='FLOPPY', boot_option='BOOT_ONCE',
                                   write_protect='YES')
-        set_vm_status_mock.assert_called_once_with('FLOPPY', 'BOOT_ONCE',
-                                                   'YES')
+        set_vm_status_mock.assert_called_once_with(device='FLOPPY',
+                                                   boot_option='BOOT_ONCE',
+                                                   write_protect='YES')
 
     @mock.patch.object(ribcl.RIBCLOperations, 'set_vm_status')
     def test_set_vm_status_gen8(self, set_vm_status_mock):
         self.client.model = 'Gen8'
         self.client.set_vm_status(device='FLOPPY', boot_option='BOOT_ONCE',
                                   write_protect='YES')
-        set_vm_status_mock.assert_called_once_with('FLOPPY', 'BOOT_ONCE',
-                                                   'YES')
+        set_vm_status_mock.assert_called_once_with(device='FLOPPY',
+                                                   boot_option='BOOT_ONCE',
+                                                   write_protect='YES')
 
     @mock.patch.object(ris.RISOperations, 'insert_virtual_media')
     def test_insert_virtual_media_gen9(self, insert_virtual_media_mock):
         self.client.model = 'Gen9'
         self.client.insert_virtual_media(url="http://ilo/fpy.iso",
                                          device='FLOPPY')
-        insert_virtual_media_mock.assert_called_once_with("http://ilo/fpy.iso",
-                                                          "FLOPPY")
+        insert_virtual_media_mock.assert_called_once_with(
+            url="http://ilo/fpy.iso", device="FLOPPY")
 
     @mock.patch.object(ribcl.RIBCLOperations, 'insert_virtual_media')
     def test_insert_virtual_media_gen8(self, insert_virtual_media_mock):
         self.client.model = 'Gen8'
         self.client.insert_virtual_media(url="http://ilo/fpy.iso",
                                          device='FLOPPY')
-        insert_virtual_media_mock.assert_called_once_with("http://ilo/fpy.iso",
-                                                          "FLOPPY")
+        insert_virtual_media_mock.assert_called_once_with(
+            url="http://ilo/fpy.iso", device="FLOPPY")
 
     @mock.patch.object(ris.RISOperations, 'get_one_time_boot')
     def test_get_one_time_boot_gen9(self, get_one_time_boot_mock):
@@ -542,3 +547,31 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.reset_server()
         self.assertTrue(reset_server_mock.called)
+
+    @mock.patch.object(client.IloClient, '__getattr__')
+    def test___getattr___called_gen8(self, mocked_getattr):
+        self.client.model = 'Gen8'
+        self.client.reset_server()
+        self.assertTrue(mocked_getattr.called)
+
+    @mock.patch.object(client.IloClient, '__getattr__')
+    def test___getattr___called_gen9(self, mocked_getattr):
+        self.client.model = 'Gen9'
+        self.client.reset_server()
+        self.assertTrue(mocked_getattr.called)
+
+    @mock.patch.object(client.IloClient, '__getattr__')
+    @mock.patch.object(client.IloClient, 'get_server_capabilities')
+    def test___getattr___not_called_gen8(self, mocked_server_cap,
+                                         mocked_getattr):
+        self.client.model = 'Gen8'
+        self.client.get_server_capabilities()
+        mocked_getattr.assert_not_called()
+
+    @mock.patch.object(client.IloClient, '__getattr__')
+    @mock.patch.object(client.IloClient, 'get_server_capabilities')
+    def test___getattr___not_called_gen9(self, mocked_server_cap,
+                                         mocked_getattr):
+        self.client.model = 'Gen9'
+        self.client.get_server_capabilities()
+        mocked_getattr.assert_not_called()
