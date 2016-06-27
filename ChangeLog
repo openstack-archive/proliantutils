@@ -1,6 +1,25 @@
 CHANGES
 =======
 
+2.1.9
+-----
+
+* Fix sorting of available disks when 'share_physical_disks' is
+  'True' for any of the requested logical volume
+* Fix the logic of fetching gpu device count for Gen9 servers
+
+2.1.8
+-----
+
+* Passing 'process_input' to the running hpssacli process
+* Add RIS support for power operations
+* Adds support in hpssa for SDD interface 'Solid State SAS'
+* Add proper error message for extraction failure
+* Modify minimum disk for RAID 0 in hpssa
+* Add `.flash` extn to supported raw firmware files
+* Adds test coverage in tox.ini
+* Switch tox unit test command to use ostestr
+
 2.1.7
 -----
 
@@ -10,7 +29,9 @@ CHANGES
 2.1.6
 -----
 
+* Changes to NIC info retrieving logic
 * Support for iLO based firmware update
+* Reduce logical disk size returned by 1
 
 2.1.5
 -----
