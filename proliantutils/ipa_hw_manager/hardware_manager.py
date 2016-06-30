@@ -35,12 +35,16 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
         :returns: A list of dictionaries, each item containing the step name,
             interface and priority for the clean step.
         """
-        return [{'step': 'create_configuration',
-                 'interface': 'raid',
-                 'priority': 0},
-                {'step': 'delete_configuration',
-                 'interface': 'raid',
-                 'priority': 0}]
+        steps = [{'step': 'create_configuration',
+                  'interface': 'raid',
+                  'priority': 0},
+                 {'step': 'delete_configuration',
+                  'interface': 'raid',
+                  'priority': 0},
+                 {'step': 'hardware_disk_erase',
+                  'interface': 'deploy',
+                  'priority': 0}]
+        return steps
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
@@ -80,3 +84,15 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def hardware_disk_erase(self, node, ports):
+        """Erases the devices on the bare metal.
+
+        This method erases all the disks on the bare metal.
+        :param node: A dictionary of the node object
+        :param ports: A list of dictionaries containing information of ports
+            for the node
+        """
+        info = node.get('driver_internal_info', {})
+        erase_pattern = info.get('hardware_erase_pattern', 'zero')
+        return hpssa_manager.disk_erase(erase_pattern)
