@@ -333,3 +333,53 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def validate_erase_pattern(erase_pattern):
+    """Validates the erase_pattern provided
+
+    This method validates the erase_pattern provided against a JSON schema.
+
+    :param erase_pattern: A string with the erase pattern.
+    :raises: InvalidInputError, if validation of the input fails.
+    """
+    schema = {
+        "type": "string",
+        "enum": ["zero", "random_zero", "random_random_zero"]
+        }
+    try:
+        jsonschema.validate(erase_pattern, schema)
+    except json_schema_exc.ValidationError as e:
+        raise exception.InvalidInputError(e.message)
+
+
+def hardware_disk_erase(erase_pattern=None):
+    """Erases the physical disks attached to the controller.
+
+    This method securely erases the physical drives based on the pattern
+    passed as the input
+    :param erase_pattern: A string with the erase pattern. The possible values
+        are zero, random_zero, random_random_zero
+    :return: A string with the drive status as 'Erase Completed'
+    :raises: HPSSAException, if no unassigned physical disks are available for
+        erase operation.
+    """
+    server = objects.Server()
+
+    _filter_raid_mode_controllers(server)
+
+    validate_erase_pattern(erase_pattern)
+
+    for controller in server.controllers:
+        # Select the unassigned physical drives from the controller
+        # and pass it to perform the drive erase.
+        physical_drives = controller.unassigned_physical_drives
+        selected_drive_ids = [x.id for x in physical_drives]
+        if not selected_drive_ids:
+            reason = ("No unassigned physical disks available to perform"
+                      " the disk erase")
+            raise exception.HPSSAException(reason=reason)
+        drives = ','.join(str(e) for e in selected_drive_ids)
+        status = controller.erase_physical_drives(drives, erase_pattern)
+
+    return status

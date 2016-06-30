@@ -32,6 +32,9 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
               'priority': 0},
              {'step': 'delete_configuration',
               'interface': 'raid',
+              'priority': 0},
+             {'step': 'hardware_disk_erase',
+              'interface': 'deploy',
               'priority': 0}],
             self.hardware_manager.get_clean_steps("", ""))
 
@@ -50,3 +53,11 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         ret = self.hardware_manager.delete_configuration("", "")
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
+
+    @mock.patch.object(hpssa_manager, 'hardware_disk_erase')
+    def test_hardware_disk_erase(self, erase_mock):
+        erase_mock.return_value = 'Erase Completed'
+        node = {'properties': {'erase_pattern': 'zero'}}
+        ret = self.hardware_manager.hardware_disk_erase(node, "")
+        erase_mock.assert_called_once_with('zero')
+        self.assertEqual('Erase Completed', ret)
