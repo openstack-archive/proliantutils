@@ -26,6 +26,21 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         super(ProliantHardwareManagerTestCase, self).setUp()
 
     def test_get_clean_steps(self):
+        node = {'properties': {'erase_type': 'hardware'}}
+        self.assertEqual(
+            [{'step': 'create_configuration',
+              'interface': 'raid',
+              'priority': 0},
+             {'step': 'delete_configuration',
+              'interface': 'raid',
+              'priority': 0},
+             {'step': 'erase_devices',
+              'interface': 'deploy',
+              'priority': 0}],
+            self.hardware_manager.get_clean_steps(node, ""))
+
+    def test_get_clean_steps_without_erase_devices(self):
+        node = {'properties': {'erase_type': 'shred'}}
         self.assertEqual(
             [{'step': 'create_configuration',
               'interface': 'raid',
@@ -33,7 +48,7 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
              {'step': 'delete_configuration',
               'interface': 'raid',
               'priority': 0}],
-            self.hardware_manager.get_clean_steps("", ""))
+            self.hardware_manager.get_clean_steps(node, ""))
 
     @mock.patch.object(hpssa_manager, 'create_configuration')
     def test_create_configuration(self, create_mock):
@@ -50,3 +65,21 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         ret = self.hardware_manager.delete_configuration("", "")
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
+
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_devices(self, erase_mock):
+        erase_mock.return_value = 'Erase Completed'
+        node = {'properties': {'erase_pattern': 'zero'}}
+        ret = self.hardware_manager.erase_devices(node, "")
+        erase_mock.assert_called_once_with('zero')
+        self.assertEqual('Erase Completed', ret)
+
+    def test__erase_devices_manager_support_hardware(self):
+        node = {'properties': {'erase_type': 'hardware'}}
+        ret = self.hardware_manager._erase_devices_manager_support(node)
+        self.assertTrue(ret)
+
+    def test__erase_devices_manager_support_shred(self):
+        node = {'properties': {'erase_type': 'shred'}}
+        ret = self.hardware_manager._erase_devices_manager_support(node)
+        self.assertFalse(ret)

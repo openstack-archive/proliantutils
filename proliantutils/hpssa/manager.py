@@ -303,3 +303,24 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def erase_devices(erase_pattern=None):
+    """Erases the physical disks attached to the controller.
+
+    This method securely erases the physical drives based on the pattern
+    passed as the input
+    :param erase_pattern: A string with the erase pattern
+    :return: A string with the drive status
+    """
+    server = objects.Server()
+
+    for controller in server.controllers:
+        # Select the unassigned physical drives from the controller
+        # and pass it to perform the drive erase.
+        physical_drives = controller.unassigned_physical_drives
+        selected_drive_ids = [x.id for x in physical_drives]
+        drives = ','.join(str(e) for e in selected_drive_ids)
+        status = controller.erase_physical_drives(drives, erase_pattern)
+
+    return status

@@ -410,6 +410,15 @@ class ManagerTestCases(testtools.TestCase):
         self.assertEqual(sorted(pds_active_expected), sorted(pds_active))
         self.assertEqual(sorted(pds_ready_expected), sorted(pds_ready))
 
+    @mock.patch.object(objects.Controller, 'erase_physical_drives')
+    def test_erase_devices(self, erase_mock, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+        erase_mock.return_value = 'Erase Completed'
+
+        ret = manager.erase_devices('zero')
+
+        self.assertEqual('Erase Completed', ret)
+
 
 class RaidConfigValidationTestCases(testtools.TestCase):
 
