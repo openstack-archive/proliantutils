@@ -305,6 +305,20 @@ class ControllerTest(testtools.TestCase):
             "raid=50", "size=51200", process_input='y')
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices(self, execute_mock, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+
+        execute_mock.return_value = "Status:Erase Completed"
+
+        unassigned_drives = "5I:1:1,5I:1:2"
+        server = objects.Server()
+        controller = server.controllers[0]
+
+        controller.erase_physical_drives(unassigned_drives, 'zero')
+        execute_mock.assert_any_call("pd 5I:1:1,5I:1:2", "modify", "erase",
+                                     "erasepattern=zero")
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_delete_all_logical_drives(self, execute_mock,
                                        get_all_details_mock):
 

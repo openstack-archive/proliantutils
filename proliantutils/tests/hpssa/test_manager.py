@@ -461,6 +461,21 @@ class ManagerTestCases(testtools.TestCase):
         manager._filter_raid_mode_controllers(server)
         self.assertEqual(ctrl_expected, server.controllers)
 
+    @mock.patch.object(objects.Controller, 'erase_physical_drives')
+    def test_hardware_disk_erase(self, erase_mock, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+        erase_mock.return_value = 'Erase Completed'
+
+        ret = manager.hardware_disk_erase('zero')
+
+        self.assertEqual('Erase Completed', ret)
+
+    def test_hardware_disk_erase_hba_mode(self, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_HBA_MODE
+        self.assertRaises(exception.HPSSAOperationError,
+                          manager.hardware_disk_erase,
+                          'zero')
+
 
 class RaidConfigValidationTestCases(testtools.TestCase):
 
