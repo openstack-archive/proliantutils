@@ -21,6 +21,20 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
 
     HARDWARE_MANAGER_VERSION = "3"
 
+    def _is_hardware_disk_erase_requested(self, node):
+        """Check the erase_devices support by ProliantHardwareManager.
+
+        This method return True when the 'device_erase_type' is 'hardware'
+        else it returns False.
+        :param node: A dictionary of the node object.
+        :returns: True when 'device_erase_type' is 'hardware' else False.
+        """
+        info = node.get('properties', {})
+        erase_type = info.get('device_erase_type', 'shred')
+        if erase_type == 'hardware':
+            return True
+        return False
+
     def get_clean_steps(self, node, ports):
         """Return the clean steps supported by this hardware manager.
 
@@ -35,12 +49,18 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
         :returns: A list of dictionaries, each item containing the step name,
             interface and priority for the clean step.
         """
-        return [{'step': 'create_configuration',
-                 'interface': 'raid',
-                 'priority': 0},
-                {'step': 'delete_configuration',
-                 'interface': 'raid',
-                 'priority': 0}]
+        steps = [{'step': 'create_configuration',
+                  'interface': 'raid',
+                  'priority': 0},
+                 {'step': 'delete_configuration',
+                  'interface': 'raid',
+                  'priority': 0}]
+
+        if self._is_hardware_disk_erase_requested(node):
+            steps.append({'step': 'erase_devices',
+                          'interface': 'deploy',
+                          'priority': 0})
+        return steps
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
@@ -80,3 +100,15 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def erase_devices(self, node, ports):
+        """Erases the devices on the bare metal.
+
+        This method erases all the disks on the bare metal.
+        :param node: A dictionary of the node object
+        :param ports: A list of dictionaries containing information of ports
+            for the node
+        """
+        info = node.get('properties', {})
+        erase_pattern = info.get('erase_pattern', 'zero')
+        return hpssa_manager.erase_devices(erase_pattern)
