@@ -399,6 +399,42 @@ class Controller(object):
 
         self.execute_cmd(*cmd_args, process_input='y')
 
+    def erase_physical_drives(self, drives, erase_pattern=None):
+        """Erase Physical drives on the controller.
+
+        This method while securely erase all the physical drives attached to
+        the controller by overwriting the disks with a erase pattern when the
+        physical drive ids are passed to it.
+
+        :param drives: A string with all the drive ids
+        :param erase_pattern: A string with the pattern to be used for secure
+            erase.
+        :raises: HPSSAOperationError, if hpssacli operation failed.
+        """
+        cmd_args = []
+        cmd_args.append("pd %s" % drives)
+        cmd_args.extend(['modify', 'erase'])
+        if erase_pattern is None:
+            erase_pattern = 'zero'
+
+        cmd_args.append('erasepattern=%s' % erase_pattern)
+        self.execute_cmd(*cmd_args)
+
+        # After triggering the disk erase, checks the erase status for
+        # physical drives by getting the status of the drives.
+        status = "Erase In Progress"
+        cmd_args = []
+        cmd_args.append("pd %s" % drives)
+        cmd_args.extend(['show'])
+        while (status == "Erase In Progress"):
+            out = self.execute_cmd(*cmd_args)
+            for x in out.split("\n"):
+                if "Status" in x:
+                    status = x.strip()
+                    break
+            status = status[8:]
+        return status
+
     def delete_all_logical_drives(self):
         """Deletes all logical drives on trh controller.
 
