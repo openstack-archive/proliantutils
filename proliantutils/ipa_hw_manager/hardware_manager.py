@@ -35,12 +35,18 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
         :returns: A list of dictionaries, each item containing the step name,
             interface and priority for the clean step.
         """
-        return [{'step': 'create_configuration',
-                 'interface': 'raid',
-                 'priority': 0},
-                {'step': 'delete_configuration',
-                 'interface': 'raid',
-                 'priority': 0}]
+        steps = [{'step': 'create_configuration',
+                  'interface': 'raid',
+                  'priority': 0},
+                 {'step': 'delete_configuration',
+                  'interface': 'raid',
+                  'priority': 0}]
+
+        if hardware.erase_devices_manager_support(self, node):
+            steps.append({'step': 'erase_devices',
+                          'interface': 'deploy',
+                          'priority': 0})
+        return steps
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
@@ -80,3 +86,8 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def erase_devices(self, node, ports):
+        info = node.get('properties', {})
+        erase_pattern = info.get('erase_pattern', 'zero')
+        return hpssa_manager.erase_devices(erase_pattern)

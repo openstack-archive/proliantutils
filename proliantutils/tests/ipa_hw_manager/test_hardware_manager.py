@@ -13,10 +13,13 @@
 # under the License.
 
 import mock
+from oslo_utils import importutils
 import testtools
 
 from proliantutils.hpssa import manager as hpssa_manager
 from proliantutils.ipa_hw_manager import hardware_manager
+
+ironic_python_agent = importutils.try_import('ironic_python_agent')
 
 
 class ProliantHardwareManagerTestCase(testtools.TestCase):
@@ -25,7 +28,26 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         self.hardware_manager = hardware_manager.ProliantHardwareManager()
         super(ProliantHardwareManagerTestCase, self).setUp()
 
-    def test_get_clean_steps(self):
+    @mock.patch.object(ironic_python_agent.hardware,
+                       'erase_devices_manager_support')
+    def test_get_clean_steps(self, erase_mock):
+        erase_mock.return_value = True
+        self.assertEqual(
+            [{'step': 'create_configuration',
+              'interface': 'raid',
+              'priority': 0},
+             {'step': 'delete_configuration',
+              'interface': 'raid',
+              'priority': 0},
+             {'step': 'erase_devices',
+              'interface': 'deploy',
+              'priority': 0}],
+            self.hardware_manager.get_clean_steps("", ""))
+
+    @mock.patch.object(ironic_python_agent.hardware,
+                       'erase_devices_manager_support')
+    def test_get_clean_steps_without_erase_devices(self, erase_mock):
+        erase_mock.return_value = False
         self.assertEqual(
             [{'step': 'create_configuration',
               'interface': 'raid',
@@ -50,3 +72,11 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         ret = self.hardware_manager.delete_configuration("", "")
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
+
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_devices(self, erase_mock):
+        erase_mock.return_value = 'Erase Completed'
+        node = {'properties': {'erase_pattern': 'zero'}}
+        ret = self.hardware_manager.erase_devices(node, "")
+        erase_mock.assert_called_once_with('zero')
+        self.assertEqual('Erase Completed', ret)
