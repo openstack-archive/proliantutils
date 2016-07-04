@@ -133,6 +133,18 @@ class IloCommonModuleTestCase(unittest.TestCase):
         self.assertEqual(10, get_firmware_update_progress_mock.call_count)
 
     @mock.patch.object(time, 'sleep')
+    @mock.patch.object(ris.RISOperations, 'get_firmware_update_progress')
+    @mock.patch.object(common, 'wait_for_ilo_after_reset', lambda x: None)
+    def test_wait_for_ris_firmware_update_to_complete_for_very_quick_update(
+            self, get_firmware_update_progress_mock, sleep_mock):
+        # | GIVEN |
+        get_firmware_update_progress_mock.side_effect = [('COMPLETED', 100)]
+        # | WHEN |
+        common.wait_for_ris_firmware_update_to_complete(self.ris)
+        # | THEN |
+        self.assertEqual(1, get_firmware_update_progress_mock.call_count)
+
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     @mock.patch.object(common, 'wait_for_ilo_after_reset', lambda x: None)
     def test_wait_for_ribcl_firmware_update_to_complete_retries_till_exception(
