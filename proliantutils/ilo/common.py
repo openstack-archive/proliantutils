@@ -105,6 +105,8 @@ def wait_for_ris_firmware_update_to_complete(ris_object):
         +=====================+====================+
         |    IDLE             |    ERROR           |
         +---------------------+--------------------+
+        |    IDLE             |    COMPLETED       |
+        +---------------------+--------------------+
         |    PROGRESSING      |    ERROR           |
         +---------------------+--------------------+
         |    PROGRESSING      |    COMPLETED       |
@@ -120,7 +122,8 @@ def wait_for_ris_firmware_update_to_complete(ris_object):
         if (((p_state[0] == 'PROGRESSING') and (c_state[0] in
                                                 ['COMPLETED', 'ERROR',
                                                  'UNKNOWN', 'IDLE']))
-                or (p_state[0] == 'IDLE' and c_state[0] == 'ERROR')):
+                or (p_state[0] == 'IDLE' and (c_state[0] in
+                                              ['COMPLETED', 'ERROR']))):
             return True
         return False
 
