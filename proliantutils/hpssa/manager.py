@@ -129,7 +129,11 @@ def create_configuration(raid_config):
 
         controller = server.get_controller_by_id(controller_id)
         if not controller:
-            msg = ("Unable to find controller named '%s'" % controller_id)
+            msg = ("Unable to find controller named '%(controller)s'."
+                   " The available controllers are %(ctrl_list)s." %
+                   {'controller': controller_id,
+                    'ctrl_list': str(
+                        [c.id for c in server.controllers]).strip('[]')})
             raise exception.InvalidInputError(reason=msg)
 
         if 'physical_disks' in logical_disk:

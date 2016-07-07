@@ -114,6 +114,21 @@ class ManagerTestCases(testtools.TestCase):
                           manager.create_configuration,
                           raid_info)
 
+        no_drives = raid_constants.HPSSA_NO_DRIVES
+        get_all_details_mock.return_value = no_drives
+        raid_info = {'logical_disks': [
+                     {'size_gb': 50,
+                      'raid_level': '1',
+                      'controller': 'Smart Array P822 in Slot 0',
+                      'physical_disks': ["6I:1:5", "6I:1:6"]}]}
+        msg = ("Invalid Input: Unable to find controller named 'Smart Array "
+               "P822 in Slot 0'. The available controllers are "
+               "'Smart Array P822 in Slot 2'.")
+        ex = self.assertRaises(exception.InvalidInputError,
+                               manager.create_configuration,
+                               raid_info)
+        self.assertIn(msg, str(ex))
+
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_configuration_without_disk_input_succeeds(
             self, controller_exec_cmd_mock, get_all_details_mock):
