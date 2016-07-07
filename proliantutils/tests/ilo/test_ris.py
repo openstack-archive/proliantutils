@@ -386,23 +386,26 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_get_tpm_status')
     @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock, gpu_mock):
+                                     secure_mock, gpu_mock, tpm_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
         secure_mock.return_value = False
+        tpm_mock.return_value = {'trusted_boot': True}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
                          'server_model': u'ProLiant BL460c Gen9',
-                         'pci_gpu_devices': 2}
+                         'pci_gpu_devices': 2,
+                         'trusted_boot': True}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1826,3 +1829,24 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client.reset_server)
         rest_post_mock.assert_called_once_with(systems_uri, None,
                                                new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    def test__get_tpm_status_notpresent(self, bios_mock):
+        bios_mock.return_value = 'NotPresent'
+        expected_out = {'trusted_boot': False}
+        status = self.client._get_tpm_status()
+        self.assertEqual(expected_out, status)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    def test__get_tpm_status_presentdisabled(self, bios_mock):
+        bios_mock.return_value = 'PresentDisabled'
+        expected_out = {'trusted_boot': True}
+        status = self.client._get_tpm_status()
+        self.assertEqual(expected_out, status)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    def test__get_tpm_status_presentenabled(self, bios_mock):
+        bios_mock.return_value = 'PresentEnabled'
+        expected_out = {'trusted_boot': True}
+        status = self.client._get_tpm_status()
+        self.assertEqual(expected_out, status)
