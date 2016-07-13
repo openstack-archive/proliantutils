@@ -389,8 +389,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
 
         return map_settings
 
-    def _check_iscsi_rest_patch_allowed(self):
-        """Checks if patch is supported on iscsi.
+    def _get_iscsi_resource(self):
+        """Gets iscsi resource.
 
         :returns: iscsi url.
         :raises: IloError, on an error from iLO.
@@ -409,17 +409,37 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
                 msg = self._get_extended_error(settings)
                 raise exception.IloError(msg)
 
-            if not self._operation_allowed(headers, 'PATCH'):
-                headers, iscsi_uri, settings = (
-                    self._get_iscsi_settings_resource(settings))
-                self._validate_if_patch_supported(headers, iscsi_uri)
-
-            return iscsi_uri
+            return headers, iscsi_uri, settings
 
         else:
             msg = ('"links/iScsi" section in bios'
                    ' does not exist')
             raise exception.IloCommandNotSupportedError(msg)
+
+    def _check_iscsi_rest_patch_allowed(self):
+        """Checks if patch is supported on iscsi.
+
+        :returns: iscsi url.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, iscsi_uri, settings = self._get_iscsi_resource()
+
+        if not self._operation_allowed(headers, 'PATCH'):
+            headers, iscsi_uri, settings = (
+                self._get_iscsi_settings_resource(settings))
+            self._validate_if_patch_supported(headers, iscsi_uri)
+
+        return iscsi_uri
+
+    def _get_iscsi_boot_supported(self):
+        """Checks if system supports iscsi boot"""
+        iscsi_uri = self._check_iscsi_rest_patch_allowed()
+        iscsi_boot = 'false'
+        if iscsi_uri:
+            iscsi_boot = 'true'
+        return {'iscsi_boot': iscsi_boot}
 
     def _change_iscsi_settings(self, mac, iscsi_info):
         """Change iscsi settings.
@@ -979,9 +999,9 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_iscsi_boot_supported())
         if self._get_tpm_capability():
             capabilities['trusted_boot'] = 'true'
-
         if self._get_cpu_virtualization():
             capabilities['cpu_vt'] = 'true'
         if self._get_nvdimm_n_status():
