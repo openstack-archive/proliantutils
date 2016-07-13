@@ -428,6 +428,141 @@ class RISOperations(operations.IloOperations):
                     gpu_list.append(item)
         return gpu_list
 
+    def _check_storage_resource(self):
+        """Check if the SmartStorage resource exists."""
+        system = self._get_host_details()
+        if ('links' in system['Oem']['Hp'] and
+                'SmartStorage' in system['Oem']['Hp']['links']):
+            # Get the BIOS URI and Settings
+            storage_uri = system['Oem']['Hp']['links']['SmartStorage']['href']
+            status, headers, storage_settings = self._rest_get(storage_uri)
+
+            if status >= 300:
+                msg = self._get_extended_error(storage_settings)
+                raise exception.IloError(msg)
+
+            return headers, storage_uri, storage_settings
+        else:
+            msg = ('"links/SmartStorage" section in ComputerSystem/Oem/Hp'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def _check_array_controller_resource(self):
+        """Check if the ArrayController resource exists."""
+        headers, storage_uri, storage_settings = self._check_storage_resource()
+        if ('links' in storage_settings and
+                'ArrayControllers' in storage_settings['links']):
+            # Get the BIOS URI and Settings
+            array_uri = storage_settings['links']['ArrayControllers']['href']
+            status, headers, array_settings = self._rest_get(array_uri)
+
+            if status >= 300:
+                msg = self._get_extended_error(array_settings)
+                raise exception.IloError(msg)
+
+            return headers, array_uri, array_settings
+        else:
+            msg = ('"links/ArrayControllers" section in SmartStorage'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def _get_list_of_array_controllers(self):
+        """Gets the list of Array Controller URIs."""
+        headers, array_uri, array_settings = (
+            self._check_array_controller_resource())
+        array_uri_links = []
+        if ('links' in array_settings and
+                'Member' in array_settings['links']):
+            array_uri_links = array_settings['links']['Member']
+        else:
+            msg = ('"links/Member" section in ArrayControllers'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+        return array_uri_links
+
+    def _check_disk_drive_resource(self):
+        """Check if the DiskDrive resource exists."""
+        i = 0
+        disk_details_dict = []
+        array_uri_links = self._get_list_of_array_controllers()
+        import pdb
+        pdb.set_trace()
+        while(i < len(array_uri_links)):
+            headers, array_member_uri, member_settings = (
+                self._rest_get(array_uri_links[i]['href']))
+
+            if ('links' in member_settings and
+                    'PhysicalDrives' in member_settings['links']):
+                disk_uri = member_settings['links']['PhysicalDrives']['href']
+                headers, disk_member_uri, disk_mem = (
+                    self._rest_get(disk_uri))
+                if ('links' in disk_mem and
+                        'Member' in disk_mem['links']):
+                    j = 0
+                    while(j < len(disk_mem['links']['Member'])):
+                        diskdrive_uri = disk_mem['links']['Member'][j]['href']
+                        headers, drive_uri, disk_details = (
+                            self._rest_get(diskdrive_uri))
+                        disk_details_dict.append(disk_details)
+                        j = j + 1
+                else:
+                    msg = ('"links/Member" section in PhysicalDrives'
+                           ' does not exist')
+                    raise exception.IloCommandNotSupportedError(msg)
+            else:
+                msg = ('"links/PhysicalDrive" section in '
+                       ' ArrayController/links/Member does not exist')
+                raise exception.IloCommandNotSupportedError(msg)
+            i = i + 1
+        if disk_details_dict:
+            return disk_details_dict
+
+    def _get_controllers_names(self):
+        """Gets the list of the names of the controllers attached."""
+        array_uri_links = self._get_list_of_array_controllers()
+        controllers = []
+        i = 0
+        while(i < len(array_uri_links)):
+            headers, array_member_uri, member_settings = (
+                self._rest_get(array_uri_links[i]['href']))
+
+            controller_name = ""
+            location = ""
+            if ('Model' in member_settings):
+                controller_name = member_settings['Model']
+            if ('Location' in member_settings):
+                location = member_settings['Location']
+            if len(controller_name):
+                controller = "controller_" + str(i+1)
+                controllers.append(
+                    {controller: controller_name + ' in ' + location})
+            i = i + 1
+        return controllers
+
+    def _get_drive_type_and_speed(self):
+        """Gets the disk drive type.
+
+        :returns: if the disk is SSD or Rotational and the max
+                  rotation speed.
+        """
+        disk_details = self._check_disk_drive_resource()
+        drive_hdd = False
+        drive_ssd = False
+        max_drive_rpm = 0
+        if disk_details:
+            for item in disk_details:
+                value = item['MediaType']
+                if value == "HDD":
+                    drive_hdd = True
+                    speed = item['RotationalSpeedRpm']
+                    if speed > max_drive_rpm:
+                        max_drive_rpm = speed
+                if value == "SDD":
+                    drive_ssd = True
+        return {'drive_rotational': drive_hdd,
+                'drive_ssd': drive_ssd,
+                'max_rotational_drive_rpm': max_drive_rpm}
+
     def _get_bios_settings_resource(self, data):
         """Get the BIOS settings resource."""
         try:
@@ -1117,6 +1252,10 @@ class RISOperations(operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_drive_type_and_speed())
+        controller_details = self._get_controllers_names()
+        for item in controller_details:
+            capabilities.update(item)
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
