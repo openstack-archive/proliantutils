@@ -1007,14 +1007,19 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities.update({
             'boot_mode_bios': boot_modes.boot_mode_bios,
             'boot_mode_uefi': boot_modes.boot_mode_uefi})
-
         if self._get_tpm_capability():
             capabilities['trusted_boot'] = 'true'
-
         if self._get_cpu_virtualization():
             capabilities['cpu_vt'] = 'true'
         if self._get_nvdimm_n_status():
             capabilities['nvdimm_n'] = 'true'
+        try:
+            self._check_iscsi_rest_patch_allowed()
+            capabilities['iscsi_boot'] = 'true'
+        except exception.IloCommandNotSupportedError:
+            # If an error is raised dont populate the capability
+            # iscsi_boot
+            pass
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
