@@ -579,6 +579,28 @@ class RISOperations(operations.IloOperations):
                    ' does not exist')
             raise exception.IloCommandNotSupportedError(msg)
 
+    def _get_iscsi_boot_supported(self):
+        iscsi_uri = self._check_iscsi_rest_patch_allowed()
+        iscsi_boot = False
+        if iscsi_uri:
+            iscsi_boot = True
+        return {'iscsi_boot': iscsi_boot}
+
+    def _get_iscsi_iqn(self):
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        iscsi_iqn = None
+        if('links' in bios_settings and 'iScsi' in bios_settings['links']):
+            iscsi_uri = bios_settings['links']['iScsi']['href']
+            status, headers, settings = self._rest_get(iscsi_uri)
+
+            if status != 200:
+                msg = self._get_extended_error(settings)
+                raise exception.IloError(msg)
+
+            iscsi_iqn = settings['iSCSIInitiatorName']
+
+        return {'iscsi_iqn': iscsi_iqn}
+
     def _change_iscsi_settings(self, mac, iscsi_info):
         """Change iscsi settings.
 
@@ -1117,6 +1139,8 @@ class RISOperations(operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_iscsi_boot_supported())
+        capabilities.update(self._get_iscsi_iqn())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
