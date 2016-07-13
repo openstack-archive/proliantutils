@@ -287,6 +287,24 @@ GET_HEADERS = {
     'x_hp-chrp-service-version': '1.0.3'
 }
 
+REST_GET_SMART_STORAGE = """
+{
+    "Model": "ProLiant BL460c Gen9",
+    "Name": "Computer System",
+    "Oem": {
+        "Hp": {
+            "links":
+                {
+                    "SmartStorage":
+                        {
+                            "href": "/rest/v1/Systems/1/SmartStorage"
+                        }
+                }
+           }
+    }
+}
+"""
+
 REST_GET_SECURE_BOOT = {
     "Name": "SecureBoot",
     "ResetAllKeys": True,
@@ -3891,4 +3909,205 @@ Pci(0x8,0x0)/Pci(0x0,0x0)",
     }
   ]
 }
+"""
+
+STORAGE_SETTINGS = """
+{
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage$entity",
+        "@odata.id": "/redfish/v1/Systems/1/SmartStorage/",
+        "@odata.type": "#HpSmartStorage.HpSmartStorage",
+        "Description": "HP Smart Storage",
+        "Id": "1",
+        "Links": {
+        "ArrayControllers": {
+                "@odata.id": "/redfish/v1/Systems/1\
+/SmartStorage/ArrayControllers/"
+                },
+                "HostBusAdapters": {
+                "@odata.id": "/redfish/v1/Systems/1/SmartStorage\
+/HostBusAdapters/"
+                }
+        },
+        "Name": "HpSmartStorage",
+        "Status": {
+                "Health": "OK"
+                },
+        "Type": "HpSmartStorage.1.0.0",
+        "links": {
+                "ArrayControllers": {
+                        "href": "/rest/v1/Systems/1/SmartStorage\
+/ArrayControllers"
+                        },
+                "HostBusAdapters": {
+                        "href": "/rest/v1/Systems/1/SmartStorage\
+/HostBusAdapters"
+                },
+        "self": {
+                "href": "/rest/v1/Systems/1/SmartStorage"
+                }
+        }
+}
+"""
+
+ARRAY_SETTINGS = """
+{
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage/ArrayControllers",
+        "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/",
+        "@odata.type": "#HpSmartStorageArrayControllerCollection.\
+1.0.0.HpSmartStorageArrayControllerCollection",
+        "Description": "HP Smart Storage Array Controllers View",
+        "MemberType": "HpSmartStorageArrayController.1",
+        "Members": [{
+                "@odata.id": "/redfish/v1/Systems/1/SmartStorage\
+/ArrayControllers/0/"
+        }],
+        "Members@odata.count": 1,
+        "Name": "HpSmartStorageArrayControllers",
+        "Total": 1,
+        "Type": "Collection.0.9.5",
+        "links": {
+        "Member": [{
+                "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers/0"
+                        }],
+                "self": {
+                        "href": "/rest/v1/Systems/1/SmartStorage/\
+ArrayControllers"
+                }
+        }
+}
+"""
+
+ARRAY_MEM_SETTINGS = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage/ArrayControllers/Members/$entity",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/",
+    "@odata.type": "#HpSmartStorageArrayController.\
+HpSmartStorageArrayController",
+    "AdapterType": "SmartArray",
+    "BackupPowerSourceStatus": "Present",
+    "CacheMemorySizeMiB": 1024,
+    "CurrentOperatingMode": "RAID",
+    "Description": "HP Smart Storage Array Controller View",
+    "FirmwareVersion": {
+        "Current": {
+        "VersionString": "2.49"
+    }
+    },
+    "HardwareRevision": "B",
+    "Id": "0",
+    "Links": {
+        "LogicalDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/LogicalDrives/"
+        },
+        "PhysicalDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/DiskDrives/"
+        },
+        "StorageEnclosures": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/StorageEnclosures/"
+        }
+    },
+    "Location": "Slot 0",
+    "LocationFormat": "PCISlot",
+    "Model": "HP Smart Array P244br Controller",
+    "Name": "HpSmartStorageArrayController",
+    "SerialNumber": "PDZVU0FLM7I03I",
+    "Status": {
+        "Health": "OK",
+    "State": "Enabled"
+    },
+    "Type": "HpSmartStorageArrayController.1.0.0",
+    "links": {
+        "LogicalDrives": {
+            "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers\
+/0/LogicalDrives"
+        },
+        "PhysicalDrives": {
+            "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers/\
+0/DiskDrives"
+        },
+        "StorageEnclosures": {
+            "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers/\
+0/StorageEnclosures"
+        },
+        "self": {
+            "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers/0"
+        }
+    }
+}
+"""
+
+DISK_COLLECTION = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage/ArrayControllers/Members/2/DiskDrives",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers\
+/2/DiskDrives/",
+    "@odata.type": "\
+#HpSmartStorageDiskDriveCollection.HpSmartStorageDiskDriveCollection",
+    "Description": "HP Smart Storage Disk Drives View",
+    "MemberType": "HpSmartStorageDiskDrive.1",
+    "Members": [{
+        "@odata.id": "/redfish/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/DiskDrives/0/"
+        }],
+    "Members@odata.count": 1,
+    "Name": "HpSmartStorageDiskDrives",
+    "Total": 1,
+    "Type": "Collection.1.0.0",
+    "links": {
+    "Member": [{
+        "href": "/rest/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/DiskDrives/0"
+    }],
+    "self": {
+        "href": "/rest/v1/Systems/1/SmartStorage/\
+ArrayControllers/0/DiskDrives"
+        }
+    }
+}
+"""
+DISK_DETAILS_LIST = """
+[{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage/ArrayControllers/Members/0/DiskDrives/Members/$entity",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers\
+/0/DiskDrives/0/",
+    "@odata.type": "#HpSmartStorageDiskDrive.HpSmartStorageDiskDrive",
+    "CapacityMiB": 572325,
+    "CurrentTemperatureCelsius": 25,
+    "Description": "HP Smart Storage Disk Drive View",
+    "EncryptedDrive": "False",
+    "FirmwareVersion": {
+    "Current": {
+        "VersionString": "HPDC"
+        }
+    },
+    "Id": "0",
+    "InterfaceType": "SAS",
+    "Location": "1I:1:1",
+    "LocationFormat": "ControllerPort:Box:Bay",
+    "MaximumTemperatureCelsius": 34,
+    "MediaType": "HDD",
+    "Model": "EG0600FBVFP",
+    "Name": "HpSmartStorageDiskDrive",
+    "RotationalSpeedRpm": 10000,
+    "SerialNumber": "KWK1JS2X",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Type": "HpSmartStorageDiskDrive.1.0.0",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Systems/1/SmartStorage/ArrayControllers\
+/0/DiskDrives/0"
+        }
+    }
+}]
 """
