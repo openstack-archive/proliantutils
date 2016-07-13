@@ -546,7 +546,7 @@ class RISOperations(operations.IloOperations):
 
         return map_settings
 
-    def _check_iscsi_rest_patch_allowed(self):
+    def _check_iscsi_resource(self):
         """Checks if patch is supported on iscsi.
 
         :returns: iscsi url.
@@ -566,17 +566,41 @@ class RISOperations(operations.IloOperations):
                 msg = self._get_extended_error(settings)
                 raise exception.IloError(msg)
 
-            if not self._operation_allowed(headers, 'PATCH'):
-                headers, iscsi_uri, settings = (
-                    self._get_iscsi_settings_resource(settings))
-                self._validate_if_patch_supported(headers, iscsi_uri)
-
-            return iscsi_uri
+            return headers, iscsi_uri, settings
 
         else:
             msg = ('"links/iScsi" section in bios'
                    ' does not exist')
             raise exception.IloCommandNotSupportedError(msg)
+
+    def _check_iscsi_rest_patch_allowed(self):
+        """Checks if patch is supported on iscsi.
+
+        :returns: iscsi url.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, iscsi_uri, settings = self._check_iscsi_resource()
+
+        if not self._operation_allowed(headers, 'PATCH'):
+            headers, iscsi_uri, settings = (
+                self._get_iscsi_settings_resource(settings))
+            self._validate_if_patch_supported(headers, iscsi_uri)
+
+        return iscsi_uri
+
+    def _get_iscsi_boot_supported(self):
+        headers, iscsi_uri, settings = self._check_iscsi_resource()
+        iscsi_boot = False
+        if iscsi_uri:
+            iscsi_boot = True
+        return {'iscsi_boot': iscsi_boot}
+
+    def _get_iscsi_iqn(self):
+        headers, iscsi_uri, settings = self._check_iscsi_resource()
+        iscsi_iqn = settings['iSCSIInitiatorName']
+        return {'iscsi_iqn': iscsi_iqn}
 
     def _change_iscsi_settings(self, mac, iscsi_info):
         """Change iscsi settings.
@@ -1132,6 +1156,8 @@ class RISOperations(operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_iscsi_boot_supported())
+        capabilities.update(self._get_iscsi_iqn())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'

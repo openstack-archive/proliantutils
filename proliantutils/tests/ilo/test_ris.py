@@ -407,23 +407,28 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_get_iscsi_boot_supported')
+    @mock.patch.object(ris.RISOperations, '_get_iscsi_iqn')
     @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock, gpu_mock):
+                                     secure_mock, gpu_mock, iscsi_iqn_mock,
+                                     iscsi_boot_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
         secure_mock.return_value = False
+        iscsi_boot_mock.return_value = {'iscsi_boot': True}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
                          'server_model': u'ProLiant BL460c Gen9',
-                         'pci_gpu_devices': 2}
+                         'pci_gpu_devices': 2,
+                         'iscsi_boot': True}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1915,3 +1920,55 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client.reset_server)
         rest_post_mock.assert_called_once_with(systems_uri, None,
                                                new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_resource')
+    def test__get_iscsi_boot_supported_true(self, check_mock):
+        check_mock.return_value = ("headers",
+                                   "/rest/v1/Systems/1/bios/Settings",
+                                   "Settings")
+        expected_value = {'iscsi_boot': True}
+        value = self.client._get_iscsi_boot_supported()
+        self.assertEqual(expected_value, value)
+        self.assertTrue(check_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_resource')
+    def test__get_iscsi_boot_supported_false(self, check_mock):
+        check_mock.return_value = (None, None, None)
+        expected_value = {'iscsi_boot': False}
+        value = self.client._get_iscsi_boot_supported()
+        self.assertEqual(expected_value, value)
+        self.assertTrue(check_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_iscsi_iqn_succeed(self, check_bios_mock, get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        iscsi_iqn = iscsi_settings['iSCSIInitiatorName']
+        expected_value = {'iscsi_iqn': iscsi_iqn}
+        actual_iqn = self.client._get_iscsi_iqn()
+        self.assertEqual(expected_value, actual_iqn)
+        self.assertTrue(check_bios_mock.called)
+        get_mock.assert_called_once_with(iscsi_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test__get_iscsi_iqn_fail(self, check_bios_mock, get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_iscsi_iqn)
+        self.assertTrue(check_bios_mock.called)
+        get_mock.assert_called_once_with(iscsi_uri)
