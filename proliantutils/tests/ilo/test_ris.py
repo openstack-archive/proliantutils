@@ -437,6 +437,8 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_get_logical_raid_levels')
+    @mock.patch.object(ris.RISOperations, '_get_drive_type_and_speed')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
     @mock.patch.object(ris.RISOperations,
@@ -451,7 +453,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
                                      secure_mock, boot_mode_mock, gpu_mock,
                                      tpm_mock, cpu_vt_mock, nvdimm_n_mock,
-                                     bios_sriov_mock):
+                                     bios_sriov_mock, drive_mock, raid_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -463,6 +465,10 @@ class IloRisTestCase(testtools.TestCase):
         nvdimm_n_mock.return_value = True
         tpm_mock.return_value = True
         bios_sriov_mock.return_value = 'Disabled'
+        drive_mock.return_value = {'has_rotational': True,
+                                   'rotational_drive_4800_rpm': True,
+                                   'has_ssd': False}
+        raid_mock.return_value = {'logical_raid_volume_0': 'true'}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
@@ -472,10 +478,16 @@ class IloRisTestCase(testtools.TestCase):
                          'cpu_vt': 'true',
                          'nvdimm_n': 'true',
                          'boot_mode_bios': 'false',
-                         'boot_mode_uefi': 'true'}
+                         'boot_mode_uefi': 'true',
+                         'has_rotational': True,
+                         'rotational_drive_4800_rpm': True,
+                         'has_ssd': False,
+                         'logical_raid_volume_0': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
+    @mock.patch.object(ris.RISOperations, '_get_logical_raid_levels')
+    @mock.patch.object(ris.RISOperations, '_get_drive_type_and_speed')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
     @mock.patch.object(ris.RISOperations,
@@ -489,7 +501,8 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities_tp_absent(
             self, get_details_mock, ilo_firm_mock, secure_mock, boot_mode_mock,
-            gpu_mock, tpm_mock, cpu_vt_mock, nvdimm_n_mock, bios_sriov_mock):
+            gpu_mock, tpm_mock, cpu_vt_mock, nvdimm_n_mock, bios_sriov_mock,
+            drive_mock, raid_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -501,6 +514,10 @@ class IloRisTestCase(testtools.TestCase):
         tpm_mock.return_value = False
         cpu_vt_mock.return_value = True
         bios_sriov_mock.return_value = 'Enabled'
+        drive_mock.return_value = {'has_rotational': True,
+                                   'rotational_drive_4800_rpm': True,
+                                   'has_ssd': False}
+        raid_mock.return_value = {'logical_raid_volume_0': 'true'}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
@@ -510,7 +527,11 @@ class IloRisTestCase(testtools.TestCase):
                          'nvdimm_n': 'true',
                          'sriov_enabled': 'true',
                          'boot_mode_bios': 'true',
-                         'boot_mode_uefi': 'true'}
+                         'boot_mode_uefi': 'true',
+                         'has_rotational': True,
+                         'rotational_drive_4800_rpm': True,
+                         'has_ssd': False,
+                         'logical_raid_volume_0': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1768,6 +1789,160 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertRaises(exception.IloCommandNotSupportedError,
                           self.client._get_pci_devices)
         get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_storage_resource(self, get_host_details_mock, get_mock):
+        system_data = json.loads(ris_outputs.REST_GET_SMART_STORAGE)
+        get_host_details_mock.return_value = system_data
+        storage_uri = '/rest/v1/Systems/1/SmartStorage'
+        storage_settings = json.loads(ris_outputs.STORAGE_SETTINGS)
+
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 storage_settings)
+        self.client._get_storage_resource()
+        get_mock.assert_called_once_with(storage_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_storage_resource_fail(self, get_host_details_mock,
+                                        get_mock):
+        system_data = json.loads(ris_outputs.REST_GET_SMART_STORAGE)
+        get_host_details_mock.return_value = system_data
+        storage_uri = '/rest/v1/Systems/1/SmartStorage'
+        storage_settings = json.loads(ris_outputs.STORAGE_SETTINGS)
+
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 storage_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_storage_resource)
+        get_mock.assert_called_once_with(storage_uri)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_storage_resource_not_supported(self,
+                                                 get_host_details_mock):
+        system_data = json.loads(ris_outputs.REST_GET_SMART_STORAGE)
+        del system_data['Oem']['Hp']['links']['SmartStorage']
+        get_host_details_mock.return_value = system_data
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_storage_resource)
+        get_host_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_storage_resource')
+    def test__get_array_controller_resource(self, storage_mock, get_mock):
+        storage_data = json.loads(ris_outputs.STORAGE_SETTINGS)
+        storage_uri = '/rest/v1/Systems/1/SmartStorage'
+        storage_mock.return_value = (ris_outputs.GET_HEADERS,
+                                     storage_uri,
+                                     storage_data)
+        array_uri = '/rest/v1/Systems/1/SmartStorage/ArrayControllers'
+        array_settings = json.loads(ris_outputs.ARRAY_SETTINGS)
+
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 array_settings)
+        self.client._get_array_controller_resource()
+        get_mock.assert_called_once_with(array_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_storage_resource')
+    def test__get_array_controller_resource_fail(self, storage_mock,
+                                                 get_mock):
+        storage_data = json.loads(ris_outputs.STORAGE_SETTINGS)
+        storage_uri = '/rest/v1/Systems/1/SmartStorage'
+        storage_mock.return_value = (ris_outputs.GET_HEADERS,
+                                     storage_uri,
+                                     storage_data)
+        array_uri = '/rest/v1/Systems/1/SmartStorage/ArrayControllers'
+        array_settings = json.loads(ris_outputs.ARRAY_SETTINGS)
+
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 array_settings)
+        self.assertRaises(exception.IloError,
+                          self.client._get_array_controller_resource)
+        get_mock.assert_called_once_with(array_uri)
+
+    @mock.patch.object(ris.RISOperations, '_get_storage_resource')
+    def test__get_array_controller_resource_not_supported(self,
+                                                          storage_mock):
+        storage_data = json.loads(ris_outputs.STORAGE_SETTINGS)
+        storage_uri = '/rest/v1/Systems/1/SmartStorage'
+        del storage_data['links']['ArrayControllers']
+        storage_mock.return_value = (ris_outputs.GET_HEADERS,
+                                     storage_uri,
+                                     storage_data)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_array_controller_resource)
+        storage_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_array_controller_resource')
+    def test__create_list_of_array_controllers(self, array_mock):
+        array_data = json.loads(ris_outputs.ARRAY_SETTINGS)
+        array_uri = '/rest/v1/Systems/1/SmartStorage/ArrayControllers'
+        array_mock.return_value = (ris_outputs.GET_HEADERS,
+                                   array_uri,
+                                   array_data)
+        expected_uri_links = (
+            [{u'href': u'/rest/v1/Systems/1/SmartStorage/ArrayControllers/0'}])
+        uri_links = self.client._create_list_of_array_controllers()
+        self.assertEqual(expected_uri_links, uri_links)
+        array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_array_controller_resource')
+    def test__create_list_of_array_controllers_fail(self, array_mock):
+        array_data = json.loads(ris_outputs.ARRAY_SETTINGS)
+        array_uri = '/rest/v1/Systems/1/SmartStorage/ArrayControllers'
+        del array_data['links']['Member']
+        array_mock.return_value = (ris_outputs.GET_HEADERS,
+                                   array_uri,
+                                   array_data)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._create_list_of_array_controllers)
+        array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_physical_drive_resource')
+    def test__get_drive_type_and_speed(self, disk_details_mock):
+        disk_details_mock.return_value = (
+            json.loads(ris_outputs.DISK_DETAILS_LIST))
+        expected_out = {'has_rotational': 'true',
+                        'rotational_drive_10000_rpm': 'true'}
+        out = self.client._get_drive_type_and_speed()
+        self.assertEqual(expected_out, out)
+        disk_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_create_list_of_array_controllers')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_drive_resource_physical(self, get_mock, array_mock):
+        array_mock.return_value = (
+            [{u'href': u'/rest/v1/Systems/1/SmartStorage/ArrayControllers/0'}])
+        get_mock.side_effect = [(ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.ARRAY_MEM_SETTINGS)),
+                                (ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.DISK_COLLECTION)),
+                                (ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.DISK_DETAILS_LIST))]
+        out = self.client._get_physical_drive_resource()
+        expected_out = []
+        expected_out.append(json.loads(ris_outputs.DISK_DETAILS_LIST))
+        self.assertEqual(expected_out, out)
+        array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_create_list_of_array_controllers')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test__get_drive_resource_logical(self, get_mock, array_mock):
+        array_mock.return_value = (
+            [{u'href': u'/rest/v1/Systems/1/SmartStorage/ArrayControllers/0'}])
+        get_mock.side_effect = [(ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.ARRAY_MEM_SETTINGS)),
+                                (ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.LOGICAL_COLLECTION)),
+                                (ris_outputs.GET_HEADERS, 'xyz',
+                                 json.loads(ris_outputs.LOGICAL_DETAILS))]
+        out = self.client._get_logical_drive_resource()
+        expected_out = []
+        expected_out.append(json.loads(ris_outputs.LOGICAL_DETAILS))
+        self.assertEqual(expected_out, out)
+        array_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_get_pci_devices')
     def test__get_gpu_pci_devices(self, pci_mock):
