@@ -68,7 +68,7 @@ def validate(raid_config):
 
         if (no_of_disks_specified and
                 no_of_disks_specified < min_disks_reqd):
-            msg = ("RAID level %(raid_level)s requires at least %(number) "
+            msg = ("RAID level %(raid_level)s requires at least %(number)s "
                    "disks." % {'raid_level': raid_level,
                                'number': min_disks_reqd})
             raise exception.InvalidInputError(msg)

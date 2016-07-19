@@ -414,13 +414,18 @@ class ManagerTestCases(testtools.TestCase):
 class RaidConfigValidationTestCases(testtools.TestCase):
 
     def test_validate_fails_min_disks_number(self):
-        raid_config = {'size_gb': 100, 'raid_level': 5,
-                       'number_of_physical_disks': 2}
-        self.assertRaises(exception.InvalidInputError,
-                          manager.validate, raid_config)
+        raid_config = {'logical_disks':
+                       [{'size_gb': 100,
+                         'raid_level': '5',
+                         'number_of_physical_disks': 2}]}
+        msg = "RAID level 5 requires at least 3 disks"
+        self.assertRaisesRegex(exception.InvalidInputError, msg,
+                               manager.validate, raid_config)
 
     def test_validate_fails_min_physical_disks(self):
-        raid_config = {'size_gb': 100, 'raid_level': 5,
-                       'physical_disks': ['foo']}
-        self.assertRaises(exception.InvalidInputError,
-                          manager.validate, raid_config)
+        raid_config = {'logical_disks':
+                       [{'size_gb': 100, 'raid_level': '5',
+                         'physical_disks': ['foo']}]}
+        msg = "RAID level 5 requires at least 3 disks"
+        self.assertRaisesRegex(exception.InvalidInputError, msg,
+                               manager.validate, raid_config)
