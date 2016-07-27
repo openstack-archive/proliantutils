@@ -226,7 +226,12 @@ class Server(object):
 
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
-        config = self._get_all_details()
+        try:
+            config = self._get_all_details()
+        except Exception:
+            msg = ("HPSSA controller not found. Enable hpssa controller"
+                   " to continue with the desired operation")
+            raise exception.HPSSAOperationError(reason=msg)
 
         raid_info = _convert_to_dict(config)
         self.controllers = []
