@@ -142,7 +142,11 @@ def _hpssacli(*args, **kwargs):
         stdout, stderr = processutils.execute("hpssacli",
                                               *args, **kwargs)
     except (OSError, processutils.ProcessExecutionError) as e:
-        if not dont_transform_to_hpssa_exception:
+        if 'No controllers detected' in str(e):
+            msg = ("HPSSA controller not found. Enable hpssa controller"
+                   " to continue with the desired operation")
+            raise exception.HPSSAOperationError(reason=msg)
+        elif not dont_transform_to_hpssa_exception:
             raise exception.HPSSAOperationError(reason=e)
         else:
             raise

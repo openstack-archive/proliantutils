@@ -570,3 +570,13 @@ class PrivateMethodsTestCase(testtools.TestCase):
                           objects._hpssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
         execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+
+    @mock.patch.object(processutils, 'execute')
+    def test__hpssacli_raises_error_no_controller(self, execute_mock):
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            raid_constants.HPSSA_NOT_FOUND)
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               objects._hpssacli, "foo", "bar")
+        msg = ("HPSSA controller not found. Enable hpssa controller"
+               " to continue with the desired operation")
+        self.assertIn(msg, str(ex))
