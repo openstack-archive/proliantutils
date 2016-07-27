@@ -104,6 +104,8 @@ class ManagerTestCases(testtools.TestCase):
     def test_create_configuration_invalid_logical_disks(self,
                                                         get_all_details_mock):
 
+        drives = raid_constants.HPSSA_NO_DRIVES
+        get_all_details_mock.return_value = drives
         raid_info = {}
         self.assertRaises(exception.InvalidInputError,
                           manager.create_configuration,
@@ -166,6 +168,20 @@ class ManagerTestCases(testtools.TestCase):
                                 manager.create_configuration,
                                 raid_info)
         self.assertIn("of size 50 GB and raid level 1", str(exc))
+
+    def test_create_configuration_hba_enabled(self, get_all_details_mock):
+        drives = raid_constants.HPSSA_HBA_MODE
+        get_all_details_mock.return_value = drives
+
+        raid_info = {'logical_disks': 'foo'}
+
+        msg = ("An error was encountered while doing hpssa configuration: None"
+               " of the available HPSSA controllers Smart Array P822 in "
+               "Slot 3 have RAID enabled")
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               manager.create_configuration,
+                               raid_info)
+        self.assertIn(msg, str(ex))
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_create_configuration_share_physical_disks(
@@ -368,6 +384,19 @@ class ManagerTestCases(testtools.TestCase):
         get_configuration_mock.assert_called_once_with()
         self.assertEqual('foo', ret)
 
+    @mock.patch.object(manager, 'get_configuration')
+    def test_delete_configuration_hba_enabled(self, get_configuration,
+                                              get_all_details_mock):
+        drives = raid_constants.HPSSA_HBA_MODE
+        get_all_details_mock.return_value = drives
+
+        msg = ("An error was encountered while doing hpssa configuration: None"
+               " of the available HPSSA controllers Smart Array P822 in "
+               "Slot 3 have RAID enabled")
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               manager.delete_configuration)
+        self.assertIn(msg, str(ex))
+
     def test_get_configuration(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
@@ -409,6 +438,28 @@ class ManagerTestCases(testtools.TestCase):
                               '5I:1:4', '6I:1:5']
         self.assertEqual(sorted(pds_active_expected), sorted(pds_active))
         self.assertEqual(sorted(pds_ready_expected), sorted(pds_ready))
+
+    def test__filter_raid_mode_controllers_hba(self, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_HBA_MODE
+
+        server = objects.Server()
+
+        msg = ("An error was encountered while doing hpssa configuration: None"
+               " of the available HPSSA controllers Smart Array P822 in "
+               "Slot 3 have RAID enabled")
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               manager._filter_raid_mode_controllers,
+                               server)
+        self.assertIn(msg, str(ex))
+
+    def test__filter_raid_mode_controllers(self, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
+
+        server = objects.Server()
+        ctrl_expected = server.controllers
+
+        manager._filter_raid_mode_controllers(server)
+        self.assertEqual(ctrl_expected, server.controllers)
 
 
 class RaidConfigValidationTestCases(testtools.TestCase):
