@@ -2231,3 +2231,11 @@ Smart Array P822 in Slot 3
          Serial Number: 2AVVENJN
          Model: HP      EF0600FATFF
 '''
+
+HPSSA_NOT_FOUND = '''
+
+Error: No controllers detected. Possible causes:
+        - The driver for the installed controller(s) is not loaded.
+        - On LINUX, the scsi_generic (sg) driver module is not loaded.
+        See the README file for more details.
+'''
