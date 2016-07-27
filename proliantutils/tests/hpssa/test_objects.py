@@ -570,3 +570,17 @@ class PrivateMethodsTestCase(testtools.TestCase):
                           objects._hpssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
         execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+
+    @mock.patch.object(processutils, 'execute')
+    def test__hpssacli_raises_error_no_controller(self, execute_mock):
+        value = ("Error: No controllers detected. Possible causes:"
+                 " The driver for the installed controller(s) is not loaded."
+                 " On LINUX, the scsi_generic (sg) driver module is not"
+                 " loaded. See the README file for more details.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            value)
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               objects._hpssacli, "foo", "bar")
+        msg = ("HPSSA controller not found. Enable hpssa controller"
+               " to continue with the desired operation")
+        self.assertIn(msg, str(ex))
