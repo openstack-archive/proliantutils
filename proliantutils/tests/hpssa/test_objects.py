@@ -107,6 +107,16 @@ class ServerTest(testtools.TestCase):
         logical_drive = server.controllers[0].raid_arrays[0].logical_drives[0]
         self.assertEqual(constants.RAID_50, logical_drive.raid_level)
 
+    def test_server_object_hpssa_controller_not_found(self,
+                                                      get_all_details_mock):
+        stdout = raid_constants.HPSSA_NOT_FOUND
+        get_all_details_mock.return_value = stdout
+
+        msg = ("HPSSA controller not found. Enable hpssa controller to"
+               " continue with the desired operation")
+        self.assertRaisesRegex(exception.InvalidInputError, msg,
+                               objects.Server().refresh())
+
     def test_get_controller_by_id(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
