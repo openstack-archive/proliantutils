@@ -74,6 +74,29 @@ def validate(raid_config):
             raise exception.InvalidInputError(msg)
 
 
+def _filter_raid_mode_controllers(server):
+    """Filters out the hpssa controllers in raid mode.
+
+    This method updates the server with only the controller which is in raid
+    mode. The controller which are in HBA mode are removed from the list.
+
+    :param server: The object containing all the supported hpssa controllers
+        details.
+    :raises exception.HPSSAOperationError, if all the controller are in HBA
+        mode.
+    """
+    controllers_id = []
+    for controller in server.controllers:
+        hba_mode_enabled = controller.properties.get('HBA Mode Enabled', False)
+        if hba_mode_enabled:
+            controllers_id.append(controller.id)
+            server.controllers.remove(controller)
+    if not server.controllers:
+        reason = ("The available HPSSA controllers %s is/are in HBA mode"
+                  % controllers_id)
+        raise exception.HPSSAOperationError(reason=reason)
+
+
 def create_configuration(raid_config):
     """Create a RAID configuration on this server.
 
@@ -89,10 +112,14 @@ def create_configuration(raid_config):
         controller, physical_disks, etc filled for each logical disk
         after its creation.
     :raises exception.InvalidInputError, if input is invalid.
+    :raises exception.HPSSAOperationError, if all the controller are in HBA
+        mode.
     """
-    validate(raid_config)
-
     server = objects.Server()
+
+    _filter_raid_mode_controllers(server)
+
+    validate(raid_config)
 
     # Make sure we create the large disks first.  This is avoid the
     # situation that we avoid giving large disks to smaller requests.
