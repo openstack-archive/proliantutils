@@ -152,3 +152,23 @@ class ImageExtractionFailed(ProliantUtilsException):
             message = self.message % kwargs
 
         super(ImageExtractionFailed, self).__init__(message)
+
+
+class IloSNMPInvalidInputFailure(IloError):
+    message = "Failed to do SNMP retreival %(reason)s"
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message % kwargs
+
+        super(IloSNMPInvalidInputFailure, self).__init__(message)
+
+
+class IloSNMPExceptionFailure(IloError):
+    message = "SNMP library failed %(reason)s"
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message % kwargs
+
+        super(IloSNMPExceptionFailure, self).__init__(message)
