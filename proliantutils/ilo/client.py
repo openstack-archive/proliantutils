@@ -13,10 +13,12 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
 from proliantutils import log
 
 SUPPORTED_RIS_METHODS = [
@@ -59,7 +61,10 @@ LOG = log.get_logger(__name__)
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
-                 bios_password=None, cacert=None):
+                 bios_password=None, cacert=None, snmp_auth_user=None,
+                 snmp_auth_protocol=None, snmp_auth_prot_pp=None,
+                 snmp_priv_protocol=None, snmp_auth_priv_pp=None,
+                 snmp_inspection=False):
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
         self.ris = ris.RISOperations(host, login, password,
@@ -69,6 +74,12 @@ class IloClient(operations.IloOperations):
         self.host = host
         self.model = self.ribcl.get_product_name()
         self.ribcl.init_model_based_tags(self.model)
+        self.snmp_auth_user = snmp_auth_user
+        self.snmp_auth_protocol = snmp_auth_protocol
+        self.snmp_auth_prot_pp = snmp_auth_prot_pp
+        self.snmp_priv_protocol = snmp_priv_protocol
+        self.snmp_auth_priv_pp = snmp_auth_priv_pp
+        self.snmp_inspection = snmp_inspection
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
 
@@ -348,7 +359,25 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        return self._call_method('get_essential_properties')
+        data = self._call_method('get_essential_properties')
+        if (data['properties']['local_gb'] == 0):
+            if self.snmp_inspection:
+                disksize = snmp.get_local_gb(
+                    self.host,
+                    self.snmp_auth_user,
+                    auth_protocol=self.snmp_auth_protocol,
+                    auth_prot_pp=self.snmp_auth_prot_pp,
+                    priv_protocol=self.snmp_priv_protocol,
+                    auth_priv_pp=self.snmp_auth_priv_pp)
+                if disksize:
+                    data['properties']['local_gb'] = disksize
+                else:
+                    msg = "Snmp inspection failed to get the disk size"
+                    raise exception.IloError(msg)
+            else:
+                msg = "Inspection failed to get the disk size"
+                raise exception.IloError(msg)
+        return data
 
     def get_server_capabilities(self):
         """Get hardware properties which can be used for scheduling
