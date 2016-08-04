@@ -17,10 +17,12 @@
 import mock
 import testtools
 
+from proliantutils import exception
 from proliantutils.ilo import client
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo.snmp import snmp_cpqdisk_sizes
 
 
 class IloClientInitTestCase(testtools.TestCase):
@@ -46,6 +48,64 @@ class IloClientInitTestCase(testtools.TestCase):
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
             c.info)
         self.assertEqual('product', c.model)
+
+    @mock.patch.object(client.IloClient, '_validate_snmp')
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_snmp(self, ris_mock, ribcl_mock, snmp_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+        snmp_credentials = {'auth_user': 'user',
+                            'auth_protocol': 'SHA',
+                            'auth_prot_pp': '1234',
+                            'priv_protocol': 'AES',
+                            'auth_priv_pp': '4321',
+                            'snmp_inspection': True}
+        c = client.IloClient("1.2.3.4", "admin", "Admin",
+                             timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere',
+                             snmp_credentials=snmp_credentials)
+
+        ris_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertEqual('product', c.model)
+        snmp_mock.assert_called_once_with(snmp_credentials=snmp_credentials)
+
+    @mock.patch.object(client.IloClient, '_validate_snmp')
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_snmp_raises(self, ris_mock, ribcl_mock, snmp_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+        snmp_mock.side_effect = exception.IloError("msg")
+        snmp_credentials = {'auth_user': 'user',
+                            'auth_protocol': 'SHA',
+                            'auth_prot_pp': '1234',
+                            'priv_protocol': 'AES',
+                            'auth_priv_pp': '4321',
+                            'snmp_inspection': True}
+        self.assertRaises(exception.IloError, client.IloClient,
+                          "1.2.3.4", "admin", "Admin",
+                          timeout=120,  port=4430,
+                          bios_password='foo',
+                          cacert='/somewhere',
+                          snmp_credentials=snmp_credentials)
+
+        ris_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        snmp_mock.assert_called_once_with(snmp_credentials=snmp_credentials)
 
 
 class IloClientTestCase(testtools.TestCase):
@@ -542,3 +602,99 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.reset_server()
         self.assertTrue(reset_server_mock.called)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    def test_get_essential_prop_no_snmp_ris(self,
+                                            snmp_mock,
+                                            call_mock):
+        self.client.model = 'Gen9'
+        properties = {'local_gb': 250}
+        data = {'properties': properties}
+        call_mock.return_value = data
+        self.client.get_essential_properties()
+        call_mock.assert_called_once_with('get_essential_properties')
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    def test_get_essential_prop_no_snmp_raises(self,
+                                               snmp_mock,
+                                               call_mock):
+        self.client.model = 'Gen9'
+        properties = {'local_gb': 0}
+        data = {'properties': properties}
+        call_mock.return_value = data
+        self.assertRaises(exception.IloError,
+                          self.client.get_essential_properties)
+        call_mock.assert_called_once_with('get_essential_properties')
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    def test_get_essential_prop_snmp_true(self,
+                                          snmp_mock,
+                                          call_mock):
+        self.client.model = 'Gen9'
+        self.client.snmp_auth_user = 'user'
+        self.client.snmp_auth_prot_pp = '1234'
+        self.client.snmp_auth_priv_pp = '4321'
+        self.client.snmp_auth_protocol = 'SHA'
+        self.client.snmp_priv_protocol = 'AES'
+        properties = {'local_gb': 0}
+        data = {'properties': properties}
+        call_mock.return_value = data
+        self.client.snmp_inspection = True
+        snmp_mock.return_value = 250
+        self.client.get_essential_properties()
+        call_mock.assert_called_once_with('get_essential_properties')
+        snmp_mock.assert_called_once_with(self.client.info['address'],
+                                          'user', auth_priv_pp='4321',
+                                          auth_prot_pp='1234',
+                                          auth_protocol='SHA',
+                                          priv_protocol='AES')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    def test_get_essential_prop_snmp_true_raises(self,
+                                                 snmp_mock,
+                                                 call_mock):
+        self.client.model = 'Gen9'
+        self.client.snmp_auth_user = 'user'
+        self.client.snmp_auth_prot_pp = '1234'
+        self.client.snmp_auth_priv_pp = '4321'
+        self.client.snmp_auth_protocol = 'SHA'
+        self.client.snmp_priv_protocol = 'AES'
+        self.client.snmp_inspection = True
+        properties = {'local_gb': 0}
+        data = {'properties': properties}
+        call_mock.return_value = data
+        snmp_mock.return_value = 0
+        self.assertRaises(exception.IloError,
+                          self.client.get_essential_properties)
+        call_mock.assert_called_once_with('get_essential_properties')
+        snmp_mock.assert_called_once_with(self.client.info['address'],
+                                          'user', auth_priv_pp='4321',
+                                          auth_prot_pp='1234',
+                                          auth_protocol='SHA',
+                                          priv_protocol='AES')
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_essential_prop_snmp_false_raises(self, call_mock,
+                                                  snmp_mock):
+
+        self.client.model = 'Gen9'
+        self.client.auth_user = 'user'
+        self.client.auth_prot_pp = '1234'
+        self.client.auth_priv_pp = '4321'
+        self.client.auth_protocol = 'SHA'
+        self.client.priv_protocol = 'AES'
+        self.client.snmp_inspection = False
+        properties = {'local_gb': 0}
+        data = {'properties': properties}
+        call_mock.return_value = data
+        self.assertRaises(exception.IloError,
+                          self.client.get_essential_properties)
+        call_mock.assert_called_once_with('get_essential_properties')
+        self.assertFalse(snmp_mock.called)
