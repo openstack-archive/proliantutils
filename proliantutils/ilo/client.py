@@ -13,10 +13,12 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo.snmp import snmp_cpqdisk_sizes
 from proliantutils import log
 
 SUPPORTED_RIS_METHODS = [
@@ -338,7 +340,9 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method('get_host_power_readings')
 
-    def get_essential_properties(self):
+    def get_essential_properties(self, authUser=None, authProtValue=None,
+                                 privProtValue=None, authProtocol=None,
+                                 privProtocol=None, snmp_inspection=False):
         """Get the essential scheduling properties
 
         :returns: a dictionary containing memory size, disk size,
@@ -348,7 +352,24 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        return self._call_method('get_essential_properties')
+        data = self._call_method('get_essential_properties')
+        if (data['properties']['local_gb'] == 0):
+            if snmp_inspection:
+                disksize = snmp_cpqdisk_sizes.get_local_gb(self.host,
+                                                           authUser,
+                                                           authProtValue,
+                                                           privProtValue,
+                                                           authProtocol,
+                                                           privProtocol)
+                if disksize:
+                    data['properties']['local_gb'] = disksize
+                else:
+                    msg = "Snmp inspection failed to get the disk size"
+                    raise exception.IloError((msg))
+            else:
+                msg = "Inspection failed to get the disk size"
+                raise exception.IloError((msg))
+        return data
 
     def get_server_capabilities(self):
         """Get hardware properties which can be used for scheduling
