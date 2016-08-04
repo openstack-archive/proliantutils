@@ -661,6 +661,26 @@ class RISOperations(operations.IloOperations):
         val = val.rstrip() if val.endswith(" ") else val+" "
         self._change_bios_setting({'CustomPostMessage': val})
 
+    def _patch_snmp_settings(self, property, value):
+        manager, manager_uri = self._get_ilo_details()
+        network_uri = manager['links']['NetworkService']['href']
+        status, headers, network_settings = self._rest_get(network_uri)
+        snmp_uri = network_settings['Oem']['Hp']['links']['SNMPService']['href']
+        new_snmp_settings = {}
+        new_snmp_settings[property] = value
+
+        status, headers, response = self._rest_patch(
+            snmp_uri, None, new_snmp_settings)
+        if status >= 300:
+            msg = self._get_extended_error(response)
+            raise exception.IloError(msg)
+        status, headers, snmp_settings = self._rest_get(snmp_uri)
+        print snmp_settings
+
+
+    def _change_snmp_RC(self, value):
+        self._patch_snmp_settings("ReadCommunities", value)
+
     def _is_boot_mode_uefi(self):
         """Checks if the system is in uefi boot mode.
 
