@@ -18,6 +18,7 @@ from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils import log
+from proliantutils.snmp import snmp_cpqdisk_sizes
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
@@ -338,7 +339,7 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method('get_host_power_readings')
 
-    def get_essential_properties(self):
+    def get_essential_properties(self, snmp_comm_str):
         """Get the essential scheduling properties
 
         :returns: a dictionary containing memory size, disk size,
@@ -348,7 +349,23 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        return self._call_method('get_essential_properties')
+        data = self._call_method('get_essential_properties')
+        if data['properties']['local_gb'] == 0:
+            #snmp_comm_str = 'zTKeKi' 
+            #disk_sizes = snmp_cpqdisk_sizes.get_disksize_MiB(self.host, snmp_comm_str)
+            #self.ribcl._mod_snmp_im_settings(snmp_comm_str)
+            #self.ris._change_snmp_RC(snmp_comm_str)
+            disk_sizes = snmp_cpqdisk_sizes.get_disksize_MiB(self.host, snmp_comm_str)
+            import pdb
+            pdb.set_trace()
+            max_size = 0
+            for uuid in disk_sizes:
+                for key in disk_sizes[uuid]:
+                    print disk_sizes[uuid][key]
+                    if disk_sizes[uuid][key] > max_size:
+                        max_size = disk_sizes[uuid][key]
+            data['properties']['local_gb'] = max_size
+        return data
 
     def get_server_capabilities(self):
         """Get hardware properties which can be used for scheduling

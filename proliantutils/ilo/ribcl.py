@@ -484,6 +484,12 @@ class RIBCLOperations(operations.IloOperations):
             'SET_PENDING_BOOT_MODE', 'SERVER_INFO', 'write', dic)
         return data
 
+    def _mod_snmp_im_settings(self, read_comm_str):
+        dic = {'SNMP_ADDRESS_1_ROCOMMUNITY': {'VALUE': read_comm_str}}
+        data = self._execute_command(
+            'MOD_SNMP_IM_SETTINGS', 'RIB_INFO', 'write', dic)
+        return data 
+
     def _get_persistent_boot(self):
         """Retrieves the current boot mode settings."""
         data = self._execute_command(
