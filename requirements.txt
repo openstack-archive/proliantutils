@@ -3,3 +3,4 @@ oslo.concurrency>=1.8.0
 oslo.utils>=1.4.0
 jsonschema>=2.4.0
 requests>=2.7.0
+pysnmp>=4.3.2
