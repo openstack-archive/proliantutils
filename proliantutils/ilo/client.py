@@ -13,10 +13,12 @@
 # under the License.
 """IloClient module"""
 
+from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
 from proliantutils import log
 
 SUPPORTED_RIS_METHODS = [
@@ -59,7 +61,7 @@ LOG = log.get_logger(__name__)
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
-                 bios_password=None, cacert=None):
+                 bios_password=None, cacert=None, snmp_credentials={}):
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
         self.ris = ris.RISOperations(host, login, password,
@@ -69,8 +71,42 @@ class IloClient(operations.IloOperations):
         self.host = host
         self.model = self.ribcl.get_product_name()
         self.ribcl.init_model_based_tags(self.model)
+        self._validate_snmp(snmp_credentials=snmp_credentials)
+        self.snmp_auth_user = snmp_credentials.get('auth_user')
+        self.snmp_auth_protocol = snmp_credentials.get('auth_protocol')
+        self.snmp_auth_prot_pp = snmp_credentials.get('auth_prot_pp')
+        self.snmp_priv_protocol = snmp_credentials.get('priv_protocol')
+        self.snmp_auth_priv_pp = snmp_credentials.get('auth_priv_pp')
+        self.snmp_inspection = snmp_credentials.get('snmp_inspection')
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
+
+    def _validate_snmp(self, snmp_credentials={}):
+        """Validates SNMP credentials.
+
+        :param snmp_credentials: the dictionary of snmp credentials.
+        :raises exception.IloError
+        """
+
+        if snmp_credentials.get('snmp_inspection') == 'True':
+            if (not snmp_credentials['auth_user']
+                    or not snmp_credentials['auth_protocol']
+                    or not snmp_credentials['auth_prot_pp']
+                    or not snmp_credentials['priv_protocol']
+                    or not snmp_credentials['auth_priv_pp']):
+                raise exception.IloError("SNMP credentials missing")
+            auth_protocol = snmp_credentials.get('auth_protocol')
+            if auth_protocol != "SHA" and auth_protocol != "MD5":
+                raise exception.IloError('Invalid SNMP auth protocol '
+                                         ' provided %s. Valid values '
+                                         'are "SHA" or "MD5"',
+                                         auth_protocol)
+            priv_protocol = snmp_credentials.get('priv_protocol')
+            if priv_protocol != "AES" and priv_protocol != "DES":
+                raise exception.IloError('Invalid privacy protocol '
+                                         ' provided %s. Valid values '
+                                         'are "AES" or "DES"',
+                                         priv_protocol)
 
     def _call_method(self, method_name, *args, **kwargs):
         """Call the corresponding method using either RIBCL or RIS."""
@@ -348,7 +384,25 @@ class IloClient(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        return self._call_method('get_essential_properties')
+        data = self._call_method('get_essential_properties')
+        if (data['properties']['local_gb'] == 0):
+            if self.snmp_inspection:
+                disksize = snmp.get_local_gb(
+                    self.host,
+                    self.snmp_auth_user,
+                    auth_protocol=self.snmp_auth_protocol,
+                    auth_prot_pp=self.snmp_auth_prot_pp,
+                    priv_protocol=self.snmp_priv_protocol,
+                    auth_priv_pp=self.snmp_auth_priv_pp)
+                if disksize:
+                    data['properties']['local_gb'] = disksize
+                else:
+                    msg = "Snmp inspection failed to get the disk size"
+                    raise exception.IloError(msg)
+            else:
+                msg = "Inspection failed to get the disk size"
+                raise exception.IloError(msg)
+        return data
 
     def get_server_capabilities(self):
         """Get hardware properties which can be used for scheduling
