@@ -21,6 +21,7 @@ from proliantutils.ilo import client
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
+from proliantutils.ilo.snmp import snmp_cpqdisk_sizes
 
 
 class IloClientInitTestCase(testtools.TestCase):
@@ -542,3 +543,208 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen8'
         self.client.reset_server()
         self.assertTrue(reset_server_mock.called)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_no_snmp_ribcl(self, prop_mock,
+                                              snmp_mock):
+        self.client.model = 'Gen8'
+        data['properties']['local_gb'] = 250
+        prop_mock.return_value = data
+        self.client.get_essential_properties()
+        prop_mock.assert_called_once_with()
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_false_ribcl(self, prop_mock,
+                                                 snmp_mock):
+        self.client.model = 'Gen8'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = False
+        self.client.get_essential_properties(authUser,
+                                             authProtValue,
+                                             privProtValue,
+                                             authProtocol,
+                                             privProtocol,
+                                             snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_true_ribcl(self, prop_mock,
+                                              snmp_mock):
+        self.client.model = 'Gen8'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = True
+        self.client.get_essential_properties(authUser,
+                                             authProtValue,
+                                             privProtValue,
+                                             authProtocol,
+                                             privProtocol,
+                                             snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        snmp_mock.assert_called_once_with(self.host,
+                                          authUser, authProtValue,
+                                          privProtValue, authProtocol,
+                                          privProtocol) 
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ris.RISOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_no_snmp_ris(self, prop_mock,
+                                              snmp_mock):
+        self.client.model = 'Gen9'
+        data['properties']['local_gb'] = 250
+        prop_mock.return_value = data
+        self.client.get_essential_properties()
+        prop_mock.assert_called_once_with()
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ris.RISOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_false_ris(self, prop_mock,
+                                               snmp_mock):
+        self.client.model = 'Gen9'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = False
+        self.client.get_essential_properties(authUser,
+                                             authProtValue,
+                                             privProtValue,
+                                             authProtocol,
+                                             privProtocol,
+                                             snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        self.assertFalse(snmp_mock.called)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ris.RISOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_true_ris(self, prop_mock,
+                                              snmp_mock):
+        self.client.model = 'Gen9'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = True
+        snmp_mock.return_value = 250
+        self.client.get_essential_properties(authUser,
+                                             authProtValue,
+                                             privProtValue,
+                                             authProtocol,
+                                             privProtocol,
+                                             snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        snmp_mock.assert_called_once_with(self.host,
+                                          authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ris.RISOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_true_raises(self, prop_mock,
+                                                 snmp_mock):
+        self.client.model = 'Gen9'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = True
+        snmp_mock.return_value = 0
+        self.assertRaises(exception.IloError,
+                          self.client.get_essential_properties,
+                          authUser, authProtValue, privProtValue,
+                          authProtocol, privProtocol,
+                          snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        snmp_mock.assert_called_once_with(self.host,
+                                          authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol)
+
+    @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
+    @mock.patch.object(ris.RISOperations,
+                       'get_essential_properties')
+    def test_get_essential_prop_snmp_false_raises(self, prop_mock,
+                                                  snmp_mock):
+        self.client.model = 'Gen9'
+        data['properties']['local_gb'] = 0
+        prop_mock.return_value = data
+        authUser = 'user'
+        authProtValue = '1234'
+        privProtValue = '4321'
+        authProtocol = 'SHA'
+        privProtocol = 'AES'
+        snmp_inspection = False
+        self.assertRaises(exception.IloError,
+                          self.client.get_essential_properties,
+                          authUser, authProtValue, privProtValue,
+                          authProtocol, privProtocol,
+                          snmp_inspection)
+        prop_mock.assert_called_once_with(authUser,
+                                          authProtValue,
+                                          privProtValue,
+                                          authProtocol,
+                                          privProtocol,
+                                          snmp_inspection)
+        self.assertFalse(snmp_mock.called)
