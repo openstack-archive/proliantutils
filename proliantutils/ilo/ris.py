@@ -120,7 +120,7 @@ class RISOperations(operations.IloOperations):
             try:
                 response = request_method(url.geturl(), **kwargs)
             except Exception as e:
-                LOG.exception(self._("An error occurred while "
+                LOG.debug(self._("An error occurred while "
                                      "contacting iLO. Error: %s"), e)
                 raise exception.IloConnectionError(e)
 
@@ -144,7 +144,7 @@ class RISOperations(operations.IloOperations):
             msg = (self._("URL Redirected 5 times continuously. "
                           "URL incorrect: %(start_url)s") %
                    {'start_url': start_url})
-            LOG.error(msg)
+            LOG.debug(msg)
             raise exception.IloConnectionError(msg)
 
         response_body = {}
@@ -167,7 +167,7 @@ class RISOperations(operations.IloOperations):
                     uncompressed_string = gzipper.read().decode('UTF-8')
                     response_body = json.loads(uncompressed_string)
                 except Exception as e:
-                    LOG.error(self._("Got invalid response "
+                    LOG.debug(self._("Got invalid response "
                                      "'%(response)s' for url %(url)s."),
                               {'url': url.geturl(),
                                'response': response.text})
@@ -1563,7 +1563,7 @@ class RISOperations(operations.IloOperations):
 
         if state == "ERROR":
             msg = 'Error in firmware update'
-            LOG.error(self._(msg))  # noqa
+            LOG.debug(self._(msg))  # noqa
             raise exception.IloError(msg)
         elif state == "UNKNOWN":
             msg = 'Status of firmware update not known'
