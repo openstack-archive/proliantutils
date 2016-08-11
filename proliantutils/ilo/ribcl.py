@@ -119,8 +119,8 @@ class RIBCLOperations(operations.IloOperations):
             response = requests.post(urlstr, **kwargs)
             response.raise_for_status()
         except Exception as e:
-            LOG.exception(self._("An error occurred while "
-                                 "contacting iLO. Error: %s"), e)
+            LOG.debug(self._("An error occurred while "
+                             "contacting iLO. Error: %s"), e)
             raise exception.IloConnectionError(e)
         return response.text
 
@@ -278,24 +278,24 @@ class RIBCLOperations(operations.IloOperations):
                             platform = self.get_product_name()
                             msg = ("%(cmd)s is not supported on %(platform)s" %
                                    {'cmd': cmd, 'platform': platform})
-                            LOG.error(self._("Got invalid response with "
+                            LOG.debug(self._("Got invalid response with "
                                              "message: '%(message)s'"),
                                       {'message': msg})
                             raise (exception.IloCommandNotSupportedError
                                    (msg, status))
                     else:
-                        LOG.error(self._("Got invalid response with "
+                        LOG.debug(self._("Got invalid response with "
                                          "message: '%(message)s'"),
                                   {'message': msg})
                         raise exception.IloClientInternalError(msg, status)
                 if (status in exception.IloLoginFailError.statuses or
                         msg in exception.IloLoginFailError.messages):
-                    LOG.error(self._("Got invalid response with "
+                    LOG.debug(self._("Got invalid response with "
                                      "message: '%(message)s'"),
                               {'message': msg})
                     raise exception.IloLoginFailError(msg, status)
 
-                LOG.error(self._("Got invalid response with "
+                LOG.debug(self._("Got invalid response with "
                                  "message: '%(message)s'"),
                           {'message': msg})
                 raise exception.IloError(msg, status)
