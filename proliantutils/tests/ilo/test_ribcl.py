@@ -107,7 +107,7 @@ class IloRibclTestCase(unittest.TestCase):
 
         post_mock.assert_called_once_with(
             'https://x.x.x.x:443/ribcl',
-            headers={"Content-length": 14},
+            headers={"Content-length": '14'},
             data='serialized-xml',
             verify=False)
         response_mock.raise_for_status.assert_called_once_with()
@@ -127,7 +127,7 @@ class IloRibclTestCase(unittest.TestCase):
 
         post_mock.assert_called_once_with(
             'https://x.x.x.x:443/ribcl',
-            headers={"Content-length": 14},
+            headers={"Content-length": '14'},
             data='serialized-xml',
             verify='/somepath')
         response_mock.raise_for_status.assert_called_once_with()
@@ -145,7 +145,7 @@ class IloRibclTestCase(unittest.TestCase):
 
         post_mock.assert_called_once_with(
             'https://x.x.x.x:443/ribcl',
-            headers={"Content-length": 14},
+            headers={"Content-length": '14'},
             data='serialized-xml',
             verify=False)
 

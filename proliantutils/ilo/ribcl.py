@@ -101,7 +101,7 @@ class RIBCLOperations(operations.IloOperations):
         else:
             urlstr = 'https://%s/ribcl' % (self.host)
         xml = self._serialize_xml(root)
-        headers = {"Content-length": len(xml)}
+        headers = {"Content-length": str(len(xml))}
         if extra_headers:
             headers.update(extra_headers)
 
