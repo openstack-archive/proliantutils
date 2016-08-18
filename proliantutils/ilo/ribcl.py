@@ -72,8 +72,14 @@ class RIBCLOperations(operations.IloOperations):
     Implements the base class using RIBCL scripting language to talk
     to the iLO.
     """
+
     def __init__(self, host, login, password, timeout=60, port=443,
                  cacert=None):
+        """Constructor for RIBCLOperations.
+
+        Also initialize the model based tags by making an explicit call to
+        ``init_model_based_tags`` whenever a RIBCl object is created.
+        """
         self.host = host
         self.login = login
         self.password = password
@@ -87,6 +93,30 @@ class RIBCLOperations(operations.IloOperations):
         # Just disable the warning if user intentionally did this.
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
+
+    def init_model_based_tags(self, model):
+        """Initializing the model based memory and NIC information tags.
+
+        It should be called just after instantiating a RIBCL object.
+
+            ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
+                                           port, cacert=cacert)
+            model = ribcl.get_product_name()
+            ribcl.init_model_based_tags(model)
+
+        Again, model attribute is also set here on the RIBCL object.
+
+        :param model: the model string
+        """
+        self.model = model
+        if 'G7' in self.model:
+            self.MEMORY_SIZE_TAG = "MEMORY_SIZE"
+            self.MEMORY_SIZE_NOT_PRESENT_TAG = "Not Installed"
+            self.NIC_INFORMATION_TAG = "NIC_INFOMATION"
+        else:
+            self.MEMORY_SIZE_TAG = "TOTAL_MEMORY_SIZE"
+            self.MEMORY_SIZE_NOT_PRESENT_TAG = "N/A"
+            self.NIC_INFORMATION_TAG = "NIC_INFORMATION"
 
     def _request_ilo(self, root, extra_headers=None):
         """Send RIBCL XML data to iLO.
@@ -752,10 +782,10 @@ class RIBCLOperations(operations.IloOperations):
         :raises:IloError if iLO returns an error in command execution.
 
         """
-
         data = self.get_host_health_data()
-        properties = {}
-        properties['memory_mb'] = self._parse_memory_embedded_health(data)
+        properties = {
+            'memory_mb': self._parse_memory_embedded_health(data)
+        }
         cpus, cpu_arch = self._parse_processor_embedded_health(data)
         properties['cpus'] = cpus
         properties['cpu_arch'] = cpu_arch
@@ -809,25 +839,23 @@ class RIBCLOperations(operations.IloOperations):
         :param data: the output returned by get_host_health_data()
         :returns: memory size in MB.
         :raises IloError, if unable to get the memory details.
-
         """
         memory_mb = 0
-        memory = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
-                                        ['MEMORY']), 'MEMORY_DETAILS_SUMMARY')
+        memory = self._get_memory_details_value_based_on_model(data)
+
         if memory is None:
             msg = "Unable to get memory data. Error: Data missing"
             raise exception.IloError(msg)
 
         total_memory_size = 0
-        for item in memory:
-            for val in item.values():
-                memsize = val['TOTAL_MEMORY_SIZE']['VALUE']
-                if memsize != 'N/A':
-                    memory_bytes = (
-                        strutils.string_to_bytes(
-                            memsize.replace(' ', ''), return_int=True))
-                    memory_mb = int(memory_bytes / (1024 * 1024))
-                    total_memory_size = total_memory_size + memory_mb
+        for memory_item in memory:
+            memsize = memory_item[self.MEMORY_SIZE_TAG]["VALUE"]
+            if memsize != self.MEMORY_SIZE_NOT_PRESENT_TAG:
+                memory_bytes = (
+                    strutils.string_to_bytes(
+                        memsize.replace(" ", ""), return_int=True))
+                memory_mb = int(memory_bytes / (1024 * 1024))
+                total_memory_size = total_memory_size + memory_mb
         return total_memory_size
 
     def _parse_processor_embedded_health(self, data):
@@ -943,7 +971,8 @@ class RIBCLOperations(operations.IloOperations):
 
         """
         nic_data = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
-                                          ['NIC_INFORMATION']), 'NIC')
+                                          [self.NIC_INFORMATION_TAG]), 'NIC')
+
         if nic_data is None:
             msg = "Unable to get NIC details. Data missing"
             raise exception.IloError(msg)
@@ -952,12 +981,14 @@ class RIBCLOperations(operations.IloOperations):
             try:
                 port = item['NETWORK_PORT']['VALUE']
                 mac = item['MAC_ADDRESS']['VALUE']
-                location = item['LOCATION']['VALUE']
-                if location == 'Embedded':
-                    nic_dict[port] = mac
+                self._update_nic_data_from_nic_info_based_on_model(nic_dict,
+                                                                   item, port,
+                                                                   mac)
+
             except KeyError:
                 msg = "Unable to get NIC details. Data missing"
                 raise exception.IloError(msg)
+
         return nic_dict
 
     def _get_firmware_embedded_health(self, data):
@@ -1125,6 +1156,35 @@ class RIBCLOperations(operations.IloOperations):
                                             'IMAGE_LENGTH': str(fwlen)
                                         })
         return root
+
+    def _get_memory_details_value_based_on_model(self, data):
+        """This method gives memory details based on model.
+
+        :param data: the output returned by get_host_health_data()
+        :returns : a list of memory details.
+        """
+        if 'G7' in self.model:
+            return (data['GET_EMBEDDED_HEALTH_DATA']['MEMORY']
+                    ['MEMORY_COMPONENTS']['MEMORY_COMPONENT'])
+        else:
+            return (data['GET_EMBEDDED_HEALTH_DATA']['MEMORY']
+                    ['MEMORY_DETAILS_SUMMARY']).values()
+
+    def _update_nic_data_from_nic_info_based_on_model(self, nic_dict, item,
+                                                      port, mac):
+        """This method updates with port number and corresponding mac
+
+        :param nic_dict: dictionary contains port number and corresponding mac
+        :param item: dictionary containing nic details
+        :param port: Port number
+        :param mac: mac-address
+        """
+        if 'G7' in self.model:
+            nic_dict[port] = mac
+        else:
+            location = item['LOCATION']['VALUE']
+            if location == 'Embedded':
+                nic_dict[port] = mac
 
 
 # The below block of code is there only for backward-compatibility
