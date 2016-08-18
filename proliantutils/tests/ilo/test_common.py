@@ -32,13 +32,15 @@ class IloCommonModuleTestCase(unittest.TestCase):
 
     def setUp(self):
         # | BEFORE_EACH |
-        super(IloCommonModuleTestCase, self).setUp()
-        self.ribcl = ribcl.RIBCLOperations("x.x.x.x", "admin", "Admin",
-                                           60, 443)
-        self.ris = ris.RISOperations("x.x.x.x", "admin", "Admin",
-                                     60, 443)
-        self.any_scexe_file = 'any_file.scexe'
-        self.any_rpm_file = 'any_file.rpm'
+        with mock.patch.object(ribcl.RIBCLOperations, 'get_product_name',
+                               lambda x: 'ProLiant DL580 Gen8'):
+            super(IloCommonModuleTestCase, self).setUp()
+            self.ribcl = ribcl.RIBCLOperations("x.x.x.x", "admin", "Admin",
+                                               60, 443)
+            self.ris = ris.RISOperations("x.x.x.x", "admin", "Admin",
+                                         60, 443)
+            self.any_scexe_file = 'any_file.scexe'
+            self.any_rpm_file = 'any_file.rpm'
 
     @mock.patch.object(time, 'sleep', lambda x: None)
     @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
