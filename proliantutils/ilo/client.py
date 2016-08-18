@@ -68,6 +68,7 @@ class IloClient(operations.IloOperations):
         self.info = {'address': host, 'username': login, 'password': password}
         self.host = host
         self.model = self.ribcl.get_product_name()
+        self.ribcl.init_model_based_tags(self.model)
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
 
