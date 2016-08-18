@@ -752,10 +752,14 @@ class RIBCLOperations(operations.IloOperations):
         :raises:IloError if iLO returns an error in command execution.
 
         """
-
+        model = self.get_product_name()
         data = self.get_host_health_data()
         properties = {}
-        properties['memory_mb'] = self._parse_memory_embedded_health(data)
+        if 'G7' in model:
+            properties['memory_mb'] = self._parse_memory_embedded_health_gen7(
+                data)
+        else:
+            properties['memory_mb'] = self._parse_memory_embedded_health(data)
         cpus, cpu_arch = self._parse_processor_embedded_health(data)
         properties['cpus'] = cpus
         properties['cpu_arch'] = cpu_arch
@@ -802,6 +806,33 @@ class RIBCLOperations(operations.IloOperations):
         capabilities.update({'server_model': self.get_product_name()})
         capabilities.update(self._get_number_of_gpu_devices_connected(data))
         return capabilities
+
+    def _parse_memory_embedded_health_gen7(self, data):
+        """Parse the get_host_health_data() for essential properties
+
+        :param data: the output returned by get_host_health_data()
+        :returns: memory size in MB.
+        :raises IloError, if unable to get the memory details.
+
+        """
+        memory_mb = 0
+        memory = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                        ['MEMORY']['MEMORY_COMPONENTS']),
+                                        'MEMORY_COMPONENT')
+        if memory is None:
+            msg = "Unable to get memory data. Error: Data missing"
+            raise exception.IloError(msg)
+
+        total_memory_size = 0
+        for item in memory:
+            memsize = item['MEMORY_SIZE']['VALUE']
+            if memsize != 'Not Installed':
+                memory_bytes = (
+                    strutils.string_to_bytes(
+                        memsize.replace(' ', ''), return_int=True))
+                memory_mb = int(memory_bytes / (1024 * 1024))
+                total_memory_size = total_memory_size + memory_mb
+        return total_memory_size
 
     def _parse_memory_embedded_health(self, data):
         """Parse the get_host_health_data() for essential properties
@@ -942,8 +973,13 @@ class RIBCLOperations(operations.IloOperations):
         :raises IloError, if unable to get NIC data.
 
         """
-        nic_data = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
-                                          ['NIC_INFORMATION']), 'NIC')
+        model = self.get_product_name()
+        if 'G7' in model:
+            nic_data = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                              ['NIC_INFOMATION']), 'NIC')
+        else:
+            nic_data = self.get_value_as_list((data['GET_EMBEDDED_HEALTH_DATA']
+                                              ['NIC_INFORMATION']), 'NIC')
         if nic_data is None:
             msg = "Unable to get NIC details. Data missing"
             raise exception.IloError(msg)
@@ -952,9 +988,12 @@ class RIBCLOperations(operations.IloOperations):
             try:
                 port = item['NETWORK_PORT']['VALUE']
                 mac = item['MAC_ADDRESS']['VALUE']
-                location = item['LOCATION']['VALUE']
-                if location == 'Embedded':
+                if 'G7' in model:
                     nic_dict[port] = mac
+                else:
+                    location = item['LOCATION']['VALUE']
+                    if location == 'Embedded':
+                        nic_dict[port] = mac
             except KeyError:
                 msg = "Unable to get NIC details. Data missing"
                 raise exception.IloError(msg)
