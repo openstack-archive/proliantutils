@@ -61,6 +61,8 @@ class MaskedRequestDataTestCase(unittest.TestCase):
         self.assertIn(xml_data, str(self.maskedRequestData))
 
 
+@mock.patch.object(ribcl.RIBCLOperations, 'get_product_name',
+                   lambda x: 'ProLiant DL580 Gen8')
 class IloRibclTestCaseInitTestCase(unittest.TestCase):
 
     @mock.patch.object(urllib3, 'disable_warnings')
@@ -94,7 +96,23 @@ class IloRibclTestCase(unittest.TestCase):
 
     def setUp(self):
         super(IloRibclTestCase, self).setUp()
-        self.ilo = ribcl.RIBCLOperations("x.x.x.x", "admin", "Admin", 60, 443)
+        self.ilo = ribcl.RIBCLOperations("x.x.x.x", "admin",
+                                         "Admin", 60, 443)
+        self.ilo.init_model_based_tags('ProLiant DL580 Gen8')
+
+    def test_init_model_based_tags_gen7(self):
+        self.model = 'Proliant DL380 G7'
+        self.ilo.init_model_based_tags(self.model)
+        self.assertEqual(self.ilo.MEMORY_SIZE_TAG, "MEMORY_SIZE")
+        self.assertEqual(self.ilo.MEMORY_SIZE_NOT_PRESENT_TAG, "Not Installed")
+        self.assertEqual(self.ilo.NIC_INFORMATION_TAG, "NIC_INFOMATION")
+
+    def test_init_model_based_tags(self):
+        self.model = 'ProLiant DL580 Gen8'
+        self.ilo.init_model_based_tags(self.model)
+        self.assertEqual(self.ilo.MEMORY_SIZE_TAG, "TOTAL_MEMORY_SIZE")
+        self.assertEqual(self.ilo.MEMORY_SIZE_NOT_PRESENT_TAG, "N/A")
+        self.assertEqual(self.ilo.NIC_INFORMATION_TAG, "NIC_INFORMATION")
 
     @mock.patch.object(ribcl.RIBCLOperations, '_serialize_xml')
     @mock.patch.object(requests, 'post')
@@ -826,6 +844,45 @@ class IloRibclTestCase(unittest.TestCase):
                           self.ilo.update_firmware,
                           'raw_fw_file.bin',
                           'invalid_component')
+
+    def test__get_memory_details_value_based_on_model_gen7(self):
+        self.ilo.model = 'Proliant DL380 G7'
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_GEN7
+        self.assertIn('MEMORY_COMPONENTS', data)
+        self.assertIn('MEMORY_COMPONENT', data)
+
+    def test__get_memory_details_value_based_on_model(self):
+        self.ilo.model = 'ProLiant DL580 Gen8'
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
+        self.assertIn('MEMORY_DETAILS_SUMMARY', data)
+
+    def test__update_nic_data_from_nic_info_based_on_model_gen7(self):
+        self.ilo.model = 'Proliant DL380 G7'
+        nic_dict = {}
+        item = {'NETWORK_PORT': {'VALUE': 'Port 1'},
+                'MAC_ADDRESS': {'VALUE': '78:ac:c0:fe:49:60'}}
+        port = 'Port 1'
+        mac = '78:ac:c0:fe:49:60'
+        expected_result = {'Port 1': '78:ac:c0:fe:49:60'}
+        self.ilo._update_nic_data_from_nic_info_based_on_model(
+            nic_dict, item, port, mac)
+        self.assertEqual(expected_result, nic_dict)
+
+    def test__update_nic_data_from_nic_info_based_on_model(self):
+        self.ilo.model = 'ProLiant DL580 Gen8'
+        nic_dict = {}
+        item = {'NETWORK_PORT': {'VALUE': 'Port 1'},
+                'STATUS': {'VALUE': 'Unknown'},
+                'PORT_DESCRIPTION': {'VALUE': 'N/A'},
+                'LOCATION': {'VALUE': 'Embedded'},
+                'MAC_ADDRESS': {'VALUE': '40:a8:f0:1e:86:74'},
+                'IP_ADDRESS': {'VALUE': 'N/A'}}
+        port = 'Port 1'
+        mac = '40:a8:f0:1e:86:74'
+        expected_result = {'Port 1': '40:a8:f0:1e:86:74'}
+        self.ilo._update_nic_data_from_nic_info_based_on_model(
+            nic_dict, item, port, mac)
+        self.assertEqual(expected_result, nic_dict)
 
 
 class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
