@@ -1231,6 +1231,201 @@ GET_HOST_POWER_READINGS = '''
 </RIBCL>
 '''
 
+GET_EMBEDDED_HEALTH_OUTPUT_GEN7 = '''
+{
+    "GET_EMBEDDED_HEALTH_DATA": {
+        "MEMORY": {
+            "MEMORY_COMPONENTS": {
+                "MEMORY_COMPONENT": [
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "0 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "Not Installed"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 1G"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "1333 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "8192 MB"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 2D"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "1333 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "8192 MB"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 3A"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "0 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "Not Installed"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 4H"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "1333 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "8192 MB"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 5E"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "0 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "Not Installed"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 6B"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "1333 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "8192 MB"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 7I"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "0 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "Not Installed"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 8F"
+                        }
+                    },
+                    {
+                        "MEMORY_SPEED": {
+                            "VALUE": "0 MHz"
+                        },
+                        "MEMORY_SIZE": {
+                            "VALUE": "Not Installed"
+                        },
+                        "MEMORY_LOCATION": {
+                            "VALUE": "PROC 1 DIMM 9C"
+                        }
+                    }
+                ]
+            }
+        },
+        "NIC_INFOMATION": {
+            "NIC": [
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:60"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 1"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:62"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 2"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:64"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 3"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:66"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 4"
+                    }
+                }
+            ],
+            "iSCSI": [
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:61"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 1"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:63"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 2"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:65"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 3"
+                    }
+                },
+                {
+                    "MAC_ADDRESS": {
+                        "VALUE": "78:ac:c0:fe:49:67"
+                    },
+                    "NETWORK_PORT": {
+                        "VALUE": "Port 4"
+                    }
+                }
+            ],
+            "iLO": {
+                "MAC_ADDRESS": {
+                    "VALUE": "78:ac:c0:fe:49:68"
+                },
+                "NETWORK_PORT": {
+                    "VALUE": "iLO Dedicated Network Port"
+                }
+            }
+        }
+    },
+    "RESPONSE": {
+        "MESSAGE": "No error",
+        "STATUS": "0x0000"
+    },
+    "VERSION": "2.23"
+}
+'''
+
 GET_EMBEDDED_HEALTH_OUTPUT = '''
 {
     "GET_EMBEDDED_HEALTH_DATA": {
