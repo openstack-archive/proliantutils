@@ -527,16 +527,44 @@ class IloRibclTestCase(unittest.TestCase):
                           self.ilo._parse_processor_embedded_health,
                           json_data)
 
-    def test__parse_memory_embedded_health(self):
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test__parse_memory_embedded_health_gen7(self, server_mock):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_GEN7
+        json_data = json.loads(data)
+        server_mock.return_value = 'Proliant DL380 G7'
+        memory_mb = self.ilo._parse_memory_embedded_health_gen7(json_data)
+        self.assertEqual('32768', str(memory_mb))
+        self.assertTrue(type(memory_mb), int)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test__parse_memory_embedded_health(self, server_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
+        server_mock.return_value = 'ProLiant DL580 Gen8'
         memory_mb = self.ilo._parse_memory_embedded_health(json_data)
         self.assertEqual('32768', str(memory_mb))
         self.assertTrue(type(memory_mb), int)
 
-    def test__parse_nics_embedded_health(self):
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test__parse_nics_embedded_health_gen7(self, server_mock):
+        data = constants.GET_EMBEDDED_HEALTH_OUTPUT_GEN7
+        json_data = json.loads(data)
+        server_mock.return_value = 'Proliant DL380 G7'
+        expected_output = {u'Port 4': u'78:ac:c0:fe:49:66',
+                           u'Port 3': u'78:ac:c0:fe:49:64',
+                           u'Port 2': u'78:ac:c0:fe:49:62',
+                           u'Port 1': u'78:ac:c0:fe:49:60'}
+        nic_data = self.ilo._parse_nics_embedded_health(json_data)
+        self.assertIsInstance(nic_data, dict)
+        for key, val in nic_data.items():
+            self.assertIn("Port", key)
+        self.assertEqual(expected_output, nic_data)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test__parse_nics_embedded_health(self, server_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
+        server_mock.return_value = 'ProLiant DL580 Gen8'
         expected_output = {u'Port 4': u'40:a8:f0:1e:86:77',
                            u'Port 3': u'40:a8:f0:1e:86:76',
                            u'Port 2': u'40:a8:f0:1e:86:75',
@@ -648,11 +676,13 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsInstance(gpu_cnt, dict)
         self.assertIn('pci_gpu_devices', gpu_cnt)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    def test_get_essential_properties(self, health_data_mock):
+    def test_get_essential_properties(self, health_data_mock, server_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         health_data_mock.return_value = json_data
+        server_mock.return_value = 'ProLiant DL580 Gen8'
         expected_properties = {'macs': {
                                u'Port 4': u'40:a8:f0:1e:86:77',
                                u'Port 3': u'40:a8:f0:1e:86:76',
