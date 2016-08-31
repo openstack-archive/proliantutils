@@ -74,6 +74,29 @@ def validate(raid_config):
             raise exception.InvalidInputError(msg)
 
 
+def _filter_raid_mode_controllers(server):
+    """Filters out the hpssa controllers in raid mode.
+
+    This method updates the server with only the controller which is in raid
+    mode. The controller which are in HBA mode are removed from the list.
+
+    :param server: The object containing all the supported hpssa controllers
+        details.
+    :raises exception.HPSSAOperationError, if all the controller are in HBA
+        mode.
+    """
+    all_controllers = server.controllers
+    non_hba_controllers = [c for c in all_controllers
+                           if not c.properties.get('HBA Mode Enabled', False)]
+
+    if not non_hba_controllers:
+        reason = ("None of the available HPSSA controllers %s have RAID "
+                  "enabled" % ', '.join([c.id for c in all_controllers]))
+        raise exception.HPSSAOperationError(reason=reason)
+
+    server.controllers = non_hba_controllers
+
+
 def create_configuration(raid_config):
     """Create a RAID configuration on this server.
 
@@ -89,10 +112,14 @@ def create_configuration(raid_config):
         controller, physical_disks, etc filled for each logical disk
         after its creation.
     :raises exception.InvalidInputError, if input is invalid.
+    :raises exception.HPSSAOperationError, if all the controllers are in HBA
+        mode.
     """
-    validate(raid_config)
-
     server = objects.Server()
+
+    _filter_raid_mode_controllers(server)
+
+    validate(raid_config)
 
     # Make sure we create the large disks first.  This is avoid the
     # situation that we avoid giving large disks to smaller requests.
@@ -269,6 +296,9 @@ def delete_configuration():
         the logical disks.
     """
     server = objects.Server()
+
+    _filter_raid_mode_controllers(server)
+
     for controller in server.controllers:
         # Trigger delete only if there is some RAID array, otherwise
         # hpssacli will fail saying "no logical drives found."

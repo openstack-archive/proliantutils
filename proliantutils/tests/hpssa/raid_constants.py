@@ -2231,3 +2231,81 @@ Smart Array P822 in Slot 3
          Serial Number: 2AVVENJN
          Model: HP      EF0600FATFF
 '''
+
+HPSSA_HBA_MODE = '''
+
+Smart Array P822 in Slot 3
+   Bus Interface: PCI
+   Slot: 3
+   Serial Number: PDVTF0BRH5T0KV
+   Cache Serial Number: PBKUD0BRH5T3UM
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 5.22
+   Cache Board Present: True
+   Cache Status: Not Configured
+   Total Cache Size: 2.0 GB
+   Total Cache Memory Available: 1.8 GB
+   Cache Backup Power Source: Capacitors
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   Controller Temperature (C): 88
+   Cache Module Temperature (C): 37
+   Capacitor Temperature  (C): 24
+   Number of Ports: 6 (2 Internal / 4 External )
+   Driver Name: hpsa
+   Driver Version: 3.4.14
+   HBA Mode Enabled: True
+   PCI Address (Domain:Bus:Device.Function): 0000:0D:00.0
+   Host Serial Number: SGH401AERD
+   Sanitize Erase Supported: False
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 5I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438028842E40
+         Port Location: Internal
+
+   Internal Drive Cage at Port 5I, Box 1, OK
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 5I
+      Box: 1
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 5I:1:1 (port 5I:box 1:bay 1, SAS, 600 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 5I:1:1
+         Port: 5I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: HBA Mode Drive
+         Interface Type: SAS
+         Size: 600 GB
+         Drive exposed to OS: True
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G4QV0000B41803GZ
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 36
+         Maximum Temperature (C): 45
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Disk Name: /dev/sda
+         Mount Points: None
+         Sanitize Erase Supported: False
+'''
