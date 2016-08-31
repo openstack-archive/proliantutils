@@ -124,14 +124,15 @@ def _hpssacli(*args, **kwargs):
         following:
         - dont_transform_to_hpssa_exception - Set to True if this
           method shouldn't transform other exceptions to hpssa
-          exceptions. This is useful when the return code from hpssacli
-          is useful for analysis.
+          exceptions only when hpssa controller is available. This is
+          useful when the return code from hpssacli is useful for
+          analysis.
     :returns: a tuple containing the stdout and stderr after running
         the process.
     :raises: HPSSAOperationError, if some error was encountered and
         dont_dont_transform_to_hpssa_exception was set to False.
     :raises: OSError or processutils.ProcessExecutionError if execution
-        failed and dont_dont_transform_to_hpssa_exception was set to True.
+        failed and dont_transform_to_hpssa_exception was set to True.
     """
 
     dont_transform_to_hpssa_exception = kwargs.get(
@@ -142,7 +143,11 @@ def _hpssacli(*args, **kwargs):
         stdout, stderr = processutils.execute("hpssacli",
                                               *args, **kwargs)
     except (OSError, processutils.ProcessExecutionError) as e:
-        if not dont_transform_to_hpssa_exception:
+        if 'No controllers detected' in str(e):
+            msg = ("HPSSA controller not found. Enable hpssa controller"
+                   " to continue with the desired operation")
+            raise exception.HPSSAOperationError(reason=msg)
+        elif not dont_transform_to_hpssa_exception:
             raise exception.HPSSAOperationError(reason=e)
         else:
             raise
