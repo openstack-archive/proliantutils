@@ -1,14 +1,6 @@
 CHANGES
 =======
 
-2.1.10
-------
-
-* Fix for 'raid_config' validation error message
-* Providing detailed error message for hpssa
-* Fix for InvalidInputError exception
-* Fix to accommodate very quick firmware update
-
 2.1.9
 -----
 
