@@ -1,6 +1,23 @@
 CHANGES
 =======
 
+2.1.11
+------
+
+* Add Gen7 support
+* Adds support in hpssa for SDD interface 'Solid State SATA'
+* Raise exception when HPSSA controller not available
+* Add hpssa support only in raid mode
+* RIBCL calls fails with 'requests' library version 2.11.0
+
+2.1.10
+------
+
+* Fix for 'raid_config' validation error message
+* Providing detailed error message for hpssa
+* Fix for InvalidInputError exception
+* Fix to accommodate very quick firmware update
+
 2.1.9
 -----
 
