@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import re
 import time
 
@@ -57,7 +58,7 @@ def _get_key_value(string):
 
 def _get_dict(lines, start_index, indentation):
     """Recursive function for parsing hpssacli output."""
-
+    # hpssacli is renamed to ssacli.
     info = {}
     current_item = None
 
@@ -109,23 +110,23 @@ def _convert_to_dict(stdout):
     and calls the recursive function _get_dict to return
     the complete dictionary containing the RAID information.
     """
-
+    # hpssacli is renamed to ssacli.
     lines = stdout.split("\n")
     lines = list(filter(None, lines))
     info_dict, j = _get_dict(lines, 0, 0)
     return info_dict
 
 
-def _hpssacli(*args, **kwargs):
-    """Wrapper function for executing hpssacli command.
+def _ssacli(*args, **kwargs):
+    """Wrapper function for executing hpssacli/ssacli command.
 
-    :param args: args to be provided to hpssacli command
+    :param args: args to be provided to hpssacli/ssacli command
     :param kwargs: kwargs to be sent to processutils except the
         following:
         - dont_transform_to_hpssa_exception - Set to True if this
           method shouldn't transform other exceptions to hpssa
-          exceptions only when hpssa controller is available. This is
-          useful when the return code from hpssacli is useful for
+          exceptions only when ssa controller is available. This is
+          useful when the return code from hpssacli/ssacli is useful for
           analysis.
     :returns: a tuple containing the stdout and stderr after running
         the process.
@@ -140,11 +141,15 @@ def _hpssacli(*args, **kwargs):
     kwargs.pop('dont_transform_to_hpssa_exception', None)
 
     try:
-        stdout, stderr = processutils.execute("hpssacli",
-                                              *args, **kwargs)
+        if os.path.exists("/usr/sbin/ssacli"):
+            stdout, stderr = processutils.execute("ssacli",
+                                                  *args, **kwargs)
+        else:
+            stdout, stderr = processutils.execute("hpssacli",
+                                                  *args, **kwargs)
     except (OSError, processutils.ProcessExecutionError) as e:
         if 'No controllers detected' in str(e):
-            msg = ("HPSSA controller not found. Enable hpssa controller"
+            msg = ("SSA controller not found. Enable ssa controller"
                    " to continue with the desired operation")
             raise exception.HPSSAOperationError(reason=msg)
         elif not dont_transform_to_hpssa_exception:
@@ -218,8 +223,9 @@ class Server(object):
 
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
-        stdout, stderr = _hpssacli("controller", "all", "show",
-                                   "config", "detail")
+        # hpssacli is renamed to ssacli.
+        stdout, stderr = _ssacli("controller", "all", "show",
+                                 "config", "detail")
         return stdout
 
     def refresh(self):
@@ -231,6 +237,7 @@ class Server(object):
 
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
+        # hpssacli is renamed to ssacli.
         config = self._get_all_details()
 
         raid_info = _convert_to_dict(config)
@@ -357,11 +364,11 @@ class Controller(object):
         :param kwargs: kwargs to be passed to execute() in processutils
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
-
+        # hpssacli is renamed to ssacli.
         slot = self.properties['Slot']
         base_cmd = ("controller", "slot=%s" % slot)
         cmd = base_cmd + args
-        return _hpssacli(*cmd, **kwargs)
+        return _ssacli(*cmd, **kwargs)
 
     def create_logical_drive(self, logical_drive_info):
         """Create a logical drive on the controller.
@@ -373,6 +380,7 @@ class Controller(object):
             of the logical drive as specified in raid config.
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
+        # hpssacli is renamed to ssacli.
         cmd_args = []
         if 'array' in logical_drive_info:
             cmd_args.extend(['array', logical_drive_info['array']])
@@ -384,13 +392,13 @@ class Controller(object):
             cmd_args.append("drives=%s" % phy_drive_ids)
 
         raid_level = logical_drive_info['raid_level']
-        # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
+        # For RAID levels (like 5+0 and 6+0), SSA names them differently.
         # Check if we have mapping stored, otherwise use the same.
         raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
             raid_level, raid_level)
         cmd_args.append("raid=%s" % raid_level)
 
-        # If size_gb is MAX, then don't pass size argument.  HPSSA will
+        # If size_gb is MAX, then don't pass size argument.  SSA will
         # automatically allocate the maximum # disks size possible to the
         # logical disk.
         if logical_drive_info['size_gb'] != "MAX":
@@ -405,6 +413,7 @@ class Controller(object):
         This method deletes all logical drives on trh controller.
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
+        # hpssacli is renamed to ssacli.
         self.execute_cmd("logicaldrive", "all", "delete", "forced")
 
 
@@ -448,6 +457,7 @@ class RaidArray(object):
         :returns: True, if logical disk can be created on the RAID array
                   False, otherwise.
         """
+        # hpssacli is renamed to ssacli.
         raid_level = constants.RAID_LEVEL_INPUT_TO_HPSSA_MAPPING.get(
             logical_disk['raid_level'], logical_disk['raid_level'])
         args = ("array", self.id, "create", "type=logicaldrive",
@@ -476,7 +486,7 @@ class RaidArray(object):
             raise exception.HPSSAOperationError(reason=ex)
 
         # TODO(rameshg87): This always returns in MB, but confirm with
-        # HPSSA folks.
+        # SSA folks.
         match = re.search('Max: (\d+)', stdout)
         if not match:
             return False
@@ -507,7 +517,7 @@ class LogicalDrive(object):
                                                         return_int=True) /
                                (1024*1024*1024)) - 1
         except ValueError:
-            msg = ("hpssacli returned unknown size '%(size)s' for logical "
+            msg = ("ssacli returned unknown size '%(size)s' for logical "
                    "disk '%(logical_disk)s' of RAID array '%(array)s' in "
                    "controller '%(controller)s'." %
                    {'size': size, 'logical_disk': self.id,
@@ -516,7 +526,7 @@ class LogicalDrive(object):
             raise exception.HPSSAOperationError(reason=msg)
 
         self.raid_level = self.properties.get('Fault Tolerance')
-        # For RAID levels (like 5+0 and 6+0), HPSSA names them differently.
+        # For RAID levels (like 5+0 and 6+0), SSA names them differently.
         # Check if we have mapping stored, otherwise use the same.
         raid_level_mapping = constants.RAID_LEVEL_HPSSA_TO_INPUT_MAPPING
         self.raid_level = raid_level_mapping.get(self.raid_level,
@@ -568,7 +578,7 @@ class PhysicalDrive:
                                                         return_int=True) /
                                (1024*1024*1024))
         except ValueError:
-            msg = ("hpssacli returned unknown size '%(size)s' for physical "
+            msg = ("ssacli returned unknown size '%(size)s' for physical "
                    "disk '%(physical_disk)s' of controller "
                    "'%(controller)s'." %
                    {'size': size, 'physical_disk': self.id,

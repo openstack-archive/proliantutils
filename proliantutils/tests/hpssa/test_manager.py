@@ -190,8 +190,8 @@ class ManagerTestCases(testtools.TestCase):
 
         raid_info = {'logical_disks': 'foo'}
 
-        msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
+        msg = ("An error was encountered while doing ssa configuration: None"
+               " of the available SSA controllers Smart Array P822 in "
                "Slot 3 have RAID enabled")
         ex = self.assertRaises(exception.HPSSAOperationError,
                                manager.create_configuration,
@@ -405,8 +405,8 @@ class ManagerTestCases(testtools.TestCase):
         drives = raid_constants.HPSSA_HBA_MODE
         get_all_details_mock.return_value = drives
 
-        msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
+        msg = ("An error was encountered while doing ssa configuration: None"
+               " of the available SSA controllers Smart Array P822 in "
                "Slot 3 have RAID enabled")
         ex = self.assertRaises(exception.HPSSAOperationError,
                                manager.delete_configuration)
@@ -459,8 +459,8 @@ class ManagerTestCases(testtools.TestCase):
 
         server = objects.Server()
 
-        msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
+        msg = ("An error was encountered while doing ssa configuration: None"
+               " of the available SSA controllers Smart Array P822 in "
                "Slot 3 have RAID enabled")
         ex = self.assertRaises(exception.HPSSAOperationError,
                                manager._filter_raid_mode_controllers,
