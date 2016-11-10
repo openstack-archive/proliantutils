@@ -101,7 +101,7 @@ class HPSSATestCase(testtools.TestCase):
                                               new_device_file)
         # Output is like:
         # WWN="0x600508b1001cca7f"
-        # TODO(rameshg87: Check with hpssa team whether this can be
+        # TODO(rameshg87: Check with ssa team whether this can be
         # assumed.
         wwn = stdout.split("\n")[0].split('"')[1]
         self.assertEqual(logical_disk['root_device_hint']['wwn'], wwn)

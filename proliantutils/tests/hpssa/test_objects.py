@@ -186,7 +186,7 @@ class ControllerTest(testtools.TestCase):
 
         stdout, stderr = controller.execute_cmd('foo', 'bar')
 
-        processutils_mock.assert_called_once_with("hpssacli",
+        processutils_mock.assert_called_once_with("ssacli",
                                                   "controller",
                                                   "slot=2",
                                                   "foo",
@@ -467,7 +467,7 @@ class ArrayTest(testtools.TestCase):
         server = objects.Server()
         server.controllers[0].raid_arrays[0].can_accomodate(logical_disk)
         execute_mock.assert_called_once_with(
-            "hpssacli", "controller", "slot=2", "array", mock.ANY, "create",
+            "ssacli", "controller", "slot=2", "array", mock.ANY, "create",
             "type=logicaldrive", "raid=50", "size=?")
 
 
@@ -554,31 +554,31 @@ class PhysicalDriveTest(testtools.TestCase):
 class PrivateMethodsTestCase(testtools.TestCase):
 
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli(self, execute_mock):
+    def test__ssacli(self, execute_mock):
         execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = objects._hpssacli("foo", "bar",
-                                           check_exit_code=[0, 1, 2, 3])
+        stdout, stderr = objects._ssacli("foo", "bar",
+                                         check_exit_code=[0, 1, 2, 3])
         execute_mock.assert_called_once_with(
-            "hpssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
+            "ssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
         self.assertEqual("stdout", stdout)
         self.assertEqual("stderr", stderr)
 
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error(self, execute_mock):
+    def test__ssacli_raises_error(self, execute_mock):
         execute_mock.side_effect = OSError
         self.assertRaises(exception.HPSSAOperationError,
-                          objects._hpssacli, "foo", "bar")
+                          objects._ssacli, "foo", "bar")
 
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error_no_transform(self, execute_mock):
+    def test__ssacli_raises_error_no_transform(self, execute_mock):
         execute_mock.side_effect = OSError
         self.assertRaises(OSError,
-                          objects._hpssacli, "foo", "bar",
+                          objects._ssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
-        execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+        execute_mock.assert_called_once_with("ssacli", "foo", "bar")
 
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error_no_controller(self, execute_mock):
+    def test__ssacli_raises_error_no_controller(self, execute_mock):
         value = ("Error: No controllers detected. Possible causes:"
                  " The driver for the installed controller(s) is not loaded."
                  " On LINUX, the scsi_generic (sg) driver module is not"
@@ -586,7 +586,7 @@ class PrivateMethodsTestCase(testtools.TestCase):
         execute_mock.side_effect = processutils.ProcessExecutionError(
             value)
         ex = self.assertRaises(exception.HPSSAOperationError,
-                               objects._hpssacli, "foo", "bar")
-        msg = ("HPSSA controller not found. Enable hpssa controller"
+                               objects._ssacli, "foo", "bar")
+        msg = ("SSA controller not found. Enable ssa controller"
                " to continue with the desired operation")
         self.assertIn(msg, str(ex))
