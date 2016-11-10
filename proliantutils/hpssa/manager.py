@@ -90,7 +90,7 @@ def _filter_raid_mode_controllers(server):
                            if not c.properties.get('HBA Mode Enabled', False)]
 
     if not non_hba_controllers:
-        reason = ("None of the available HPSSA controllers %s have RAID "
+        reason = ("None of the available SSA controllers %s have RAID "
                   "enabled" % ', '.join([c.id for c in all_controllers]))
         raise exception.HPSSAOperationError(reason=reason)
 
@@ -301,7 +301,7 @@ def delete_configuration():
 
     for controller in server.controllers:
         # Trigger delete only if there is some RAID array, otherwise
-        # hpssacli will fail saying "no logical drives found."
+        # hpssacli/ssacli will fail saying "no logical drives found.".
         if controller.raid_arrays:
             controller.delete_all_logical_drives()
     return get_configuration()

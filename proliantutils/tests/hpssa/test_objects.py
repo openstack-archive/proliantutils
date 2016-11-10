@@ -174,9 +174,11 @@ class ServerTest(testtools.TestCase):
 @mock.patch.object(objects.Server, '_get_all_details')
 class ControllerTest(testtools.TestCase):
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_cmd(self, processutils_mock, get_all_details_mock):
-
+    def test_execute_cmd(self, processutils_mock, path_mock,
+                         get_all_details_mock):
+        path_mock.return_value = True
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
@@ -186,7 +188,7 @@ class ControllerTest(testtools.TestCase):
 
         stdout, stderr = controller.execute_cmd('foo', 'bar')
 
-        processutils_mock.assert_called_once_with("hpssacli",
+        processutils_mock.assert_called_once_with("ssacli",
                                                   "controller",
                                                   "slot=2",
                                                   "foo",
@@ -457,17 +459,19 @@ class ArrayTest(testtools.TestCase):
             server.controllers[0].raid_arrays[0].can_accomodate,
             logical_disk)
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test_can_accomodate_map_raid_level(self, execute_mock,
+    def test_can_accomodate_map_raid_level(self, execute_mock, path_mock,
                                            get_all_details_mock):
         current_config = raid_constants.HPSSA_TWO_DRIVES_100GB_RAID5_50GB_RAID1
+        path_mock.return_value = True
         execute_mock.return_value = ("", None)
         get_all_details_mock.return_value = current_config
         logical_disk = {'size_gb': 1500, 'raid_level': '5+0'}
         server = objects.Server()
         server.controllers[0].raid_arrays[0].can_accomodate(logical_disk)
         execute_mock.assert_called_once_with(
-            "hpssacli", "controller", "slot=2", "array", mock.ANY, "create",
+            "ssacli", "controller", "slot=2", "array", mock.ANY, "create",
             "type=logicaldrive", "raid=50", "size=?")
 
 
@@ -553,32 +557,40 @@ class PhysicalDriveTest(testtools.TestCase):
 
 class PrivateMethodsTestCase(testtools.TestCase):
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli(self, execute_mock):
+    def test__ssacli(self, execute_mock, path_mock):
         execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = objects._hpssacli("foo", "bar",
-                                           check_exit_code=[0, 1, 2, 3])
+        path_mock.return_value = True
+        stdout, stderr = objects._ssacli("foo", "bar",
+                                         check_exit_code=[0, 1, 2, 3])
         execute_mock.assert_called_once_with(
-            "hpssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
+            "ssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
         self.assertEqual("stdout", stdout)
         self.assertEqual("stderr", stderr)
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error(self, execute_mock):
+    def test__ssacli_raises_error(self, execute_mock, path_mock):
+        path_mock.return_value = True
         execute_mock.side_effect = OSError
         self.assertRaises(exception.HPSSAOperationError,
-                          objects._hpssacli, "foo", "bar")
+                          objects._ssacli, "foo", "bar")
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error_no_transform(self, execute_mock):
+    def test__ssacli_raises_error_no_transform(self, execute_mock, path_mock):
+        path_mock.return_value = True
         execute_mock.side_effect = OSError
         self.assertRaises(OSError,
-                          objects._hpssacli, "foo", "bar",
+                          objects._ssacli, "foo", "bar",
                           dont_transform_to_hpssa_exception=True)
-        execute_mock.assert_called_once_with("hpssacli", "foo", "bar")
+        execute_mock.assert_called_once_with("ssacli", "foo", "bar")
 
+    @mock.patch('os.path.exists')
     @mock.patch.object(processutils, 'execute')
-    def test__hpssacli_raises_error_no_controller(self, execute_mock):
+    def test__ssacli_raises_error_no_controller(self, execute_mock, path_mock):
+        path_mock.return_value = True
         value = ("Error: No controllers detected. Possible causes:"
                  " The driver for the installed controller(s) is not loaded."
                  " On LINUX, the scsi_generic (sg) driver module is not"
@@ -586,7 +598,19 @@ class PrivateMethodsTestCase(testtools.TestCase):
         execute_mock.side_effect = processutils.ProcessExecutionError(
             value)
         ex = self.assertRaises(exception.HPSSAOperationError,
-                               objects._hpssacli, "foo", "bar")
-        msg = ("HPSSA controller not found. Enable hpssa controller"
+                               objects._ssacli, "foo", "bar")
+        msg = ("SSA controller not found. Enable ssa controller"
                " to continue with the desired operation")
         self.assertIn(msg, str(ex))
+
+    @mock.patch('os.path.exists')
+    @mock.patch.object(processutils, 'execute')
+    def test__hpssacli_exists(self, execute_mock, path_mock):
+        execute_mock.return_value = ("stdout", "stderr")
+        path_mock.return_value = False
+        stdout, stderr = objects._ssacli("foo", "bar",
+                                         check_exit_code=[0, 1, 2, 3])
+        execute_mock.assert_called_once_with(
+            "hpssacli", "foo", "bar", check_exit_code=[0, 1, 2, 3])
+        self.assertEqual("stdout", stdout)
+        self.assertEqual("stderr", stderr)
