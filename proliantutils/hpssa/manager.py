@@ -311,7 +311,7 @@ def delete_configuration():
 
     for controller in server.controllers:
         # Trigger delete only if there is some RAID array, otherwise
-        # hpssacli will fail saying "no logical drives found."
+        # hpssacli/ssacli will fail saying "no logical drives found.".
         if controller.raid_arrays:
             controller.delete_all_logical_drives()
     return get_configuration()

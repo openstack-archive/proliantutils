@@ -122,7 +122,7 @@ class IloInvalidInputError(IloError):
 
 class HPSSAException(ProliantUtilsException):
 
-    message = "An exception occured in hpssa module"
+    message = "An exception occured in ssa module"
 
     def __init__(self, message=None, **kwargs):
         if not message:
@@ -140,7 +140,7 @@ class PhysicalDisksNotFoundError(HPSSAException):
 
 class HPSSAOperationError(HPSSAException):
 
-    message = ("An error was encountered while doing hpssa configuration: "
+    message = ("An error was encountered while doing ssa configuration: "
                "%(reason)s.")
 
 
