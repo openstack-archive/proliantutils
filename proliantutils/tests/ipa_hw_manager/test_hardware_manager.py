@@ -50,3 +50,10 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         ret = self.hardware_manager.delete_configuration("", "")
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
+
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_controller_drives(self, erase_mock):
+        erase_mock.return_value = 'erase_status'
+        ret = self.hardware_manager.erase_controller_drives()
+        erase_mock.assert_called_once_with()
+        self.assertEqual('erase_status', ret)

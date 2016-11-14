@@ -80,3 +80,13 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def erase_controller_drives(self):
+        """Erase the drives on the bare metal.
+
+        This method erase all the drives which supports sanitize on
+        bare metal.
+        :returns: The dictionary of controllers with the drives and erase
+            status for each drive.
+        """
+        return hpssa_manager.erase_devices()

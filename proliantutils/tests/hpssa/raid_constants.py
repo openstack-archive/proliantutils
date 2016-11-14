@@ -2330,3 +2330,561 @@ Smart Array P822 in Slot 3
          Mount Points: None
          Sanitize Erase Supported: False
 '''
+
+HPSSA_ERASE_DRIVE = '''
+
+Smart Array P440 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDNMF0ARH8Y342
+   Cache Serial Number: PEYFP0BRH8Y0V4
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.52-0
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 0 secs
+   Cache Board Present: True
+   Cache Status: Not Configured
+   Drive Write Cache: Disabled
+   Total Cache Size: 4.0 GB
+   Total Cache Memory Available: 3.8 GB
+   No-Battery Write Cache: Disabled
+   SSD Caching RAID5 WriteBack Enabled: True
+   SSD Caching Version: 2
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 72
+   Cache Module Temperature (C): 45
+   Number of Ports: 1 Internal only
+   Encryption: Disabled
+   Express Local Encryption: False
+   Driver Name: hpsa
+   Driver Version: 3.4.16
+   Driver Supports SSD Smart Path: True
+   PCI Address (Domain:Bus:Device.Function): 0000:09:00.0
+   Negotiated PCIe Data Rate: PCIe 3.0 x8 (7880 MB/s)
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Latency Scheduler Setting: Disabled
+   Current Power Mode: MaxPerformance
+   Survival Mode: Enabled
+   Host Serial Number: SGH537Y7AY
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 1I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438035544EC0
+         Port Location: Internal
+         Managed Cable Connected: False
+
+
+   Internal Drive Cage at Port 1I, Box 0, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 0
+      Location: Internal
+
+   Physical Drives
+      None attached
+
+
+
+   Internal Drive Cage at Port 1I, Box 2, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 2
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+      physicaldrive 1I:2:2 (port 1I:box 2:bay 2, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Port: 1I
+         Box: 2
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C3FJ0000K601EZLM
+         WWID: 5000C5008E183B1D
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 42
+         Maximum Temperature (C): 52
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+
+      physicaldrive 1I:2:2
+         Port: 1I
+         Box: 2
+         Bay: 2
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C5T30000K5533CLR
+         WWID: 5000C5008E1758BD
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 43
+         Maximum Temperature (C): 51
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+'''
+
+HPSSA_ERASE_IN_PROGRESS = '''
+Smart Array P440 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDNMF0ARH8Y342
+   Cache Serial Number: PEYFP0BRH8Y0V4
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.52-0
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 0 secs
+   Cache Board Present: True
+   Cache Status: Not Configured
+   Drive Write Cache: Disabled
+   Total Cache Size: 4.0 GB
+   Total Cache Memory Available: 3.8 GB
+   No-Battery Write Cache: Disabled
+   SSD Caching RAID5 WriteBack Enabled: True
+   SSD Caching Version: 2
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 72
+   Cache Module Temperature (C): 45
+   Number of Ports: 1 Internal only
+   Encryption: Disabled
+   Express Local Encryption: False
+   Driver Name: hpsa
+   Driver Version: 3.4.16
+   Driver Supports SSD Smart Path: True
+   PCI Address (Domain:Bus:Device.Function): 0000:09:00.0
+   Negotiated PCIe Data Rate: PCIe 3.0 x8 (7880 MB/s)
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Latency Scheduler Setting: Disabled
+   Current Power Mode: MaxPerformance
+   Survival Mode: Enabled
+   Host Serial Number: SGH537Y7AY
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 1I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438035544EC0
+         Port Location: Internal
+         Managed Cable Connected: False
+
+
+   Internal Drive Cage at Port 1I, Box 0, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 0
+      Location: Internal
+
+   Physical Drives
+      None attached
+
+
+
+   Internal Drive Cage at Port 1I, Box 2, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 2
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+      physicaldrive 1I:2:2 (port 1I:box 2:bay 2, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Port: 1I
+         Box: 2
+         Bay: 1
+         Status: Erase In Progress
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C3FJ0000K601EZLM
+         WWID: 5000C5008E183B1D
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 42
+         Maximum Temperature (C): 52
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+
+      physicaldrive 1I:2:2
+         Port: 1I
+         Box: 2
+         Bay: 2
+         Status: Erase In Progress
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C5T30000K5533CLR
+         WWID: 5000C5008E1758BD
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 43
+         Maximum Temperature (C): 51
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+'''
+
+HPSSA_ERASE_COMPLETE = '''
+Smart Array P440 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDNMF0ARH8Y342
+   Cache Serial Number: PEYFP0BRH8Y0V4
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 4.52-0
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 0 secs
+   Cache Board Present: True
+   Cache Status: Not Configured
+   Drive Write Cache: Disabled
+   Total Cache Size: 4.0 GB
+   Total Cache Memory Available: 3.8 GB
+   No-Battery Write Cache: Disabled
+   SSD Caching RAID5 WriteBack Enabled: True
+   SSD Caching Version: 2
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 72
+   Cache Module Temperature (C): 45
+   Number of Ports: 1 Internal only
+   Encryption: Disabled
+   Express Local Encryption: False
+   Driver Name: hpsa
+   Driver Version: 3.4.16
+   Driver Supports SSD Smart Path: True
+   PCI Address (Domain:Bus:Device.Function): 0000:09:00.0
+   Negotiated PCIe Data Rate: PCIe 3.0 x8 (7880 MB/s)
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Latency Scheduler Setting: Disabled
+   Current Power Mode: MaxPerformance
+   Survival Mode: Enabled
+   Host Serial Number: SGH537Y7AY
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 1I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438035544EC0
+         Port Location: Internal
+         Managed Cable Connected: False
+
+
+   Internal Drive Cage at Port 1I, Box 0, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 0
+      Location: Internal
+
+   Physical Drives
+      None attached
+
+
+
+   Internal Drive Cage at Port 1I, Box 2, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 2
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+      physicaldrive 1I:2:2 (port 1I:box 2:bay 2, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Port: 1I
+         Box: 2
+         Bay: 1
+         Status: Erase Complete. Reenable Before Using.
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C3FJ0000K601EZLM
+         WWID: 5000C5008E183B1D
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 42
+         Maximum Temperature (C): 52
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+
+      physicaldrive 1I:2:2
+         Port: 1I
+         Box: 2
+         Bay: 2
+         Status: Erase Complete. Reenable Before Using.
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C5T30000K5533CLR
+         WWID: 5000C5008E1758BD
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 43
+         Maximum Temperature (C): 51
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+'''
+
+HPSSA_ERASE_NOT_SUPPORTED = '''
+
+Smart Array P440 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDNMF0ARH8Y30Q
+   Cache Serial Number: PEYFP0BRH8Y29O
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Hardware Revision: B
+   Firmware Version: 2.52-0
+   Wait for Cache Room: Disabled
+   Surface Analysis Inconsistency Notification: Disabled
+   Post Prompt Timeout: 0 secs
+   Cache Board Present: True
+   Cache Status: Not Configured
+   Drive Write Cache: Disabled
+   Total Cache Size: 4.0 GB
+   Total Cache Memory Available: 3.8 GB
+   No-Battery Write Cache: Disabled
+   SSD Caching RAID5 WriteBack Enabled: True
+   SSD Caching Version: 2
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: OK
+   SATA NCQ Supported: True
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Temperature (C): 56
+   Cache Module Temperature (C): 43
+   Number of Ports: 1 Internal only
+   Encryption: Disabled
+   Express Local Encryption: False
+   Driver Name: hpsa
+   Driver Version: 3.4.16
+   Driver Supports SSD Smart Path: True
+   PCI Address (Domain:Bus:Device.Function): 0000:09:00.0
+   Negotiated PCIe Data Rate: PCIe 3.0 x8 (7880 MB/s)
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Latency Scheduler Setting: Disabled
+   Current Power Mode: MaxPerformance
+   Survival Mode: Enabled
+   Host Serial Number: SGH537Y7B2
+   Sanitize Erase Supported: False
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 1I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438035544740
+         Port Location: Internal
+         Managed Cable Connected: False
+
+
+   Internal Drive Cage at Port 1I, Box 0, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 0
+      Location: Internal
+
+   Physical Drives
+      None attached
+
+
+
+   Internal Drive Cage at Port 1I, Box 2, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 2
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+      physicaldrive 1I:2:2 (port 1I:box 2:bay 2, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Port: 1I
+         Box: 2
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD2
+         Serial Number: S7K0C0XH0000K602BHUG
+         WWID: 5000C5008E19466D
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 41
+         Maximum Temperature (C): 47
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: False
+         Shingled Magnetic Recording Support: None
+
+      physicaldrive 1I:2:2
+         Port: 1I
+         Box: 2
+         Bay: 2
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD2
+         Serial Number: S7K0C0WQ0000K6029SB5
+         WWID: 5000C5008E194789
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 44
+         Maximum Temperature (C): 49
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: False
+         Shingled Magnetic Recording Support: None
+'''

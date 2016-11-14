@@ -373,7 +373,6 @@ class ManagerTestCases(testtools.TestCase):
     def test_delete_configuration(self, controller_exec_cmd_mock,
                                   get_configuration_mock,
                                   get_all_details_mock):
-
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
         get_configuration_mock.return_value = 'foo'
 
@@ -475,6 +474,62 @@ class ManagerTestCases(testtools.TestCase):
 
         manager._filter_raid_mode_controllers(server)
         self.assertEqual(ctrl_expected, server.controllers)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices(self, controller_exec_cmd_mock,
+                           get_all_details_mock):
+        erase_drive = raid_constants.HPSSA_ERASE_DRIVE
+        erase_complete = raid_constants.HPSSA_ERASE_COMPLETE
+        cmd_args = []
+        cmd_args.append("pd 1I:2:1")
+        cmd_args.extend(['modify', 'erase',
+                         'erasepattern=overwrite',
+                         'unrestricted=off',
+                         'forced'])
+        expt_ret = {
+            'Smart Array P440 in Slot 2': {
+                '1I:2:2': 'Erase Complete. Reenable Before Using.',
+                '1I:2:1': 'Erase Complete. Reenable Before Using.'}}
+        get_all_details_mock.side_effect = [erase_drive,
+                                            erase_complete]
+
+        ret = manager.erase_devices()
+        self.assertTrue(controller_exec_cmd_mock.called)
+        controller_exec_cmd_mock.assert_any_call(*cmd_args)
+        self.assertEqual(expt_ret, ret)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_no_drives(self, controller_exec_cmd_mock,
+                                     get_all_details_mock):
+        erase_no_drives = raid_constants.HPSSA_ERASE_NOT_SUPPORTED
+        get_all_details_mock.side_effect = [erase_no_drives, erase_no_drives]
+        msg = ("No unassigned physical disks available to perform "
+               "the sanitize disk erase")
+        ex = self.assertRaises(exception.HPSSAException,
+                               manager.erase_devices)
+        self.assertEqual(msg, str(ex))
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_in_progress(self, controller_exec_cmd_mock,
+                                       get_all_details_mock):
+        erase_progress = raid_constants.HPSSA_ERASE_IN_PROGRESS
+        erase_complete = raid_constants.HPSSA_ERASE_COMPLETE
+        cmd_args = []
+        cmd_args.append("pd 1I:2:1")
+        cmd_args.extend(['modify', 'erase',
+                         'erasepattern=overwrite',
+                         'unrestricted=off',
+                         'forced'])
+        expt_ret = {
+            'Smart Array P440 in Slot 2': {
+                '1I:2:2': 'Erase Complete. Reenable Before Using.',
+                '1I:2:1': 'Erase Complete. Reenable Before Using.'}}
+        get_all_details_mock.side_effect = [erase_progress,
+                                            erase_complete]
+
+        ret = manager.erase_devices()
+        self.assertFalse(controller_exec_cmd_mock.called)
+        self.assertEqual(expt_ret, ret)
 
 
 class RaidConfigValidationTestCases(testtools.TestCase):
