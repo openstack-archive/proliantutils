@@ -22,6 +22,7 @@ from proliantutils import exception
 from proliantutils.hpssa import constants
 from proliantutils.hpssa import disk_allocator
 from proliantutils.hpssa import objects
+from proliantutils.ilo import common
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
@@ -337,3 +338,61 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def has_erase_completed():
+    server = objects.Server()
+    drives = server.get_physical_drives()
+    if any((drive.erase_status == 'Erase In Progress')
+           for drive in drives):
+        return False
+    else:
+        return True
+
+
+def erase_devices():
+    """Erase all the drives on this server.
+
+    This method performs sanitize erase on all the supported drives
+    in this server.
+
+    :returns: a dictionary of controllers with drives and the erase status.
+    :raises exception.HPSSAException, if none of the drives support
+        sanitize erase.
+    """
+    server = objects.Server()
+
+    supported_controllers = [
+        c for c in server.controllers
+        if c.properties.get('Sanitize Erase Supported', False) == 'True'
+    ]
+
+    if not supported_controllers:
+        reason = ("Sanitize erase not supported in the available"
+                  "controllers %s" % ', '.join([c.id
+                                               for c in server.controllers]))
+        raise exception.HPSSAOperationError(reason=reason)
+
+    for controller in supported_controllers:
+        drives = [x for x in controller.unassigned_physical_drives
+                  if (x.get_physical_drive_dict().get('erase_status', '')
+                      == 'OK')]
+        if drives:
+            drives = ','.join(x.id for x in drives)
+            controller.erase_devices(drives)
+
+    common.wait_for_operation_to_complete(
+        has_erase_completed,
+        delay_bw_retries=300,
+        failover_msg='Disk erase failed.'
+    )
+
+    server.refresh()
+
+    status = {}
+    for controller in server.controllers:
+        drive_status = {x.id: x.erase_status
+                        for x in controller.unassigned_physical_drives}
+        status[controller.id] = drive_status
+
+    return status
