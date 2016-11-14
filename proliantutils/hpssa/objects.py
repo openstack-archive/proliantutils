@@ -317,7 +317,12 @@ class Controller(object):
         self.unassigned_physical_drives = []
         self.raid_arrays = []
 
-        unassigned_drives = properties.get('unassigned', {})
+        # This step is needed because of the mismatch in the data returned by
+        # hpssacli and ssacli.
+        attr = ''.join(x for x in properties
+                       if x == 'Unassigned' or x == 'unassigned')
+
+        unassigned_drives = properties.get(attr, {})
         for key, value in unassigned_drives.items():
             self.unassigned_physical_drives.append(PhysicalDrive(key,
                                                                  value,
@@ -406,6 +411,15 @@ class Controller(object):
         :raises: HPSSAOperationError, if hpssacli operation failed.
         """
         self.execute_cmd("logicaldrive", "all", "delete", "forced")
+
+    def erase_devices(self, drive):
+        cmd_args = []
+        cmd_args.append("pd %s" % drive)
+        cmd_args.extend(['modify', 'erase',
+                         'erasepattern=overwrite',
+                         'unrestricted=off',
+                         'forced'])
+        self.execute_cmd(*cmd_args)
 
 
 class RaidArray(object):
@@ -580,6 +594,7 @@ class PhysicalDrive:
         self.disk_type = constants.get_disk_type(ssa_interface)
         self.model = self.properties.get('Model')
         self.firmware = self.properties.get('Firmware Revision')
+        self.erase_status = self.properties.get('Status')
 
     def get_physical_drive_dict(self):
         """Returns a dictionary of with the details of the physical drive."""
@@ -598,4 +613,5 @@ class PhysicalDrive:
                 'interface_type': self.interface_type,
                 'model': self.model,
                 'firmware': self.firmware,
-                'status': status}
+                'status': status,
+                'erase_status': self.erase_status}
