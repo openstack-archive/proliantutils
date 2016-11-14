@@ -24,5 +24,6 @@ if not ironic_python_agent:
     sys.modules['ironic_python_agent.errors'] = ipa_mock.errors
     sys.modules['ironic_python_agent.hardware'] = ipa_mock.hardware
     ipa_mock.hardware.GenericHardwareManager = mock.MagicMock
+    mock.MagicMock.erase_devices = mock.MagicMock(name='erase_devices')
     if 'proliantutils.ipa_hw_manager' in sys.modules:
         reload(sys.modules['proliantutils.ipa_hw_manager'])
