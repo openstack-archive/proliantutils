@@ -14,6 +14,7 @@
 
 from ironic_python_agent import hardware
 
+from proliantutils import exception
 from proliantutils.hpssa import manager as hpssa_manager
 
 
@@ -80,3 +81,22 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def erase_devices(self, node, port):
+        """Erase the drives on the bare metal.
+
+        This method erase all the drives which supports sanitize on
+        bare metal.
+        :returns: The dictionary of controllers with the drives and erase
+            status for each drive.
+        """
+        try:
+            result = hpssa_manager.erase_devices()
+
+        except exception.HPSSAOperationError as e:
+            generic_result = super(ProliantHardwareManager,
+                                   self).erase_devices(node, port)
+            generic_result['Sanitize Erase'] = e
+            return generic_result
+
+        return result
