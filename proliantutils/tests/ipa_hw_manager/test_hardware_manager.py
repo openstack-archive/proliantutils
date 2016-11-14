@@ -13,10 +13,13 @@
 # under the License.
 
 import mock
+from oslo_utils import importutils
 import testtools
 
 from proliantutils.hpssa import manager as hpssa_manager
 from proliantutils.ipa_hw_manager import hardware_manager
+
+ironic_python_agent = importutils.try_import('ironic_python_agent')
 
 
 class ProliantHardwareManagerTestCase(testtools.TestCase):
@@ -50,3 +53,31 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         ret = self.hardware_manager.delete_configuration("", "")
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
+
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_devices(self, erase_mock):
+        node = {}
+        port = {}
+        erase_mock.return_value = 'erase_status'
+        ret = self.hardware_manager.erase_devices(node, port)
+        erase_mock.assert_called_once_with()
+        self.assertEqual('erase_status', ret)
+
+    @mock.patch.object(ironic_python_agent.hardware.GenericHardwareManager,
+                       'erase_devices')
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_devices_not_supported(self, erase_mock, generic_erase_mock):
+        node = {}
+        port = {}
+        erase_mock.return_value = None
+        generic_erase_mock.return_value = {'foo': 'bar'}
+        expt_return = {
+            'Sanitize Erase': ("No unassigned physical disks available to"
+                               " perform the sanitize disk erase")}
+        expt_return.update(generic_erase_mock.return_value)
+
+        ret = self.hardware_manager.erase_devices(node, port)
+
+        erase_mock.assert_called_once_with()
+        generic_erase_mock.assert_called_once_with(node, port)
+        self.assertEqual(expt_return, ret)

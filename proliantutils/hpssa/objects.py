@@ -407,6 +407,15 @@ class Controller(object):
         """
         self.execute_cmd("logicaldrive", "all", "delete", "forced")
 
+    def erase_devices(self, drive):
+        cmd_args = []
+        cmd_args.append("pd %s" % drive)
+        cmd_args.extend(['modify', 'erase',
+                         'erasepattern=overwrite',
+                         'unrestricted=off',
+                         'forced'])
+        self.execute_cmd(*cmd_args)
+
 
 class RaidArray(object):
     """Class for a RAID Array.
@@ -580,6 +589,9 @@ class PhysicalDrive:
         self.disk_type = constants.get_disk_type(ssa_interface)
         self.model = self.properties.get('Model')
         self.firmware = self.properties.get('Firmware Revision')
+        self.erase_support = self.properties.get('Sanitize Erase Supported',
+                                                 'False')
+        self.erase_status = self.properties.get('Status')
 
     def get_physical_drive_dict(self):
         """Returns a dictionary of with the details of the physical drive."""
@@ -598,4 +610,6 @@ class PhysicalDrive:
                 'interface_type': self.interface_type,
                 'model': self.model,
                 'firmware': self.firmware,
-                'status': status}
+                'status': status,
+                'erase_support': self.erase_support,
+                'erase_status': self.erase_status}

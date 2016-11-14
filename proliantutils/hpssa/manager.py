@@ -337,3 +337,49 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def erase_devices():
+    """Erase all the drives on this server.
+
+    This method performs sanitize erase on all the supported drives
+    in this server.
+
+    :returns: a dictionary of controllers with drives and the erase status.
+    :raises exception.HPSSAException, if none of the drives support
+        sanitize erase.
+    """
+    server = objects.Server()
+    supported_drives = []
+    physical_drives = server.get_physical_drives()
+    for physical_drive in physical_drives:
+        physical_drive_dict = physical_drive.get_physical_drive_dict()
+        if physical_drive_dict['erase_support'] == 'True':
+            supported_drives.append(physical_drive)
+
+    if not supported_drives:
+        return
+
+    for drive in supported_drives:
+        if physical_drive_dict['erase_status'] == 'OK':
+            controller_id = drive.get_physical_drive_dict().get('controller')
+            controller = server.get_controller_by_id(controller_id)
+            controller.erase_devices(drive.id)
+
+    erase_in_progress = True
+    while(erase_in_progress):
+        server.refresh()
+        drives = server.get_physical_drives()
+        if any((drive.erase_status == 'Erase In Progress')
+               for drive in drives):
+            erase_in_progress = True
+        else:
+            erase_in_progress = False
+
+    status = {}
+    for controller in server.controllers:
+        drive_status = {x.id: x.erase_status
+                        for x in controller.unassigned_physical_drives}
+        status[controller.id] = drive_status
+
+    return status

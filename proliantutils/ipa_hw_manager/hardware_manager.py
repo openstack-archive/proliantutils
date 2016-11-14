@@ -80,3 +80,20 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             for the node
         """
         return hpssa_manager.delete_configuration()
+
+    def erase_devices(self, node, port):
+        """Erase the drives on the bare metal.
+
+        This method erase all the drives which supports sanitize on
+        bare metal.
+        :returns: The dictionary of controllers with the drives and erase
+            status for each drive.
+        """
+        result = hpssa_manager.erase_devices()
+        if not result:
+            reason = ("No unassigned physical disks available to perform"
+                      " the sanitize disk erase")
+            result = super(ProliantHardwareManager, self).erase_devices(node,
+                                                                        port)
+            result['Sanitize Erase'] = reason
+        return result
