@@ -337,6 +337,18 @@ class ControllerTest(testtools.TestCase):
 
         self.assertIsNone(controller.get_physical_drive_by_id('foo'))
 
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices(self, execute_mock,
+                           get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_ERASE_DRIVE
+        server = objects.Server()
+        controller = server.controllers[0]
+        controller.erase_devices('1I:2:1')
+        execute_mock.assert_called_once_with('pd 1I:2:1', 'modify', 'erase',
+                                             'erasepattern=overwrite',
+                                             'unrestricted=off',
+                                             'forced')
+
 
 @mock.patch.object(objects.Server, '_get_all_details')
 class LogicalDriveTest(testtools.TestCase):
@@ -516,6 +528,9 @@ class PhysicalDriveTest(testtools.TestCase):
         self.assertEqual('ssd', ret_sata['disk_type'])
         self.assertEqual('sata', ret_sata['interface_type'])
 
+        self.assertEqual('False', ret_sata['erase_support'])
+        self.assertEqual('OK', ret_sata['erase_status'])
+
     def test_get_physical_drive_dict_part_of_array(self, get_all_details_mock):
 
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
@@ -532,6 +547,8 @@ class PhysicalDriveTest(testtools.TestCase):
         self.assertEqual('HP      EF0600FARNA', ret['model'])
         self.assertEqual('HPD6', ret['firmware'])
         self.assertEqual('active', ret['status'])
+        self.assertEqual('False', ret['erase_support'])
+        self.assertEqual('OK', ret['erase_status'])
 
     def test_get_physical_drive_dict_unassigned(self, get_all_details_mock):
 
@@ -549,6 +566,26 @@ class PhysicalDriveTest(testtools.TestCase):
         self.assertEqual('HP      EF0600FARNA', ret['model'])
         self.assertEqual('HPD6', ret['firmware'])
         self.assertEqual('ready', ret['status'])
+        self.assertEqual('False', ret['erase_support'])
+        self.assertEqual('OK', ret['erase_status'])
+
+    def test_get_physical_drive_dict_erase_support(self, get_all_details_mock):
+        get_all_details_mock.return_value = raid_constants.HPSSA_ERASE_DRIVE
+        server = objects.Server()
+        d = server.controllers[0].unassigned_physical_drives[0]
+        d = [x for x in server.controllers[0].unassigned_physical_drives
+             if x.id == '1I:2:1']
+        ret = d[0].get_physical_drive_dict()
+        self.assertEqual('Smart Array P440 in Slot 2', ret['controller'])
+        self.assertEqual(300, ret['size_gb'])
+        self.assertEqual('1I:2:1', ret['id'])
+        self.assertEqual('hdd', ret['disk_type'])
+        self.assertEqual('sas', ret['interface_type'])
+        self.assertEqual('HP      EH0300JEDHC', ret['model'])
+        self.assertEqual('HPD4', ret['firmware'])
+        self.assertEqual('ready', ret['status'])
+        self.assertEqual('True', ret['erase_support'])
+        self.assertEqual('OK', ret['erase_status'])
 
 
 class PrivateMethodsTestCase(testtools.TestCase):

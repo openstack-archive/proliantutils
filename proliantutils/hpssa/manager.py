@@ -14,6 +14,7 @@
 
 import json
 import os
+import time
 
 import jsonschema
 from jsonschema import exceptions as json_schema_exc
@@ -337,3 +338,54 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def erase_devices():
+    """Erase all the drives on this server.
+
+    This method performs sanitize erase on all the supported drives
+    in this server.
+
+    :returns: a dictionary of controllers with drives and the erase status.
+    :raises exception.HPSSAException, if none of the drives support
+        sanitize erase.
+    """
+    server = objects.Server()
+    supported_controllers = []
+    for controller in server.controllers:
+        if controller.sanitize_support == 'True':
+            supported_controllers.append(controller)
+
+    if not supported_controllers:
+        reason = ("Sanitize erase not supported in the available"
+                  "controllers %s" % ', '.join([c.id
+                                               for c in server.controllers]))
+        return reason
+
+    for controller in supported_controllers:
+        drives = [x for x in controller.unassigned_physical_drives
+                  if (x.get_physical_drive_dict().get('erase_status', '')
+                      == 'OK')]
+        if drives:
+            drives = ','.join(x.id for x in drives)
+            controller.erase_devices(drives)
+
+    erase_in_progress = True
+    while(erase_in_progress):
+        server.refresh()
+        drives = server.get_physical_drives()
+        if any((drive.erase_status == 'Erase In Progress')
+               for drive in drives):
+            erase_in_progress = True
+        else:
+            erase_in_progress = False
+            continue
+        time.sleep(300)
+
+    status = {}
+    for controller in server.controllers:
+        drive_status = {x.id: x.erase_status
+                        for x in controller.unassigned_physical_drives}
+        status[controller.id] = drive_status
+
+    return status
