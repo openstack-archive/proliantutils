@@ -109,6 +109,7 @@ class IloRisTestCase(testtools.TestCase):
         _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {
             'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
+            'iSCSITargetInfoViaDHCP': False,
             'iSCSIBootLUN': '1',
             'iSCSITargetIpAddress': '10.10.1.30',
             'iSCSITargetTcpPort': 3260}

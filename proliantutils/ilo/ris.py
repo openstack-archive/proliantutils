@@ -902,6 +902,7 @@ class RISOperations(operations.IloOperations):
             iscsi_info['iSCSIBootLUN'] = lun
             iscsi_info['iSCSITargetIpAddress'] = ip_address
             iscsi_info['iSCSITargetTcpPort'] = int(port)
+            iscsi_info['iSCSITargetInfoViaDHCP'] = False
             if (auth_method == 'CHAP'):
                 iscsi_info['iSCSIAuthenticationMethod'] = 'Chap'
                 iscsi_info['iSCSIChapUsername'] = username
