@@ -22,8 +22,8 @@ import time
 
 from oslo_concurrency import processutils
 
+from proliantutils import client
 from proliantutils import exception
-from proliantutils.ilo import client
 from proliantutils import utils
 
 

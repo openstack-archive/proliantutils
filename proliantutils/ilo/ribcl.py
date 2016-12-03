@@ -31,8 +31,8 @@ import six
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import firmware_controller
-from proliantutils.ilo import operations
 from proliantutils import log
+from proliantutils import operations
 
 
 POWER_STATE = {
@@ -66,7 +66,7 @@ class MaskedRequestData(object):
         return str(request_data_copy)
 
 
-class RIBCLOperations(operations.IloOperations):
+class RIBCLOperations(operations.Operations):
     """iLO class for RIBCL interface for iLO.
 
     Implements the base class using RIBCL scripting language to talk

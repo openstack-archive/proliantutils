@@ -17,11 +17,11 @@ from proliantutils import exception
 ERRMSG = "The specified operation is not supported on current platform."
 
 
-class IloOperations(object):
-    """iLO class for performing iLO Operations.
+class Operations(object):
+    """Interface class for all Operations supported.
 
     This class provides an OO interface for retrieving information
-    and managing iLO. It implements the same interface in
+    and managing a node. It implements the same interface in
     python as described in HP iLO 4 Scripting and Command Line Guide.
 
     """

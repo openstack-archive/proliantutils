@@ -23,8 +23,8 @@ import six.moves.builtins as __builtin__
 from six.moves import http_client
 import testtools
 
+from proliantutils import client
 from proliantutils import exception
-from proliantutils.ilo import client
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import ribcl
 from proliantutils import utils

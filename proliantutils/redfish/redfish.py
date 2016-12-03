@@ -25,10 +25,23 @@ Class specific for Redfish APIs.
 LOG = log.get_logger(__name__)
 
 
-class RISOperations(rest_operations.RestOperations):
+class RedfishOperations(rest_operations.RestOperations):
 
     def __init__(self, host, username, password, bios_password=None,
                  cacert=None):
-        super(RISOperations, self).__init__(host, username, password,
-                                            biospassword=bios_password,
-                                            cacert=cacert)
+        super(RedfishOperations, self).__init__(
+            host, username, password, default_prefix='/redfish/v1/',
+            biospassword=bios_password, cacert=cacert)
+
+    # Note(deray): This is the list of APIs which are currently supported
+    # via Redfish mode of operation. This is a growing list which needs
+    # to be updated as and when the existing API/s are migrated from its
+    # cousin RIS and RIBCL interfaces.
+    #
+    #    --- START ---
+    #
+    #    get_product_name(self),
+    #    get_host_power_status(self),
+    #    get_vm_status(self, device='FLOPPY'),
+    #
+    #    --- END ---

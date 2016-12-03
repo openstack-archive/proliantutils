@@ -20,9 +20,9 @@ import mock
 from oslo_concurrency import processutils
 import testtools
 
+from proliantutils import client as ilo_client
 from proliantutils import exception
 from proliantutils.hpsum import hpsum_controller
-from proliantutils.ilo import client as ilo_client
 from proliantutils.tests.hpsum import hpsum_sample_output as constants
 from proliantutils import utils
 

@@ -15,11 +15,11 @@
 
 from proliantutils import exception
 from proliantutils.ilo import ipmi
-from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
 from proliantutils import log
+from proliantutils import operations
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
@@ -59,7 +59,7 @@ SUPPORTED_RIS_METHODS = [
 LOG = log.get_logger(__name__)
 
 
-class IloClient(operations.IloOperations):
+class IloClient(operations.Operations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
                  bios_password=None, cacert=None, snmp_credentials=None):
@@ -74,7 +74,7 @@ class IloClient(operations.IloOperations):
         self.ribcl.init_model_based_tags(self.model)
         self.snmp_credentials = snmp_credentials
         self._validate_snmp()
-        LOG.debug(self._("IloClient object created. "
+        LOG.debug(self._("Client object created. "
                          "Model: %(model)s"), {'model': self.model})
 
     def _validate_snmp(self):
