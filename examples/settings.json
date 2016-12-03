@@ -1,0 +1,7 @@
+{
+    "path_to_local_repo": "/opt/stack/proliantutils",
+
+    "ilo_ip": "15.119.209.114",
+    "username": "administrator",
+    "password": "compaq"
+}

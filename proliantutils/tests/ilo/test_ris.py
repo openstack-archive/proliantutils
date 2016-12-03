@@ -199,7 +199,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_rest_post')
     @mock.patch.object(ris.RISOperations, '_rest_get')
     def test_reset_ilo_ok(self, get_mock, post_mock, status_mock):
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
         get_mock.return_value = (200, ris_outputs.GET_HEADERS,
                                  manager_data)
@@ -213,7 +213,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_rest_post')
     @mock.patch.object(ris.RISOperations, '_rest_get')
     def test_reset_ilo_fail(self, get_mock, post_mock):
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
         get_mock.return_value = (200, ris_outputs.HEADERS_FOR_REST_OP,
                                  manager_data)
@@ -228,7 +228,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_type')
     @mock.patch.object(ris.RISOperations, '_rest_get')
     def test_reset_ilo_type_mismatch(self, get_mock, type_mock):
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
         get_mock.return_value = (200, ris_outputs.HEADERS_FOR_REST_OP,
                                  manager_data)
@@ -339,7 +339,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_collection')
     def test_reset_ilo_credential(self, collection_mock, patch_mock):
-        uri = '/rest/v1/AccountService/Accounts/1'
+        uri = '/AccountService/Accounts/1'
         collection_output = json.loads(ris_outputs.COLLECTIONS_SAMPLE)
         item = collection_output['Items'][0]
         collection_mock.return_value = [(200, None, item, uri)]
@@ -352,7 +352,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_get_collection')
     def test_reset_ilo_credential_fail(self, collection_mock, patch_mock):
-        uri = '/rest/v1/AccountService/Accounts/1'
+        uri = '/AccountService/Accounts/1'
         collection_output = json.loads(ris_outputs.COLLECTIONS_SAMPLE)
         item = collection_output['Items'][0]
         collection_mock.return_value = [(200, None, item, uri)]
@@ -366,7 +366,7 @@ class IloRisTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_get_collection')
     def test_reset_ilo_credential_no_account(self, collection_mock):
-        uri = '/rest/v1/AccountService/Accounts/1'
+        uri = '/AccountService/Accounts/1'
         self.client = ris.RISOperations("1.2.3.4", "Admin", "Admin")
         collection_output = json.loads(ris_outputs.COLLECTIONS_SAMPLE)
         item = collection_output['Items'][0]
@@ -434,7 +434,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_ilo_firmware_version_as_major_minor(
             self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
         expected_ilo_firm = "2.04"
@@ -444,7 +444,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_ilo_firmware_version_as_major_minor_suggested_min(
             self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_EQ_SUGGESTED)
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
         expected_ilo_firm = "2.30"
@@ -454,7 +454,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_ilo_firmware_version_as_major_minor_gt_suggested_min(
             self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_GT_SUGGESTED)
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
         expected_ilo_firm = "2.54"
@@ -464,7 +464,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_ilo_firmware_version_as_major_minor_no_firmware(
             self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS_NO_FIRMWARE)
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client.get_ilo_firmware_version_as_major_minor()
         expected_ilo_firm = None
@@ -473,7 +473,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_ilo_details')
     def test__get_ilo_firmware_version(self, get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         ilo_firm = self.client._get_ilo_firmware_version()
         expected_ilo_firm = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -514,7 +514,7 @@ class IloRisTestCase(testtools.TestCase):
                                                      get_ilo_details_mock):
         ilo_details = json.loads(ris_outputs.GET_MANAGER_DETAILS)
         del ilo_details['Oem']['Hp']['links']['LicenseService']
-        uri = '/rest/v1/Managers/1'
+        uri = '/Managers/1'
         get_ilo_details_mock.return_value = (ilo_details, uri)
         self.assertRaises(exception.IloCommandNotSupportedError,
                           self.client.activate_license, 'testkey')
@@ -897,7 +897,8 @@ class IloRisTestCase(testtools.TestCase):
                        '_get_firmware_update_service_resource',
                        autospec=True)
     @mock.patch.object(ris.RISOperations, '_rest_post', autospec=True)
-    @mock.patch.object(ris.common, 'wait_for_ris_firmware_update_to_complete',
+    @mock.patch.object(ris.rest_operations.common,
+                       'wait_for_ris_firmware_update_to_complete',
                        autospec=True)
     @mock.patch.object(ris.RISOperations, 'get_firmware_update_progress',
                        autospec=True)
@@ -940,7 +941,8 @@ class IloRisTestCase(testtools.TestCase):
                        '_get_firmware_update_service_resource',
                        autospec=True)
     @mock.patch.object(ris.RISOperations, '_rest_post', autospec=True)
-    @mock.patch.object(ris.common, 'wait_for_ris_firmware_update_to_complete',
+    @mock.patch.object(ris.rest_operations.common,
+                       'wait_for_ris_firmware_update_to_complete',
                        autospec=True)
     @mock.patch.object(ris.RISOperations, 'get_firmware_update_progress',
                        autospec=True)
@@ -1043,7 +1045,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertFalse(result)
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_okay(self, request_mock):
+    def xtest__rest_op_okay(self, request_mock):
         sample_headers = ris_outputs.HEADERS_FOR_REST_OP
         exp_headers = dict((x.lower(), y) for x, y in sample_headers)
         sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
@@ -1052,8 +1054,8 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             headers=exp_headers)
         request_mock.return_value = response_mock_obj
 
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', None, None)
+        status, headers, response = self.client._rest_request(
+            '/v1/foo', 'GET', None, None)
 
         self.assertEqual(200, status)
         self.assertEqual(exp_headers, headers)
@@ -1064,11 +1066,11 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             data="null", verify=False)
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_request_error(self, request_mock):
+    def xtest__rest_op_request_error(self, request_mock):
         request_mock.side_effect = RuntimeError("boom")
 
         exc = self.assertRaises(exception.IloConnectionError,
-                                self.client._rest_op,
+                                self.client._rest_request,
                                 'GET', '/v1/foo', {}, None)
 
         request_mock.assert_called_once_with(
@@ -1078,7 +1080,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertIn("boom", str(exc))
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_continous_redirection(self, request_mock):
+    def xtest__rest_op_continous_redirection(self, request_mock):
         sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
         sample_headers = ris_outputs.HEADERS_FOR_REST_OP
         sample_headers.append(('location', 'https://foo'))
@@ -1093,14 +1095,14 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                     response_mock_obj]
 
         exc = self.assertRaises(exception.IloConnectionError,
-                                self.client._rest_op,
+                                self.client._rest_request,
                                 'GET', '/v1/foo', {}, None)
 
         self.assertEqual(5, request_mock.call_count)
         self.assertIn('https://1.2.3.4/v1/foo', str(exc))
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_one_redirection(self, request_mock):
+    def xtest__rest_op_one_redirection(self, request_mock):
         sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
         sample_headers1 = ris_outputs.HEADERS_FOR_REST_OP
         sample_headers2 = ris_outputs.HEADERS_FOR_REST_OP
@@ -1116,8 +1118,8 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         request_mock.side_effect = [response_mock_obj1,
                                     response_mock_obj2]
 
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', {}, None)
+        status, headers, response = self.client._rest_request(
+            '/v1/foo', 'GET', {}, None)
 
         exp_headers = dict((x.lower(), y) for x, y in sample_headers2)
         self.assertEqual(200, status)
@@ -1132,7 +1134,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                       data="null", verify=False)])
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_response_decode_error(self, request_mock):
+    def xtest__rest_op_response_decode_error(self, request_mock):
         sample_response_body = "{[wrong json"
         sample_headers = ris_outputs.HEADERS_FOR_REST_OP
         exp_headers = dict((x.lower(), y) for x, y in sample_headers)
@@ -1142,8 +1144,8 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         request_mock.return_value = response_mock_obj
 
         self.assertRaises(exception.IloError,
-                          self.client._rest_op,
-                          'GET', '/v1/foo', {}, None)
+                          self.client._rest_request,
+                          '/v1/foo', 'GET', {}, None)
 
         request_mock.assert_called_once_with(
             'https://1.2.3.4/v1/foo',
@@ -1151,7 +1153,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             data="null", verify=False)
 
     @mock.patch.object(requests, 'get')
-    def test__rest_op_response_gzipped_response(self, request_mock):
+    def xtest__rest_op_response_gzipped_response(self, request_mock):
         sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
         gzipped_response_body = base64.b64decode(
             ris_outputs.BASE64_GZIPPED_RESPONSE)
@@ -1162,8 +1164,8 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
             headers=exp_headers)
         request_mock.return_value = response_mock_obj
 
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', {}, None)
+        status, headers, response = self.client._rest_request(
+            '/v1/foo', 'GET', {}, None)
 
         self.assertEqual(200, status)
         self.assertEqual(exp_headers, headers)
@@ -1172,7 +1174,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
     def test___change_bios_setting(self, check_bios_mock, patch_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         properties = {'fake-property': 'fake-value'}
         settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
@@ -1191,7 +1193,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test___change_bios_setting_fail(self, check_bios_mock, patch_mock,
                                         settings_mock, op_mock,
                                         validate_mock):
-        bios_uri = '/rest/v1/systems/1/bios/Settings'
+        bios_uri = '/systems/1/bios/Settings'
         properties = {'fake-property': 'fake-value'}
         settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         op_mock.return_value = False
@@ -1217,7 +1219,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__check_iscsi_rest_patch_allowed(self, check_bios_mock, get_mock,
                                              op_mock, settings_mock,
                                              validate_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, settings)
@@ -1226,7 +1228,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         get_mock.return_value = (200, ris_outputs.GET_HEADERS,
                                  iscsi_settings)
         op_mock.return_value = False
-        iscsi_settings_uri = '/rest/v1/systems/1/bios/iScsi/Settings'
+        iscsi_settings_uri = '/systems/1/bios/iScsi/Settings'
         settings_mock.return_value = (ris_outputs.GET_HEADERS,
                                       iscsi_settings_uri, iscsi_settings)
         self.client._check_iscsi_rest_patch_allowed()
@@ -1241,7 +1243,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
     def test__check_iscsi_rest_patch_allowed_fail(self, check_bios_mock,
                                                   get_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, settings)
@@ -1256,7 +1258,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
     def test__check_iscsi_rest_patch_allowed_not_found(self, check_bios_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         settings = json.loads(ris_outputs.GET_BASE_CONFIG)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, settings)
@@ -1272,7 +1274,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__change_iscsi_settings(self, check_bios_mock, boot_mock,
                                     mappings_mock, check_iscsi_mock,
                                     patch_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1280,7 +1282,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         boot_mock.return_value = boot_settings
         map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
         mappings_mock.return_value = map_settings
-        iscsi_uri = '/rest/v1/systems/1/bios/iScsi/Settings'
+        iscsi_uri = '/systems/1/bios/iScsi/Settings'
         properties = {'iSCSITargetName':
                       'iqn.2011-07.com.example.server:test1',
                       'iSCSIBootLUN': '1',
@@ -1303,7 +1305,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__change_iscsi_settings_invalid_mac(self, check_bios_mock,
                                                 boot_mock,
                                                 mappings_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1323,7 +1325,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__change_iscsi_settings_invalid_mapping(self, check_bios_mock,
                                                     boot_mock,
                                                     mappings_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1346,7 +1348,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__change_iscsi_settings_fail(self, check_bios_mock, boot_mock,
                                          mappings_mock, check_iscsi_mock,
                                          patch_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1354,7 +1356,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         boot_mock.return_value = boot_settings
         map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
         mappings_mock.return_value = map_settings
-        iscsi_uri = '/rest/v1/systems/1/bios/iScsi/Settings'
+        iscsi_uri = '/systems/1/bios/iScsi/Settings'
         properties = {'iSCSITargetName':
                       'iqn.2011-07.com.example.server:test1',
                       'iSCSIBootLUN': '1',
@@ -1538,14 +1540,14 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                    collection_mock,
                                    ilo_details_mock,
                                    get_mock):
-        manager_uri = '/rest/v1/Managers/1'
+        manager_uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
 
         ilo_details_mock.return_value = (manager_data, manager_uri)
 
         collection_item = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_EMPTY)
         vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
-        member_uri = '/rest/v1/Managers/1/VirtualMedia/1'
+        member_uri = '/Managers/1/VirtualMedia/1'
         collection_mock.return_value = [(200, None, collection_item,
                                          member_uri)]
         get_mock.return_value = (200, ris_outputs.GET_HEADERS,
@@ -1562,7 +1564,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_ilo_details')
     def test__get_vm_device_status_vmedia_not_supported(self,
                                                         ilo_details_mock):
-        manager_uri = '/rest/v1/Managers/1'
+        manager_uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS_NO_VMEDIA)
 
         ilo_details_mock.return_value = (manager_data, manager_uri)
@@ -1578,14 +1580,14 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                         collection_mock,
                                         ilo_details_mock,
                                         get_mock):
-        manager_uri = '/rest/v1/Managers/1'
+        manager_uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
 
         ilo_details_mock.return_value = (manager_data, manager_uri)
 
         collection_item = json.loads(ris_outputs.RESP_VM_STATUS_FLOPPY_EMPTY)
         vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
-        member_uri = '/rest/v1/Managers/1/VirtualMedia/1'
+        member_uri = '/Managers/1/VirtualMedia/1'
         collection_mock.return_value = [(200, None, collection_item,
                                          member_uri)]
         get_mock.return_value = (301, ris_outputs.GET_HEADERS,
@@ -1603,14 +1605,14 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                                   collection_mock,
                                                   ilo_details_mock,
                                                   get_mock):
-        manager_uri = '/rest/v1/Managers/1'
+        manager_uri = '/Managers/1'
         manager_data = json.loads(ris_outputs.GET_MANAGER_DETAILS)
 
         ilo_details_mock.return_value = (manager_data, manager_uri)
 
         collection_item = json.loads(ris_outputs.RESP_VM_STATUS_CDROM_MISSING)
         vmedia_uri = '/rest/v1/Managers/1/VirtualMedia'
-        member_uri = '/rest/v1/Managers/1/VirtualMedia/2'
+        member_uri = '/Managers/1/VirtualMedia/2'
         collection_mock.return_value = [(200, None, collection_item,
                                          member_uri)]
         get_mock.return_value = (200, ris_outputs.GET_HEADERS,
@@ -1623,7 +1625,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_once(self, rest_patch_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_boot_settings = {}
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Once',
                                      'BootSourceOverrideTarget': 'Cd'}
@@ -1636,7 +1638,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_for_continuous(self, rest_patch_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_boot_settings = {}
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
                                      'BootSourceOverrideTarget': 'Cd'}
@@ -1649,7 +1651,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_for_UefiShell(self, rest_patch_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_boot_settings = {}
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
                                      'BootSourceOverrideTarget': 'UefiShell'}
@@ -1666,13 +1668,13 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__update_persistent_boot_for_iscsi_mac_valid(self, rest_patch_mock,
                                                          check_bios_mock,
                                                          boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
         boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
         boot_mock.return_value = boot_settings
-        systems_uri = '/rest/v1/Systems/1'
+        systems_uri = '/Systems/1'
         new1_boot_settings = {}
         new1_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
                                       u'NIC.LOM.1.1.iSCSI'}
@@ -1696,7 +1698,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__update_persistent_boot_for_iscsi_mac_invalid(self,
                                                            check_bios_mock,
                                                            boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1715,7 +1717,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_fail(self, rest_patch_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_boot_settings = {}
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
                                      'BootSourceOverrideTarget': 'FakeDevice'}
@@ -1732,7 +1734,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__get_persistent_boot_devices_no_boot_order(self,
                                                         check_bios_mock,
                                                         boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1746,7 +1748,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
     def test__get_persistent_boot_devices(self, check_bios_mock, boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1765,7 +1767,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
     def test__get_persistent_boot_devices_no_bootsources(self,
                                                          check_bios_mock,
                                                          boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
+        bios_uri = '/systems/1/bios'
         bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
         check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
                                         bios_uri, bios_settings)
@@ -1875,7 +1877,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_post')
     def test_press_pwr_btn(self, rest_post_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_pow_settings = {"Action": "PowerButton",
                             "Target": "/Oem/Hp",
                             "PushType": "Press"}
@@ -1887,7 +1889,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_post')
     def test_press_pwr_btn_patch_fail(self, rest_post_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_pow_settings = {"Action": "PowerButton",
                             "Target": "/Oem/Hp",
                             "PushType": "Press"}
@@ -1900,7 +1902,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_post')
     def test_perform_power_op(self, rest_post_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_pow_settings = {"Action": "Reset", "ResetType": "ForceRestart"}
         rest_post_mock.return_value = (200, ris_outputs.GET_HEADERS,
                                        ris_outputs.REST_POST_RESPONSE)
@@ -1910,7 +1912,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_rest_post')
     def test_perform_power_op_fail(self, rest_post_mock):
-        systems_uri = "/rest/v1/Systems/1"
+        systems_uri = "/Systems/1"
         new_pow_settings = {"Action": "Reset", "ResetType": "ForceRestart"}
         rest_post_mock.return_value = (301, ris_outputs.GET_HEADERS,
                                        ris_outputs.REST_FAILURE_OUTPUT)

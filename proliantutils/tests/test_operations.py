@@ -16,14 +16,14 @@
 
 import unittest
 
-from proliantutils.ilo import operations
+from proliantutils import operations
 
 
-class IloOperationsTestCase(unittest.TestCase):
+class OperationsTestCase(unittest.TestCase):
 
     def setUp(self):
-        super(IloOperationsTestCase, self).setUp()
-        self.operations_object = operations.IloOperations()
+        super(OperationsTestCase, self).setUp()
+        self.operations_object = operations.Operations()
 
     def test__okay(self):
         self.operations_object.host = '1.2.3.4'

@@ -17,8 +17,8 @@
 import mock
 import testtools
 
+from proliantutils import client
 from proliantutils import exception
-from proliantutils.ilo import client
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
