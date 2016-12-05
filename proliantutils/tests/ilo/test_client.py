@@ -89,6 +89,11 @@ class IloClientTestCase(testtools.TestCase):
                                           'CHAP', 'user', 'password')
 
     @mock.patch.object(client.IloClient, '_call_method')
+    def test_unset_iscsi_boot_info(self, call_mock):
+        self.client.unset_iscsi_boot_info('c456')
+        call_mock.assert_called_once_with('unset_iscsi_boot_info', 'c456')
+
+    @mock.patch.object(client.IloClient, '_call_method')
     def test_get_product_name(self, call_mock):
         self.client.get_product_name()
         call_mock.assert_called_once_with('get_product_name')

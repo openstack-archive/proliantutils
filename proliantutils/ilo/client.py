@@ -48,6 +48,7 @@ SUPPORTED_RIS_METHODS = [
     'set_secure_boot_mode',
     'get_server_capabilities',
     'set_iscsi_boot_info',
+    'unset_iscsi_boot_info',
     'set_vm_status',
     'update_firmware',
     'update_persistent_boot',
@@ -140,6 +141,16 @@ class IloClient(operations.IloOperations):
         return self._call_method('set_iscsi_boot_info', mac, target_name, lun,
                                  ip_address, port, auth_method, username,
                                  password)
+
+    def unset_iscsi_boot_info(self, mac):
+        """Disable iscsi boot option of the system. in uefi boot mode.
+
+        :param mac: MAC address of initiator.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        return self._call_method('unset_iscsi_boot_info', mac)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""

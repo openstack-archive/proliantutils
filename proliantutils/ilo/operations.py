@@ -86,6 +86,17 @@ class IloOperations(object):
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
+    def unset_iscsi_boot_info(self, mac):
+        """Disable iscsi boot option of the system in uefi boot mode.
+
+        The iSCSI initiator is identified by the MAC provided.
+        :param mac: MAC address of initiator.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
         raise exception.IloCommandNotSupportedError(ERRMSG)

@@ -111,6 +111,7 @@ class IloRisTestCase(testtools.TestCase):
             'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
             'iSCSITargetInfoViaDHCP': False,
             'iSCSIBootLUN': '1',
+            'iSCSIBootEnable': 'Enabled',
             'iSCSITargetIpAddress': '10.10.1.30',
             'iSCSITargetTcpPort': 3260}
         self.client.set_iscsi_boot_info(
@@ -120,6 +121,25 @@ class IloRisTestCase(testtools.TestCase):
         _uefi_boot_mode_mock.assert_called_once_with()
         change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
                                                            iscsi_variables)
+
+    @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_unset_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
+                                        change_iscsi_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {'iSCSIBootEnable': 'Disabled'}
+        self.client.unset_iscsi_boot_info('C4346BB7EF30')
+        _uefi_boot_mode_mock.assert_called_once_with()
+        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
+                                                           iscsi_variables)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_unset_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        mac = 'C4346BB7EF30'
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.unset_iscsi_boot_info, mac)
+        _uefi_boot_mode_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
