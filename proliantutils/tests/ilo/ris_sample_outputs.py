@@ -1863,7 +1863,6 @@ GET_ISCSI_PATCH = """
         {
             "iSCSIBootAttemptInstance": 1,
             "iSCSIBootAttemptName": "NicBoot1",
-            "iSCSIBootEnable": "Enabled",
             "iSCSIBootLUN": "1",
             "iSCSINicSource": "NicBoot1",
             "iSCSITargetIpAddress": "10.10.1.30",
