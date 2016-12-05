@@ -623,7 +623,6 @@ class RISOperations(operations.IloOperations):
         iscsi_info['iSCSIBootAttemptName'] = nic
         iscsi_info['iSCSINicSource'] = nic
         iscsi_info['iSCSIBootAttemptInstance'] = 1
-        iscsi_info['iSCSIBootEnable'] = 'Enabled'
         patch_data = {'iSCSIBootSources': [iscsi_info]}
         status, headers, response = self._rest_patch(iscsi_uri,
                                                      None, patch_data)
@@ -907,6 +906,26 @@ class RISOperations(operations.IloOperations):
                 iscsi_info['iSCSIAuthenticationMethod'] = 'Chap'
                 iscsi_info['iSCSIChapUsername'] = username
                 iscsi_info['iSCSIChapSecret'] = password
+            self._change_iscsi_settings(mac.upper(), iscsi_info)
+        else:
+            msg = 'iscsi boot is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def set_iscsi_boot_option(self, mac, boot_option):
+        """Set iscsi boot option (Enable/Disable) of the system.
+
+        :param mac: MAC address of initiator.
+        :param boot_option: Boot option, to make iscis boot Enable or Disable.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        if(self._is_boot_mode_uefi() is True):
+            iscsi_info = {}
+            if boot_option is 'Enable':
+                iscsi_info['iSCSIBootEnable'] = 'Enabled'
+            else:
+                iscsi_info['iSCSIBootEnable'] = 'Disabled'
             self._change_iscsi_settings(mac.upper(), iscsi_info)
         else:
             msg = 'iscsi boot is not supported in the BIOS boot mode'

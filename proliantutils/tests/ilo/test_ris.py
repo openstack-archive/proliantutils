@@ -121,6 +121,37 @@ class IloRisTestCase(testtools.TestCase):
         change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
                                                            iscsi_variables)
 
+    @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_boot_option_uefi_Enable(self, _uefi_boot_mode_mock,
+                                               change_iscsi_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {'iSCSIBootEnable': 'Enabled'}
+        self.client.set_iscsi_boot_option('C4346BB7EF30', 'Enable')
+        _uefi_boot_mode_mock.assert_called_once_with()
+        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
+                                                           iscsi_variables)
+
+    @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_boot_option_uefi_Disable(self, _uefi_boot_mode_mock,
+                                                change_iscsi_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {'iSCSIBootEnable': 'Disabled'}
+        self.client.set_iscsi_boot_option('C4346BB7EF30', 'Disable')
+        _uefi_boot_mode_mock.assert_called_once_with()
+        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
+                                                           iscsi_variables)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_boot_option_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        mac = 'C4346BB7EF30'
+        self.assertRaises(exception.IloCommandNotSupportedInBiosError,
+                          self.client.set_iscsi_boot_option, mac,
+                          'Enable')
+        _uefi_boot_mode_mock.assert_called_once_with()
+
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
