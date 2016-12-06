@@ -1643,6 +1643,22 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                                 new_boot_settings)
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_for_UefiTarget(self, rest_patch_mock):
+        systems_uri = "/rest/v1/Systems/1"
+        iscsi_boot_settings = {}
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                                     'BootSourceOverrideTarget': 'UefiTarget'}
+        iscsi_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                       'NIC.LOM.1.1.iSCSI'}
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        self.client._update_persistent_boot(['ISCSI'], persistent=True)
+        calls = [mock.call(systems_uri, None, iscsi_boot_settings),
+                 mock.call(systems_uri, None, new_boot_settings)]
+        rest_patch_mock.assert_has_calls(calls)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_fail(self, rest_patch_mock):
         systems_uri = "/rest/v1/Systems/1"
         new_boot_settings = {}

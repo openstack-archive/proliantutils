@@ -39,7 +39,7 @@ TODO : Add rest of the API's that exists in RIBCL. """
 DEVICE_COMMON_TO_RIS = {'NETWORK': 'Pxe',
                         'CDROM': 'Cd',
                         'HDD': 'Hdd',
-                        }
+                        'ISCSI': 'UefiTarget'}
 DEVICE_RIS_TO_COMMON = dict(
     (v, k) for (k, v) in DEVICE_COMMON_TO_RIS.items())
 
@@ -1453,7 +1453,6 @@ class RISOperations(operations.IloOperations):
         """
         tenure = 'Once'
         new_device = device_type[0]
-
         # If it is a standard device, we need to convert in RIS convention
         if device_type[0].upper() in DEVICE_COMMON_TO_RIS:
             new_device = DEVICE_COMMON_TO_RIS[device_type[0].upper()]
@@ -1465,6 +1464,16 @@ class RISOperations(operations.IloOperations):
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
                                      'BootSourceOverrideTarget': new_device}
         systems_uri = "/rest/v1/Systems/1"
+        # Need to set this option first if device is 'UefiTarget'
+        if new_device is 'UefiTarget':
+            iscsi_boot_settings = {}
+            iscsi_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                           'NIC.LOM.1.1.iSCSI'}
+            status, headers, response = self._rest_patch(systems_uri, None,
+                                                         iscsi_boot_settings)
+            if status >= 300:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
 
         status, headers, response = self._rest_patch(systems_uri, None,
                                                      new_boot_settings)
@@ -1483,8 +1492,9 @@ class RISOperations(operations.IloOperations):
         # Check if the input is valid
         for item in device_type:
             if item.upper() not in DEVICE_COMMON_TO_RIS:
-                raise exception.IloInvalidInputError(
-                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
+                raise exception.IloInvalidInputError("Invalid input. Valid "
+                                                     "devices: NETWORK, HDD,"
+                                                     " ISCSI or CDROM.")
 
         self._update_persistent_boot(device_type, persistent=True)
 
