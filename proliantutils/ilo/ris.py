@@ -39,7 +39,7 @@ TODO : Add rest of the API's that exists in RIBCL. """
 DEVICE_COMMON_TO_RIS = {'NETWORK': 'Pxe',
                         'CDROM': 'Cd',
                         'HDD': 'Hdd',
-                        }
+                        'ISCSI': 'UefiTarget'}
 DEVICE_RIS_TO_COMMON = dict(
     (v, k) for (k, v) in DEVICE_COMMON_TO_RIS.items())
 
@@ -1439,7 +1439,8 @@ class RISOperations(operations.IloOperations):
         else:
             return None
 
-    def _update_persistent_boot(self, device_type=[], persistent=False):
+    def _update_persistent_boot(self, device_type=[], persistent=False,
+                                mac=None):
         """Changes the persistent boot device order in BIOS boot mode for host
 
         Note: It uses first boot device from the device_type and ignores rest.
@@ -1447,13 +1448,13 @@ class RISOperations(operations.IloOperations):
         :param device_type: ordered list of boot devices
         :param persistent: Boolean flag to indicate if the device to be set as
                            a persistent boot device
+        :param mac: intiator mac address, mandotory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
         tenure = 'Once'
         new_device = device_type[0]
-
         # If it is a standard device, we need to convert in RIS convention
         if device_type[0].upper() in DEVICE_COMMON_TO_RIS:
             new_device = DEVICE_COMMON_TO_RIS[device_type[0].upper()]
@@ -1461,21 +1462,50 @@ class RISOperations(operations.IloOperations):
         if persistent:
             tenure = 'Continuous'
 
+        systems_uri = "/rest/v1/Systems/1"
+        # Need to set this option first if device is 'UefiTarget'
+        if new_device is 'UefiTarget':
+            if not mac:
+                msg = ('Mac is needed for iscsi uefi boot')
+                raise exception.IloInvalidInputError(msg)
+
+            headers, bios_uri, bios_settings = self._check_bios_resource()
+            # Get the Boot resource and Mappings resource.
+            boot_settings = self._get_bios_boot_resource(bios_settings)
+            StructuredBootString = None
+
+            for boot_setting in boot_settings['BootSources']:
+                if(mac.upper() in boot_setting['UEFIDevicePath'] and
+                   'iSCSI' in boot_setting['UEFIDevicePath']):
+                    StructuredBootString = boot_setting['StructuredBootString']
+                    break
+            if not StructuredBootString:
+                msg = ('MAC provided is Invalid "%s"' % mac)
+                raise exception.IloInvalidInputError(msg)
+
+            new_boot_settings = {}
+            new_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                         StructuredBootString}
+            status, headers, response = self._rest_patch(systems_uri, None,
+                                                         new_boot_settings)
+            if status >= 300:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
+
         new_boot_settings = {}
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
                                      'BootSourceOverrideTarget': new_device}
-        systems_uri = "/rest/v1/Systems/1"
-
         status, headers, response = self._rest_patch(systems_uri, None,
                                                      new_boot_settings)
         if status >= 300:
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
 
-    def update_persistent_boot(self, device_type=[]):
+    def update_persistent_boot(self, device_type=[], mac=None):
         """Changes the persistent boot device order for the host
 
         :param device_type: ordered list of boot devices
+        :param mac: intiator mac address, mandatory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
@@ -1483,20 +1513,22 @@ class RISOperations(operations.IloOperations):
         # Check if the input is valid
         for item in device_type:
             if item.upper() not in DEVICE_COMMON_TO_RIS:
-                raise exception.IloInvalidInputError(
-                    "Invalid input. Valid devices: NETWORK, HDD or CDROM.")
+                raise exception.IloInvalidInputError("Invalid input. Valid "
+                                                     "devices: NETWORK, HDD,"
+                                                     " ISCSI or CDROM.")
 
-        self._update_persistent_boot(device_type, persistent=True)
+        self._update_persistent_boot(device_type, persistent=True, mac=mac)
 
-    def set_one_time_boot(self, device):
+    def set_one_time_boot(self, device, mac=None):
         """Configures a single boot from a specific device.
 
         :param device: Device to be set as a one time boot device
+        :param mac: intiator mac address, optional parameter
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        self._update_persistent_boot([device], persistent=False)
+        self._update_persistent_boot([device], persistent=False, mac=mac)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot.

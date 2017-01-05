@@ -1427,6 +1427,15 @@ GET_BIOS_BOOT = """
                                         (C4346BB7EF30,0x0)/IPv4(0.0.0.0)"
         },
         {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 2-port\
+                                         361i Adapter - NIC (iSCSI IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x1)/IPv4(0.0.0.0)/iSCSI(iqn.2016-07.org.de\
+            :storage,0x1,0x0,None,None,None,TCP)"
+        },
+        {
             "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
                                           331i Adapter - NIC (PXE IPv6) ",
             "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
@@ -1479,6 +1488,7 @@ GET_BIOS_BOOT = """
     "PersistentBootConfigOrder": [
         "HD.Slot.1.1",
         "HD.Slot.1.2",
+        "NIC.LOM.1.1.iSCSI",
         "NIC.LOM.1.1.IPv4",
         "NIC.LOM.1.1.IPv6",
         "Generic.USB.1.1",
@@ -3490,6 +3500,7 @@ UEFI_BOOT_SOURCES_ERR = '''
 
 UEFI_PERS_BOOT_DEVICES = ["HD.Slot.1.1",
                           "HD.Slot.1.2",
+                          "NIC.LOM.1.1.iSCSI",
                           "NIC.LOM.1.1.IPv4",
                           "NIC.LOM.1.1.IPv6",
                           "Generic.USB.1.1",
@@ -3633,6 +3644,16 @@ UEFI_BootSources = '''
             "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)/MAC\
                                         (C4346BB7EF30,0x0)/IPv4(0.0.0.0)"
     },
+    {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 2-port\
+                                         361i Adapter - NIC (iSCSI IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x1)/IPv4(0.0.0.0)/iSCSI(iqn.2016-07.org.de\
+            :storage,0x1,0x0,None,None,None,TCP)"
+    },
+
     {
             "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 4-port\
                                           331i Adapter - NIC (PXE IPv6) ",
