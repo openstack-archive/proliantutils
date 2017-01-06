@@ -22,6 +22,7 @@ from proliantutils import exception
 from proliantutils.hpssa import constants
 from proliantutils.hpssa import disk_allocator
 from proliantutils.hpssa import objects
+from proliantutils.ilo import common
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
@@ -74,27 +75,32 @@ def validate(raid_config):
             raise exception.InvalidInputError(msg)
 
 
-def _filter_raid_mode_controllers(server):
-    """Filters out the hpssa controllers in raid mode.
+def _select_controllers_by(server, select_condition, msg):
+    """Filters out the hpssa controllers based on the condition.
 
-    This method updates the server with only the controller which is in raid
-    mode. The controller which are in HBA mode are removed from the list.
+    This method updates the server with only the controller which satisfies
+    the condition. The controllers which doesn't satisfies the selection
+    condition will be removed from the list.
 
     :param server: The object containing all the supported hpssa controllers
         details.
+    :param select_condition: A lambda function to select the controllers based
+        on requirement.
+    :param msg: A String which describes the controller selection.
     :raises exception.HPSSAOperationError, if all the controller are in HBA
         mode.
     """
     all_controllers = server.controllers
-    non_hba_controllers = [c for c in all_controllers
-                           if not c.properties.get('HBA Mode Enabled', False)]
+    supported_controllers = [c for c in all_controllers if select_condition(c)]
 
-    if not non_hba_controllers:
-        reason = ("None of the available HPSSA controllers %s have RAID "
-                  "enabled" % ', '.join([c.id for c in all_controllers]))
+    if not supported_controllers:
+        reason = ("None of the available SSA controllers %(controllers)s "
+                  "have %(msg)s"
+                  % {'controllers': ', '.join([c.id for c in all_controllers]),
+                     'msg': msg})
         raise exception.HPSSAOperationError(reason=reason)
 
-    server.controllers = non_hba_controllers
+    server.controllers = supported_controllers
 
 
 def create_configuration(raid_config):
@@ -117,7 +123,9 @@ def create_configuration(raid_config):
     """
     server = objects.Server()
 
-    _filter_raid_mode_controllers(server)
+    select_controllers = lambda x: not x.properties.get('HBA Mode Enabled',
+                                                        False)
+    _select_controllers_by(server, select_controllers, 'RAID enabled')
 
     validate(raid_config)
 
@@ -297,7 +305,9 @@ def delete_configuration():
     """
     server = objects.Server()
 
-    _filter_raid_mode_controllers(server)
+    select_controllers = lambda x: not x.properties.get('HBA Mode Enabled',
+                                                        False)
+    _select_controllers_by(server, select_controllers, 'RAID enabled')
 
     for controller in server.controllers:
         # Trigger delete only if there is some RAID array, otherwise
@@ -337,3 +347,56 @@ def get_configuration():
 
     _update_physical_disk_details(raid_config, server)
     return raid_config
+
+
+def has_erase_completed():
+    server = objects.Server()
+    drives = server.get_physical_drives()
+    if any((drive.erase_status == 'Erase In Progress')
+           for drive in drives):
+        return False
+    else:
+        return True
+
+
+def erase_devices():
+    """Erase all the drives on this server.
+
+    This method performs sanitize erase on all the supported physical drives
+    in this server. This erase cannot be performed on logical drives.
+
+    :returns: a dictionary of controllers with drives and the erase status.
+    :raises exception.HPSSAException, if none of the drives support
+        sanitize erase.
+    """
+    server = objects.Server()
+
+    select_controllers = lambda x: (x.properties.get(
+                                    'Sanitize Erase Supported',
+                                    False) == 'True')
+    _select_controllers_by(server, select_controllers,
+                           'Sanitize Erase Supported')
+
+    for controller in server.controllers:
+        drives = [x for x in controller.unassigned_physical_drives
+                  if (x.get_physical_drive_dict().get('erase_status', '')
+                      == 'OK')]
+        if drives:
+            drives = ','.join(x.id for x in drives)
+            controller.erase_devices(drives)
+
+    common.wait_for_operation_to_complete(
+        has_erase_completed,
+        delay_bw_retries=300,
+        failover_msg='Disk erase failed.'
+    )
+
+    server.refresh()
+
+    status = {}
+    for controller in server.controllers:
+        drive_status = {x.id: x.erase_status
+                        for x in controller.unassigned_physical_drives}
+        status[controller.id] = drive_status
+
+    return status

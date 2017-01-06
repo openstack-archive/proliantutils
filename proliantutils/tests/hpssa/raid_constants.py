@@ -2330,3 +2330,156 @@ Smart Array P822 in Slot 3
          Mount Points: None
          Sanitize Erase Supported: False
 '''
+
+SSA_ERASE_DRIVE = '''
+
+Smart Array P440 in Slot 2
+   Bus Interface: PCI
+   Slot: 2
+   Serial Number: PDNMF0ARH8Y342
+   RAID 6 (ADG) Status: Enabled
+   Controller Status: OK
+   Firmware Version: 4.52-0
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Encryption: Disabled
+   Driver Name: hpsa
+   Driver Version: 3.4.16
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Host Serial Number: SGH537Y7AY
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+
+   Port Name: 1I
+         Port ID: 0
+         Port Connection Number: 0
+         SAS Address: 5001438035544EC0
+         Port Location: Internal
+         Managed Cable Connected: False
+
+
+   Internal Drive Cage at Port 1I, Box 0, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 0
+      Location: Internal
+
+   Physical Drives
+      None attached
+
+
+
+   Internal Drive Cage at Port 1I, Box 2, OK
+
+      Power Supply Status: Not Redundant
+      Drive Bays: 4
+      Port: 1I
+      Box: 2
+      Location: Internal
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Port: 1I
+         Box: 2
+         Bay: 1
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Drive exposed to OS: False
+         Logical/Physical Block Size: 512/512
+         Rotational Speed: 15100
+         Firmware Revision: HPD4
+         Serial Number: S7K0C3FJ0000K601EZLM
+         WWID: 5000C5008E183B1D
+         Model: HP      EH0300JEDHC
+         Current Temperature (C): 42
+         Maximum Temperature (C): 52
+         PHY Count: 2
+         PHY Transfer Rate: 12.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Shingled Magnetic Recording Support: None
+'''
+
+SSA_ERASE_IN_PROGRESS = '''
+Smart Array P440 in Slot 2
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Status: Erase In Progress
+         Drive Type: Unassigned Drive
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+'''
+
+SSA_ERASE_COMPLETE = '''
+Smart Array P440 in Slot 2
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+   Physical Drives
+      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
+
+
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Status: Erase Complete. Reenable Before Using.
+         Drive Type: Unassigned Drive
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+'''
+
+SSA_ERASE_NOT_SUPPORTED = '''
+
+Smart Array P440 in Slot 2
+   Controller Status: OK
+   Firmware Version: 4.52-0
+   Spare Activation Mode: Activate on physical drive failure (default)
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Controller Mode Reboot: Not Required
+   Sanitize Erase Supported: False
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+'''

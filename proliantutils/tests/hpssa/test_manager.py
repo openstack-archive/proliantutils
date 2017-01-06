@@ -191,7 +191,7 @@ class ManagerTestCases(testtools.TestCase):
         raid_info = {'logical_disks': 'foo'}
 
         msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
+               " of the available SSA controllers Smart Array P822 in "
                "Slot 3 have RAID enabled")
         ex = self.assertRaises(exception.HPSSAOperationError,
                                manager.create_configuration,
@@ -373,7 +373,6 @@ class ManagerTestCases(testtools.TestCase):
     def test_delete_configuration(self, controller_exec_cmd_mock,
                                   get_configuration_mock,
                                   get_all_details_mock):
-
         get_all_details_mock.return_value = raid_constants.HPSSA_ONE_DRIVE
         get_configuration_mock.return_value = 'foo'
 
@@ -406,7 +405,7 @@ class ManagerTestCases(testtools.TestCase):
         get_all_details_mock.return_value = drives
 
         msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
+               " of the available SSA controllers Smart Array P822 in "
                "Slot 3 have RAID enabled")
         ex = self.assertRaises(exception.HPSSAOperationError,
                                manager.delete_configuration)
@@ -454,27 +453,81 @@ class ManagerTestCases(testtools.TestCase):
         self.assertEqual(sorted(pds_active_expected), sorted(pds_active))
         self.assertEqual(sorted(pds_ready_expected), sorted(pds_ready))
 
-    def test__filter_raid_mode_controllers_hba(self, get_all_details_mock):
+    def test__select_controllers_by_hba(self, get_all_details_mock):
         get_all_details_mock.return_value = raid_constants.HPSSA_HBA_MODE
 
         server = objects.Server()
+        select_controllers = lambda x: not x.properties.get('HBA Mode Enabled',
+                                                            False)
 
-        msg = ("An error was encountered while doing hpssa configuration: None"
-               " of the available HPSSA controllers Smart Array P822 in "
-               "Slot 3 have RAID enabled")
+        msg = ("An error was encountered while doing hpssa configuration: "
+               "None of the available SSA controllers Smart Array P822 in "
+               "Slot 3 have Raid enabled.")
         ex = self.assertRaises(exception.HPSSAOperationError,
-                               manager._filter_raid_mode_controllers,
-                               server)
+                               manager._select_controllers_by,
+                               server, select_controllers, 'Raid enabled')
         self.assertIn(msg, str(ex))
 
-    def test__filter_raid_mode_controllers(self, get_all_details_mock):
+    def test__select_controllers_by(self, get_all_details_mock):
         get_all_details_mock.return_value = raid_constants.HPSSA_NO_DRIVES
 
         server = objects.Server()
+        select_controllers = lambda x: not x.properties.get('HBA Mode Enabled',
+                                                            False)
         ctrl_expected = server.controllers
 
-        manager._filter_raid_mode_controllers(server)
+        manager._select_controllers_by(server, select_controllers,
+                                       'Raid enabled')
         self.assertEqual(ctrl_expected, server.controllers)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices(self, controller_exec_cmd_mock,
+                           get_all_details_mock):
+        erase_drive = raid_constants.SSA_ERASE_DRIVE
+        erase_complete = raid_constants.SSA_ERASE_COMPLETE
+        cmd_args = []
+        cmd_args.append("pd 1I:2:1")
+        cmd_args.extend(['modify', 'erase',
+                         'erasepattern=overwrite',
+                         'unrestricted=off',
+                         'forced'])
+        expt_ret = {
+            'Smart Array P440 in Slot 2': {
+                '1I:2:1': 'Erase Complete. Reenable Before Using.'}}
+        get_all_details_mock.side_effect = [erase_drive, erase_complete,
+                                            erase_complete]
+
+        ret = manager.erase_devices()
+        self.assertTrue(controller_exec_cmd_mock.called)
+        controller_exec_cmd_mock.assert_any_call(*cmd_args)
+        self.assertEqual(expt_ret, ret)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_no_drives(self, controller_exec_cmd_mock,
+                                     get_all_details_mock):
+        erase_no_drives = raid_constants.SSA_ERASE_NOT_SUPPORTED
+        get_all_details_mock.side_effect = [erase_no_drives]
+        ex = self.assertRaises(exception.HPSSAOperationError,
+                               manager.erase_devices)
+        expt_ret = ("None of the available SSA controllers Smart "
+                    "Array P440 in Slot 2 have Sanitize Erase Supported.")
+        self.assertIn(expt_ret, str(ex))
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_in_progress(self, controller_exec_cmd_mock,
+                                       get_all_details_mock):
+        erase_progress = raid_constants.SSA_ERASE_IN_PROGRESS
+        erase_complete = raid_constants.SSA_ERASE_COMPLETE
+
+        expt_ret = {
+            'Smart Array P440 in Slot 2': {
+                '1I:2:1': 'Erase Complete. Reenable Before Using.'}}
+        get_all_details_mock.side_effect = [erase_progress, erase_complete,
+                                            erase_complete]
+
+        ret = manager.erase_devices()
+        self.assertFalse(controller_exec_cmd_mock.called)
+        self.assertEqual(expt_ret, ret)
 
 
 class RaidConfigValidationTestCases(testtools.TestCase):
