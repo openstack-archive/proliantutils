@@ -36,6 +36,9 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
               'priority': 0},
              {'step': 'delete_configuration',
               'interface': 'raid',
+              'priority': 0},
+             {'step': 'erase_devices',
+              'interface': 'deploy',
               'priority': 0}],
             self.hardware_manager.get_clean_steps("", ""))
 
