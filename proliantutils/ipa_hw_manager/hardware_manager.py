@@ -41,6 +41,9 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                  'priority': 0},
                 {'step': 'delete_configuration',
                  'interface': 'raid',
+                 'priority': 0},
+                {'step': 'erase_devices',
+                 'interface': 'deploy',
                  'priority': 0}]
 
     def evaluate_hardware_support(cls):
