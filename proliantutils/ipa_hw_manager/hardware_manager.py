@@ -16,6 +16,7 @@ from ironic_python_agent import hardware
 
 from proliantutils import exception
 from proliantutils.hpssa import manager as hpssa_manager
+from proliantutils import hpsum
 
 
 class ProliantHardwareManager(hardware.GenericHardwareManager):
@@ -36,15 +37,17 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
         :returns: A list of dictionaries, each item containing the step name,
             interface and priority for the clean step.
         """
-        return [{'step': 'create_configuration',
-                 'interface': 'raid',
-                 'priority': 0},
-                {'step': 'delete_configuration',
-                 'interface': 'raid',
-                 'priority': 0},
-                {'step': 'erase_devices',
-                 'interface': 'deploy',
-                 'priority': 0}]
+        return [
+            {'step': 'create_configuration',
+             'interface': 'raid',
+             'priority': 0},
+            {'step': 'delete_configuration',
+             'interface': 'raid',
+             'priority': 0},
+            {'step': 'erase_devices',
+             'interface': 'deploy',
+             'priority': 0}
+            ]
 
     def evaluate_hardware_support(cls):
         return hardware.HardwareSupport.SERVICE_PROVIDER
@@ -100,5 +103,14 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
         except exception.HPSSAOperationError:
             result.update(super(ProliantHardwareManager,
                                 self).erase_devices(node, port))
-
         return result
+
+    def update_firmware(self, node, port):
+        """Performs HPSUM based firmware update on the bare metal node.
+
+        This method performs firmware update on all the firmware components on
+        the bare metal node.
+        :returns: The dictionary of firmware components updated with the
+            version and update status.
+        """
+        return hpsum.hpsum_firmware_update(node)
