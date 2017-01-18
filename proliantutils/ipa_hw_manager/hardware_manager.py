@@ -16,6 +16,7 @@ from ironic_python_agent import hardware
 
 from proliantutils import exception
 from proliantutils.hpssa import manager as hpssa_manager
+from proliantutils.hpsum import hpsum_controller
 
 
 class ProliantHardwareManager(hardware.GenericHardwareManager):
@@ -44,6 +45,9 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                  'priority': 0},
                 {'step': 'erase_devices',
                  'interface': 'deploy',
+                 'priority': 0},
+                {'step': 'update_firmware',
+                 'interface': 'management',
                  'priority': 0}]
 
     def evaluate_hardware_support(cls):
@@ -102,3 +106,16 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                                 self).erase_devices(node, port))
 
         return result
+
+    def update_firmware(self, node, _):
+        """Performs HPSUM based firmware update on the bare metal node.
+
+        This method performs firmware update on all or some of the firmware
+        components on the bare metal node.
+
+        :returns: A string with return code and the statistics of
+            updated/failed components.
+        :raises: HpsumOperationError, when the hpsum firmware update operation
+        on the node fails.
+        """
+        return hpsum_controller.update_firmware(node)
