@@ -152,3 +152,21 @@ class ImageExtractionFailed(ProliantUtilsException):
             message = self.message % kwargs
 
         super(ImageExtractionFailed, self).__init__(message)
+
+
+class HpsumOperationError(ProliantUtilsException):
+    """Base Exception.
+
+    This exception is used when a problem is encountered in
+    executing a hpsum operation.
+    """
+
+    message = ("An exception occured while performing hpsum based firmware "
+               "update")
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message
+
+        message = message % kwargs
+        super(HpsumOperationError, self).__init__(message)

@@ -15,7 +15,11 @@
 """
 Non-iLO related utilities and helper functions.
 """
+import hashlib
 
+import six
+
+from proliantutils import exception
 from proliantutils.ilo import firmware_controller
 from proliantutils import log
 
@@ -63,3 +67,67 @@ def process_firmware_image(compact_firmware_file, ilo_object):
             'yes_or_no': 'Yes' if to_upload else 'No'})
     LOG.info(msg)
     return raw_fw_file_path, to_upload, is_extracted
+
+
+def _get_hash_object(hash_algo_name):
+    """Create a hash object based on given algorithm.
+
+    :param hash_algo_name: name of the hashing algorithm.
+    :raises: InvalidParameterValue, on unsupported or invalid input.
+    :returns: a hash object based on the given named algorithm.
+    """
+    algorithms = (hashlib.algorithms_guaranteed if six.PY3
+                  else hashlib.algorithms)
+    if hash_algo_name not in algorithms:
+        msg = (_("Unsupported/Invalid hash name '%s' provided.")
+               % hash_algo_name)
+        LOG.error(msg)
+        raise exception.InvalidParameterValue(msg)
+
+    return getattr(hashlib, hash_algo_name)()
+
+
+def _hash_file(file_like_object, hash_algo='md5'):
+    """Generate a hash for the contents of a file.
+
+    It returns a hash of the file object as a string of double length,
+    containing only hexadecimal digits. It supports all the algorithms
+    hashlib does.
+    :param file_like_object: file like object whose hash to be calculated.
+    :param hash_algo: name of the hashing strategy, default being 'md5'.
+    :raises: InvalidParameterValue, on unsupported or invalid input.
+    :returns: a condensed digest of the bytes of contents.
+    """
+    checksum = _get_hash_object(hash_algo)
+    for chunk in iter(lambda: file_like_object.read(32768), b''):
+        checksum.update(chunk)
+    return checksum.hexdigest()
+
+
+def verify_image_checksum(image_location, expected_checksum):
+    """Verifies checksum (md5) of image file against the expected one.
+
+    This method generates the checksum of the image file on the fly and
+    verifies it against the expected checksum provided as argument.
+
+    :param image_location: location of image file whose checksum is verified.
+    :param expected_checksum: checksum to be checked against
+    :raises: ImageRefValidationFailed, if invalid file path or
+             verification fails.
+    """
+    try:
+        with open(image_location, 'rb') as fd:
+            actual_checksum = _hash_file(fd)
+    except IOError as e:
+        raise exception.ImageRefValidationFailed(image_href=image_location,
+                                                 reason=e)
+
+    if actual_checksum != expected_checksum:
+        msg = (_('Error verifying image checksum. Image %(image)s failed to '
+                 'verify against checksum %(checksum)s. Actual checksum is: '
+                 '%(actual_checksum)s') %
+               {'image': image_location, 'checksum': expected_checksum,
+                'actual_checksum': actual_checksum})
+        LOG.error(msg)
+        raise exception.ImageRefValidationFailed(image_href=image_location,
+                                                 reason=msg)
