@@ -39,7 +39,11 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
               'priority': 0},
              {'step': 'erase_devices',
               'interface': 'deploy',
-              'priority': 0}],
+              'priority': 0},
+             {'step': 'update_firmware',
+              'interface': 'management',
+              'priority': 0}
+             ],
             self.hardware_manager.get_clean_steps("", ""))
 
     @mock.patch.object(hpssa_manager, 'create_configuration')
