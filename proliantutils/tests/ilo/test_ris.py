@@ -375,6 +375,7 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_get_raid_support')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
     @mock.patch.object(ris.RISOperations,
                        '_get_cpu_virtualization')
@@ -389,7 +390,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
                                      secure_mock, gpu_mock, drive_mock,
                                      raid_mock, tpm_mock, cpu_vt_mock,
-                                     nvdimm_n_mock):
+                                     nvdimm_n_mock, raid_support_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -402,6 +403,7 @@ class IloRisTestCase(testtools.TestCase):
                                    'rotational_drive_4800_rpm': True,
                                    'has_ssd': False}
         raid_mock.return_value = {'logical_raid_volume_0': 'true'}
+        raid_support_mock.return_value = {'raid_support': 'true'}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
@@ -413,10 +415,12 @@ class IloRisTestCase(testtools.TestCase):
                          'has_rotational': True,
                          'rotational_drive_4800_rpm': True,
                          'has_ssd': False,
-                         'logical_raid_volume_0': 'true'}
+                         'logical_raid_volume_0': 'true',
+                         'raid_support': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
+    @mock.patch.object(ris.RISOperations, '_get_raid_support')
     @mock.patch.object(ris.RISOperations, '_get_logical_raid_levels')
     @mock.patch.object(ris.RISOperations, '_get_drive_type_and_speed')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
@@ -433,7 +437,8 @@ class IloRisTestCase(testtools.TestCase):
                                                ilo_firm_mock, secure_mock,
                                                gpu_mock, tpm_mock,
                                                cpu_vt_mock, nvdimm_n_mock,
-                                               drive_mock, raid_mock):
+                                               drive_mock, raid_mock,
+                                               raid_support_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -446,6 +451,7 @@ class IloRisTestCase(testtools.TestCase):
                                    'rotational_drive_4800_rpm': True,
                                    'has_ssd': False}
         raid_mock.return_value = {'logical_raid_volume_0': 'true'}
+        raid_support_mock.return_value = {'raid_support': 'true'}
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
@@ -456,7 +462,8 @@ class IloRisTestCase(testtools.TestCase):
                          'has_rotational': True,
                          'rotational_drive_4800_rpm': True,
                          'has_ssd': False,
-                         'logical_raid_volume_0': 'true'}
+                         'logical_raid_volume_0': 'true',
+                         'raid_support': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -2063,3 +2070,23 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         nvdimm_n_status_return = self.client._get_nvdimm_n_status()
         self.assertEqual(nvdimm_n_status_return, expected_nvdimm_n_status)
         self.assertTrue(bios_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_check_array_controller_resource')
+    def test_get_raid_support(self, check_array_mock):
+        array_settings = json.loads(ris_outputs.ARRAY_SETTINGS)
+        check_array_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                         array_settings)
+        expt_ret = {'raid_support': 'true'}
+        ret = self.client._get_raid_support()
+        self.assertEqual(ret, expt_ret)
+        check_array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_check_array_controller_resource')
+    def test_get_raid_support_false(self, check_array_mock):
+        array_settings = json.loads(ris_outputs.ARRAY_SETTING_NO_CONTROLLER)
+        check_array_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                         array_settings)
+        expt_ret = {'raid_support': 'false'}
+        ret = self.client._get_raid_support()
+        self.assertEqual(ret, expt_ret)
+        check_array_mock.assert_called_once_with()
