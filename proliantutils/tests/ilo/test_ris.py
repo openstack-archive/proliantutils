@@ -377,16 +377,20 @@ class IloRisTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_get_tpm_capability')
     @mock.patch.object(ris.RISOperations,
+                       '_get_cpu_virtualization')
+    @mock.patch.object(ris.RISOperations,
                        '_get_number_of_gpu_devices_connected')
     @mock.patch.object(ris.RISOperations, 'get_secure_boot_mode')
     @mock.patch.object(ris.RISOperations, '_get_ilo_firmware_version')
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
-                                     secure_mock, gpu_mock, tpm_mock):
+                                     secure_mock, gpu_mock, tpm_mock,
+                                     cpu_vt_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
         gpu_mock.return_value = {'pci_gpu_devices': 2}
+        cpu_vt_mock.return_value = True
         secure_mock.return_value = False
         tpm_mock.return_value = {'trusted_boot': True}
         expected_caps = {'secure_boot': 'true',
@@ -394,7 +398,8 @@ class IloRisTestCase(testtools.TestCase):
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
                          'server_model': u'ProLiant BL460c Gen9',
                          'pci_gpu_devices': 2,
-                         'trusted_boot': True}
+                         'trusted_boot': True,
+                         'cpu_vt': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1684,6 +1689,23 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         gpu_count_returned = self.client._get_number_of_gpu_devices_connected()
         self.assertEqual(gpu_count_returned, expected_gpu_count)
         self.assertTrue(gpu_list_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    def test___get_cpu_virtualization_enabled(self, bios_mock):
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        bios_mock.return_value = bios_settings['ProcVirtualization']
+        expected_cpu_vt = True
+        cpu_vt_return = self.client._get_cpu_virtualization()
+        self.assertEqual(cpu_vt_return, expected_cpu_vt)
+        self.assertTrue(bios_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_bios_setting')
+    def test___get_cpu_virtualization_disabled(self, bios_mock):
+        bios_mock.return_value = 'Disable'
+        expected_cpu_vt = False
+        cpu_vt_return = self.client._get_cpu_virtualization()
+        self.assertEqual(cpu_vt_return, expected_cpu_vt)
+        self.assertTrue(bios_mock.called)
 
     @mock.patch.object(ris.RISOperations, '_get_ilo_details', autospec=True)
     def test__get_firmware_update_service_resource_traverses_manager_as(
