@@ -443,6 +443,20 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
                     raid_level.update({raid_level_var: 'true'})
         return raid_level if len(raid_level.keys()) > 0 else None
 
+    def _is_raid_supported(self):
+        """Get the RAID support on the server.
+
+        This method returns the raid support on the physical server. It
+        checks for the list of array controllers configured to the Smart
+        Storage. If one or more array controllers available then raid
+        is supported by the server. If none, raid is not supported.
+
+        :return: Raid support as a dictionary with true/false as its value.
+        """
+        header, uri, array_resource = self._get_array_controller_resource()
+
+        return True if array_resource['Total'] > 0 else False
+
     def _get_bios_settings_resource(self, data):
         """Get the BIOS settings resource."""
         try:
@@ -1177,6 +1191,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         raid_details = self._get_logical_raid_levels()
         if raid_details is not None:
             capabilities.update(raid_details)
+        if self._is_raid_supported():
+            capabilities['raid_support'] = 'true'
         boot_modes = common.get_supported_boot_modes(
             self.get_supported_boot_mode())
         capabilities.update({
