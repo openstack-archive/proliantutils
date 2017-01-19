@@ -386,6 +386,7 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_get_raid_support')
     @mock.patch.object(ris.RISOperations, '_get_controllers_names')
     @mock.patch.object(ris.RISOperations, '_get_drive_type_and_speed')
     @mock.patch.object(ris.RISOperations,
@@ -395,7 +396,7 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
                                      secure_mock, gpu_mock, drive_mock,
-                                     controller_mock):
+                                     controller_mock, raid_support_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -404,6 +405,7 @@ class IloRisTestCase(testtools.TestCase):
         drive_mock.return_value = {'drive_rotational': True,
                                    'max_rotational_drive_rpm': 10000,
                                    'drive_ssd': False}
+        raid_support_mock.return_value = {'raid_support': True}
         ctr_name = 'HP Smart Array P244br Controller in Slot 0'
         ctr = [{'controller_1': u'HP Smart Array P244br Controller in Slot 0'}]
         controller_mock.return_value = ctr
@@ -415,7 +417,8 @@ class IloRisTestCase(testtools.TestCase):
                          'drive_rotational': True,
                          'max_rotational_drive_rpm': 10000,
                          'drive_ssd': False,
-                         'controller_1': ctr_name}
+                         'controller_1': ctr_name,
+                         'raid_support': True}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
@@ -1977,3 +1980,23 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                           self.client.reset_server)
         rest_post_mock.assert_called_once_with(systems_uri, None,
                                                new_pow_settings)
+
+    @mock.patch.object(ris.RISOperations, '_check_array_controller_resource')
+    def test_get_raid_support(self, check_array_mock):
+        array_settings = json.loads(ris_outputs.ARRAY_SETTINGS)
+        check_array_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                         array_settings)
+        expt_ret = {'raid_support': True}
+        ret = self.client._get_raid_support()
+        self.assertEqual(ret, expt_ret)
+        check_array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_check_array_controller_resource')
+    def test_get_raid_support_false(self, check_array_mock):
+        array_settings = json.loads(ris_outputs.ARRAY_SETTING_NO_CONTROLLER)
+        check_array_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                         array_settings)
+        expt_ret = {'raid_support': False}
+        ret = self.client._get_raid_support()
+        self.assertEqual(ret, expt_ret)
+        check_array_mock.assert_called_once_with()

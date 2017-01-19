@@ -571,6 +571,24 @@ class RISOperations(operations.IloOperations):
                 'drive_ssd': drive_ssd,
                 'max_rotational_drive_rpm': max_drive_rpm}
 
+    def _get_raid_support(self):
+        """Get the RAID support on the server.
+
+        This method returns the raid support on the physical server. It
+        checks for the list of array controllers configured to the Smart
+        Storage. If one or more array controllers available then raid
+        is supported by the server. If none, raid is not supported.
+
+        :return: Raid support as a dictionary with true/false as its value.
+        """
+        header, uri, storage_resource = self._check_array_controller_resource()
+        if 'Member' in storage_resource['links'].keys():
+            support = True
+        else:
+            support = False
+
+        return {'raid_support': support}
+
     def _get_bios_settings_resource(self, data):
         """Get the BIOS settings resource."""
         try:
@@ -1261,6 +1279,7 @@ class RISOperations(operations.IloOperations):
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_drive_type_and_speed())
+        capabilities.update(self._get_raid_support())
         controller_details = self._get_controllers_names()
         for item in controller_details:
             capabilities.update(item)

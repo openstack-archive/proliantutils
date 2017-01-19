@@ -4064,3 +4064,29 @@ DISK_DETAILS_LIST = """
     }
 }]
 """
+
+ARRAY_SETTING_NO_CONTROLLER = """
+{
+        "@odata.context": "/redfish/v1/$metadata#Systems/Members/1\
+/SmartStorage/ArrayControllers",
+        "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/",
+        "@odata.type": "#HpSmartStorageArrayControllerCollection.\
+1.0.0.HpSmartStorageArrayControllerCollection",
+        "Description": "HP Smart Storage Array Controllers View",
+        "MemberType": "HpSmartStorageArrayController.1",
+        "Members": [{
+                "@odata.id": "/redfish/v1/Systems/1/SmartStorage\
+/ArrayControllers/0/"
+        }],
+        "Members@odata.count": 1,
+        "Name": "HpSmartStorageArrayControllers",
+        "Total": 1,
+        "Type": "Collection.0.9.5",
+        "links": {
+                "self": {
+                        "href": "/rest/v1/Systems/1/SmartStorage/\
+ArrayControllers"
+                }
+        }
+}
+"""
