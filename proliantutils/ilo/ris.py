@@ -976,6 +976,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_tpm_capability())
+        capabilities.update(self._get_cpu_virtualization())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1512,3 +1513,12 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         tpm_result = tpm_values[tpm_state]
 
         return {'trusted_boot': tpm_result}
+
+    def _get_cpu_virtualization(self):
+        """get cpu virtualization status."""
+        cpu_vt = self._get_bios_setting('ProcVirtualization')
+        if cpu_vt == 'Enabled':
+            vt_status = 'true'
+        else:
+            vt_status = 'false'
+        return {'cpu_vt': vt_status}
