@@ -26,6 +26,18 @@ HPSUM_SUCCESS = [
      'New Version: 2.60-18.0',
      'Deployment Result: Success']]
 
+HPSUM_FAILED = [
+    ['Component Filename: hpsmh-7.6.0-11.x86_64.rpm',
+     'Component Name: HPE System Management Homepage for Linux (AMD64/EM64T)',
+     'Original Version:',
+     'New Version: 7.6.0-11',
+     'Deployment Result: Success'],
+    ['Component Filename: ssaducli-2.60-18.0.x86_64.rpm',
+     'Component Name: HPE Smart Storage Administrator Diagnostic Utility',
+     'Original Version:',
+     'New Version: 2.60-18.0',
+     'Deployment Result: Success']]
+
 HPSUM_OUTPUT_DATA = """
 Scouting completed, node type:LINUX
 Inventory started

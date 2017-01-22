@@ -46,20 +46,48 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     @mock.patch.object(processutils, 'execute')
     def test_execute_hpsum(self, execute_mock):
         file_path = "hpsum"
-        execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = hpsum._execute_hpsum(file_path)
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=0)
+        ret_value = "The smart component was installed successfully."
+
+        stdout = hpsum._execute_hpsum(file_path)
         execute_mock.assert_called_once_with(
             "hpsum", "--s", "--romonly")
-        self.assertEqual("stdout", stdout)
-        self.assertEqual("stderr", stderr)
+        self.assertEqual(ret_value, stdout)
 
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(hpsum, '_parse_hpsum_ouput')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_fails(self, execute_mock):
+    def test_execute_hpsum_update_fails(self, execute_mock, parse_output_mock,
+                                        exists_mock):
+        parse_output_mock.return_value = constants.HPSUM_FAILED
+        exists_mock.return_value = True
+        file_path = "hpsum"
+        value = ("Error: Cannot launch hpsum_service_x64 locally. Reason: "
+                 "General failure.")
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=-1)
+
+        ex = self.assertRaises(exception.HpsumOperationError,
+                               hpsum._execute_hpsum, file_path)
+        msg = ("Unable to perform hpsum firmware update on the node." +
+               str(constants.HPSUM_FAILED))
+        self.assertIn(msg, str(ex))
+
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(processutils, 'execute')
+    def test_execute_hpsum_fails(self, execute_mock, exists_mock):
+        exists_mock.return_value = False
         file_path = "hpsum"
         value = ("Error: Cannot launch hpsum_service_x64 locally. Reason: "
                  "General failure.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
-            value)
+            stdout=value, stderr=None, exit_code=-1)
+
         ex = self.assertRaises(exception.HpsumOperationError,
                                hpsum._execute_hpsum, file_path)
         msg = "Unable to perform hpsum firmware update on the node."
@@ -88,7 +116,7 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         listdir_mock.return_value = ['SPP_LABEL']
         parse_output_mock.return_value = constants.HPSUM_SUCCESS
 
-        exp_ret = [
+        exp_ret = {'DETAILS': [
             ['Component Filename: hpsmh-7.6.0-11.x86_64.rpm',
              ('Component Name: HPE System Management Homepage for Linux '
               '(AMD64/EM64T)'),
@@ -100,7 +128,7 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
               'Utility'),
              'Original Version:',
              'New Version: 2.60-18.0',
-             'Deployment Result: Success']]
+             'Deployment Result: Success']], 'RETURN STATUS': 'SUCCESS'}
 
         mkdtemp_mock.return_value = "/tempdir"
         null_output = ["", ""]
