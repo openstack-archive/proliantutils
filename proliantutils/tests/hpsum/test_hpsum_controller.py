@@ -43,34 +43,72 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         self.node = {'driver_info': self.info,
                      'clean_step': clean_step}
 
+    @mock.patch.object(hpsum_controller, 'open',
+                       mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA))
+    @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum(self, execute_mock):
+    def test_execute_hpsum(self, execute_mock, exists_mock):
         file_path = "hpsum"
-        execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = hpsum_controller._execute_hpsum(file_path, None)
-        execute_mock.assert_called_once_with(
-            "hpsum", "--s", "--romonly", "")
-        self.assertEqual("stdout", stdout)
-        self.assertEqual("stderr", stderr)
+        exists_mock.return_value = True
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=0)
+        ret_value = ("Summary: The smart component was installed successfully."
+                     " Details: Update for 2 component(s) succeeded")
+
+        stdout = hpsum_controller._execute_hpsum(file_path, components=None)
+
+        self.assertEqual(ret_value, stdout)
+        execute_mock.assert_called_once_with("hpsum", "--s", "--romonly", "")
 
     @mock.patch.object(processutils, 'execute')
     def test_execute_hpsum_with_args(self, execute_mock):
         file_path = "hpsum"
-        execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = hpsum_controller._execute_hpsum(file_path,
-                                                         ["foo", "bar"])
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=3)
+        ret_value = ("Summary: The smart component was not installed. Node is "
+                     "already up-to-date.")
+
+        stdout = hpsum_controller._execute_hpsum(file_path,
+                                                 components=["foo", "bar"])
+
         execute_mock.assert_called_once_with(
             "hpsum", "--s", "--romonly", " --c foo --c bar")
-        self.assertEqual("stdout", stdout)
-        self.assertEqual("stderr", stderr)
+        self.assertEqual(ret_value, stdout)
 
+    @mock.patch.object(
+        hpsum_controller, 'open',
+        mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA_FAILURE))
+    @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_fails(self, execute_mock):
+    def test_execute_hpsum_update_fails(self, execute_mock, exists_mock):
+        exists_mock.return_value = True
+        ret = ("Summary: The installation of the component failed. Details: "
+               "Update for 1 component(s) succeeded and 1 component(s) failed")
+        file_path = "hpsum"
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=-3)
+
+        stdout = hpsum_controller._execute_hpsum(file_path, components=None)
+
+        self.assertEqual(ret, stdout)
+        execute_mock.assert_called_once_with("hpsum", "--s", "--romonly", "")
+
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(processutils, 'execute')
+    def test_execute_hpsum_fails(self, execute_mock, exists_mock):
+        exists_mock.return_value = False
         file_path = "hpsum"
         value = ("Error: Cannot launch hpsum_service_x64 locally. Reason: "
                  "General failure.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
-            value)
+            stdout=value, stderr=None, exit_code=-1)
+
         ex = self.assertRaises(exception.HpsumOperationError,
                                hpsum_controller._execute_hpsum, file_path,
                                None)
@@ -79,7 +117,6 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
 
     @mock.patch.object(utils, 'validate_href')
     @mock.patch.object(utils, 'verify_image_checksum')
-    @mock.patch.object(hpsum_controller, '_parse_hpsum_ouput')
     @mock.patch.object(hpsum_controller, '_execute_hpsum')
     @mock.patch.object(os, 'listdir')
     @mock.patch.object(shutil, 'rmtree', autospec=True)
@@ -91,16 +128,12 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     def test_update_firmware(self, client_mock, execute_mock, mkdir_mock,
                              exists_mock, mkdtemp_mock, rmtree_mock,
                              listdir_mock, execute_hpsum_mock,
-                             parse_output_mock, verify_image_mock,
-                             validate_mock):
+                             verify_image_mock, validate_mock):
         ilo_mock_object = client_mock.return_value
         eject_media_mock = ilo_mock_object.eject_virtual_media
         insert_media_mock = ilo_mock_object.insert_virtual_media
         execute_hpsum_mock.return_value = 'SUCCESS'
         listdir_mock.return_value = ['SPP_LABEL']
-        exp_ret = "1 component(s) updated successfully, 1 failed"
-        parse_output_mock.return_value = exp_ret
-
         mkdtemp_mock.return_value = "/tempdir"
         null_output = ["", ""]
         exists_mock.side_effect = [True, False]
@@ -119,8 +152,7 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         execute_mock.assert_any_call('umount', "/tempdir")
         mkdtemp_mock.assert_called_once_with()
         rmtree_mock.assert_called_once_with("/tempdir", ignore_errors=True)
-        parse_output_mock.assert_called_once_with()
-        self.assertEqual(exp_ret, ret_val)
+        self.assertEqual('SUCCESS', ret_val)
 
     @mock.patch.object(utils, 'validate_href')
     @mock.patch.object(ilo_client, 'IloClient', spec_set=True, autospec=True)
@@ -194,9 +226,10 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     @mock.patch.object(os.path, 'exists')
     def test_parse_hpsum_ouput(self, exists_mock):
         exists_mock.return_value = True
-        expt_ret = "Update for 2 component(s) succeeded"
+        expt_ret = ("Summary: The smart component was installed successfully. "
+                    "Details: Update for 2 component(s) succeeded")
 
-        ret = hpsum_controller._parse_hpsum_ouput()
+        ret = hpsum_controller._parse_hpsum_ouput(0)
 
         exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
         self.assertEqual(expt_ret, ret)
@@ -207,10 +240,11 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     @mock.patch.object(os.path, 'exists')
     def test_parse_hpsum_ouput_some_failed(self, exists_mock):
         exists_mock.return_value = True
-        expt_ret = ("Update for 1 component(s) succeeded, and 1 component(s) "
-                    "failed")
+        expt_ret = ("Summary: The installation of the component failed. "
+                    "Details: Update for 1 component(s) succeeded and 1 "
+                    "component(s) failed")
 
-        ret = hpsum_controller._parse_hpsum_ouput()
+        ret = hpsum_controller._parse_hpsum_ouput(-3)
 
         exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
         self.assertEqual(expt_ret, ret)
@@ -222,6 +256,6 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                % hpsum_controller.OUTPUT_FILE)
 
         exc = self.assertRaises(exception.HpsumOperationError,
-                                hpsum_controller._parse_hpsum_ouput)
+                                hpsum_controller._parse_hpsum_ouput, -3)
         exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
         self.assertEqual(str(exc), msg)
