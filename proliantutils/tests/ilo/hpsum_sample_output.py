@@ -27,6 +27,19 @@ HPSUM_SUCCESS = {'HPESystemManagementHomepageforLinux(AMD64/EM64T)':
                   'ComponentFilename': 'hp-cnu-5.2.3-1.x86_64.rpm'
                   }}
 
+HPSUM_FAILED = {'HPESystemManagementHomepageforLinux(AMD64/EM64T)':
+                {'NewVersion': '7.6.0-11',
+                 'DeploymentResult': 'Success',
+                 'OriginalVersion': '',
+                 'ComponentFilename': 'hpsmh-7.6.0-11.x86_64.rpm'
+                 },
+                'HPESmartStorageAdministratorDiagnosticUtility':
+                {'NewVersion': '2.60-18.0',
+                 'DeploymentResult': 'Success',
+                 'OriginalVersion': '',
+                 'ComponentFilename': 'ssaducli-2.60-18.0.x86_64.rpm'
+                 }}
+
 HPSUM_OUTPUT_DATA = """
 Scouting completed, node type:LINUX
 Inventory started
