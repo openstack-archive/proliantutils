@@ -32,6 +32,27 @@ OUTPUT_FILE = '/var/hp/log/localhost/hpsum_log.txt'
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
 
 
+def _get_string_for(exit_code):
+    """Maps the exit code with the status."""
+    return_code = {
+        0: "The smart component was installed successfully.",
+        1: ("The smart component was installed successfully, but the system "
+            "must be restarted."),
+        2: ("The installation was not attempted because the required hardware "
+            "is not present, the software is current, or there is nothing to "
+            "install."),
+        3: ("The smart component was not installed. Node is already "
+            "up-to-date."),
+        5: ("A user canceled the installation before anything could be "
+            "installed."),
+        6: ("The installer cannot run because of an unmet dependency or "
+            "installation tool failure."),
+        7: ("The actual installation operation (not the installation tool) "
+            "failed.")}
+
+    return return_code.get(exit_code, None)
+
+
 def _execute_hpsum(hpsum_file_path, components):
     """Executes the hpsum firmware update command.
 
@@ -41,7 +62,7 @@ def _execute_hpsum(hpsum_file_path, components):
     :param hpsum_file_path: A string with the path to the hpsum binary to be
         executed
     :param components: A string with the comma separated list of components
-    :returns: A tuple containing stdout and stderr after running the process.
+    :returns: A String with hpsum based firmware update return status.
     :raises: HpsumOperationError, when the hpsum firmware update operation on
         the node fails.
     """
@@ -55,9 +76,18 @@ def _execute_hpsum(hpsum_file_path, components):
         stdout, stderr = processutils.execute(hpsum_file_path, "--s",
                                               "--romonly", cmd)
     except processutils.ProcessExecutionError as e:
-        msg = ("Unable to perform hpsum firmware update on the node. %s" % e)
-        raise exception.HpsumOperationError(msg)
-    return stdout, stderr
+        if e.exit_code >= 0 and e.exit_code <= 7:
+            msg = _get_string_for(e.exit_code)
+        else:
+            msg = "Unable to perform hpsum firmware update on the node."
+            if os.path.exists(OUTPUT_FILE):
+                result = _parse_hpsum_ouput()
+                msg = msg + str(result)
+            else:
+                msg = msg + str(e)
+
+            raise exception.HpsumOperationError(msg)
+    return msg
 
 
 def _parse_hpsum_ouput():
@@ -173,11 +203,15 @@ def update_firmware(node):
         hpsum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
         components = _get_clean_arg_value(node, 'component')
 
-        _execute_hpsum(hpsum_file_path, components)
+        stdout = _execute_hpsum(hpsum_file_path, components)
+
+        details = _parse_hpsum_ouput()
+        result = ("Summary: %(stdout)s. Details: %(output)s" %
+                  {'stdout': stdout, 'output': details})
 
         stdout, stderr = processutils.trycmd("umount",
                                              vmedia_mount_point)
     finally:
         shutil.rmtree(vmedia_mount_point, ignore_errors=True)
 
-    return _parse_hpsum_ouput()
+    return result

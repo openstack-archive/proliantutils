@@ -46,31 +46,65 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     @mock.patch.object(processutils, 'execute')
     def test_execute_hpsum(self, execute_mock):
         file_path = "hpsum"
-        execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = hpsum_controller._execute_hpsum(file_path, None)
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=0)
+        ret_value = "The smart component was installed successfully."
+
+        stdout = hpsum_controller._execute_hpsum(file_path, None)
+
+        self.assertEqual(ret_value, stdout)
         execute_mock.assert_called_once_with(
             "hpsum", "--s", "--romonly", "")
-        self.assertEqual("stdout", stdout)
-        self.assertEqual("stderr", stderr)
 
     @mock.patch.object(processutils, 'execute')
     def test_execute_hpsum_with_args(self, execute_mock):
         file_path = "hpsum"
-        execute_mock.return_value = ("stdout", "stderr")
-        stdout, stderr = hpsum_controller._execute_hpsum(file_path,
-                                                         "foo,bar")
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=3)
+        ret_value = ("The smart component was not installed. Node is already "
+                     "up-to-date.")
+
+        stdout = hpsum_controller._execute_hpsum(file_path, "foo,bar")
+
         execute_mock.assert_called_once_with(
             "hpsum", "--s", "--romonly", " --c foo --c bar")
-        self.assertEqual("stdout", stdout)
-        self.assertEqual("stderr", stderr)
+        self.assertEqual(ret_value, stdout)
 
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(hpsum_controller, '_parse_hpsum_ouput')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_fails(self, execute_mock):
+    def test_execute_hpsum_update_fails(self, execute_mock, parse_output_mock,
+                                        exists_mock):
+        exists_mock.return_value = True
+        ret = "1 component(s) updated successfully, 1 failed"
+        parse_output_mock.return_value = ret
+        file_path = "hpsum"
+        value = ("hpsum_service_x64 started successfully. Sending Shutdown "
+                 "request to engine. Successfully shutdown the service.")
+        execute_mock.side_effect = processutils.ProcessExecutionError(
+            stdout=value, stderr=None, exit_code=-1)
+
+        ex = self.assertRaises(exception.HpsumOperationError,
+                               hpsum_controller._execute_hpsum, file_path,
+                               None)
+        msg = ("Unable to perform hpsum firmware update on the node." +
+               str(ret))
+        self.assertIn(msg, str(ex))
+
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(processutils, 'execute')
+    def test_execute_hpsum_fails(self, execute_mock, exists_mock):
+        exists_mock.return_value = False
         file_path = "hpsum"
         value = ("Error: Cannot launch hpsum_service_x64 locally. Reason: "
                  "General failure.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
-            value)
+            stdout=value, stderr=None, exit_code=-1)
+
         ex = self.assertRaises(exception.HpsumOperationError,
                                hpsum_controller._execute_hpsum, file_path,
                                None)
@@ -98,9 +132,9 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         insert_media_mock = ilo_mock_object.insert_virtual_media
         execute_hpsum_mock.return_value = 'SUCCESS'
         listdir_mock.return_value = ['SPP_LABEL']
-        exp_ret = "1 component(s) updated successfully, 1 failed"
-        parse_output_mock.return_value = exp_ret
-
+        exp_ret = ("Summary: SUCCESS. Details: 2 component(s) updated "
+                   "successfully")
+        parse_output_mock.return_value = "2 component(s) updated successfully"
         mkdtemp_mock.return_value = "/tempdir"
         null_output = ["", ""]
         exists_mock.side_effect = [True, False]
