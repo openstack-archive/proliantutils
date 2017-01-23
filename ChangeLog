@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.2.0
+-----
+
+* Update hpssacli to ssacli
+* Add Sanitize disk erase support using SSA
+* Add snmp inspection for disk size
+* Add py35 to tox environments
+
 2.1.11
 ------
 
