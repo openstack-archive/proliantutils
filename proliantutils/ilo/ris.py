@@ -48,6 +48,11 @@ POWER_STATE = {
     'OFF': 'ForceOff',
 }
 
+MAP_VENDORID_TO_VENDOR = {
+    '0x10DE': 'NVIDIA',
+    '0x1002': 'AMD',
+    '0x8086': 'Intel'
+}
 # The PCI standards mention following categories of PCI devices as
 # GPU devices.
 # Base Class Code 03 indicate VGA devices
@@ -1133,6 +1138,7 @@ class RISOperations(operations.IloOperations):
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_tpm_capability())
+        capabilities.update(self._get_vendor_gpu_count())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1669,3 +1675,19 @@ class RISOperations(operations.IloOperations):
         tpm_result = tpm_values[tpm_state]
 
         return {'trusted_boot': tpm_result}
+
+    def _get_vendor_gpu_count(self):
+        """Get the total gpu count per vendor."""
+        gpu_devices = self._get_gpu_pci_devices()
+        count = {}
+        for item in gpu_devices:
+            vendor_id = hex(item['VendorID'])
+            try:
+                vendor = MAP_VENDORID_TO_VENDOR[vendor_id]
+            except KeyError:
+                vendor = vendor_id
+            vendor_var_name = vendor + "_gpu_count"
+            if not count.get(vendor_var_name):
+                count[vendor_var_name] = 0
+            count[vendor_var_name] = count.get(vendor_var_name) + 1
+        return count

@@ -3824,6 +3824,26 @@ Pci(0x8,0x0)/Pci(0x0,0x0)",
 ]
 """
 
+PCI_GPU_VENDOR_LIST = """
+[
+    {
+        "VendorID": 4098
+    },
+    {
+        "VendorID": 1000
+    },
+    {
+        "VendorID": 4098
+    },
+    {
+        "VendorID": 4098
+    },
+    {
+        "VendorID": 32902
+    }
+]
+"""
+
 PCI_DEVICE_DETAILS = """
 {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/PCIDevices",
