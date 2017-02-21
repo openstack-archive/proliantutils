@@ -92,8 +92,11 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
     def erase_devices(self, node, port):
         """Erase the drives on the bare metal.
 
-        This method erase all the drives which supports sanitize on
-        bare metal. If fails, it falls back to the generic erase method.
+        This method erase all the drives which supports sanitize and the drives
+        which are not part of any logical volume on the bare metal. It calls
+        generic erase method after the success of Sanitize disk erase.
+        :raises exception.HPSSAOperationError, if Sanitize is not supported
+            on the controllers.
         :returns: The dictionary of controllers with the drives and erase
             status for each drive.
         """
@@ -102,8 +105,12 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
             result['Sanitize Erase'] = hpssa_manager.erase_devices()
 
         except exception.HPSSAOperationError:
-            result.update(super(ProliantHardwareManager,
-                                self).erase_devices(node, port))
+            msg = ("Sanitize erase not supported in the "
+                   "available controllers")
+            raise exception.HPSSAOperationError(reason=msg)
+
+        result.update(super(ProliantHardwareManager,
+                            self).erase_devices(node, port))
 
         return result
 
