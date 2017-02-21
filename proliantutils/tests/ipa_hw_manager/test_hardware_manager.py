@@ -61,20 +61,26 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
 
+    @mock.patch.object(ironic_python_agent.hardware.GenericHardwareManager,
+                       'erase_devices')
     @mock.patch.object(hpssa_manager, 'erase_devices')
-    def test_erase_devices(self, erase_mock):
+    def test_erase_devices(self, erase_mock, generic_erase_mock):
         node = {}
         port = {}
         erase_mock.return_value = 'erase_status'
+        generic_erase_mock.return_value = {'foo': 'bar'}
         ret = self.hardware_manager.erase_devices(node, port)
         erase_mock.assert_called_once_with()
-        self.assertEqual({'Sanitize Erase': 'erase_status'}, ret)
+        generic_erase_mock.assert_called_once_with(node, port)
+        self.assertEqual({'Sanitize Erase': 'erase_status', 'foo': 'bar'}, ret)
 
     @mock.patch.object(ironic_python_agent.hardware.GenericHardwareManager,
                        'erase_devices')
     @mock.patch.object(hpssa_manager, 'erase_devices')
-    def test_erase_devices_not_supported(self, erase_mock, generic_erase_mock):
-        node = {}
+    def test_erase_devices_not_supported_generic_erase(self, erase_mock,
+                                                       generic_erase_mock):
+        node = {'driver_internal_info':
+                {'agent_continue_if_ata_erase_failed': True}}
         port = {}
         value = ("Sanitize erase not supported in the "
                  "available controllers")
@@ -85,6 +91,23 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
             'Sanitize Erase': erase_mock.side_effect}
         expt_return.update(generic_erase_mock.return_value)
 
-        self.hardware_manager.erase_devices(node, port)
+        ret = self.hardware_manager.erase_devices(node, port)
 
+        self.assertEqual(ret, expt_return)
         generic_erase_mock.assert_called_once_with(node, port)
+
+    @mock.patch.object(hpssa_manager, 'erase_devices')
+    def test_erase_devices_not_supported(self, erase_mock):
+        node = {'driver_internal_info':
+                {'agent_continue_if_ata_erase_failed': False}}
+        port = {}
+        value = ("Sanitize erase not supported in the "
+                 "available controllers")
+        e = exception.HPSSAOperationError(value)
+        erase_mock.side_effect = e
+        expt_return = {
+            'Sanitize Erase': erase_mock.side_effect}
+
+        ret = self.hardware_manager.erase_devices(node, port)
+
+        self.assertEqual(ret, expt_return)
