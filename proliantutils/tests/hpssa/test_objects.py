@@ -355,6 +355,27 @@ class ControllerTest(testtools.TestCase):
                            'unrestricted=off', 'forced')]
         execute_mock.assert_has_calls(calls, any_order=True)
 
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_sanitize_not_supported(self, execute_mock,
+                                                  get_all_details_mock):
+        erase_not_supported = raid_constants.SSA_ERASE_NOT_SUPPORTED
+        get_all_details_mock.return_value = erase_not_supported
+        server = objects.Server()
+        d = [x for x in server.controllers[0].unassigned_physical_drives]
+        controller = server.controllers[0]
+        value = ("Drive 1I:2:1: This operation is not supported in this "
+                 "physical drive")
+        execute_mock.side_effect = [exception.HPSSAOperationError(
+            reason=value), None]
+        controller.erase_devices(d)
+        calls = [mock.call('pd 1I:2:1', 'modify', 'erase',
+                           'erasepattern=overwrite', 'unrestricted=off',
+                           'forced'),
+                 mock.call('pd 1I:2:1', 'modify', 'erase',
+                           'erasepattern=zero',
+                           'unrestricted=off', 'forced')]
+        execute_mock.assert_has_calls(calls)
+
 
 @mock.patch.object(objects.Server, '_get_all_details')
 class LogicalDriveTest(testtools.TestCase):

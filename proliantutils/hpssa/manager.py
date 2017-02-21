@@ -371,12 +371,6 @@ def erase_devices():
     """
     server = objects.Server()
 
-    select_controllers = lambda x: (x.properties.get(
-                                    'Sanitize Erase Supported',
-                                    False) == 'True')
-    _select_controllers_by(server, select_controllers,
-                           'Sanitize Erase Supported')
-
     for controller in server.controllers:
         drives = [x for x in controller.unassigned_physical_drives
                   if (x.get_physical_drive_dict().get('erase_status', '')

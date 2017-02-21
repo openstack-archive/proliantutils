@@ -436,7 +436,9 @@ class Controller(object):
         """Perform Erase on all the drives in the controller.
 
         This method erases all the drives in the controller by overwriting
-        the drives with the pattern.
+        the drives with the pattern. If the sanitize erase is not
+        supported on the controller it performs the disk erase by
+        overwritting with zeros.
         :param drives: A list of drive objects in the controller.
         """
         types = {'hdd': 'overwrite', 'ssd': 'block'}
@@ -451,7 +453,15 @@ class Controller(object):
             drive = ','.join([x.id for x in drives_dict[drive]])
             pattern = 'erasepattern=' + types[type]
             cmd_args = self._get_erase_command(drive, pattern)
-            self.execute_cmd(*cmd_args)
+            try:
+                self.execute_cmd(*cmd_args)
+            except exception.HPSSAOperationError as e:
+                if "not supported" in str(e):
+                    cmd_args = self._get_erase_command(drive,
+                                                       'erasepattern=zero')
+                    self.execute_cmd(*cmd_args)
+                else:
+                    raise exception.HPSSAOperationError(reason=e)
 
 
 class RaidArray(object):
