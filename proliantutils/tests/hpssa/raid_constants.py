@@ -2425,11 +2425,6 @@ Smart Array P440 in Slot 2
    Primary Boot Volume: None
    Secondary Boot Volume: None
 
-   Physical Drives
-      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
-
-
-
    unassigned
 
       physicaldrive 1I:2:1
@@ -2450,11 +2445,6 @@ Smart Array P440 in Slot 2
    Sanitize Erase Supported: True
    Primary Boot Volume: None
    Secondary Boot Volume: None
-
-   Physical Drives
-      physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
-
-
 
    unassigned
 
@@ -2482,4 +2472,15 @@ Smart Array P440 in Slot 2
    Primary Boot Volume: None
    Secondary Boot Volume: None
 
+   unassigned
+
+      physicaldrive 1I:2:1
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Status: Erase Complete. Reenable Before Using.
+         Drive Type: Unassigned Drive
+         Sanitize Erase Supported: False
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
 '''
