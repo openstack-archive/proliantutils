@@ -568,7 +568,7 @@ class LogicalDrive(object):
                 'volume_name': self.volume_name}
 
 
-class PhysicalDrive:
+class PhysicalDrive(object):
     """Class for PhysicalDrive object."""
 
     def __init__(self, id, properties, parent):
