@@ -1132,6 +1132,7 @@ class RISOperations(operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_tpm_capability())
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1652,3 +1653,19 @@ class RISOperations(operations.IloOperations):
         gpu_devices = self._get_gpu_pci_devices()
         gpu_devices_count = len(gpu_devices)
         return {'pci_gpu_devices': gpu_devices_count}
+
+    def _get_tpm_capability(self):
+        """Retrieves if server is TPM capable or not.
+
+        :returns True if TPM is Present else False
+        """
+        tpm_values = {"NotPresent": False,
+                      "PresentDisabled": True,
+                      "PresentEnabled": True}
+        try:
+            tpm_state = self._get_bios_setting('TpmState')
+        except exception.IloCommandNotSupportedError:
+            tpm_state = "NotPresent"
+        tpm_result = tpm_values[tpm_state]
+
+        return {'trusted_boot': tpm_result}
