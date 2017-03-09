@@ -371,18 +371,11 @@ def erase_devices():
     """
     server = objects.Server()
 
-    select_controllers = lambda x: (x.properties.get(
-                                    'Sanitize Erase Supported',
-                                    False) == 'True')
-    _select_controllers_by(server, select_controllers,
-                           'Sanitize Erase Supported')
-
     for controller in server.controllers:
         drives = [x for x in controller.unassigned_physical_drives
                   if (x.get_physical_drive_dict().get('erase_status', '')
                       == 'OK')]
         if drives:
-            drives = ','.join(x.id for x in drives)
             controller.erase_devices(drives)
 
     common.wait_for_operation_to_complete(
@@ -397,6 +390,15 @@ def erase_devices():
     for controller in server.controllers:
         drive_status = {x.id: x.erase_status
                         for x in controller.unassigned_physical_drives}
+        sanitize_supported = controller.properties.get(
+            'Sanitize Erase Supported', 'False')
+        if sanitize_supported == 'False':
+            drive_status.update({
+                'Summary': ("Drives are overwritten with zeros because "
+                            "sanitize erase is not supported on the "
+                            "controller")
+                })
+
         status[controller.id] = drive_status
 
     return status
