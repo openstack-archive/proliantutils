@@ -61,14 +61,18 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         delete_mock.assert_called_once_with()
         self.assertEqual('current-config', ret)
 
+    @mock.patch.object(ironic_python_agent.hardware.GenericHardwareManager,
+                       'erase_devices')
     @mock.patch.object(hpssa_manager, 'erase_devices')
-    def test_erase_devices(self, erase_mock):
+    def test_erase_devices(self, erase_mock, generic_erase_mock):
         node = {}
         port = {}
         erase_mock.return_value = 'erase_status'
+        generic_erase_mock.return_value = {'foo': 'bar'}
         ret = self.hardware_manager.erase_devices(node, port)
         erase_mock.assert_called_once_with()
-        self.assertEqual({'Sanitize Erase': 'erase_status'}, ret)
+        generic_erase_mock.assert_called_once_with(node, port)
+        self.assertEqual({'Sanitize Erase': 'erase_status', 'foo': 'bar'}, ret)
 
     @mock.patch.object(ironic_python_agent.hardware.GenericHardwareManager,
                        'erase_devices')
@@ -78,13 +82,12 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
         port = {}
         value = ("Sanitize erase not supported in the "
                  "available controllers")
-        e = exception.HPSSAOperationError(value)
+        e = exception.HPSSAOperationError(reason=value)
         erase_mock.side_effect = e
-        generic_erase_mock.return_value = {'foo': 'bar'}
-        expt_return = {
-            'Sanitize Erase': erase_mock.side_effect}
-        expt_return.update(generic_erase_mock.return_value)
 
-        self.hardware_manager.erase_devices(node, port)
+        exc = self.assertRaises(exception.HPSSAOperationError,
+                                self.hardware_manager.erase_devices,
+                                node, port)
 
-        generic_erase_mock.assert_called_once_with(node, port)
+        self.assertIn(value, str(exc))
+        self.assertFalse(generic_erase_mock.called)
