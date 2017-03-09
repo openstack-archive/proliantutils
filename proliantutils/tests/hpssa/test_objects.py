@@ -344,12 +344,15 @@ class ControllerTest(testtools.TestCase):
                            get_all_details_mock):
         get_all_details_mock.return_value = raid_constants.SSA_ERASE_DRIVE
         server = objects.Server()
+        d = [x for x in server.controllers[0].unassigned_physical_drives]
         controller = server.controllers[0]
-        controller.erase_devices('1I:2:1')
-        execute_mock.assert_called_once_with('pd 1I:2:1', 'modify', 'erase',
-                                             'erasepattern=overwrite',
-                                             'unrestricted=off',
-                                             'forced')
+        controller.erase_devices(d)
+        calls = [mock.call('pd 1I:2:2', 'modify', 'erase',
+                           'erasepattern=block', 'unrestricted=off', 'forced'),
+                 mock.call('pd 1I:2:1', 'modify', 'erase',
+                           'erasepattern=overwrite',
+                           'unrestricted=off', 'forced')]
+        execute_mock.assert_has_calls(calls)
 
 
 @mock.patch.object(objects.Server, '_get_all_details')

@@ -2360,32 +2360,8 @@ Smart Array P440 in Slot 2
          Port Location: Internal
          Managed Cable Connected: False
 
-
-   Internal Drive Cage at Port 1I, Box 0, OK
-
-      Power Supply Status: Not Redundant
-      Drive Bays: 4
-      Port: 1I
-      Box: 0
-      Location: Internal
-
-   Physical Drives
-      None attached
-
-
-
-   Internal Drive Cage at Port 1I, Box 2, OK
-
-      Power Supply Status: Not Redundant
-      Drive Bays: 4
-      Port: 1I
-      Box: 2
-      Location: Internal
-
    Physical Drives
       physicaldrive 1I:2:1 (port 1I:box 2:bay 1, SAS HDD, 300 GB, OK)
-
-
 
    unassigned
 
@@ -2415,6 +2391,30 @@ Smart Array P440 in Slot 2
          Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
          Unrestricted Sanitize Supported: False
          Shingled Magnetic Recording Support: None
+
+     physicaldrive 1I:2:2
+         Port: 1I
+         Box: 2
+         Bay: 2
+         Status: OK
+         Drive Type: Unassigned Drive
+         Interface Type: Solid State SATA
+         Size: 200 GB
+         Native Block Size: 512
+         Rotational Speed: 15000
+         Firmware Revision: HPD6
+         Serial Number: 6SL7G54Q0000N4180W34
+         Model: HP      EF0600FARNA
+         Current Temperature (C): 31
+         Maximum Temperature (C): 39
+         PHY Count: 2
+         PHY Transfer Rate: 6.0Gbps, Unknown
+         Drive Authentication Status: OK
+         Sanitize Erase Supported: True
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+         Carrier Application Version: 11
+         Carrier Bootloader Version: 6
 '''
 
 SSA_ERASE_IN_PROGRESS = '''

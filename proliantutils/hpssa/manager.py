@@ -382,7 +382,6 @@ def erase_devices():
                   if (x.get_physical_drive_dict().get('erase_status', '')
                       == 'OK')]
         if drives:
-            drives = ','.join(x.id for x in drives)
             controller.erase_devices(drives)
 
     common.wait_for_operation_to_complete(
