@@ -418,14 +418,52 @@ class Controller(object):
         """
         self.execute_cmd("logicaldrive", "all", "delete", "forced")
 
-    def erase_devices(self, drive):
+    def _get_erase_command(self, drive, pattern):
+        """Return the command arguments based on the pattern.
+
+        Erase command examples:
+        1) Sanitize: "ssacli ctrl slot=0 pd 1I:1:1 modify erase
+                      erasepattern=overwrite unrestricted=off forced"
+        2) Zeros: "ssacli ctrl slot=0 pd 1I:1:1 modify erase
+                   erasepattern=zero forced"
+
+        :param drive: A string with comma separated list of drives.
+        :param pattern: A string which defines the type of erase.
+        :returns: A list of ssacli command arguments.
+        """
         cmd_args = []
         cmd_args.append("pd %s" % drive)
-        cmd_args.extend(['modify', 'erase',
-                         'erasepattern=overwrite',
-                         'unrestricted=off',
-                         'forced'])
-        self.execute_cmd(*cmd_args)
+        cmd_args.extend(['modify', 'erase', pattern])
+
+        if pattern != 'erasepattern=zero':
+            cmd_args.append('unrestricted=off')
+
+        cmd_args.append('forced')
+        return cmd_args
+
+    def erase_devices(self, drives):
+        """Perform Erase on all the drives in the controller.
+
+        This method erases all the drives in the controller by overwriting
+        the drives with the pattern. The drives will be unavailable until
+        after successful completion or failure. The possible erase pattern
+        available for sanitize erase are 'overwrite' and 'block' to perform
+        erase on HDD and SSD respectively.
+
+        If the sanitize erase is not supported on the controller it performs
+        the disk erase by overwritting with zeros.
+
+        :param drives: A list of drive objects in the controller.
+        """
+        # TODO(aparnav): Add Sanitize erase support for SSD
+        drive = ','.join([x.id for x in drives])
+        cmd_args = self._get_erase_command(drive, 'erasepattern=overwrite')
+
+        stdout = self.execute_cmd(*cmd_args)
+        if "not supported" in str(stdout):
+            cmd_args = self._get_erase_command(drive,
+                                               'erasepattern=zero')
+            self.execute_cmd(*cmd_args)
 
 
 class RaidArray(object):
