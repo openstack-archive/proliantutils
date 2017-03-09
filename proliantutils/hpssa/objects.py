@@ -418,14 +418,40 @@ class Controller(object):
         """
         self.execute_cmd("logicaldrive", "all", "delete", "forced")
 
-    def erase_devices(self, drive):
+    def _get_erase_command(self, drive, pattern):
+        """Return the command arguments based on the pattern.
+
+        :param drive: A string with comma separated list of drives.
+        :param pattern: A string which defines the type of erase.
+        :returns: A list of ssacli command arguments.
+        """
         cmd_args = []
         cmd_args.append("pd %s" % drive)
-        cmd_args.extend(['modify', 'erase',
-                         'erasepattern=overwrite',
+        cmd_args.extend(['modify', 'erase', pattern,
                          'unrestricted=off',
                          'forced'])
-        self.execute_cmd(*cmd_args)
+        return cmd_args
+
+    def erase_devices(self, drives):
+        """Perform Erase on all the drives in the controller.
+
+        This method erases all the drives in the controller by overwriting
+        the drives with the pattern.
+        :param drives: A list of drive objects in the controller.
+        """
+        types = {'hdd': 'overwrite', 'ssd': 'block'}
+        l = locals()
+        for type in types:
+            drive = type + '_drives'
+            l[drive] = [
+                x for x in drives
+                if (x.get_physical_drive_dict().get('disk_type', '') == type)]
+            if not eval(drive):
+                continue
+            drive = ','.join([x.id for x in eval(drive)])
+            pattern = 'erasepattern=' + types[type]
+            cmd_args = self._get_erase_command(drive, pattern)
+            self.execute_cmd(*cmd_args)
 
 
 class RaidArray(object):
