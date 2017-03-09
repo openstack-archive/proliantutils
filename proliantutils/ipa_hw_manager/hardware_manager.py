@@ -12,6 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import functools
+import futurist
+from futurist import waiters
+
 from ironic_python_agent import hardware
 
 from proliantutils import exception
@@ -92,18 +96,46 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
     def erase_devices(self, node, port):
         """Erase the drives on the bare metal.
 
-        This method erase all the drives which supports sanitize on
-        bare metal. If fails, it falls back to the generic erase method.
+        This method erase all the drives which supports sanitize and the drives
+        which are not part of any logical volume on the bare metal. It calls
+        generic erase method after the success of Sanitize disk erase.
+        :param node: A dictionary of the node object.
+        :param port: A list of dictionaries containing information of ports
+            for the node.
+        :raises exception.HPSSAOperationError, if there is a failure on the
+            erase operation on the controllers.
         :returns: The dictionary of controllers with the drives and erase
             status for each drive.
         """
+        result = {}
+        exc_msg = []
         try:
-            result = {}
-            result['Sanitize Erase'] = hpssa_manager.erase_devices()
+            def on_done_callback(erase_type, f):
+                try:
+                    result[erase_type] = f.result()
+                except Exception:
+                    exc_msg.append(f.exception())
 
-        except exception.HPSSAOperationError:
-            result.update(super(ProliantHardwareManager,
-                                self).erase_devices(node, port))
+            with futurist.ThreadPoolExecutor(max_workers=2) as executor:
+                sanitize_erase = executor.submit(hpssa_manager.erase_devices)
+                sanitize_erase.add_done_callback(functools.partial(
+                    on_done_callback, 'Sanitize Disk Erase'))
+
+                software_erase = executor.submit(
+                    super(ProliantHardwareManager, self).erase_devices,
+                    node, port)
+                software_erase.add_done_callback(functools.partial(
+                    on_done_callback, 'Logical Volume Erase'))
+
+                futures = [sanitize_erase, software_erase]
+                waiters.wait_for_all(futures)
+        except futurist.CancelledError as e:
+            msg = ("Unexpected error occured while performing erase_devices"
+                   + str(e))
+            raise exception.HPSSAOperationError(reason=msg)
+
+        if exc_msg:
+            raise exc_msg[0]
 
         return result
 

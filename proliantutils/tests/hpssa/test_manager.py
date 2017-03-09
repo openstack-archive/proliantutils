@@ -503,17 +503,6 @@ class ManagerTestCases(testtools.TestCase):
         self.assertEqual(expt_ret, ret)
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
-    def test_erase_devices_no_drives(self, controller_exec_cmd_mock,
-                                     get_all_details_mock):
-        erase_no_drives = raid_constants.SSA_ERASE_NOT_SUPPORTED
-        get_all_details_mock.side_effect = [erase_no_drives]
-        ex = self.assertRaises(exception.HPSSAOperationError,
-                               manager.erase_devices)
-        expt_ret = ("None of the available SSA controllers Smart "
-                    "Array P440 in Slot 2 have Sanitize Erase Supported.")
-        self.assertIn(expt_ret, str(ex))
-
-    @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_erase_devices_in_progress(self, controller_exec_cmd_mock,
                                        get_all_details_mock):
         erase_progress = raid_constants.SSA_ERASE_IN_PROGRESS
@@ -527,6 +516,27 @@ class ManagerTestCases(testtools.TestCase):
 
         ret = manager.erase_devices()
         self.assertFalse(controller_exec_cmd_mock.called)
+        self.assertEqual(expt_ret, ret)
+
+    @mock.patch.object(objects.Controller, 'execute_cmd')
+    def test_erase_devices_not_supported(self, controller_exec_cmd_mock,
+                                         get_all_details_mock):
+        erase_not_supported = raid_constants.SSA_ERASE_NOT_SUPPORTED
+        erase_complete = raid_constants.SSA_ERASE_COMPLETE_NOT_SUPPORTED
+        get_all_details_mock.side_effect = [erase_not_supported,
+                                            erase_complete, erase_complete]
+        value = ("Drive 1I:2:1: This operation is not supported in this "
+                 "physical drive")
+        controller_exec_cmd_mock.return_value = value
+        expt_ret = {
+            'Smart Array P440 in Slot 2': {
+                '1I:2:1': 'Erase Complete. Reenable Before Using.',
+                'Summary': ('Drives are overwritten with zeros because '
+                            'sanitize erase is not supported on the '
+                            'controller')
+                }}
+
+        ret = manager.erase_devices()
         self.assertEqual(expt_ret, ret)
 
 
