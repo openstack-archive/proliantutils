@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+2.2.1
+-----
+
+* Updating requirements.txt based on ironic
+* [Fix gate] Update pbr requirement
+* Add HPSUM firmware update support
+
 2.2.0
 -----
 
