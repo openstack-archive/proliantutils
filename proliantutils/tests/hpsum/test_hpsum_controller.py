@@ -14,10 +14,12 @@
 
 import os
 import shutil
+import tarfile
 import tempfile
 
 import mock
 from oslo_concurrency import processutils
+from oslo_serialization import base64
 import testtools
 
 from proliantutils import exception
@@ -43,19 +45,25 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         self.node = {'driver_info': self.info,
                      'clean_step': clean_step}
 
+    @mock.patch.object(hpsum_controller,
+                       '_get_log_file_data_as_encoded_content')
     @mock.patch.object(hpsum_controller, 'open',
                        mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA))
     @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum(self, execute_mock, exists_mock):
+    def test_execute_hpsum(self, execute_mock, exists_mock, log_mock):
         exists_mock.return_value = True
+        log_mock.return_value = "aaabbbcccdddd"
         value = ("hpsum_service_x64 started successfully. Sending Shutdown "
                  "request to engine. Successfully shutdown the service.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
             stdout=value, stderr=None, exit_code=0)
-        ret_value = ("Summary: The smart component was installed successfully."
-                     " Status of updated components: Total: 2 Success: 2 "
-                     "Failed: 0.")
+        ret_value = {
+            'Log Data': 'aaabbbcccdddd',
+            'Summary': ("The smart component was installed successfully."
+                        " Status of updated components: Total: 2 Success: 2 "
+                        "Failed: 0.")
+            }
 
         stdout = hpsum_controller._execute_hpsum("hpsum", components=None)
 
@@ -78,15 +86,23 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
             "hpsum", "--s", "--romonly", " --c foo --c bar")
         self.assertEqual(ret_value, stdout)
 
+    @mock.patch.object(hpsum_controller,
+                       '_get_log_file_data_as_encoded_content')
     @mock.patch.object(
         hpsum_controller, 'open',
         mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA_FAILURE))
     @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_update_fails(self, execute_mock, exists_mock):
+    def test_execute_hpsum_update_fails(self, execute_mock, exists_mock,
+                                        log_mock):
         exists_mock.return_value = True
-        ret = ("Summary: The installation of the component failed. Status "
-               "of updated components: Total: 2 Success: 1 Failed: 1.")
+        log_mock.return_value = "aaabbbcccdddd"
+        ret = {
+            'Log Data': 'aaabbbcccdddd',
+            'Summary': ("The installation of the component failed. Status "
+                        "of updated components: Total: 2 Success: 1 "
+                        "Failed: 1.")
+            }
         value = ("hpsum_service_x64 started successfully. Sending Shutdown "
                  "request to engine. Successfully shutdown the service.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
@@ -110,6 +126,27 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                                hpsum_controller._execute_hpsum, "hpsum",
                                None)
         self.assertIn(value, str(ex))
+
+    def test_get_log_file_data_as_encoded_content(self):
+        log_file_content = b'Sample Data for testing hpsum log output'
+        file_object = tempfile.NamedTemporaryFile(delete=False)
+        file_object.write(log_file_content)
+        file_object.close()
+        hpsum_controller.OUTPUT_FILES = [file_object.name]
+
+        base64_encoded_text = (hpsum_controller.
+                               _get_log_file_data_as_encoded_content())
+
+        tar_gzipped_content = base64.decode_as_bytes(base64_encoded_text)
+        tar_file = tempfile.NamedTemporaryFile(suffix='.tar.gz', delete=False)
+        tar_file.write(tar_gzipped_content)
+        tar_file.close()
+
+        with tarfile.open(name=tar_file.name) as tar:
+            f = tar.extractfile(file_object.name.lstrip('/'))
+            self.assertEqual(log_file_content, f.read())
+        os.remove(file_object.name)
+        os.remove(tar_file.name)
 
     @mock.patch.object(utils, 'validate_href')
     @mock.patch.object(utils, 'verify_image_checksum')
@@ -149,6 +186,19 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         mkdtemp_mock.assert_called_once_with()
         rmtree_mock.assert_called_once_with("/tempdir", ignore_errors=True)
         self.assertEqual('SUCCESS', ret_val)
+
+    @mock.patch.object(utils, 'validate_href')
+    def test_update_firmware_throws_for_nonexistent_file(self,
+                                                         validate_href_mock):
+        invalid_file_path = '/some/invalid/file/path'
+        value = ("Got HTTP code 503 instead of 200 in response to "
+                 "HEAD request.")
+        validate_href_mock.side_effect = exception.ImageRefValidationFailed(
+            reason=value, image_href=invalid_file_path)
+
+        exc = self.assertRaises(exception.HpsumOperationError,
+                                hpsum_controller.update_firmware, self.node)
+        self.assertIn(value, str(exc))
 
     @mock.patch.object(utils, 'validate_href')
     @mock.patch.object(ilo_client, 'IloClient', spec_set=True, autospec=True)
@@ -219,33 +269,41 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                                                   'CDROM')
         exists_mock.assert_called_once_with("/dev/disk/by-label/SPP_LABEL")
 
+    @mock.patch.object(hpsum_controller,
+                       '_get_log_file_data_as_encoded_content')
     @mock.patch.object(hpsum_controller, 'open',
                        mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA))
     @mock.patch.object(os.path, 'exists')
-    def test__parse_hpsum_ouput(self, exists_mock):
+    def test__parse_hpsum_ouput(self, exists_mock, log_mock):
         exists_mock.return_value = True
-        expt_ret = ("Summary: The smart component was installed successfully. "
-                    "Status of updated components: Total: 2 Success: 2 "
-                    "Failed: 0.")
+        log_mock.return_value = "aaabbbcccdddd"
+        expt_ret = {'Log Data': 'aaabbbcccdddd',
+                    'Summary': ("The smart component was installed "
+                                "successfully. Status of updated components: "
+                                "Total: 2 Success: 2 Failed: 0.")}
 
         ret = hpsum_controller._parse_hpsum_ouput(0)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
+        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)
 
+    @mock.patch.object(hpsum_controller,
+                       '_get_log_file_data_as_encoded_content')
     @mock.patch.object(
         hpsum_controller, 'open',
         mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA_FAILURE))
     @mock.patch.object(os.path, 'exists')
-    def test__parse_hpsum_ouput_some_failed(self, exists_mock):
+    def test__parse_hpsum_ouput_some_failed(self, exists_mock, log_mock):
         exists_mock.return_value = True
-        expt_ret = ("Summary: The installation of the component failed. "
-                    "Status of updated components: Total: 2 Success: 1 "
-                    "Failed: 1.")
+        log_mock.return_value = "aaabbbcccdddd"
+        expt_ret = {'Log Data': 'aaabbbcccdddd',
+                    'Summary': ("The installation of the component failed. "
+                                "Status of updated components: Total: 2 "
+                                "Success: 1 Failed: 1.")}
 
         ret = hpsum_controller._parse_hpsum_ouput(253)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
+        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)
 
     @mock.patch.object(os.path, 'exists')
@@ -255,5 +313,5 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
 
         ret = hpsum_controller._parse_hpsum_ouput(1)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILE)
+        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)

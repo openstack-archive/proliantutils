@@ -14,22 +14,27 @@
 
 
 import fnmatch
+import io
 import os
 import re
 import shutil
+import tarfile
 import tempfile
 import time
 
 from oslo_concurrency import processutils
+from oslo_serialization import base64
 
 from proliantutils import exception
 from proliantutils.ilo import client
 from proliantutils import utils
 
 
-OUTPUT_FILE = '/var/hp/log/localhost/hpsum_log.txt'
-
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
+
+# List of log files created by hpsum based firmware update.
+OUTPUT_FILES = ['/var/hp/log/localhost/hpsum_log.txt',
+                '/var/hp/log/localhost/hpsum_detail_log.txt']
 
 EXIT_CODE_TO_STRING = {
     0: "The smart component was installed successfully.",
@@ -70,6 +75,22 @@ def _execute_hpsum(hpsum_file_path, components=None):
             raise exception.HpsumOperationError(reason=msg)
 
 
+def _get_log_file_data_as_encoded_content():
+    """Gzip and base64 encode files and BytesIO buffers.
+
+    This method gets the log files created by hpsum based
+    firmware update and tar zip the files.
+    :returns: A gzipped and base64 encoded string as text.
+    """
+    with io.BytesIO() as fp:
+        with tarfile.open(fileobj=fp, mode='w:gz') as tar:
+            for f in OUTPUT_FILES:
+                tar.add(f)
+
+        fp.seek(0)
+        return base64.encode_as_bytes(fp.getvalue())
+
+
 def _parse_hpsum_ouput(exit_code):
     """Parse the hpsum output log file.
 
@@ -88,8 +109,8 @@ def _parse_hpsum_ouput(exit_code):
         return "Summary: %s" % EXIT_CODE_TO_STRING.get(exit_code)
 
     if exit_code in (0, 1, 253):
-        if os.path.exists(OUTPUT_FILE):
-            with open(OUTPUT_FILE, 'r') as f:
+        if os.path.exists(OUTPUT_FILES[0]):
+            with open(OUTPUT_FILES[0], 'r') as f:
                 output_data = f.read()
 
             ret_data = output_data[(output_data.find('Deployed Components:') +
@@ -105,12 +126,15 @@ def _parse_hpsum_ouput(exit_code):
                     else:
                         success += 1
 
-            return ("Summary: %(return_string)s Status of updated components:"
-                    " Total: %(total)s Success: %(success)s Failed: "
-                    "%(failed)s." %
+            return {
+                'Summary': (
+                    "%(return_string)s Status of updated components: Total: "
+                    "%(total)s Success: %(success)s Failed: %(failed)s." %
                     {'return_string': EXIT_CODE_TO_STRING.get(exit_code),
                      'total': (success + failed), 'success': success,
-                     'failed': failed})
+                     'failed': failed}),
+                'Log Data': _get_log_file_data_as_encoded_content()
+            }
 
         return "UPDATE STATUS: UNKNOWN"
 
