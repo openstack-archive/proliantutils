@@ -14,13 +14,16 @@
 
 
 import fnmatch
+import io
 import os
 import re
 import shutil
+import tarfile
 import tempfile
 import time
 
 from oslo_concurrency import processutils
+from oslo_serialization import base64
 
 from proliantutils import exception
 from proliantutils.ilo import client
@@ -30,6 +33,8 @@ from proliantutils import utils
 OUTPUT_FILE = '/var/hp/log/localhost/hpsum_log.txt'
 
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
+
+OUTPUT_FILES = ['hpsum_log.txt', 'hpsum_detail_log.txt']
 
 EXIT_CODE_TO_STRING = {
     0: "The smart component was installed successfully.",
@@ -70,6 +75,20 @@ def _execute_hpsum(hpsum_file_path, components=None):
             raise exception.HpsumOperationError(reason=msg)
 
 
+def get_log_file_data():
+    """Gzip and base64 encode files and BytesIO buffers.
+
+    :returns: A gzipped and base64 encoded string.
+    """
+    with io.BytesIO() as fp:
+        with tarfile.open(fileobj=fp, mode='w:gz') as tar:
+            for f in OUTPUT_FILES:
+                tar.add(f)
+
+        fp.seek(0)
+        return base64.encode_as_text(fp.getvalue())
+
+
 def _parse_hpsum_ouput(exit_code):
     """Parse the hpsum output log file.
 
@@ -105,12 +124,16 @@ def _parse_hpsum_ouput(exit_code):
                     else:
                         success += 1
 
-            return ("Summary: %(return_string)s Status of updated components:"
-                    " Total: %(total)s Success: %(success)s Failed: "
-                    "%(failed)s." %
-                    {'return_string': EXIT_CODE_TO_STRING.get(exit_code),
-                     'total': (success + failed), 'success': success,
-                     'failed': failed})
+            result = {}
+            result['Summary'] = (
+                "%(return_string)s Status of updated components: Total: "
+                "%(total)s Success: %(success)s Failed: %(failed)s." %
+                {'return_string': EXIT_CODE_TO_STRING.get(exit_code),
+                 'total': (success + failed), 'success': success,
+                 'failed': failed})
+            result['Log Data'] = get_log_file_data()
+
+            return result
 
         return "UPDATE STATUS: UNKNOWN"
 
