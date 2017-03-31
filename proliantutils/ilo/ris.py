@@ -22,6 +22,7 @@ import json
 import requests
 from requests.packages import urllib3
 from requests.packages.urllib3 import exceptions as urllib3_exceptions
+import retrying
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -61,6 +62,8 @@ POWER_STATE = {
 CLASSCODE_FOR_GPU_DEVICES = [3]
 SUBCLASSCODE_FOR_GPU_DEVICES = [0, 1, 2, 128]
 
+REDIRECTION_ATTEMPTS = 5
+
 LOG = log.get_logger(__name__)
 
 
@@ -83,6 +86,40 @@ class RISOperations(operations.IloOperations):
         if self.cacert is None:
             urllib3.disable_warnings(urllib3_exceptions.InsecureRequestWarning)
 
+    def _get_response_body_from_gzipped_content(self, url, response):
+        """Get the response body from gzipped content
+
+        Try to decode as gzip (we should check the headers for
+        Content-Encoding=gzip)
+
+          if response.headers['content-encoding'] == "gzip":
+            ...
+
+        :param url: the url for which response was sent
+        :type url: str
+        :param response: response content object, probably gzipped
+        :type response: object
+        :returns: returns response body
+        :raiises IloError: if the content is **not** gzipped
+        """
+        try:
+            gzipper = gzip.GzipFile(fileobj=six.BytesIO(response.text))
+
+            LOG.debug(self._("Received compressed response for "
+                             "url %(url)s."), {'url': url})
+            uncompressed_string = (gzipper.read().decode('UTF-8'))
+            response_body = json.loads(uncompressed_string)
+
+        except Exception as e:
+            LOG.debug(
+                self._("Error occurred while decompressing body. "
+                       "Got invalid response '%(response)s' for "
+                       "url %(url)s: %(error)s"),
+                {'url': url, 'response': response.text, 'error': e})
+            raise exception.IloError(e)
+
+        return response_body
+
     def _rest_op(self, operation, suburi, request_headers, request_body):
         """Generic REST Operation handler."""
 
@@ -90,11 +127,8 @@ class RISOperations(operations.IloOperations):
         # Used for logging on redirection error.
         start_url = url.geturl()
 
-        LOG.debug(self._("%(operation)s %(url)s "
-                         "with headers '%(header)s' and body '%(body)s'"),
-                  {'operation': operation, 'url': start_url,
-                   'header': request_headers,
-                   'body': request_body})
+        LOG.debug(self._("%(operation)s %(url)s"),
+                  {'operation': operation, 'url': start_url})
 
         if request_headers is None:
             request_headers = {}
@@ -106,23 +140,9 @@ class RISOperations(operations.IloOperations):
                 auth_data.encode('ascii')).decode("utf-8")
             request_headers['Authorization'] = hr
 
-        redir_count = 5
-        while redir_count:
-            kwargs = {'headers': request_headers,
-                      'data': json.dumps(request_body)}
-            if self.cacert is not None:
-                kwargs['verify'] = self.cacert
-            else:
-                kwargs['verify'] = False
+        """Helper methods to retry and keep retrying on redirection - START"""
 
-            request_method = getattr(requests, operation.lower())
-            response = None
-            try:
-                response = request_method(url.geturl(), **kwargs)
-            except Exception as e:
-                LOG.debug(self._("Unable to connect to iLO. %s"), e)
-                raise exception.IloConnectionError(e)
-
+        def retry_if_response_asks_for_redirection(response):
             # NOTE:Do not assume every HTTP operation will return a JSON body.
             # For example, ExtendedError structures are only required for
             # HTTP 400 errors and are optional elsewhere as they are mostly
@@ -133,16 +153,69 @@ class RISOperations(operations.IloOperations):
             # because HTTP says they are case insensitive
             # Follow HTTP redirect
             if response.status_code == 301 and 'location' in response.headers:
-                url = urlparse.urlparse(response.headers['location'])
-                redir_count -= 1
-                LOG.debug(self._("Request redirected to %s."), url.geturl())
+                retry_if_response_asks_for_redirection.url = (
+                    urlparse.urlparse(response.headers['location']))
+                LOG.debug(self._("Request redirected to %s."),
+                          retry_if_response_asks_for_redirection.url.geturl())
+                return True
+            return False
+
+        @retrying.retry(
+            # Note(deray): Return True if we should retry, False otherwise.
+            # In our case, when the url response we receive asks for
+            # redirection then we retry.
+            retry_on_result=retry_if_response_asks_for_redirection,
+            # Note(deray): Return True if we should retry, False otherwise.
+            # In our case, when it's an IloConnectionError we don't retry.
+            # ``requests`` already takes care of issuing max number of
+            # retries if the URL service is unavailable.
+            retry_on_exception=(
+                lambda e: not isinstance(e, exception.IloConnectionError)),
+            stop_max_attempt_number=REDIRECTION_ATTEMPTS)
+        def _fetch_response():
+
+            url = retry_if_response_asks_for_redirection.url
+
+            kwargs = {'headers': request_headers,
+                      'data': json.dumps(request_body)}
+            if self.cacert is not None:
+                kwargs['verify'] = self.cacert
             else:
-                break
-        else:
-            # Redirected for 5th time. Throw error
-            msg = (self._("URL Redirected 5 times continuously. "
-                          "URL used: %(start_url)s") %
-                   {'start_url': start_url})
+                kwargs['verify'] = False
+
+            LOG.debug(self._('\n\tHTTP REQUEST: %(restreq_method)s'
+                             '\n\tPATH: %(restreq_path)s'
+                             '\n\tBODY: %(restreq_body)s'
+                             '\n'),
+                      {'restreq_method': operation,
+                       'restreq_path': url.geturl(),
+                       'restreq_body': request_body})
+
+            request_method = getattr(requests, operation.lower())
+            try:
+                response = request_method(url.geturl(), **kwargs)
+            except Exception as e:
+                LOG.debug(self._("Unable to connect to iLO. %s"), e)
+                raise exception.IloConnectionError(e)
+
+            return response
+
+        """Helper methods to retry and keep retrying on redirection - END"""
+
+        try:
+            # Note(deray): This is a trick to use the function attributes
+            # to overwrite variable/s (in our case ``url``) and use the
+            # modified one in nested functions, i.e. :func:`_fetch_response`
+            # and :func:`retry_if_response_asks_for_redirection`
+            retry_if_response_asks_for_redirection.url = url
+
+            response = _fetch_response()
+        except retrying.RetryError as e:
+            # Redirected for REDIRECTION_ATTEMPTS - th time. Throw error
+            msg = (self._("URL Redirected %(times)s times continuously. "
+                          "URL used: %(start_url)s More info: %(error)s") %
+                   {'start_url': start_url, 'times': REDIRECTION_ATTEMPTS,
+                    'error': str(e)})
             LOG.debug(msg)
             raise exception.IloConnectionError(msg)
 
@@ -151,29 +224,21 @@ class RISOperations(operations.IloOperations):
             try:
                 response_body = json.loads(response.text)
             except (TypeError, ValueError):
-                # if it doesn't decode as json
-                # NOTE:  resources may return gzipped content
-                # try to decode as gzip (we should check the headers for
-                # Content-Encoding=gzip)
-                # NOTE: json.loads on python3 raises TypeError when
-                # response.text is gzipped one.
-                try:
-                    gzipper = gzip.GzipFile(
-                        fileobj=six.BytesIO(response.text))
-                    LOG.debug(self._("Received compressed response "
-                                     "for url %(url)s."),
-                              {'url': url.geturl()})
-                    uncompressed_string = gzipper.read().decode('UTF-8')
-                    response_body = json.loads(uncompressed_string)
-                except Exception as e:
-                    LOG.debug(self._("Got invalid response "
-                                     "'%(response)s' for url %(url)s."),
-                              {'url': url.geturl(),
-                               'response': response.text})
-                    raise exception.IloError(e)
+                # Note(deray): If it doesn't decode as json, then
+                # resources may return gzipped content.
+                # ``json.loads`` on python3 raises TypeError when
+                # ``response.text`` is gzipped one.
+                response_body = (
+                    self._get_response_body_from_gzipped_content(url,
+                                                                 response))
 
-        LOG.debug(self._("Received response %(response)s for url %(url)s."),
-                  {'url': url.geturl(), 'response': response_body})
+        LOG.debug(self._('\n\tHTTP RESPONSE for %(restreq_path)s:'
+                         '\n\tCode: %(status_code)s'
+                         '\n\tResponse Body: %(response_body)s'
+                         '\n'),
+                  {'restreq_path': url.geturl(),
+                   'status_code': response.status_code,
+                   'response_body': response_body})
         return response.status_code, response.headers, response_body
 
     def _rest_get(self, suburi, request_headers=None):
