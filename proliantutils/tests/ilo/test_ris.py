@@ -15,47 +15,15 @@
 
 """Test class for RIS Module."""
 
-import base64
 import json
 
 import mock
-import requests
-from requests.packages import urllib3
-from requests.packages.urllib3 import exceptions as urllib3_exceptions
 import testtools
 
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
-
-
-class IloRisTestCaseInitTestCase(testtools.TestCase):
-
-    @mock.patch.object(urllib3, 'disable_warnings')
-    def test_init(self, disable_warning_mock):
-        ris_client = ris.RISOperations(
-            "x.x.x.x", "admin", "Admin", bios_password='foo',
-            cacert='/somepath')
-
-        self.assertEqual(ris_client.host, "x.x.x.x")
-        self.assertEqual(ris_client.login, "admin")
-        self.assertEqual(ris_client.password, "Admin")
-        self.assertEqual(ris_client.bios_password, "foo")
-        self.assertEqual({}, ris_client.message_registries)
-        self.assertEqual(ris_client.cacert, '/somepath')
-
-    @mock.patch.object(urllib3, 'disable_warnings')
-    def test_init_without_cacert(self, disable_warning_mock):
-        ris_client = ris.RISOperations(
-            "x.x.x.x", "admin", "Admin", bios_password='foo')
-
-        self.assertEqual(ris_client.host, "x.x.x.x")
-        self.assertEqual(ris_client.login, "admin")
-        self.assertEqual(ris_client.password, "Admin")
-        self.assertIsNone(ris_client.cacert)
-        disable_warning_mock.assert_called_once_with(
-            urllib3_exceptions.InsecureRequestWarning)
 
 
 class IloRisTestCase(testtools.TestCase):
@@ -1041,133 +1009,6 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         get_current_boot_mode_mock.return_value = 'LEGACY'
         result = self.client._is_boot_mode_uefi()
         self.assertFalse(result)
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_okay(self, request_mock):
-        sample_headers = ris_outputs.HEADERS_FOR_REST_OP
-        exp_headers = dict((x.lower(), y) for x, y in sample_headers)
-        sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
-        response_mock_obj = mock.MagicMock(
-            status_code=200, text=sample_response_body,
-            headers=exp_headers)
-        request_mock.return_value = response_mock_obj
-
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', None, None)
-
-        self.assertEqual(200, status)
-        self.assertEqual(exp_headers, headers)
-        self.assertEqual(json.loads(sample_response_body), response)
-        request_mock.assert_called_once_with(
-            'https://1.2.3.4/v1/foo',
-            headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
-            data="null", verify=False)
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_request_error(self, request_mock):
-        request_mock.side_effect = RuntimeError("boom")
-
-        exc = self.assertRaises(exception.IloConnectionError,
-                                self.client._rest_op,
-                                'GET', '/v1/foo', {}, None)
-
-        request_mock.assert_called_once_with(
-            'https://1.2.3.4/v1/foo',
-            headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
-            data="null", verify=False)
-        self.assertIn("boom", str(exc))
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_continous_redirection(self, request_mock):
-        sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
-        sample_headers = ris_outputs.HEADERS_FOR_REST_OP
-        sample_headers.append(('location', 'https://foo'))
-        exp_headers = dict((x.lower(), y) for x, y in sample_headers)
-        response_mock_obj = mock.MagicMock(
-            status_code=301, text=sample_response_body,
-            headers=exp_headers)
-        request_mock.side_effect = [response_mock_obj,
-                                    response_mock_obj,
-                                    response_mock_obj,
-                                    response_mock_obj,
-                                    response_mock_obj]
-
-        exc = self.assertRaises(exception.IloConnectionError,
-                                self.client._rest_op,
-                                'GET', '/v1/foo', {}, None)
-
-        self.assertEqual(5, request_mock.call_count)
-        self.assertIn('https://1.2.3.4/v1/foo', str(exc))
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_one_redirection(self, request_mock):
-        sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
-        sample_headers1 = ris_outputs.HEADERS_FOR_REST_OP
-        sample_headers2 = ris_outputs.HEADERS_FOR_REST_OP
-        sample_headers1.append(('location', 'https://5.6.7.8/v1/foo'))
-        exp_headers1 = dict((x.lower(), y) for x, y in sample_headers1)
-        exp_headers2 = dict((x.lower(), y) for x, y in sample_headers2)
-        response_mock_obj1 = mock.MagicMock(
-            status_code=301, text=sample_response_body,
-            headers=exp_headers1)
-        response_mock_obj2 = mock.MagicMock(
-            status_code=200, text=sample_response_body,
-            headers=exp_headers2)
-        request_mock.side_effect = [response_mock_obj1,
-                                    response_mock_obj2]
-
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', {}, None)
-
-        exp_headers = dict((x.lower(), y) for x, y in sample_headers2)
-        self.assertEqual(200, status)
-        self.assertEqual(exp_headers, headers)
-        self.assertEqual(json.loads(sample_response_body), response)
-        request_mock.assert_has_calls([
-            mock.call('https://1.2.3.4/v1/foo',
-                      headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
-                      data="null", verify=False),
-            mock.call('https://5.6.7.8/v1/foo',
-                      headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
-                      data="null", verify=False)])
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_response_decode_error(self, request_mock):
-        sample_response_body = "{[wrong json"
-        sample_headers = ris_outputs.HEADERS_FOR_REST_OP
-        exp_headers = dict((x.lower(), y) for x, y in sample_headers)
-        response_mock_obj = mock.MagicMock(
-            status_code=200, text=sample_response_body,
-            headers=exp_headers)
-        request_mock.return_value = response_mock_obj
-
-        self.assertRaises(exception.IloError,
-                          self.client._rest_op,
-                          'GET', '/v1/foo', {}, None)
-
-        request_mock.assert_called_once_with(
-            'https://1.2.3.4/v1/foo',
-            headers={'Authorization': 'BASIC YWRtaW46QWRtaW4='},
-            data="null", verify=False)
-
-    @mock.patch.object(requests, 'get')
-    def test__rest_op_response_gzipped_response(self, request_mock):
-        sample_response_body = ris_outputs.RESPONSE_BODY_FOR_REST_OP
-        gzipped_response_body = base64.b64decode(
-            ris_outputs.BASE64_GZIPPED_RESPONSE)
-        sample_headers = ris_outputs.HEADERS_FOR_REST_OP
-        exp_headers = dict((x.lower(), y) for x, y in sample_headers)
-        response_mock_obj = mock.MagicMock(
-            status_code=200, text=gzipped_response_body,
-            headers=exp_headers)
-        request_mock.return_value = response_mock_obj
-
-        status, headers, response = self.client._rest_op(
-            'GET', '/v1/foo', {}, None)
-
-        self.assertEqual(200, status)
-        self.assertEqual(exp_headers, headers)
-        self.assertEqual(json.loads(sample_response_body), response)
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     @mock.patch.object(ris.RISOperations, '_check_bios_resource')
