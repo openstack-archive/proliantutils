@@ -21,7 +21,7 @@ import unittest
 import mock
 
 from proliantutils.ilo import ipmi
-from proliantutils.tests.ilo import ipmi_sample_outputs as constants
+from proliantutils.tests.unit.ilo import ipmi_sample_outputs as constants
 
 
 class IloIpmiTestCase(unittest.TestCase):

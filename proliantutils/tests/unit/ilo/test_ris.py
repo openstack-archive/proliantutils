@@ -23,7 +23,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ris
-from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
+from proliantutils.tests.unit.ilo import ris_sample_outputs as ris_outputs
 
 
 class IloRisTestCase(testtools.TestCase):

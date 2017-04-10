@@ -24,7 +24,7 @@ from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
-from proliantutils.tests.ilo import ribcl_sample_outputs as ribcl_output
+from proliantutils.tests.unit.ilo import ribcl_sample_outputs as ribcl_output
 
 
 @ddt.ddt

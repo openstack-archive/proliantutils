@@ -17,7 +17,7 @@ import unittest
 import mock
 
 from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
-from proliantutils.tests.ilo.snmp import snmp_sample_output
+from proliantutils.tests.unit.ilo.snmp import snmp_sample_output
 
 
 class SnmpTestCase(unittest.TestCase):

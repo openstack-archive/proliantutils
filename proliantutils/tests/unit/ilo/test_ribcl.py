@@ -28,7 +28,7 @@ from requests.packages.urllib3 import exceptions as urllib3_exceptions
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ribcl
-from proliantutils.tests.ilo import ribcl_sample_outputs as constants
+from proliantutils.tests.unit.ilo import ribcl_sample_outputs as constants
 
 
 class MaskedRequestDataTestCase(unittest.TestCase):

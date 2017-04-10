@@ -19,7 +19,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.hpssa import constants
 from proliantutils.hpssa import objects
-from proliantutils.tests.hpssa import raid_constants
+from proliantutils.tests.unit.hpssa import raid_constants
 
 
 @mock.patch.object(objects.Server, '_get_all_details')

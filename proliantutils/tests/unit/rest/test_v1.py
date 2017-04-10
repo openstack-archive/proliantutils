@@ -23,7 +23,7 @@ import testtools
 
 from proliantutils import exception
 from proliantutils.rest import v1
-from proliantutils.tests.rest import rest_sample_outputs as rest_outputs
+from proliantutils.tests.unit.rest import rest_sample_outputs as rest_outputs
 
 
 class RestConnectorBaseInitAndLowdashTestCase(testtools.TestCase):

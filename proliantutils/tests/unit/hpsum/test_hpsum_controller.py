@@ -23,7 +23,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.hpsum import hpsum_controller
 from proliantutils.ilo import client as ilo_client
-from proliantutils.tests.hpsum import hpsum_sample_output as constants
+from proliantutils.tests.unit.hpsum import hpsum_sample_output as constants
 from proliantutils import utils
 
 
