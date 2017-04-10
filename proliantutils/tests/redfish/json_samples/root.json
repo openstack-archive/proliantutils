@@ -1,0 +1,90 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ServiceRoot",
+    "@odata.etag": "W/\"06F9101D\"",
+    "@odata.id": "/redfish/v1/",
+    "@odata.type": "#ServiceRoot.v1_1_0.ServiceRoot",
+    "AccountService": {
+        "@odata.id": "/redfish/v1/AccountService/"
+    },
+    "Chassis": {
+        "@odata.id": "/redfish/v1/Chassis/"
+    },
+    "EventService": {
+        "@odata.id": "/redfish/v1/EventService/"
+    },
+    "Id": "v1",
+    "JsonSchemas": {
+        "@odata.id": "/redfish/v1/Schemas/"
+    },
+    "Links": {
+        "Sessions": {
+            "@odata.id": "/redfish/v1/SessionService/Sessions/"
+        }
+    },
+    "Managers": {
+        "@odata.id": "/redfish/v1/Managers/"
+    },
+    "Name": "HPE RESTful Root Service",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeiLOServiceExt.v2_0_0.HpeiLOServiceExt",
+            "Links": {
+                "ResourceDirectory": {
+                    "@odata.id": "/redfish/v1/ResourceDirectory/"
+                },
+                "ViewClassService": {
+                    "@odata.id": "/redfish/v1/Views/"
+                }
+            },
+            "Manager": [
+                {
+                    "DefaultLanguage": "en",
+                    "FQDN": "ILO.asiapacific.hpqcorp.net",
+                    "HostName": "ILO",
+                    "Languages": [
+                        {
+                            "Language": "en",
+                            "TranslationName": "English",
+                            "Version": "1.10"
+                        }
+                    ],
+                    "ManagerFirmwareVersion": "1.10",
+                    "ManagerType": "iLO 5"
+                }
+            ],
+            "Sessions": {
+                "CertCommonName": "ILO.asiapacific.hpqcorp.net",
+                "CertificateLoginEnabled": false,
+                "KerberosEnabled": false,
+                "LDAPAuthLicenced": true,
+                "LDAPEnabled": false,
+                "LocalLoginEnabled": true,
+                "LoginFailureDelay": 0,
+                "LoginHint": {
+                    "Hint": "POST to /Sessions to login using the following JSON object:",
+                    "HintPOSTData": {
+                        "Password": "password",
+                        "UserName": "username"
+                    }
+                },
+                "SecurityOverride": false,
+                "ServerName": ""
+            },
+            "Time": "2017-03-30T12:13:38Z"
+        }
+    },
+    "RedfishVersion": "1.0.0",
+    "Registries": {
+        "@odata.id": "/redfish/v1/Registries/"
+    },
+    "SessionService": {
+        "@odata.id": "/redfish/v1/SessionService/"
+    },
+    "Systems": {
+        "@odata.id": "/redfish/v1/Systems/"
+    },
+    "UUID": "7704b47b-2fbe-5920-99a5-b766dd84cc28",
+    "UpdateService": {
+        "@odata.id": "/redfish/v1/UpdateService/"
+    }
+}

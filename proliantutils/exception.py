@@ -200,3 +200,20 @@ class HpsumOperationError(ProliantUtilsException):
             message = self.message % kwargs
 
         super(HpsumOperationError, self).__init__(message)
+
+
+class RedfishError(ProliantUtilsException):
+    """Basic exception for errors raised by Redfish operations."""
+
+    message = None
+
+    def __init__(self, **kwargs):
+        if self.message and kwargs:
+            self.message = self.message % kwargs
+
+        super(RedfishError, self).__init__(self.message)
+
+
+class MissingAttributeError(RedfishError):
+    message = ('The attribute %(attribute)s is missing from the '
+               'resource %(resource)s')
