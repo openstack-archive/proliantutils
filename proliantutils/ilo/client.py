@@ -20,6 +20,7 @@ from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
 from proliantutils import log
+from proliantutils.redfish import redfish
 
 SUPPORTED_RIS_METHODS = [
     'activate_license',
@@ -56,26 +57,72 @@ SUPPORTED_RIS_METHODS = [
     'update_persistent_boot',
     ]
 
+SUPPORTED_REDFISH_METHODS = [
+    'get_product_name',
+    'get_host_power_status',
+]
+
 LOG = log.get_logger(__name__)
 
 
 class IloClient(operations.IloOperations):
 
     def __init__(self, host, login, password, timeout=60, port=443,
-                 bios_password=None, cacert=None, snmp_credentials=None):
+                 bios_password=None, cacert=None, snmp_credentials=None,
+                 use_redfish_only=False):
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
-        self.ris = ris.RISOperations(host, login, password,
-                                     bios_password=bios_password,
-                                     cacert=cacert)
         self.info = {'address': host, 'username': login, 'password': password}
         self.host = host
-        self.model = self.ribcl.get_product_name()
-        self.ribcl.init_model_based_tags(self.model)
+        self.use_redfish_only = use_redfish_only
+
+        if use_redfish_only:
+            self._init_redfish_object('n/a', host, login, password,
+                                      bios_password=bios_password,
+                                      cacert=cacert)
+            LOG.debug(self._("Forced to use 'redfish' way to interact "
+                             "with iLO. Model: %(model)s"),
+                      {'model': self.model})
+        else:
+            try:
+                self.model = self.ribcl.get_product_name()
+            except exception.IloError:
+                # Note(deray): This can be a potential scenario where
+                # RIBCL is disabled on a Gen10 (iLO 5) hardware.
+                # So, trying out the redfish operation object instantiation.
+                # If that passes we know that our assumption is right.
+                # If that errors out, then alas! we are left with no other
+                # choice.
+                self._init_redfish_object(False, host, login, password,
+                                          bios_password=bios_password,
+                                          cacert=cacert)
+            else:
+                self.ribcl.init_model_based_tags(self.model)
+                if ('Gen10' in self.model):
+                    self._init_redfish_object(True, host, login, password,
+                                              bios_password=bios_password,
+                                              cacert=cacert,
+                                              should_set_model=False)
+                else:
+                    # Gen9
+                    self.ris = ris.RISOperations(
+                        host, login, password, bios_password=bios_password,
+                        cacert=cacert)
+
         self.snmp_credentials = snmp_credentials
         self._validate_snmp()
         LOG.debug(self._("IloClient object created. "
                          "Model: %(model)s"), {'model': self.model})
+
+    def _init_redfish_object(self, is_ribcl_enabled, redfish_controller_ip,
+                             username, password, bios_password=None,
+                             cacert=None, should_set_model=True):
+        self.redfish = redfish.RedfishOperations(
+            redfish_controller_ip, username, password,
+            bios_password=bios_password, cacert=cacert)
+        self.is_ribcl_enabled = is_ribcl_enabled
+        if should_set_model:
+            self.model = self.redfish.get_product_name()
 
     def _validate_snmp(self):
         """Validates SNMP credentials.
@@ -130,10 +177,28 @@ class IloClient(operations.IloOperations):
                              'inspection will not be performed.'))
 
     def _call_method(self, method_name, *args, **kwargs):
-        """Call the corresponding method using either RIBCL or RIS."""
-        the_operation_object = self.ribcl
-        if ('Gen9' in self.model) and (method_name in SUPPORTED_RIS_METHODS):
-            the_operation_object = self.ris
+        """Call the corresponding method using RIBCL, RIS or REDFISH
+
+        Make the decision to invoke the corresponding method using RIBCL,
+        RIS or REDFISH way. In case of none, throw out ``NotImplementedError``
+        """
+        if self.use_redfish_only:
+            if method_name in SUPPORTED_REDFISH_METHODS:
+                the_operation_object = self.redfish
+            else:
+                raise NotImplementedError()
+        else:
+            the_operation_object = self.ribcl
+            if 'Gen10' in self.model:
+                if method_name in SUPPORTED_REDFISH_METHODS:
+                    the_operation_object = self.redfish
+                else:
+                    if self.is_ribcl_enabled is False:
+                        raise NotImplementedError()
+            elif ('Gen9' in self.model) and (method_name in
+                                             SUPPORTED_RIS_METHODS):
+                the_operation_object = self.ris
+
         method = getattr(the_operation_object, method_name)
 
         LOG.debug(self._("Using %(class)s for method %(method)s."),
