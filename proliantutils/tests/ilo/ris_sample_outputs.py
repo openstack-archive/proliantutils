@@ -1190,7 +1190,6 @@ GET_MANAGER_DETAILS_NO_FIRMWARE = """
     }
 """
 
-
 GET_BIOS_SETTINGS = """
     {
        "AcpiRootBridgePxm": "Enabled",
@@ -1276,6 +1275,7 @@ GET_BIOS_SETTINGS = """
        "NmiDebugButton": "Enabled",
        "NodeInterleaving": "Disabled",
        "NumaGroupSizeOpt": "Clustered",
+       "NvDimmNMemFunctionality": "Enabled",
        "OldAdminPassword": null,
        "OldPowerOnPassword": null,
        "PciBusPadding": "Enabled",
