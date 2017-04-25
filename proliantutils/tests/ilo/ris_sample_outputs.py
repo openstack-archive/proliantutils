@@ -1276,6 +1276,7 @@ GET_BIOS_SETTINGS = """
        "NmiDebugButton": "Enabled",
        "NodeInterleaving": "Disabled",
        "NumaGroupSizeOpt": "Clustered",
+       "NvDimmNMemFunctionality": "Enabled",
        "OldAdminPassword": null,
        "OldPowerOnPassword": null,
        "PciBusPadding": "Enabled",
