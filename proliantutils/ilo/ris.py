@@ -978,6 +978,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities.update(self._get_tpm_capability())
         if self._get_cpu_virtualization():
             capabilities['cpu_vt'] = 'true'
+        if self._get_nvdimm_n_status():
+            capabilities['nvdimm_n'] = 'true'
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1526,3 +1528,18 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         else:
             vt_status = False
         return vt_status
+
+    def _get_nvdimm_n_status(self):
+        """Get status of NVDIMM_N.
+
+        :returns: True if NVDIMM_N is present and enabled, False otherwise.
+        """
+        try:
+            nvdimm_n_status = self._get_bios_setting('NvDimmNMemFunctionality')
+            if nvdimm_n_status == 'Enabled':
+                nvn_status = True
+            else:
+                nvn_status = False
+        except exception.IloCommandNotSupportedError:
+            nvn_status = False
+        return nvn_status
