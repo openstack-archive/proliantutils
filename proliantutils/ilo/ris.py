@@ -976,6 +976,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_tpm_capability())
+        if self._get_nvdimm_n_status():
+            capabilities['nvdimm_n'] = 'true'
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1512,3 +1514,18 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         tpm_result = tpm_values[tpm_state]
 
         return {'trusted_boot': tpm_result}
+
+    def _get_nvdimm_n_status(self):
+        """Retrieves if server has NVDIMM_N or not.
+
+        :returs True if NVDIMM_N is Present else False
+        """
+        try:
+            nvdimm_n_status = self._get_bios_setting('NvDimmNMemFunctionality')
+        except exception.IloCommandNotSupportedError:
+            return False
+        if nvdimm_n_status == 'Enabled':
+            status = True
+        else:
+            status = False
+        return status
