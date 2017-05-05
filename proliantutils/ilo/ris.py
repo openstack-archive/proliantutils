@@ -975,9 +975,12 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities['rom_firmware_version'] = rom_firmware_version
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
-        capabilities.update(self._get_tpm_capability())
+        if self._get_tpm_capability():
+            capabilities['trusted_boot'] = 'true'
+
         if self._get_cpu_virtualization():
             capabilities['cpu_vt'] = 'true'
+
         try:
             self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
@@ -1512,8 +1515,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             tpm_state = "NotPresent"
         tpm_result = tpm_values[tpm_state]
-
-        return {'trusted_boot': tpm_result}
+        return tpm_result
 
     def _get_cpu_virtualization(self):
         """get cpu virtualization status."""
