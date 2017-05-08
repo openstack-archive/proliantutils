@@ -23,6 +23,7 @@ from proliantutils.ilo import ipmi
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.ilo.snmp import snmp_cpqdisk_sizes
+from proliantutils.redfish import redfish
 
 
 class IloClientInitTestCase(testtools.TestCase):
@@ -48,6 +49,82 @@ class IloClientInitTestCase(testtools.TestCase):
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
             c.info)
         self.assertEqual('product', c.model)
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test_init_for_redfish_with_ribcl_enabled(
+            self, redfish_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'ProLiant DL180 Gen10'
+
+        c = client.IloClient("1.2.3.4", "admin", "Admin",
+                             timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        redfish_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        self.assertEqual(
+            {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertEqual('ProLiant DL180 Gen10', c.model)
+        self.assertIsNotNone(c.redfish)
+        self.assertTrue(c.is_ribcl_enabled)
+        self.assertFalse(hasattr(c, 'ris'))
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test_init_for_redfish_with_ribcl_disabled(
+            self, redfish_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.side_effect = (
+            exception.IloError('RIBCL is disabled'))
+
+        c = client.IloClient("1.2.3.4", "admin", "Admin",
+                             timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        redfish_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        self.assertEqual(
+            {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertIsNotNone(c.model)
+        self.assertIsNotNone(c.redfish)
+        self.assertFalse(c.is_ribcl_enabled)
+        self.assertFalse(hasattr(c, 'ris'))
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test_init_with_use_redfish_only_set(
+            self, redfish_mock, ribcl_mock):
+        c = client.IloClient("1.2.3.4", "admin", "Admin",
+                             timeout=120,  port=4430,
+                             bios_password='foo', cacert='/somewhere',
+                             use_redfish_only=True)
+
+        ribcl_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
+        redfish_mock.assert_called_once_with(
+            "1.2.3.4", "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        self.assertEqual(
+            {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertIsNotNone(c.model)
+        self.assertIsNotNone(c.redfish)
+        self.assertIsNone(c.is_ribcl_enabled)
+        self.assertFalse(hasattr(c, 'ris'))
+        self.assertTrue(c.use_redfish_only)
 
     @mock.patch.object(client.IloClient, '_validate_snmp')
     @mock.patch.object(ribcl, 'RIBCLOperations')
@@ -192,6 +269,91 @@ class IloClientTestCase(testtools.TestCase):
         self.client.model = 'Gen9'
         self.client._call_method('reset_ilo')
         ilo_mock.assert_called_once_with()
+
+    """
+    Testing ``_call_method`` with Redfish support.
+
+    Testing the redfish methods based on the following scenarios,
+    which are depicted in this table::
+
+      redfish  |  ribcl   | method implemented | name of test method
+    supported? | enabled? |    on redfish?     |
+    ===========|==========|====================|=============================
+       true    |   true   |      true          | test__call_method_redfish_1
+       true    |   true   |      false         | test__call_method_redfish_2
+       true    |   false  |      true          | test__call_method_redfish_3
+       true    |   false  |      false         | test__call_method_redfish_4
+    ===========|==========|====================|=============================
+    """
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test__call_method_redfish_1(self, redfish_mock,
+                                    ribcl_product_name_mock):
+        ribcl_product_name_mock.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "admin", "secret")
+        redfish_get_host_power_mock = (redfish.RedfishOperations.return_value.
+                                       get_host_power_status)
+
+        self.client._call_method('get_host_power_status')
+        redfish_get_host_power_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    @mock.patch.object(ribcl.RIBCLOperations, 'reset_ilo')
+    def test__call_method_redfish_2(self, ribcl_reset_ilo_mock,
+                                    redfish_mock, ribcl_product_name_mock):
+        ribcl_product_name_mock.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "admin", "secret")
+
+        self.client._call_method('reset_ilo')
+        ribcl_reset_ilo_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test__call_method_redfish_3(self, redfish_mock,
+                                    ribcl_product_name_mock):
+        ribcl_product_name_mock.side_effect = (
+            exception.IloError('RIBCL is disabled'))
+        redfish_mock.return_value.get_product_name.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "admin", "secret")
+        redfish_get_host_power_mock = (redfish.RedfishOperations.return_value.
+                                       get_host_power_status)
+
+        self.client._call_method('get_host_power_status')
+        redfish_get_host_power_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(redfish, 'RedfishOperations')
+    def test__call_method_redfish_4(self, redfish_mock,
+                                    ribcl_product_name_mock):
+        ribcl_product_name_mock.side_effect = (
+            exception.IloError('RIBCL is disabled'))
+        redfish_mock.return_value.get_product_name.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "admin", "secret")
+
+        self.assertRaises(NotImplementedError,
+                          self.client._call_method, 'reset_ilo')
+
+    @mock.patch.object(redfish, 'RedfishOperations',
+                       spec_set=True, autospec=True)
+    def test__call_method_with_use_redfish_only_set(self, redfish_mock):
+        self.client = client.IloClient("1.2.3.4", "admin", "secret",
+                                       use_redfish_only=True)
+        redfish_get_host_power_mock = (redfish.RedfishOperations.return_value.
+                                       get_host_power_status)
+
+        self.client._call_method('get_host_power_status')
+        redfish_get_host_power_mock.assert_called_once_with()
+
+    @mock.patch.object(redfish, 'RedfishOperations',
+                       spec_set=True, autospec=True)
+    def test__call_method_use_redfish_only_set_but_not_implemented(
+            self, redfish_mock):
+        self.client = client.IloClient("1.2.3.4", "admin", "secret",
+                                       use_redfish_only=True)
+
+        self.assertRaises(NotImplementedError,
+                          self.client._call_method, 'reset_ilo')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_http_boot_url(self, call_mock):
