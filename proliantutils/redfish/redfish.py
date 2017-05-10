@@ -26,6 +26,11 @@ from proliantutils import rest
 Class specific for Redfish APIs.
 """
 
+VALID_POWER_VALUES = {
+    'ON': 'On',
+    'OFF': 'ForceOff',
+}
+
 LOG = log.get_logger(__name__)
 
 
@@ -122,3 +127,59 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         system = self._get_system_details('1')
         return system['PowerState'].upper()
+
+    def _get_reset_system_path_for(self, system_id):
+        """Gets the reset system path
+
+        :param system_id: The identity of the System resource
+        """
+        system = self._get_system_details(system_id)
+        actions = system.get('Actions')
+        if not actions:
+            raise exception.MissingAttributeError(
+                attribute='Actions', resource=system.get('@odata.id'))
+
+        reset_action = actions.get('#ComputerSystem.Reset')
+        if not reset_action:
+            raise exception.MissingAttributeError(
+                attribute='Actions/#ComputerSystem.Reset',
+                resource=system.get('@odata.id'))
+
+        target_uri = reset_action.get('target')
+        if not target_uri:
+            raise exception.MissingAttributeError(
+                attribute='Actions/#ComputerSystem.Reset/target',
+                resource=system.get('@odata.id'))
+
+        return target_uri
+
+    def set_host_power(self, value):
+        """Sets the power state of the system.
+
+        :param value: The target value to be set. Value can be:
+            'ON' or 'OFF'.
+        :raises: IloError, on an error from iLO.
+        :raises: InvalidInputError, if the target value is not
+            allowed.
+        """
+        if value not in VALID_POWER_VALUES:
+            msg = ('The parameter "%(parameter)s" value "%(value)s" is '
+                   'invalid. Valid values are: %(valid_power_values)s' %
+                   {'parameter': 'value', 'value': value,
+                    'valid_power_values': VALID_POWER_VALUES.keys()})
+            raise exception.InvalidInputError(msg)
+
+        # Check current power status, do not act if it's in requested state.
+        current_power_status = self.get_host_power_status()
+        if current_power_status == value:
+            LOG.debug(self._("Node is already in '%(value)s' power state."),
+                      {'value': value})
+            return
+
+        # Assuming only one system present as part of collection,
+        # as we are dealing with iLO's here.
+        target_uri = self._get_reset_system_path_for('1')
+
+        target_value = VALID_POWER_VALUES[value]
+        self._conn._rest_post(target_uri, None,
+                              {'ResetType': target_value})
