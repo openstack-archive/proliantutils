@@ -15,16 +15,23 @@
 __author__ = 'HPE'
 
 from six.moves.urllib import parse
+import sushy
 
 from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
-from proliantutils import rest
 
 
 """
 Class specific for Redfish APIs.
 """
+
+GET_POWER_STATE_MAP = {
+    sushy.SYSTEM_POWER_STATE_ON: 'ON',
+    sushy.SYSTEM_POWER_STATE_POWERING_ON: 'ON',
+    sushy.SYSTEM_POWER_STATE_OFF: 'OFF',
+    sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
+}
 
 LOG = log.get_logger(__name__)
 
@@ -63,62 +70,69 @@ class RedfishOperations(operations.IloOperations):
             the root service and version. Defaults to /redfish/v1
         """
         super(RedfishOperations, self).__init__()
-        self._conn = rest.RestConnectorBase(redfish_controller_ip, username,
-                                            password, bios_password, cacert)
+        address = ('https://' + redfish_controller_ip)
+        LOG.debug('Redfish address: %s', address)
+        verify = False if cacert is None else cacert
+
+        # for error reporting purpose
+        self.host = redfish_controller_ip
         self._root_prefix = root_prefix
-        # Fetch the ServiceRoot response
-        self._fetch_root_resources()
 
-    def _fetch_root_resources(self):
-        """Fetches the service root resources
-
-        Retrieves/fetches the resources at ServiceRoot
-        :raises: IloConnectionError
-        """
-        status, headers, service_root_resp = (
-            self._conn._rest_get(self._root_prefix))
-        self._root_resp = service_root_resp
+        try:
+            self._sushy = sushy.Sushy(
+                address, username=username, password=password,
+                root_prefix=root_prefix, verify=verify)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller at "%(controller)s" has '
+                          'thrown error. Error %(error)s') %
+                   {'controller': address, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloConnectionError(msg)
 
     def _get_system_collection_path(self):
         """Helper function to find the SystemCollection path"""
-        systems_col = self._root_resp.get('Systems')
+        systems_col = self._sushy.json.get('Systems')
         if not systems_col:
             raise exception.MissingAttributeError(attribute='Systems',
                                                   resource=self._root_prefix)
         return systems_col.get('@odata.id')
 
-    def _get_system_details(self, system_id):
-        """Get the system details.
+    def _get_sushy_system(self, system_id):
+        """Get the sushy system for system_id
 
         :param system_id: The identity of the System resource
+        :returns: the Sushy system instance
         :raises: IloError
-        :raises: MissingAttributeError
         """
         system_url = parse.urljoin(self._get_system_collection_path(),
                                    system_id)
-        status, headers, system = self._conn._rest_get(system_url)
-        return system
+        try:
+            return self._sushy.get_system(system_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish System "%(system)s" was not found. '
+                          'Error %(error)s') %
+                   {'system': system_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
 
     def get_product_name(self):
         """Gets the product name of the server.
 
         :returns: server model name.
         :raises: IloError, on an error from iLO.
-        :raises: MissingAttributeError
         """
         # Assuming only one system present as part of collection,
         # as we are dealing with iLO's here.
-        system = self._get_system_details('1')
-        return system['Model']
+        sushy_system = self._get_sushy_system('1')
+        return sushy_system.json.get('Model')
 
     def get_host_power_status(self):
         """Request the power state of the server.
 
         :returns: Power State of the server, 'ON' or 'OFF'
         :raises: IloError, on an error from iLO.
-        :raises: MissingAttributeError
         """
-        # Assuming only one system present as part of collection,
+        # Assuming only one sushy_system present as part of collection,
         # as we are dealing with iLO's here.
-        system = self._get_system_details('1')
-        return system['PowerState'].upper()
+        sushy_system = self._get_sushy_system('1')
+        return GET_POWER_STATE_MAP.get(sushy_system.power_state)

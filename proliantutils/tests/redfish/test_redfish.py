@@ -16,61 +16,65 @@
 import json
 
 import mock
+import sushy
 import testtools
 
 from proliantutils import exception
 from proliantutils.redfish import redfish
-from proliantutils import rest
 
 
 class RedfishOperationsTestCase(testtools.TestCase):
 
-    @mock.patch.object(rest, 'RestConnectorBase', autospec=True)
-    def setUp(self, rest_connector_mock):
+    @mock.patch.object(sushy, 'Sushy', autospec=True)
+    def setUp(self, sushy_mock):
         super(RedfishOperationsTestCase, self).setUp()
-        self.conn = mock.MagicMock()
-        rest_connector_mock.return_value = self.conn
+        self.sushy = mock.MagicMock()
+        sushy_mock.return_value = self.sushy
         with open('proliantutils/tests/redfish/'
                   'json_samples/root.json', 'r') as f:
-            self.conn._rest_get.return_value = 200, None, json.loads(f.read())
+            self.sushy.json = json.loads(f.read())
 
         self.rf_client = redfish.RedfishOperations(
             '1.2.3.4', username='foo', password='bar')
-        rest_connector_mock.assert_called_once_with(
-            '1.2.3.4', 'foo', 'bar', None, None)
+        sushy_mock.assert_called_once_with(
+            'https://1.2.3.4', 'foo', 'bar', '/redfish/v1/', False)
 
-    def test__fetch_root_resources(self):
-        rf_client = self.rf_client
-        rf_client._fetch_root_resources()
-        self.assertEqual('HPE RESTful Root Service',
-                         rf_client._root_resp.get('Name'))
-        self.assertEqual('1.0.0', rf_client._root_resp.get('RedfishVersion'))
-        self.assertEqual('7704b47b-2fbe-5920-99a5-b766dd84cc28',
-                         rf_client._root_resp.get('UUID'))
-        for resource in ['Systems', 'Managers', 'Chassis']:
-            self.assertTrue(resource in rf_client._root_resp)
+    @mock.patch.object(sushy, 'Sushy', autospec=True)
+    def test_sushy_init_fail(self, sushy_mock):
+        sushy_mock.side_effect = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloConnectionError,
+            'The Redfish controller at "https://1.2.3.4" has thrown error',
+            redfish.RedfishOperations,
+            '1.2.3.4', username='foo', password='bar')
 
     def test__get_system_collection_path(self):
         self.assertEqual('/redfish/v1/Systems/',
                          self.rf_client._get_system_collection_path())
 
     def test__get_system_collection_path_missing_systems_attr(self):
-        self.rf_client._root_resp.pop('Systems')
+        self.rf_client._sushy.json.pop('Systems')
         self.assertRaisesRegex(
             exception.MissingAttributeError,
             'The attribute Systems is missing',
             self.rf_client._get_system_collection_path)
 
+    def test__get_sushy_system_fail(self):
+        self.rf_client._sushy.get_system.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish System "apple" was not found.',
+            self.rf_client._get_sushy_system, 'apple')
+
     def test_get_product_name(self):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
-            self.conn._rest_get.return_value = 200, None, json.loads(f.read())
+            self.sushy.get_system().json = json.loads(f.read())
         product_name = self.rf_client.get_product_name()
         self.assertEqual('ProLiant DL180 Gen10', product_name)
 
     def test_get_host_power_status(self):
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/system.json', 'r') as f:
-            self.conn._rest_get.return_value = 200, None, json.loads(f.read())
+        self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
