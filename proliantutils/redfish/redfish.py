@@ -136,3 +136,33 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system('1')
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
+
+    def _get_bios_settings(self):
+        """Get bios settings of server.
+
+        :returns: Bios settings in json.
+        :raises: IloCommandNotSupportedError, on an error from iLO.
+        """
+        # Assuming only one system present as part of collection,
+        # as we are dealing with iLO's here.
+        sushy_system = self._get_sushy_system('1')
+        if sushy_system.json.get('Bios'):
+            # Get the BIOS URI and Settings
+            bios_uri = sushy_system.json.get('Bios').get('@odata.id')
+            bios_settings = self._get_sushy_system(bios_uri)
+            return bios_settings.json
+        else:
+            msg = ('bios link not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def get_current_boot_mode(self):
+        """Retrieves the current boot mode of the server.
+
+        :returns: Current boot mode, LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        boot_mode = self._get_bios_settings().get('Attributes').get('BootMode')
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+
+        return boot_mode.upper()
