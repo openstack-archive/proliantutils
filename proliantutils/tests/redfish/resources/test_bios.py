@@ -35,6 +35,9 @@ class BIOSTestCase(testtools.TestCase):
             self.conn, '/redfish/v1/Systems/1/bios',
             redfish_version='1.0.2')
 
+    def test__parse_attributes(self):
+        self.assertEqual('uefi', self.bios_inst.boot_mode)
+
     def test_settings(self):
         self.assertIsNone(self.bios_inst._settings)
 

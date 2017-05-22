@@ -19,6 +19,9 @@ from sushy.resources import base
 
 class BIOSSettings(base.ResourceBase):
 
+    boot_mode = base.MappedField(["Attributes", "BootMode"],
+                                 mappings.GET_BIOS_BOOT_MODE_MAP)
+
     _settings = None
 
     @property
