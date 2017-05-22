@@ -19,6 +19,7 @@ import mock
 import testtools
 
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants as sys_cons
 
 
 class BIOSSettingsTestCase(testtools.TestCase):
@@ -35,6 +36,10 @@ class BIOSSettingsTestCase(testtools.TestCase):
             self.conn, '/redfish/v1/Systems/1/bios',
             redfish_version='1.0.2')
 
+    def test_attributes(self):
+        self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
+                         self.bios_inst.boot_mode)
+
     def test_pending_settings(self):
         self.assertIsNone(self.bios_inst._pending_settings)
 
@@ -42,7 +47,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
-                json.loads(f.read())['BIOS_settings_default'])
+                json.loads(f.read())['BIOS_pending_settings_default'])
         actual_settings = self.bios_inst.pending_settings
         self.assertIsInstance(actual_settings,
                               bios.BIOSPendingSettings)
@@ -62,11 +67,12 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
-                json.loads(f.read())['BIOS_settings_default'])
+                json.loads(f.read())['BIOS_pending_settings_default'])
 
         self.bios_settings_inst = bios.BIOSPendingSettings(
             self.conn, '/redfish/v1/Systems/1/bios/settings',
             redfish_version='1.0.2')
 
     def test_attributes(self):
-        self.assertEqual('uefi', self.bios_settings_inst.boot_mode)
+        self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
+                         self.bios_settings_inst.boot_mode)

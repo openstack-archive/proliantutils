@@ -292,7 +292,7 @@
   }
  },
 
- "BIOS_settings_default": {
+ "BIOS_pending_settings_default": {
   "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
   "@odata.etag": "W/\"7F2D028BA2542B2B2B2AF4CFFD358F35\"",
   "@odata.id": "/redfish/v1/systems/1/bios/settings/",

@@ -84,7 +84,7 @@ class HPESystem(system.System):
 
     @property
     def bios_settings(self):
-        """Property to provide reference to bios resources instance
+        """Property to provide reference to bios_settings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
