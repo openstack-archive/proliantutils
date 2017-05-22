@@ -78,3 +78,26 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_bios_settings_with_bios_uri(self, sushy_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system = mock.MagicMock()
+            system.json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as i:
+            bios = mock.MagicMock()
+            bios.json = json.loads(i.read())
+
+        sushy_system_mock.side_effect = [system, bios]
+        bios_settings = self.rf_client._get_bios_settings()
+        self.assertEqual(bios.json, bios_settings)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_bios_settings')
+    def test_get_current_boot_mode(self, bios_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as i:
+            bios_mock.return_value = json.loads(i.read())
+        result = self.rf_client.get_current_boot_mode()
+        self.assertEqual(result, 'UEFI')
