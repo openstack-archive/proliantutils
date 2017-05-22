@@ -39,6 +39,7 @@ class BIOSTestCase(testtools.TestCase):
         self.bios_inst._parse_attributes()
         self.assertEqual('/redfish/v1/systems/1/bios/settings/',
                          self.bios_inst._settings_object_path)
+        self.assertEqual('Uefi', self.bios_inst.boot_mode)
 
     def test_settings(self):
         self.assertIsNone(self.bios_inst._settings)

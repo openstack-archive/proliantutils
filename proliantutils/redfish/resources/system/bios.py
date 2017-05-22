@@ -19,6 +19,8 @@ class BIOS(base.ResourceBase):
 
     _settings_object_path = base.Field(["@Redfish.Settings", "SettingsObject",
                                        "@odata.id"])
+    boot_mode = base.Field(["Attributes", "BootMode"])
+
     _settings = None
 
     @property
