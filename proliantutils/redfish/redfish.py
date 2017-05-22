@@ -189,3 +189,16 @@ class RedfishOperations(operations.IloOperations):
         if boot_mode == 'LegacyBios':
             boot_mode = 'legacy'
         return boot_mode.upper()
+
+    def get_current_boot_mode(self):
+        """Retrieves the current boot mode of the server.
+
+        :returns: Current boot mode, LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system('1')
+        bios_resource = sushy_system.bios_resource
+        boot_mode = bios_resource.BootMode 
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+        return boot_mode.upper()
