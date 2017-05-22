@@ -18,6 +18,8 @@ from sushy.resources import base
 
 class BIOS(base.ResourceBase):
 
+    boot_mode = base.Field(["Attributes", "BootMode"])
+
     _settings = None
 
     @property

@@ -270,3 +270,20 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_current_boot_mode(self):
+        """Retrieves the current boot mode of the server.
+
+        :returns: Current boot mode, LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            return GET_BIOS_BOOT_MODE_MAP.get(
+                sushy_system.bios.boot_mode)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Resource was not found. Error'
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
