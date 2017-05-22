@@ -189,3 +189,39 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         result = self.rf_client.get_pending_boot_mode()
         self.assertEqual(result, 'LEGACY')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_boot_mode(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as g:
+            bios_json = json.loads(g.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['Default'], bios_json['Bios_default']]
+        self.sys_inst = hpe_system.HPESystem(
+            self.conn, '/redfish/v1/Systems/437XR1138R2',
+            redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        result = self.rf_client.get_current_boot_mode()
+        self.assertEqual(result, 'UEFI')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_boot_mode_legacy(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as g:
+            bios_json = json.loads(g.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['Default'], bios_json['Bios_bootmode_legacybios']]
+        self.sys_inst = hpe_system.HPESystem(
+            self.conn, '/redfish/v1/Systems/437XR1138R2',
+            redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        result = self.rf_client.get_current_boot_mode()
+        self.assertEqual(result, 'LEGACY')
