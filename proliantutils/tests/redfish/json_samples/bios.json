@@ -292,6 +292,27 @@
   }
  },
 
+ "Bios_bootmode_legacybios": {
+  "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
+  "@odata.etag": "W/\"A7E5EF1CDED0303030E6100B66B5BD7D\"",
+  "@odata.id": "/redfish/v1/systems/1/bios/",
+  "@odata.type": "#Bios.v1_0_0.Bios",
+  "Actions": {
+    "#Bios.ChangePassword": {
+      "target": "/redfish/v1/systems/1/bios/settings/Actions/Bios.ChangePasswords/"
+    },
+    "#Bios.ResetBios": {
+      "target": "/redfish/v1/systems/1/bios/settings/Actions/Bios.ResetBios/"
+    }
+  },
+  "AttributeRegistry": "BiosAttributeRegistryU31.v1_1_00",
+  "Attributes": {
+    "BootMode": "LegacyBios"
+  },
+  "Id": "bios",
+  "Name": "BIOS Current Settings"
+  },
+
  "Bios_settings_default": {
   "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
   "@odata.etag": "W/\"7F2D028BA2542B2B2B2AF4CFFD358F35\"",
