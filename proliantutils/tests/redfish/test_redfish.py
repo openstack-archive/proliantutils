@@ -194,3 +194,20 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The pending BIOS Settings was not found.',
             self.rf_client.get_pending_boot_mode)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_boot_mode(self, get_system_mock):
+        for cons_val in redfish.BOOT_MODE_MAP.keys():
+            get_system_mock.return_value.bios_settings.boot_mode = cons_val
+            result = self.rf_client.get_current_boot_mode()
+            self.assertEqual(redfish.BOOT_MODE_MAP[cons_val], result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_boot_mode_fail(self, get_system_mock):
+        bios_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value).bios_settings = bios_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The current BIOS Settings was not found.',
+            self.rf_client.get_current_boot_mode)

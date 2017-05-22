@@ -12,18 +12,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from sushy.resources import base
+
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
-from sushy.resources import base
 
 
 class BIOSSettings(base.ResourceBase):
 
+    boot_mode = base.MappedField(["Attributes", "BootMode"],
+                                 mappings.GET_BIOS_BOOT_MODE_MAP)
     _pending_settings = None
 
     @property
     def pending_settings(self):
-        """Property to provide reference to bios settings instance
+        """Property to provide reference to bios_pending_settings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.

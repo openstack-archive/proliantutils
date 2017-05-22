@@ -19,6 +19,7 @@ import mock
 import testtools
 
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants as sys_cons
 
 
 class BIOSSettingsTestCase(testtools.TestCase):
@@ -35,9 +36,12 @@ class BIOSSettingsTestCase(testtools.TestCase):
             self.conn, '/redfish/v1/Systems/1/bios',
             redfish_version='1.0.2')
 
+    def test__attributes(self):
+        self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
+                         self.bios_inst.boot_mode)
+
     def test_pending_settings(self):
         self.assertIsNone(self.bios_inst._pending_settings)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
@@ -69,4 +73,5 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
             redfish_version='1.0.2')
 
     def test_attributes(self):
-        self.assertEqual('uefi', self.bios_settings_inst.boot_mode)
+        self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
+                         self.bios_settings_inst.boot_mode)

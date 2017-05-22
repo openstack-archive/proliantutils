@@ -268,7 +268,23 @@ class RedfishOperations(operations.IloOperations):
             return BOOT_MODE_MAP.get(
                 sushy_system.bios_settings.pending_settings.boot_mode)
         except sushy.exceptions.SushyError as e:
-            msg = (self._('The pending BIOS Settings was not found. Error'
+            msg = (self._('The pending BIOS Settings was not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def get_current_boot_mode(self):
+        """Retrieves the current boot mode of the server.
+
+        :returns: Current boot mode, LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            return BOOT_MODE_MAP.get(sushy_system.bios_settings.boot_mode)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The current BIOS Settings was not found. Error '
                           '%(error)s') %
                    {'error': str(e)})
             LOG.debug(msg)
