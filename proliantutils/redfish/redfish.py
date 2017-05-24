@@ -33,6 +33,13 @@ GET_POWER_STATE_MAP = {
     sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
 }
 
+DEVICE_COMMON_TO_REDFISH = {'NETWORK': 'Pxe',
+                            'CDROM': 'Cd',
+                            'HDD': 'Hdd',
+                            'ISCSI': 'UefiTarget'}
+DEVICE_REDFISH_TO_COMMON = dict(
+    (v, k) for (k, v) in DEVICE_COMMON_TO_REDFISH.items())
+
 LOG = log.get_logger(__name__)
 
 
@@ -136,3 +143,21 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system('1')
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
+
+    def get_one_time_boot(self):
+        """Retrieves the current setting for the one time boot.
+
+        :returns: Returns the first boot device that would be used in next
+                 boot. Returns 'Normal' is no device is set.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system('1')
+        if (sushy_system.boot['enabled'] == 'Once'):
+            device = sushy_system.boot['target']
+            if device in DEVICE_REDFISH_TO_COMMON:
+                return DEVICE_REDFISH_TO_COMMON[device]
+            return device
+        else:
+            return 'Normal'
