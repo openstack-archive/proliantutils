@@ -78,3 +78,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
+
+    def test_get_one_time_boot_not_set(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.sushy.get_system().json = json.loads(f.read())
+        boot = self.rf_client.get_one_time_boot()
+        self.assertEqual('Normal', boot)

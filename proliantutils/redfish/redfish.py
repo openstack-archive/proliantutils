@@ -35,6 +35,13 @@ GET_POWER_STATE_MAP = {
     sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
 }
 
+DEVICE_COMMON_TO_REDFISH = {'NETWORK': 'Pxe',
+                            'CDROM': 'Cd',
+                            'HDD': 'Hdd',
+                            'ISCSI': 'UefiTarget'}
+DEVICE_REDFISH_TO_COMMON = dict(
+    (v, k) for (k, v) in DEVICE_COMMON_TO_REDFISH.items())
+
 LOG = log.get_logger(__name__)
 
 
@@ -161,11 +168,9 @@ class RedfishOperations(operations.IloOperations):
     def set_secure_boot_mode(self, secure_boot_enable):
         """Enable/Disable secure boot on the server.
 
-        :param secure_boot_enable: True, if secure boot needs to be
-               enabled for next boot, else False.
+        :param secure_boot_enable: True, if secure boot needs to be enabled for next boot, else False.
         :raises: IloError, on an error from iLO.
-        :raises: IloCommandNotSupportedError, if the command is not supported
-                 on the server.
+        :raises: IloCommandNotSupportedError, if the command is not supported on the server.
         """
         if secure_boot_enable not in secure_boot.SECURE_BOOT_ENABLE_REV_MAP:
             LOG.error("Option not supported")
@@ -202,3 +207,18 @@ class RedfishOperations(operations.IloOperations):
         if boot_mode == 'LegacyBios':
             boot_mode = 'legacy'
         return boot_mode.upper()
+
+    def get_one_time_boot(self):
+        """Retrieves the current setting for the one time boot.
+
+        :returns: Returns the first boot device that would be used in next
+                  boot. Returns 'Normal' is no device is set.
+        """
+        sushy_system = self._get_sushy_system('1')
+        if (sushy_system.boot['enabled'] == 'Once'):
+            device = sushy_system.boot['target']
+            if device in DEVICE_REDFISH_TO_COMMON:
+                return DEVICE_REDFISH_TO_COMMON[device]
+            return device
+        else:
+            return 'Normal'
