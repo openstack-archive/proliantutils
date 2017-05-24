@@ -21,9 +21,9 @@
     },
     "BiosVersion": "U31 v1.00 (03/11/2017)",
     "Boot": {
-        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideEnabled": "Once",
         "BootSourceOverrideMode": "UEFI",
-        "BootSourceOverrideTarget": "None",
+        "BootSourceOverrideTarget": "Cd",
         "BootSourceOverrideTarget@Redfish.AllowableValues": [
             "None",
             "Cd",
