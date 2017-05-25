@@ -20,12 +20,13 @@ import sushy
 import testtools
 
 from proliantutils import exception
+from proliantutils.redfish import hpe_sushy
 from proliantutils.redfish import redfish
 
 
 class RedfishOperationsTestCase(testtools.TestCase):
 
-    @mock.patch.object(sushy, 'Sushy', autospec=True)
+    @mock.patch.object(hpe_sushy, 'HPESushy', autospec=True)
     def setUp(self, sushy_mock):
         super(RedfishOperationsTestCase, self).setUp()
         self.sushy = mock.MagicMock()
@@ -39,7 +40,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         sushy_mock.assert_called_once_with(
             'https://1.2.3.4', 'foo', 'bar', '/redfish/v1/', False)
 
-    @mock.patch.object(sushy, 'Sushy', autospec=True)
+    @mock.patch.object(hpe_sushy, 'HPESushy', autospec=True)
     def test_sushy_init_fail(self, sushy_mock):
         sushy_mock.side_effect = sushy.exceptions.SushyError
         self.assertRaisesRegex(
