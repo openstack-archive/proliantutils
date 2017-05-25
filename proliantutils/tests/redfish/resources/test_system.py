@@ -19,6 +19,7 @@ import mock
 import testtools
 
 from proliantutils import exception
+from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
 
@@ -62,3 +63,19 @@ class HPESystemTestCase(testtools.TestCase):
     def test_push_power_button_invalid_value(self):
         self.assertRaises(exception.InvalidInputError,
                           self.sys_inst.push_power_button, 'invalid-value')
+
+    def test_bios(self):
+        self.assertIsNone(self.sys_inst._bios)
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        actual_bios = self.sys_inst.bios
+        self.assertIsInstance(actual_bios,
+                              bios.BIOS)
+        self.conn.get.return_value.json.assert_called_once_with()
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_bios,
+                      self.sys_inst.bios)
+        self.conn.get.return_value.json.assert_not_called()
