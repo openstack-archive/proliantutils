@@ -175,3 +175,20 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_pending_boot_mode(self, get_system_mock):
+        for cons_val in redfish.GET_BIOS_BOOT_MODE_MAP.keys():
+            get_system_mock.return_value.bios.settings.boot_mode = cons_val
+            result = self.rf_client.get_pending_boot_mode()
+            self.assertEqual(redfish.GET_BIOS_BOOT_MODE_MAP[cons_val], result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_pending_boot_mode_fail(self, get_system_mock):
+        bios_settings_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.bios).settings = bios_settings_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The BIOS Settings was not found.',
+            self.rf_client.get_pending_boot_mode)

@@ -19,7 +19,9 @@ from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
 
@@ -44,7 +46,10 @@ class HPESystem(system.System):
     """
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
+
     """Oem specific system extensibility actions"""
+
+    _bios = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -76,3 +81,17 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+    @property
+    def bios(self):
+        """Property to provide reference to bios resources instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._bios is None:
+            self._bios = bios.BIOS(
+                self._conn, utils.get_subresource_path_by(self, 'Bios'),
+                redfish_version=self.redfish_version)
+
+        return self._bios
