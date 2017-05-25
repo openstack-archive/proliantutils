@@ -30,7 +30,8 @@ class HPESystemTestCase(testtools.TestCase):
         self.conn = mock.MagicMock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
+            system_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = system_json['Default']
 
         self.sys_inst = system.HPESystem(
             self.conn, '/redfish/v1/Systems/1',

@@ -1,4 +1,5 @@
 {
+  "Default": {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
     "@odata.etag": "W/\"0E79655D\"",
     "@odata.id": "/redfish/v1/Systems/1/",
@@ -223,4 +224,5 @@
         }
     ],
     "UUID": "00000000-0000-0000-0000-000000000000"
+ }
 }
