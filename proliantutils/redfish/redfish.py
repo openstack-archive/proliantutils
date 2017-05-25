@@ -238,3 +238,17 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        Gets the boot mode to be set on next reset.
+        :returns: either LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        bios_settings = sushy_system.bios_settings
+        boot_mode = bios_settings.boot_mode
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+        return boot_mode.upper()
