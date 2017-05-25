@@ -19,6 +19,8 @@ from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system.bios import BiosResource
+from proliantutils.redfish.resources.system.bios import BiosSettings
 from proliantutils.redfish.resources.system import mappings
 
 LOG = log.get_logger(__name__)
@@ -44,6 +46,7 @@ class HPESystem(system.System):
     """
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
+    bios_odataid = base.Field(['Bios', '@odata.id'])
     """Oem specific system extensibility actions"""
 
     def _get_hpe_push_power_button_action_element(self):
@@ -76,3 +79,20 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+    @property
+    def bios_resource(self):
+        odataid_val = HPESystem.bios_odataid._load(self.json, self)
+        bios_resource = BiosResource(
+            self._conn, odataid_val, redfish_version=self.redfish_version)
+        return bios_resource
+
+    @property
+    def bios_settings(self):
+        bios_odataid_val = HPESystem.bios_odataid._load(self.json, self)
+        bios_resource = BiosResource(self._conn, bios_odataid_val,
+                                     redfish_version=self.redfish_version)
+        bios_settings_uri = bios_resource.bios_settings_odataid
+        bios_settings = BiosSettings(self._conn, bios_settings_uri,
+                                     redfish_version=self.redfish_version)
+        return bios_settings
