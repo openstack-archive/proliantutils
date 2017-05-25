@@ -20,6 +20,8 @@ import sushy
 from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
+from proliantutils.redfish.hpe_sushy import HPESushy
+import proliantutils.redfish.resources.system.secure_boot as secure_boot
 
 
 """
@@ -79,7 +81,7 @@ class RedfishOperations(operations.IloOperations):
         self._root_prefix = root_prefix
 
         try:
-            self._sushy = sushy.Sushy(
+            self._sushy = HPESushy(
                 address, username=username, password=password,
                 root_prefix=root_prefix, verify=verify)
         except sushy.exceptions.SushyError as e:
@@ -136,3 +138,40 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system('1')
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
+
+    def get_secure_boot_mode(self):
+        """Get the status of secure boot.
+
+        :returns: True, if enabled, else False
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system('1')
+        secure_boot_res = sushy_system.secure_boot_resource
+        secure_current = secure_boot_res.secure_boot_current
+        #secure_enabled = secure_boot_res.secure_boot_enable
+        if secure_current:
+            LOG.debug("Secure boot is Enabled")
+            return True
+
+        LOG.debug("Secure boot is Disabled")
+        return False
+
+    def set_secure_boot_mode(self, secure_boot_enable):
+        """Enable/Disable secure boot on the server.
+
+        :param secure_boot_enable: True, if secure boot needs to be
+               enabled for next boot, else False.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if secure_boot_enable not in secure_boot.SECURE_BOOT_ENABLE_REV_MAP:
+            LOG.error("Option not supported")
+            print("Option not supported")
+        else:
+            #if self._is_boot_mode_uefi():
+            sushy_system = self._get_sushy_system('1')
+            data = {'SecureBootEnable' : secure_boot.SECURE_BOOT_ENABLE_REV_MAP[secure_boot_enable]}
+            sushy_system.secure_boot_config(data)
