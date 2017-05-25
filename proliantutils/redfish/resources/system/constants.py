@@ -18,3 +18,8 @@
 
 PUSH_POWER_BUTTON_PRESS = 'press'
 PUSH_POWER_BUTTON_PRESS_AND_HOLD = 'press and hold'
+
+# BIOS Settings boot mode constants
+
+BIOS_BOOT_MODE_LEGACY_BIOS = 'LegacyBios'
+BIOS_BOOT_MODE_UEFI = 'Uefi'
