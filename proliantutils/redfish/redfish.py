@@ -16,6 +16,7 @@ __author__ = 'HPE'
 
 from six.moves.urllib import parse
 import sushy
+from sushy import utils
 
 from proliantutils import exception
 from proliantutils.ilo import operations
@@ -48,7 +49,13 @@ DEVICE_COMMON_TO_REDFISH = {
 
 DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
 
+GET_BIOS_BOOT_MODE_MAP = {
+    sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS: 'LEGACY',
+    sys_cons.BIOS_BOOT_MODE_UEFI: 'UEFI'
+}
 
+GET_BIOS_BOOT_MODE_MAP_REV = (
+    utils.revert_dictionary(GET_BIOS_BOOT_MODE_MAP))
 # Assuming only one sushy_system present as part of collection,
 # as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
@@ -248,3 +255,21 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        Gets the boot mode to be set on next reset.
+        :returns: either LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            return GET_BIOS_BOOT_MODE_MAP.get(
+                sushy_system.bios.settings.boot_mode)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Settings was not found. Error'
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

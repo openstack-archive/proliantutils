@@ -25,3 +25,12 @@ PUSH_POWER_BUTTON_VALUE_MAP = {
 
 PUSH_POWER_BUTTON_VALUE_MAP_REV = (
     utils.revert_dictionary(PUSH_POWER_BUTTON_VALUE_MAP))
+
+# BIOS Settings boot mode mappings
+GET_BIOS_BOOT_MODE_MAP = {
+    'LegacyBios': constants.BIOS_BOOT_MODE_LEGACY_BIOS,
+    'Uefi': constants.BIOS_BOOT_MODE_UEFI
+}
+
+GET_BIOS_BOOT_MODE_MAP_REV = (
+    utils.revert_dictionary(GET_BIOS_BOOT_MODE_MAP))
