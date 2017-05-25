@@ -12,16 +12,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from proliantutils.redfish.resources.system.hpe_system import HPESystem
-from sushy.main import Sushy
+from sushy.resources import base
 
 
-class HPESushy(Sushy):
-    def get_system(self, identity):
-        """Given the identity return a HPESystem object
+class BiosResource(base.ResourceBase):
 
-        :param identity: The identity of the System resource
-        :returns: The System object
+    BootMode = base.Field(["Attributes", "BootMode"])
+
+    def __init__(self, connector, identity, redfish_version=None):
+        """A class representing a SecureBootResource
+
+        :param connector: A Connector instance
+        :param identity: The identity of the SecureBootResource
+        :param redfish_version: The version of RedFish. Used to construct
+            the object according to schema of the given version.
         """
-        return HPESystem(self._conn, identity,
-                         redfish_version=self.redfish_version)
+        super(BiosResource, self).__init__(connector, identity,
+                                           redfish_version)

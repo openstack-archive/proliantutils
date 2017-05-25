@@ -175,3 +175,17 @@ class RedfishOperations(operations.IloOperations):
             sushy_system = self._get_sushy_system('1')
             data = {'SecureBootEnable' : secure_boot.SECURE_BOOT_ENABLE_REV_MAP[secure_boot_enable]}
             sushy_system.secure_boot_config(data)
+
+    def get_pending_boot_mode(self):
+        """Retrieves the pending boot mode of the server.
+
+        Gets the boot mode to be set on next reset.
+        :returns: either LEGACY or UEFI.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system('1')
+        bios_settings = sushy_system.bios_resource
+        boot_mode = bios_settings.BootMode
+        if boot_mode == 'LegacyBios':
+            boot_mode = 'legacy'
+        return boot_mode.upper()
