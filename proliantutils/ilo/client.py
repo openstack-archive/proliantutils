@@ -64,6 +64,8 @@ SUPPORTED_REDFISH_METHODS = [
     'reset_server',
     'press_pwr_btn',
     'hold_pwr_btn',
+    'get_one_time_boot',
+    'get_pending_boot_mode',
 ]
 
 LOG = log.get_logger(__name__)
