@@ -20,6 +20,7 @@ import sushy
 from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
+from proliantutils.redfish import hpe_sushy
 
 
 """
@@ -81,7 +82,7 @@ class RedfishOperations(operations.IloOperations):
         self._root_prefix = root_prefix
 
         try:
-            self._sushy = sushy.Sushy(
+            self._sushy = hpe_sushy.HPESushy(
                 address, username=username, password=password,
                 root_prefix=root_prefix, verify=verify)
         except sushy.exceptions.SushyError as e:
