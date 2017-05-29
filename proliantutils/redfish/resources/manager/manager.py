@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+from sushy.resources import base
 from sushy.resources.manager import manager
 
 
@@ -23,3 +24,20 @@ class HPEManager(manager.Manager):
     This class extends the functionality of Manager resource class
     from sushy
     """
+
+    lic_uri = base.Field(['Oem', 'Hpe', 'Links',
+                          'LicenseService', '@odata.id'])
+
+    def get_license_url(self):
+        """Get License url"""
+        return self.lic_uri
+
+    def set_license(self, key):
+        """Set the license on a redfish system
+
+        :param key: license key
+        :returns: response object of the post operation
+        """
+        lic_key = {'LicenseKey': key}
+        target_uri = self.get_license_url()
+        return self._conn.post(target_uri, data=lic_key)
