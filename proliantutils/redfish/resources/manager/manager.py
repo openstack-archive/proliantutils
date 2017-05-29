@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+from proliantutils.redfish import utils
 from sushy.resources.manager import manager
 
 
@@ -23,3 +24,14 @@ class HPEManager(manager.Manager):
     This class extends the functionality of Manager resource class
     from sushy
     """
+
+    def set_license(self, key):
+        """Set the license on a redfish system
+
+        :param key: license key
+        :returns: response object of the post operation
+        """
+        lic_key = {'LicenseKey': key}
+        target_uri = (utils.get_subresource_path_by(self,
+                      ['Oem', 'Hpe', 'Links', 'LicenseService']))
+        return self._conn.post(target_uri, data=lic_key)

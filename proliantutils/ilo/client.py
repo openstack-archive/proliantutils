@@ -64,6 +64,7 @@ SUPPORTED_REDFISH_METHODS = [
     'reset_server',
     'press_pwr_btn',
     'hold_pwr_btn',
+    'activate_license',
 ]
 
 LOG = log.get_logger(__name__)
