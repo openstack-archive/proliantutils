@@ -117,6 +117,32 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
+    def _get_manager_collection_path(self):
+        """Helper function to find the ManagerCollection path"""
+        manager_col = self._sushy.json.get('Managers')
+        if not manager_col:
+            raise exception.MissingAttributeError(attribute='Managers',
+                                                  resource=self._root_prefix)
+        return manager_col.get('@odata.id')
+
+    def _get_sushy_manager(self, manager_id):
+        """Get the sushy Manager for manager_id
+
+        :param manager_id: The identity of the Manager resource
+        :returns: the Sushy Manager instance
+        :raises: IloError
+        """
+        manager_url = parse.urljoin(self._get_manager_collection_path(),
+                                   manager_id)
+        try:
+            return self._sushy.get_manager(manager_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish System "%(manager)s" was not found. '
+                          'Error %(error)s') %
+                   {'manager': manager_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
     def get_product_name(self):
         """Gets the product name of the server.
 
@@ -175,3 +201,30 @@ class RedfishOperations(operations.IloOperations):
             sushy_system = self._get_sushy_system('1')
             data = {'SecureBootEnable' : secure_boot.SECURE_BOOT_ENABLE_REV_MAP[secure_boot_enable]}
             sushy_system.secure_boot_config(data)
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_manager = self._get_sushy_manager('1')
+
+        try:
+            lic_uri = sushy_manager.json['Oem']['Hpe']['Links']['LicenseService']['@odata.id']
+
+        except KeyError:
+            msg = ('"LicenseService" section in Manager/Oem/Hpe/Links does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        lic_key = {}
+        lic_key['LicenseKey'] = key
+
+        # Perform POST to activate license
+        response = sushy_manager.set_license(lic_uri, lic_key)
+
+        if response.status_code >= 300:
+            msg = "%s is not a valid response code received " % response.status_code
+            raise exception.IloError(msg)
