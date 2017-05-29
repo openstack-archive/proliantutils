@@ -56,8 +56,9 @@ BOOT_MODE_MAP = {
 
 BOOT_MODE_MAP_REV = (
     utils.revert_dictionary(BOOT_MODE_MAP))
-# Assuming only one sushy_system present as part of collection,
-# as we are dealing with iLO's here.
+# Assuming only one sushy_system and sushy_manager present as part of
+# collection, as we are dealing with iLO's here.
+PROLIANT_MANAGER_ID = '1'
 PROLIANT_SYSTEM_ID = '1'
 
 LOG = log.get_logger(__name__)
@@ -239,6 +240,22 @@ class RedfishOperations(operations.IloOperations):
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish controller failed to press and hold '
                           'power button of server. Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        try:
+            sushy_manager.set_license(key)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to update '
+                          'the license. Error %(error)s') %
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
