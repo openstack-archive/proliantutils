@@ -175,3 +175,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    def test_activate_license(self):
+        self.rf_client.activate_license('testkey')
+        (self.sushy.get_manager.return_value.set_license.
+         assert_called_once_with('testkey'))
+
+    def test_activate_license_fail(self):
+        self.sushy.get_manager().set_license.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update the license key',
+            self.rf_client.activate_license, 'key')
