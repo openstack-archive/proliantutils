@@ -41,6 +41,7 @@ POWER_RESET_MAP = {
 
 # Assuming only one sushy_system present as part of collection,
 # as we are dealing with iLO's here.
+PROLIANT_MANAGER_ID = '1'
 PROLIANT_SYSTEM_ID = '1'
 
 LOG = log.get_logger(__name__)
@@ -240,4 +241,24 @@ class RedfishOperations(operations.IloOperations):
                           'power button of server. Error %(error)s') %
                    {'error': str(e)})
             LOG.debug(msg)
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+
+        lic_key = {}
+        lic_key['LicenseKey'] = key
+
+        # Perform POST to activate license
+        response = sushy_manager.set_license(lic_key)
+
+        if response.status_code >= 300:
+            msg = ("%s is not a valid response code received "
+                   % response.status_code)
             raise exception.IloError(msg)

@@ -14,6 +14,8 @@
 
 __author__ = 'HPE'
 
+from proliantutils import exception
+from sushy.resources import base
 from sushy.resources.manager.manager import Manager
 
 
@@ -23,3 +25,27 @@ class HPEManager(Manager):
     This class extends the functionality of Manager resource class
     from sushy
     """
+    lic_uri = base.Field(['Oem', 'Hpe', 'Links',
+                          'LicenseService', '@odata.id'])
+
+    def get_license_uri(self):
+        """Get the license uri to activate_license
+
+        :returns: license uri
+        """
+        license_uri = HPEManager.lic_uri._load(self.json, self)
+        if not license_uri:
+            raise exception.MissingAttributeError(
+                attribute='Oem/Hpe/Links/LicenseService',
+                resource=self.path)
+        return license_uri
+
+    def set_license(self, data):
+        """Set the license on a redfish system
+
+        :param data: license key in dictionary format.
+        :returns: response object of the post operation
+        """
+        if data is not None:
+            target_uri = self.get_license_uri()
+            return self._conn.post(target_uri, data=data)

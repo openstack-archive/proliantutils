@@ -149,3 +149,17 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to press and hold power button',
             self.rf_client.hold_pwr_btn)
+
+    def test_activate_license(self):
+        (self.sushy.get_manager.return_value.set_license.
+         return_value.status_code) = 200
+        self.rf_client.activate_license('testkey')
+        (self.sushy.get_manager.return_value.set_license.
+         assert_called_once_with({'LicenseKey': 'testkey'}))
+
+    def test_activate_license_fail(self):
+        (self.sushy.get_manager.return_value.set_license.
+         return_value.status_code) = 500
+        self.assertRaisesRegex(exception.IloError,
+                               '500 is not a valid response code received.',
+                               self.rf_client.activate_license, 'invalid-key')
