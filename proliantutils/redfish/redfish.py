@@ -51,6 +51,7 @@ DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
 
 # Assuming only one sushy_system present as part of collection,
 # as we are dealing with iLO's here.
+PROLIANT_MANAGER_ID = '1'
 PROLIANT_SYSTEM_ID = '1'
 
 LOG = log.get_logger(__name__)
@@ -233,6 +234,21 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish controller failed to press and hold '
                           'power button of server. Error %(error)s') %
                    {'error': str(e)})
+            LOG.debug(msg)
+
+    def activate_license(self, key):
+        """Activates iLO license.
+
+        :param key: iLO license key.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        try:
+            sushy_manager.set_license(key)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to update '
+                          'the license key %(license_key)s. Error %(error)s') %
+                   {'license_key': key, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
 
