@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish.hpe_sushy import HPESushy
@@ -222,3 +223,94 @@ class RedfishOperations(operations.IloOperations):
             return device
         else:
             return 'Normal'
+
+    def _is_boot_mode_uefi(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: 'True' if the boot mode is uefi else 'False'
+        :raises: IloError, on an error from iLO.
+        """
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'UEFI':
+            return True
+        else:
+            return False
+
+    def _get_persistent_boot_devices(self):
+        """Get details of persistent boot devices, its order
+
+        :returns: List of dictionary of boot sources and
+                  list of boot device order
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system('1')
+
+        # Get the Boot resource.
+        boot_settings = sushy_system.bios_boot_settings
+
+        # Get the BootSources resource
+        try:
+            boot_sources = boot_settings.BootSources
+        except KeyError:
+            msg = ("BootSources resource not found.")
+            raise exception.IloError(msg)
+
+        try:
+            boot_order = boot_settings.PersistentBootConfigOrder
+        except KeyError:
+            msg = ("PersistentBootConfigOrder resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return boot_sources, boot_order
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns: persistent boot device for the system
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system('1')
+        try:
+            # Return boot device if it is persistent.
+            if sushy_system.boot['enabled'] == 'Continuous':
+                device = sushy_system.boot['target']
+                if device in DEVICE_REDFISH_TO_COMMON:
+                    return DEVICE_REDFISH_TO_COMMON[device]
+                return device
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        # Check if we are in BIOS boot mode.
+        # There is no resource to fetch boot device order for BIOS boot mode
+        if not self._is_boot_mode_uefi():
+            return None
+
+        # Get persistent boot device order for UEFI
+        boot_sources, boot_devices = self._get_persistent_boot_devices()
+
+        boot_string = ""
+        try:
+            for source in boot_sources:
+                if (source["StructuredBootString"] == boot_devices[0]):
+                    boot_string = source["BootString"]
+                    break
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        if 'iLO Virtual CD-ROM' in boot_string:
+            return 'CDROM'
+
+        elif ('NIC' in boot_string or
+              'PXE' in boot_string or
+              "iSCSI" in boot_string):
+            return 'NETWORK'
+
+        elif common.isDisk(boot_string):
+            return 'HDD'
+
+        else:
+            return None
