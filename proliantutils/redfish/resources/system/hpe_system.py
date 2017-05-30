@@ -14,6 +14,7 @@
 
 from proliantutils.redfish.resources.system.bios import BiosResource
 from proliantutils.redfish.resources.system.bios import BiosSettings
+from proliantutils.redfish.resources.system.bios import BiosBootSettings
 from proliantutils.redfish.resources.system.secure_boot import SecureBootResource
 from sushy import exceptions
 from sushy.resources.system.system import System
@@ -57,3 +58,13 @@ class HPESystem(System):
         bios_settings = BiosSettings(self._conn, bios_settings_uri,
                                      redfish_version=self.redfish_version)
         return bios_settings
+
+    @property
+    def bios_boot_settings(self):
+        bios_resource = BiosResource(
+            self._conn, self._get_resource_path('Bios'),
+            redfish_version=self.redfish_version)
+        bios_boot_settings_uri = bios_resource.BiosBootSettingsURI
+        bios_boot_settings = BiosBootSettings(self._conn, bios_boot_settings_uri,
+                                     redfish_version=self.redfish_version)
+        return bios_boot_settings
