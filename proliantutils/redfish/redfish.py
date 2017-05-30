@@ -314,3 +314,19 @@ class RedfishOperations(operations.IloOperations):
 
         else:
             return None
+
+    def get_http_boot_url(self):
+        """Request the http boot url from system in uefi boot mode.
+
+        :returns: URL for http boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        if(self._is_boot_mode_uefi() is True):
+            sushy_system = self._get_sushy_system('1')
+            bios_settings = sushy_system.bios_settings
+            return bios_settings.json['Attributes']['UefiShellStartupUrl']
+        else:
+            msg = 'get_http_boot_url is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
