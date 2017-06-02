@@ -138,3 +138,20 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
+
+    def reset_server(self):
+        """Resets the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        # Assuming only one sushy_system present as part of collection,
+        # as we are dealing with iLO's here.
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            sushy_system.reset_system(sushy.RESET_FORCE_RESTART)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to reset server. '
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

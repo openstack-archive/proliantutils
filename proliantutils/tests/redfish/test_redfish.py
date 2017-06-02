@@ -78,3 +78,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
+
+    def test_reset_server(self):
+        self.rf_client.reset_server()
+        self.sushy.get_system().reset_system.assert_called_once_with(
+            sushy.RESET_FORCE_RESTART)
+
+    def test_reset_server_invalid_value(self):
+        self.sushy.get_system().reset_system.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to reset server.',
+            self.rf_client.reset_server)
