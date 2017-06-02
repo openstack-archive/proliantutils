@@ -33,6 +33,11 @@ GET_POWER_STATE_MAP = {
     sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
 }
 
+POWER_RESET_MAP = {
+    'ON': sushy.RESET_ON,
+    'OFF': sushy.RESET_FORCE_OFF,
+}
+
 PROLIANT_SYSTEM_ID = '1'
 
 LOG = log.get_logger(__name__)
@@ -138,3 +143,55 @@ class RedfishOperations(operations.IloOperations):
         # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
+
+    def reset_server(self):
+        """Resets the server.
+
+        :raises: IloError, on an error from iLO.
+        """
+        # Assuming only one sushy_system present as part of collection,
+        # as we are dealing with iLO's here.
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            sushy_system.reset_system(sushy.RESET_FORCE_RESTART)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to reset server. '
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def set_host_power(self, target_value):
+        """Sets the power state of the system.
+
+        :param target_value: The target value to be set. Value can be:
+            'ON' or 'OFF'.
+        :raises: IloError, on an error from iLO.
+        :raises: InvalidInputError, if the target value is not
+            allowed.
+        """
+        if target_value not in POWER_RESET_MAP:
+            msg = ('The parameter "%(parameter)s" value "%(target_value)s" is '
+                   'invalid. Valid values are: %(valid_power_values)s' %
+                   {'parameter': 'target_value', 'target_value': target_value,
+                    'valid_power_values': POWER_RESET_MAP.keys()})
+            raise exception.InvalidInputError(msg)
+
+        # Check current power status, do not act if it's in requested state.
+        current_power_status = self.get_host_power_status()
+        if current_power_status == target_value:
+            LOG.debug(self._("Node is already in '%(target_value)s' power "
+                             "state."), {'target_value': target_value})
+            return
+
+        # Assuming only one system present as part of collection,
+        # as we are dealing with iLO's here.
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            sushy_system.reset_system(POWER_RESET_MAP[target_value])
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to set power state '
+                          'of server to %(target_value)s. Error %(error)s') %
+                   {'target_value': target_value, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

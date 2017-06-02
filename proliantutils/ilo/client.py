@@ -60,6 +60,8 @@ SUPPORTED_RIS_METHODS = [
 SUPPORTED_REDFISH_METHODS = [
     'get_product_name',
     'get_host_power_status',
+    'set_host_power',
+    'reset_server',
 ]
 
 LOG = log.get_logger(__name__)

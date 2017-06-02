@@ -78,3 +78,46 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
+
+    def test_reset_server(self):
+        self.rf_client.reset_server()
+        self.sushy.get_system().reset_system.assert_called_once_with(
+            sushy.RESET_FORCE_RESTART)
+
+    def test_reset_server_invalid_value(self):
+        self.sushy.get_system().reset_system.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to reset server.',
+            self.rf_client.reset_server)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_set_host_power_no_change(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'ON'
+        self.rf_client.set_host_power('ON')
+        self.assertTrue(get_host_power_status_mock.called)
+        self.assertFalse(self.sushy.get_system().reset_system.called)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_set_host_power_failure(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'OFF'
+        self.sushy.get_system().reset_system.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to set power state of server to ON',
+            self.rf_client.set_host_power, 'ON')
+
+    def test_set_host_power_invalid_input(self):
+        self.assertRaisesRegex(
+            exception.InvalidInputError,
+            'The parameter "target_value" value "Off" is invalid.',
+            self.rf_client.set_host_power, 'Off')
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_set_host_power_change(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'OFF'
+        self.rf_client.set_host_power('ON')
+        self.sushy.get_system().reset_system.assert_called_once_with(
+            sushy.RESET_ON)
