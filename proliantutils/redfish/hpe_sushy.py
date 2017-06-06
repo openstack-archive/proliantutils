@@ -14,7 +14,7 @@
 
 __author__ = 'HPE'
 
-from proliantutils.redfish.resources.system.hpe_system import HPESystem
+from proliantutils.redfish.resources.system import hpe_system
 from sushy.main import Sushy
 
 
@@ -25,5 +25,5 @@ class HPESushy(Sushy):
         :param identity: The identity of the System resource
         :returns: The System object
         """
-        return HPESystem(self._conn, identity,
-                         redfish_version=self.redfish_version)
+        return hpe_system.HPESystem(self._conn, identity,
+                                    redfish_version=self.redfish_version)

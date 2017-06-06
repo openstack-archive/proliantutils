@@ -14,9 +14,25 @@
 
 __author__ = 'HPE'
 
-from sushy.resources import base  # noqa
+from proliantutils.redfish.resources.system.secure_boot \
+    import SecureBootResource
+from sushy.resources import base
 from sushy.resources.system.system import System
 
 
 class HPESystem(System):
-    pass
+
+    secure_boot_odataid = base.Field(['SecureBoot', '@odata.id'])
+
+    @property
+    def secure_boot_resource(self):
+        odataid_val = HPESystem.secure_boot_odataid._load(self.json, self)
+        secure_boot_resource = SecureBootResource(
+            self._conn, odataid_val,
+            redfish_version=self.redfish_version)
+        return secure_boot_resource
+
+    def secure_boot_config(self, data):
+        if data is not None:
+            target_uri = HPESystem.secure_boot_odataid._load(self.json, self)
+            self._conn.post(target_uri, data=data)
