@@ -645,3 +645,136 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'No account found with username: foo',
             self.rf_client.reset_ilo_credential, 'fake-password')
+
+    @mock.patch.object(redfish.LOG, 'debug', autospec=True)
+    def test_get_secure_boot_mode(self, log_debug_mock):
+        sushy_system_mock = self.sushy.get_system.return_value
+        type(sushy_system_mock.secure_boot).current_boot = mock.PropertyMock(
+            return_value=sys_cons.SECUREBOOT_CURRENT_BOOT_ENABLED)
+        self.rf_client.get_secure_boot_mode()
+        log_debug_mock.assert_called_once_with(
+            '[iLO 1.2.3.4] Secure boot is Enabled')
+
+        log_debug_mock.reset_mock()
+        type(sushy_system_mock.secure_boot).current_boot = mock.PropertyMock(
+            return_value=sys_cons.SECUREBOOT_CURRENT_BOOT_DISABLED)
+        self.rf_client.get_secure_boot_mode()
+        log_debug_mock.assert_called_once_with(
+            '[iLO 1.2.3.4] Secure boot is Disabled')
+
+    def test_get_secure_boot_mode_on_fail(self):
+        sushy_system_mock = self.sushy.get_system.return_value
+        type(sushy_system_mock).secure_boot = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedError,
+            'The Redfish controller failed to provide '
+            'information about secure boot on the server.',
+            self.rf_client.get_secure_boot_mode)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_secure_boot_mode(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        self.rf_client.set_secure_boot_mode(True)
+        secure_boot_mock = self.sushy.get_system.return_value.secure_boot
+        secure_boot_mock.enable_secure_boot.assert_called_once_with(True)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_secure_boot_mode_in_bios(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = False
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedInBiosError,
+            'System is not in UEFI boot mode. "SecureBoot" related resources '
+            'cannot be changed.',
+            self.rf_client.set_secure_boot_mode, True)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_secure_boot_mode_on_fail(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        secure_boot_mock = self.sushy.get_system.return_value.secure_boot
+        secure_boot_mock.enable_secure_boot.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to set secure boot settings '
+            'on the server.',
+            self.rf_client.set_secure_boot_mode, True)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_secure_boot_mode_for_invalid_value(
+            self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        secure_boot_mock = self.sushy.get_system.return_value.secure_boot
+        secure_boot_mock.enable_secure_boot.side_effect = (
+            exception.InvalidInputError('Invalid input'))
+        self.assertRaises(
+            exception.IloError,
+            self.rf_client.set_secure_boot_mode, 'some-non-boolean')
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_reset_secure_boot_keys(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        self.rf_client.reset_secure_boot_keys()
+        sushy_system_mock = self.sushy.get_system.return_value
+        sushy_system_mock.secure_boot.reset_keys.assert_called_once_with(
+            sys_cons.SECUREBOOT_RESET_KEYS_DEFAULT)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_reset_secure_boot_keys_in_bios(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = False
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedInBiosError,
+            'System is not in UEFI boot mode. "SecureBoot" related resources '
+            'cannot be changed.',
+            self.rf_client.reset_secure_boot_keys)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_reset_secure_boot_keys_on_fail(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        sushy_system_mock = self.sushy.get_system.return_value
+        sushy_system_mock.secure_boot.reset_keys.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to reset secure boot keys '
+            'on the server.',
+            self.rf_client.reset_secure_boot_keys)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_clear_secure_boot_keys(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        self.rf_client.clear_secure_boot_keys()
+        sushy_system_mock = self.sushy.get_system.return_value
+        sushy_system_mock.secure_boot.reset_keys.assert_called_once_with(
+            sys_cons.SECUREBOOT_RESET_KEYS_DELETE_ALL)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_clear_secure_boot_keys_in_bios(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = False
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedInBiosError,
+            'System is not in UEFI boot mode. "SecureBoot" related resources '
+            'cannot be changed.',
+            self.rf_client.clear_secure_boot_keys)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_clear_secure_boot_keys_on_fail(self, _is_boot_mode_uefi_mock):
+        _is_boot_mode_uefi_mock.return_value = True
+        sushy_system_mock = self.sushy.get_system.return_value
+        sushy_system_mock.secure_boot.reset_keys.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to clear secure boot keys '
+            'on the server.',
+            self.rf_client.clear_secure_boot_keys)
