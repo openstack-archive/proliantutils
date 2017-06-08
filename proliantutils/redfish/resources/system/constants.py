@@ -18,3 +18,8 @@
 
 PUSH_POWER_BUTTON_PRESS = 'press'
 PUSH_POWER_BUTTON_PRESS_AND_HOLD = 'press and hold'
+
+# Secure Boot current boot constants
+
+SECUREBOOT_CURRENT_BOOT_ENABLED = 'enabled'
+SECUREBOOT_CURRENT_BOOT_DISABLED = 'disabled'
