@@ -22,6 +22,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system import system
 
 
@@ -80,6 +81,33 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_bios,
                       self.sys_inst.bios_settings)
         self.conn.get.return_value.json.assert_not_called()
+
+    def test_bios_settings_on_refresh(self):
+        # | GIVEN |
+        with open('proliantutils/tests/redfish/json_samples/bios.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        # | WHEN & THEN |
+        self.assertIsInstance(self.sys_inst.bios_settings,
+                              bios.BIOSSettings)
+
+        # On refreshing the system instance...
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        self.sys_inst.refresh()
+
+        # | WHEN & THEN |
+        self.assertIsNone(self.sys_inst._bios_settings)
+
+        # | GIVEN |
+        with open('proliantutils/tests/redfish/json_samples/bios.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        # | WHEN & THEN |
+        self.assertIsInstance(self.sys_inst.bios_settings,
+                              bios.BIOSSettings)
 
     def test_update_persistent_boot_persistent(self):
         with open('proliantutils/tests/redfish/'
@@ -171,3 +199,66 @@ class HPESystemTestCase(testtools.TestCase):
             exception.IloError,
             'The BIOS Boot Settings was not found.',
             self.sys_inst.update_persistent_boot, ['CDROM'], True, None)
+
+    def test_secure_boot_with_missing_path_attr(self):
+        def _get_secure_boot():
+            return self.sys_inst.secure_boot
+
+        self.sys_inst._json.pop('SecureBoot')
+        self.assertRaisesRegex(
+            exception.MissingAttributeError,
+            'attribute SecureBoot is missing',
+            _get_secure_boot)
+
+    def test_secure_boot(self):
+        # check for the underneath variable value
+        self.assertIsNone(self.sys_inst._secure_boot)
+        # | GIVEN |
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        # | WHEN |
+        actual_secure_boot = self.sys_inst.secure_boot
+        # | THEN |
+        self.assertIsInstance(actual_secure_boot,
+                              secure_boot.SecureBoot)
+        self.conn.get.return_value.json.assert_called_once_with()
+
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+        # | WHEN & THEN |
+        # tests for same object on invoking subsequently
+        self.assertIs(actual_secure_boot,
+                      self.sys_inst.secure_boot)
+        self.conn.get.return_value.json.assert_not_called()
+
+    def test_secure_boot_on_refresh(self):
+        # | GIVEN |
+        with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        # | WHEN & THEN |
+        self.assertIsInstance(self.sys_inst.secure_boot,
+                              secure_boot.SecureBoot)
+
+        # On refreshing the system instance...
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        self.sys_inst.refresh()
+
+        # | WHEN & THEN |
+        self.assertIsNone(self.sys_inst._secure_boot)
+
+        # | GIVEN |
+        with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        # | WHEN & THEN |
+        self.assertIsInstance(self.sys_inst.secure_boot,
+                              secure_boot.SecureBoot)
