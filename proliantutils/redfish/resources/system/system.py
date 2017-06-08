@@ -21,6 +21,7 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
@@ -50,6 +51,11 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+    _secure_boot = None  # ref to SecureBoot instance
+
+    def refresh(self):
+        super(HPESystem, self).refresh()
+        self._secure_boot = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -89,9 +95,25 @@ class HPESystem(system.System):
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
+
         if self._bios_settings is None:
             self._bios_settings = bios.BIOSSettings(
                 self._conn, utils.get_subresource_path_by(self, 'Bios'),
                 redfish_version=self.redfish_version)
 
         return self._bios_settings
+
+    @property
+    def secure_boot(self):
+        """Property to provide reference to `SecureBoot` instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._secure_boot is None:
+            self._secure_boot = secure_boot.SecureBoot(
+                self._conn, utils.get_subresource_path_by(
+                    self, 'SecureBoot'),
+                redfish_version=self.redfish_version)
+
+        return self._secure_boot

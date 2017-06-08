@@ -68,6 +68,10 @@ SUPPORTED_REDFISH_METHODS = [
     'get_pending_boot_mode',
     'get_current_boot_mode',
     'activate_license',
+    'get_secure_boot_mode',
+    'set_secure_boot_mode',
+    'reset_secure_boot_keys',
+    'clear_secure_boot_keys',
 ]
 
 LOG = log.get_logger(__name__)
