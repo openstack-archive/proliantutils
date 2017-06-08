@@ -20,6 +20,7 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import secure_boot
 
 LOG = log.get_logger(__name__)
 
@@ -45,6 +46,12 @@ class HPESystem(system.System):
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     """Oem specific system extensibility actions"""
+
+    _secure_boot = None  # ref to SecureBoot instance
+
+    def refresh(self):
+        super(HPESystem, self).refresh()
+        self._secure_boot = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -76,3 +83,29 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+    def _get_subresource_path_by_name(self, subresource_name):
+        """Helper function to find the subresource path
+
+        :param subresource_name: The subresource name.
+        :raises: MissingAttributeError, if subresource name is not present.
+        """
+        subresource_element = self.json.get(subresource_name)
+        if not subresource_element:
+            raise exception.MissingAttributeError(attribute=subresource_name,
+                                                  resource=self.path)
+        return subresource_element.get('@odata.id')
+
+    @property
+    def secure_boot(self):
+        """Property to provide reference to `SecureBoot` instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._secure_boot is None:
+            self._secure_boot = secure_boot.SecureBoot(
+                self._conn, self._get_subresource_path_by_name('SecureBoot'),
+                redfish_version=self.redfish_version)
+
+        return self._secure_boot
