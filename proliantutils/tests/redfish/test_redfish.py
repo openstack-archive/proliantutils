@@ -74,7 +74,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
             system_json = json.loads(f.read())
-        self.sushy.get_system().json = system_json['Default']
+        self.sushy.get_system().json = system_json['default']
         product_name = self.rf_client.get_product_name()
         self.assertEqual('ProLiant DL180 Gen10', product_name)
 
@@ -156,7 +156,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
             system_json = json.loads(f.read())
-        self.sushy.get_system().json = system_json['Default']
+        self.sushy.get_system().json = system_json['default']
         boot = self.rf_client.get_one_time_boot()
         self.assertEqual('Normal', boot)
 

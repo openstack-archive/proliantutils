@@ -18,3 +18,14 @@
 
 PUSH_POWER_BUTTON_PRESS = 'press'
 PUSH_POWER_BUTTON_PRESS_AND_HOLD = 'press and hold'
+
+# Secure Boot current boot constants
+
+SECUREBOOT_CURRENT_BOOT_ENABLED = 'enabled'
+SECUREBOOT_CURRENT_BOOT_DISABLED = 'disabled'
+
+# Secure Boot reset keys constants
+
+SECUREBOOT_RESET_KEYS_DEFAULT = 'default'
+SECUREBOOT_RESET_KEYS_DELETE_ALL = 'delete all'
+SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
