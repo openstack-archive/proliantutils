@@ -238,3 +238,120 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    # TODO(deray): Needs to change it to point to BIOS to fetch the
+    # boot mode rather than from System.
+    def _is_boot_mode_uefi(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: True if the boot mode is UEFI else False
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        boot_mode = sushy_system.boot.mode
+        if boot_mode == sushy.BOOT_SOURCE_MODE_UEFI:
+            return True
+        return False
+
+    def get_secure_boot_mode(self):
+        """Get the status of secure boot.
+
+        :returns: True, if enabled, else False
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            secure_boot_enabled = sushy_system.secure_boot.enable
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to provide '
+                          'information about secure boot on the server. '
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloCommandNotSupportedError(msg)
+
+        if secure_boot_enabled:
+            LOG.debug("Secure boot is Enabled")
+        else:
+            LOG.debug("Secure boot is Disabled")
+        return secure_boot_enabled
+
+    def set_secure_boot_mode(self, secure_boot_enable):
+        """Enable/Disable secure boot on the server.
+
+        :param secure_boot_enable: True, if secure boot needs to be
+               enabled for next boot, else False.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if self._is_boot_mode_uefi():
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            try:
+                sushy_system.secure_boot.change_settings({
+                    'SecureBootEnable': secure_boot_enable
+                })
+            except sushy.exceptions.SushyError as e:
+                msg = (self._('The Redfish controller failed to set secure '
+                              'boot settings on the server. Error %(error)s')
+                       % {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloCommandNotSupportedError(msg)
+
+            # Note(deray): Resetting the server post updating the settings,
+            # as suggested.
+            self.reset_server()
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def reset_secure_boot_keys(self):
+        """Reset secure boot keys to manufacturing defaults.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if self._is_boot_mode_uefi():
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            try:
+                sushy_system.secure_boot.reset_keys(
+                    sys_cons.SECUREBOOT_RESET_KEYS_DEFAULT)
+            except sushy.exceptions.SushyError as e:
+                msg = (self._('The Redfish controller failed to reset secure '
+                              'boot keys on the server. Error %(error)s')
+                       % {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def clear_secure_boot_keys(self):
+        """Reset all keys.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if self._is_boot_mode_uefi():
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            try:
+                sushy_system.secure_boot.reset_keys(
+                    sys_cons.SECUREBOOT_RESET_KEYS_DELETE_ALL)
+            except sushy.exceptions.SushyError as e:
+                msg = (self._('The Redfish controller failed to clear secure '
+                              'boot keys on the server. Error %(error)s')
+                       % {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+        else:
+            msg = ('System is not in UEFI boot mode. "SecureBoot" related '
+                   'resources cannot be changed.')
+            raise exception.IloCommandNotSupportedInBiosError(msg)
