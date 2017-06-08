@@ -62,6 +62,8 @@ SUPPORTED_REDFISH_METHODS = [
     'get_host_power_status',
     'set_host_power',
     'reset_server',
+    'get_secure_boot_mode',
+    'set_secure_boot_mode',
 ]
 
 LOG = log.get_logger(__name__)

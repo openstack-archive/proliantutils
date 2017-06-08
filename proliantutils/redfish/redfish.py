@@ -21,6 +21,7 @@ from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
+from proliantutils.redfish.resources.system import secure_boot
 
 
 """
@@ -196,3 +197,43 @@ class RedfishOperations(operations.IloOperations):
                    {'target_value': target_value, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_secure_boot_mode(self):
+        """Get the status of secure boot.
+
+        :returns: True, if enabled, else False
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        secure_boot_res = sushy_system.secure_boot_resource
+        secure_current = secure_boot_res.secure_boot_current
+        if secure_current:
+            LOG.debug("Secure boot is Enabled")
+            return True
+
+        LOG.debug("Secure boot is Disabled")
+        return False
+
+    def set_secure_boot_mode(self, secure_boot_enable):
+        """Enable/Disable secure boot on the server.
+
+        :param secure_boot_enable: True, if secure boot needs to be
+               enabled for next boot, else False.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if secure_boot_enable not in secure_boot.SECURE_BOOT_ENABLE_REV_MAP:
+            msg = (self._('The option "%(option)s" provided to set secure boot'
+                          ' is not supported.') %
+                   {'option': secure_boot_enable})
+            LOG.error(msg)
+            raise exception.IloError(msg)
+        else:
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            data = {'SecureBootEnable': (
+                secure_boot.SECURE_BOOT_ENABLE_REV_MAP[secure_boot_enable])}
+            LOG.debug("Data passed to secure boot is %s" % (data))
+            sushy_system.secure_boot_config(data)
