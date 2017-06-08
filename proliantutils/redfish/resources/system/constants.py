@@ -30,3 +30,14 @@ BOOT_SOURCE_TARGET_CD = 'Cd'
 BOOT_SOURCE_TARGET_PXE = 'Pxe'
 BOOT_SOURCE_TARGET_UEFI_TARGET = 'UefiTarget'
 BOOT_SOURCE_TARGET_HDD = 'Hdd'
+
+# Secure Boot current boot constants
+
+SECUREBOOT_CURRENT_BOOT_ENABLED = 'enabled'
+SECUREBOOT_CURRENT_BOOT_DISABLED = 'disabled'
+
+# Secure Boot reset keys constants
+
+SECUREBOOT_RESET_KEYS_DEFAULT = 'default'
+SECUREBOOT_RESET_KEYS_DELETE_ALL = 'delete all'
+SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
