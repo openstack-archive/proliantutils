@@ -35,3 +35,14 @@ BOOT_SOURCE_TARGET_HDD = 'Hdd'
 
 SRIOV_ENABLED = 'sriov enabled'
 SRIOV_DISABLED = 'sriov disabled'
+
+# Secure Boot current boot constants
+
+SECUREBOOT_CURRENT_BOOT_ENABLED = 'enabled'
+SECUREBOOT_CURRENT_BOOT_DISABLED = 'disabled'
+
+# Secure Boot reset keys constants
+
+SECUREBOOT_RESET_KEYS_DEFAULT = 'default'
+SECUREBOOT_RESET_KEYS_DELETE_ALL = 'delete all'
+SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'

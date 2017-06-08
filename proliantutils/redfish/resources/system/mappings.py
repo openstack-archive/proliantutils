@@ -41,3 +41,20 @@ SRIOV_MAP = {
     'Enabled': constants.SRIOV_ENABLED,
     'Disabled': constants.SRIOV_DISABLED
 }
+
+SECUREBOOT_CURRENT_BOOT_MAP = {
+    'Enabled': constants.SECUREBOOT_CURRENT_BOOT_ENABLED,
+    'Disabled': constants.SECUREBOOT_CURRENT_BOOT_DISABLED,
+}
+
+SECUREBOOT_CURRENT_BOOT_MAP_REV = (
+    utils.revert_dictionary(SECUREBOOT_CURRENT_BOOT_MAP))
+
+SECUREBOOT_RESET_KEYS_MAP = {
+    'ResetAllKeysToDefault': constants.SECUREBOOT_RESET_KEYS_DEFAULT,
+    'DeleteAllKeys': constants.SECUREBOOT_RESET_KEYS_DELETE_ALL,
+    'DeletePK': constants.SECUREBOOT_RESET_KEYS_DELETE_PK,
+}
+
+SECUREBOOT_RESET_KEYS_MAP_REV = (
+    utils.revert_dictionary(SECUREBOOT_RESET_KEYS_MAP))
