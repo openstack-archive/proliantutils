@@ -15,6 +15,7 @@
 __author__ = 'HPE'
 
 from proliantutils.redfish.resources.system import system
+from proliantutils.redfish.resources.update_service import update_service
 import sushy
 
 
@@ -33,3 +34,13 @@ class HPESushy(sushy.Sushy):
         """
         return system.HPESystem(self._conn, identity,
                                 redfish_version=self.redfish_version)
+
+    def get_update_service(self, identity):
+        """Given the identity return a HPEUpdateService object
+
+        :param identity: The identity of the UpdateService resource
+        :returns: The UpdateService object
+        """
+        return update_service.\
+            HPEUpdateService(self._conn, identity,
+                             redfish_version=self.redfish_version)
