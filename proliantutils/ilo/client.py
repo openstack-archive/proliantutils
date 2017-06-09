@@ -68,6 +68,7 @@ SUPPORTED_REDFISH_METHODS = [
     'get_pending_boot_mode',
     'get_current_boot_mode',
     'activate_license',
+    'update_firmware',
 ]
 
 LOG = log.get_logger(__name__)
