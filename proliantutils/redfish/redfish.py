@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -238,3 +239,75 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    @firmware_controller.check_firmware_update_component
+    def update_firmware(self, file_url, component_type):
+        """Updates the given firmware on the server for the given component.
+
+        :param file_url: location of the raw firmware file. Extraction of the
+                         firmware file (if in compact format) is expected to
+                         happen prior to this invocation.
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        update_service = self._sushy._get_update_service()
+        action_data = {
+            'ImageURI': file_url,
+        }
+
+        # perform the POST
+        LOG.debug('Flashing firmware file: %s ...', file_url)
+        response = update_service.flash_firmware_update(action_data)
+        if response.status_code != 200:
+            msg = ("%s invalid response code received for fw update"
+                   % response.status_code)
+            raise exception.IloError(msg)
+
+        # wait till the firmware update completes.
+        update_service.wait_for_redfish_firmware_update_to_complete(self)
+
+        try:
+            state, percent = self.get_firmware_update_progress()
+        except exception.IloError:
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+            return
+
+        if state == "Error":
+            msg = 'Unable to update firmware'
+            LOG.debug(self._(msg))  # noqa
+            raise exception.IloError(msg)
+        elif state == "Unknown":
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+        else:  # "Complete" | "Idle"
+            LOG.info(self._('Flashing firmware file: %s ... done'), file_url)
+
+    def get_firmware_update_progress(self):
+        """Get the progress of the firmware update.
+
+        :returns: firmware update state, one of the following values:
+                  "Idle","Uploading","Verifying","Writing",
+                  "Updating","Complete","Error".
+                  If the update resource is not found, then "UNKNOWN".
+        :returns: firmware update progress percent
+        :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if not able to reach iLO.
+        """
+        # perform the GET
+        try:
+            update_service = self._sushy._get_update_service()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Progress of firmware update not known.'
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            return "Unknown", "Unknown"
+
+        # NOTE: Percentage is returned None after firmware flash is completed.
+        return (update_service.firmware_state,
+                update_service.firmware_percentage)

@@ -23,6 +23,7 @@ from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources import update_service
 from sushy.resources.system import system
 
 
@@ -174,3 +175,56 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       'get_firmware_update_progress', autospec=True)
+    def test_update_firmware(self, get_firmware_update_progress_mock):
+        # | GIVEN |
+        (self.sushy._get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 200
+        get_firmware_update_progress_mock.return_value = 'Complete', 100
+        # | WHEN |
+        self.rf_client.update_firmware('fw_file_url', 'ilo')
+        # | THEN |
+        (self.sushy._get_update_service.return_value.flash_firmware_update.
+            assert_called_once_with({'ImageURI': 'fw_file_url'}))
+        (self.sushy._get_update_service.return_value.
+         wait_for_redfish_firmware_update_to_complete.
+         assert_called_once_with(self.rf_client))
+        get_firmware_update_progress_mock.assert_called_once_with(
+            self.rf_client)
+
+    def test_update_firmware_throws_if_flash_fwu_fail(self):
+        (self.sushy._get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 500
+        self.assertRaisesRegex(exception.IloError,
+                               '500 invalid response code '
+                               'received for fw update',
+                               self.rf_client.update_firmware, 'fw_file_url',
+                               'cpld')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       'get_firmware_update_progress', autospec=True)
+    def test_update_firmware_throws_if_error_occurs_in_update(
+            self, get_firmware_update_progress_mock):
+        (self.sushy._get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 200
+        get_firmware_update_progress_mock.return_value = 'Error', 0
+        self.assertRaisesRegex(exception.IloError,
+                               'Unable to update firmware',
+                               self.rf_client.update_firmware, 'fw_file_url',
+                               'cpld')
+
+    def test_get_firmware_update_progress(self):
+        # GIVEN
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/update_service.json', 'r') as f:
+            conn_mock = mock.MagicMock()
+            conn_mock.get.return_value.json.return_value = json.loads(f.read())
+        update_service_inst = update_service.HPEUpdateService(
+            conn_mock, '/redfish/v1/UpdateService', redfish_version='1.0.x')
+        self.sushy._get_update_service.return_value = update_service_inst
+        # WHEN
+        state, percent = self.rf_client.get_firmware_update_progress()
+        # THEN
+        self.assertEqual(('Updating', 24), (state, percent))
