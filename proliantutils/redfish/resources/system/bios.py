@@ -36,6 +36,7 @@ class BiosResource(base.ResourceBase):
 class BiosSettings(base.ResourceBase):
 
     BootMode = base.Field(["Attributes", "BootMode"])
+    odata_id = base.Field("@odata.id")
 
     def __init__(self, connector, identity, redfish_version=None):
         """A class representing a BootResource
@@ -47,3 +48,13 @@ class BiosSettings(base.ResourceBase):
         """
         super(BiosSettings, self).__init__(connector, identity,
                                            redfish_version)
+
+    def _change_bios_setting(self, bios_settings_uri, action_data):
+        """Change the bios settings to specified values.
+
+        :param bios_settings_uri: Bios Settings uri.
+        :param action_data: dict providing path to bios settings.
+        :returns: response object of the post operation
+        """
+        if bios_settings_uri is not None:
+            return self._conn.post(bios_settings_uri, data=action_data)
