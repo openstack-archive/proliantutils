@@ -14,8 +14,13 @@
 
 __author__ = 'HPE'
 
+from proliantutils import exception
+from proliantutils import log
 from proliantutils.redfish.resources.system import system
+from proliantutils.redfish.resources import update_service
 import sushy
+
+LOG = log.get_logger(__name__)
 
 
 class HPESushy(sushy.Sushy):
@@ -33,3 +38,37 @@ class HPESushy(sushy.Sushy):
         """
         return system.HPESystem(self._conn, identity,
                                 redfish_version=self.redfish_version)
+
+    def get_update_service(self, identity):
+        """Given the identity return a HPEUpdateService object
+
+        :param identity: The identity of the UpdateService resource
+        :returns: The UpdateService object
+        """
+        return update_service.\
+            HPEUpdateService(self._conn, identity,
+                             redfish_version=self.redfish_version)
+
+    def _get_update_service_path(self):
+        """Helper function to find the UpdateService path"""
+        update_service = self.json.get('UpdateService')
+        if not update_service:
+            raise exception.MissingAttributeError(attribute='UpdateService',
+                                                  resource=self._root_prefix)
+        return update_service.get('@odata.id')
+
+    def _get_update_service(self):
+        """Get the UpdateService
+
+        :returns: the UpdateService instance
+        :raises: IloError
+        """
+        update_service_url = self._get_update_service_path()
+        try:
+            return self.get_update_service(update_service_url)
+        except sushy.exceptions.SushyError as e:
+            msg = ('The Redfish System resource UpdateService '
+                   'was not found. Error %(error)s' %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
