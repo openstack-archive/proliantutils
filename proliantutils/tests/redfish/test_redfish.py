@@ -23,6 +23,7 @@ from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources import update_service
 from sushy.resources.system import system
 
 
@@ -211,3 +212,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The current BIOS Settings was not found.',
             self.rf_client.get_current_boot_mode)
+
+    def test_update_firmware(self):
+        self.rf_client.update_firmware('fw_file_url', 'ilo')
+        (self.sushy.get_update_service.return_value.flash_firmware.
+         assert_called_once_with(self.rf_client, 'fw_file_url'))
+
+    def test_update_firmware_fail(self):
+        (self.sushy.get_update_service.return_value.
+         flash_firmware.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update firmware',
+            self.rf_client.update_firmware, 'fw_file_url', 'cpld')

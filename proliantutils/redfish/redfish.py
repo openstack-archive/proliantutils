@@ -19,6 +19,7 @@ import sushy
 from sushy import utils
 
 from proliantutils import exception
+from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -287,5 +288,25 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The current BIOS Settings was not found. Error '
                           '%(error)s') %
                    {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    @firmware_controller.check_firmware_update_component
+    def update_firmware(self, file_url, component_type):
+        """Updates the given firmware on the server for the given component.
+
+        :param file_url: location of the raw firmware file. Extraction of the
+                         firmware file (if in compact format) is expected to
+                         happen prior to this invocation.
+        :param component_type: Type of component to be applied to.
+        :raises: IloError, on an error from iLO.
+        """
+        update_service_inst = self._sushy.get_update_service()
+        try:
+            update_service_inst.flash_firmware(self, file_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to update firmware '
+                          'with file %(file)s Error %(error)s') %
+                   {'file': file_url, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)

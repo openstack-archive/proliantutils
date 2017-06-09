@@ -16,9 +16,14 @@ __author__ = 'HPE'
 
 import sushy
 
+from proliantutils import exception
+from proliantutils import log
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
+from proliantutils.redfish.resources import update_service
 from proliantutils.redfish import utils
+
+LOG = log.get_logger(__name__)
 
 
 class HPESushy(sushy.Sushy):
@@ -51,3 +56,14 @@ class HPESushy(sushy.Sushy):
         """
         return manager.HPEManager(self._conn, identity,
                                   redfish_version=self.redfish_version)
+
+    def get_update_service(self):
+        """Given the identity return a HPEUpdateService object
+
+        :returns: The UpdateService object
+        """
+        update_service_url = utils.get_subresource_path_by(self,
+                                                           'UpdateService')
+        return (update_service.
+                HPEUpdateService(self._conn, update_service_url,
+                                 redfish_version=self.redfish_version))
