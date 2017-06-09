@@ -242,3 +242,31 @@ class RedfishOperations(operations.IloOperations):
         if boot_mode == 'LegacyBios':
             boot_mode = 'legacy'
         return boot_mode.upper()
+
+    def set_pending_boot_mode(self, boot_mode):
+        """Sets the boot mode of the system for next boot.
+
+        :param boot_mode: either 'uefi' or 'legacy'.
+        :raises: IloInvalidInputError, on an invalid input.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        boot_mode = boot_mode.lower()
+        if boot_mode not in ['uefi', 'legacy']:
+            msg = 'Invalid Boot mode specified'
+            raise exception.IloInvalidInputError(msg)
+
+        boot_properties = {'BootMode': boot_mode}
+
+        if boot_mode == 'legacy':
+            boot_properties['BootMode'] = 'LegacyBios'
+        else:
+            # If Boot Mode is 'Uefi' set the UEFIOptimizedBoot first.
+            boot_properties['UefiOptimizedBoot'] = "Enabled"
+
+        # Change the Boot Mode
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        bios_settings = sushy_system.bios_settings
+        bios_settings._change_bios_setting(bios_settings.odata_id,
+                                           boot_properties)
