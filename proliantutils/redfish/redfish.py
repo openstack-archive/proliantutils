@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -126,6 +127,30 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish System "%(system)s" was not found. '
                           'Error %(error)s') %
                    {'system': system_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _get_update_service_collection_path(self):
+        """Helper function to find the UpdateService path"""
+        update_service = self._sushy.json.get('UpdateService')
+        if not update_service:
+            raise exception.MissingAttributeError(attribute='UpdateService',
+                                                  resource=self._root_prefix)
+        return update_service.get('@odata.id')
+
+    def _get_update_service(self):
+        """Get the UpdateService
+
+        :returns: the UpdateService instance
+        :raises: IloError
+        """
+        update_service_url = self._get_update_service_collection_path()
+        try:
+            return self._sushy.get_update_service(update_service_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish System resource UpdateService '
+                          'was not found. Error %(error)s') %
+                   {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
 
@@ -238,3 +263,83 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    @firmware_controller.check_firmware_update_component
+    def update_firmware(self, file_url, component_type):
+        """Updates the given firmware on the server for the given component.
+
+        :param file_url: location of the raw firmware file. Extraction of the
+                         firmware file (if in compact format) is expected to
+                         happen prior to this invocation.
+        :param component_type: Type of component to be applied to.
+        :raises: InvalidInputError, if the validation of the input fails
+        :raises: IloError, on an error from iLO
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        update_service = self._get_update_service()
+        fw_update_uri = update_service.get_fw_update_uri()
+        action_data = {
+            'ImageURI': file_url,
+        }
+
+        # perform the POST
+        LOG.debug('Flashing firmware file: %s ...', file_url)
+        response = update_service.flash_firmware_update(action_data)
+        if response.status_code != 200:
+            msg = ("%s invalid response code received for fw update"
+                   % response.status_code)
+            raise exception.IloError(msg)
+
+        # wait till the firmware update completes.
+        update_service.wait_for_redfish_firmware_update_to_complete(self)
+
+        try:
+            state, percent = self.get_firmware_update_progress()
+        except exception.IloError:
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+            return
+
+        if state == "Error":
+            msg = 'Unable to update firmware'
+            LOG.debug(self._(msg))  # noqa
+            raise exception.IloError(msg)
+        elif state == "Unknown":
+            msg = 'Status of firmware update not known'
+            LOG.debug(self._(msg))  # noqa
+        else:  # "Complete" | "Idle"
+            LOG.info(self._('Flashing firmware file: %s ... done'), file_url)
+
+    def get_firmware_update_progress(self):
+        """Get the progress of the firmware update.
+
+        :returns: firmware update state, one of the following values:
+                  "Idle","Uploading","Verifying","Writing",
+                  "Updating","Complete","Error".
+                  If the update resource is not found, then "UNKNOWN".
+        :returns: firmware update progress percent
+        :raises: IloError, on an error from iLO.
+        :raises: IloConnectionError, if not able to reach iLO.
+        """
+        # perform the GET
+        try:
+            update_service = self._get_update_service()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Progress of firmware update not known.'
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            return "Unknown", "Unknown"
+
+        fw_update_state = update_service.json['Oem']['Hpe']['State']
+        try:
+            fw_update_progress_percent = (update_service.json['Oem']
+                                          ['Hpe']['FlashProgressPercent'])
+            # NOTE: 'FlashProgressPercent' field is not displayed after
+            #       firmware flash is completed.
+        except KeyError:
+            LOG.debug(self._('Flashing firmware file... in completed state.'))
+            fw_update_progress_percent = "Unknown"
+        return fw_update_state, fw_update_progress_percent

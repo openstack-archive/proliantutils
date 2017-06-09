@@ -174,3 +174,49 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       'get_firmware_update_progress', autospec=True)
+    def test_update_firmware(self, get_firmware_update_progress_mock):
+        # | GIVEN |
+        (self.sushy.get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 200
+        get_firmware_update_progress_mock.return_value = 'Completed', 100
+        # | WHEN |
+        self.rf_client.update_firmware('fw_file_url', 'ilo')
+        # | THEN |
+        (self.sushy.get_update_service.return_value.flash_firmware_update.
+            assert_called_once_with({'ImageURI': 'fw_file_url'}))
+        (self.sushy.get_update_service.return_value.
+         wait_for_redfish_firmware_update_to_complete.
+         assert_called_once_with(self.rf_client))
+        get_firmware_update_progress_mock.assert_called_once_with(
+            self.rf_client)
+
+    def test_update_firmware_throws_if_flash_fwu_fail(self):
+        (self.sushy.get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 500
+        self.assertRaisesRegex(exception.IloError,
+                               '500 invalid response code '
+                               'received for fw update',
+                               self.rf_client.update_firmware, 'fw_file_url',
+                               'cpld')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       'get_firmware_update_progress', autospec=True)
+    def test_update_firmware_throws_if_error_occurs_in_update(
+            self, get_firmware_update_progress_mock):
+        (self.sushy.get_update_service.return_value.flash_firmware_update.
+         return_value.status_code) = 200
+        get_firmware_update_progress_mock.return_value = 'Error', 0
+        self.assertRaisesRegex(exception.IloError,
+                               'Unable to update firmware',
+                               self.rf_client.update_firmware, 'fw_file_url',
+                               'cpld')
+
+    def test_get_firmware_update_progress(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/update_service.json', 'r') as f:
+            self.sushy.get_update_service().json = json.loads(f.read())
+        state, percent = self.rf_client.get_firmware_update_progress()
+        self.assertTupleEqual((state, percent), ('Complete', 'Unknown'))

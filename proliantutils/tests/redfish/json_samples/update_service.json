@@ -1,0 +1,49 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#UpdateService",
+    "@odata.etag": "W/\"EA63D25C\"",
+    "@odata.id": "/redfish/v1/UpdateService/",
+    "@odata.type": "#UpdateService.v1_1_0.UpdateService",
+    "Actions": {
+        "#UpdateService.SimpleUpdate": {
+            "target": "/redfish/v1/UpdateService/Actions/UpdateService.SimpleUpdate/"
+        }
+    },
+    "Description": "iLO Update Service",
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/"
+    },
+    "HttpPushUri": "/cgi-bin/uploadFile",
+    "Id": "UpdateService",
+    "Name": "Update Service",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeiLOUpdateServiceExt.v2_0_0.HpeiLOUpdateServiceExt",
+            "Actions": {
+                "#HpeiLOUpdateServiceExt.AddFromUri": {
+                    "target": "/redfish/v1/UpdateService/Actions/Oem/Hpe/HpeiLOUpdateServiceExt.AddFromUri/"
+                },
+                "#HpeiLOUpdateServiceExt.StartFirmwareIntegrityCheck": {
+                    "target": "/redfish/v1/UpdateService/Actions/Oem/Hpe/HpeiLOUpdateServiceExt.StartFirmwareIntegrityCheck/"
+                }
+            },
+            "ComponentRepository": {
+                "@odata.id": "/redfish/v1/UpdateService/ComponentRepository/"
+            },
+            "CurrentTime": "2017-06-16T10:00:54Z",
+            "InstallSets": {
+                "@odata.id": "/redfish/v1/UpdateService/InstallSets/"
+            },
+            "Result": {
+                "MessageId": "Base.1.0.Success"
+            },
+            "State": "Complete",
+            "UpdateTaskQueue": {
+                "@odata.id": "/redfish/v1/UpdateService/UpdateTaskQueue/"
+            }
+        }
+    },
+    "ServiceEnabled": true,
+    "SoftwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/SoftwareInventory/"
+    }
+}
