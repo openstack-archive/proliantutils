@@ -22,6 +22,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.system import constants as sys_cons
 
 
 class RedfishOperationsTestCase(testtools.TestCase):
@@ -122,3 +123,29 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.set_host_power('ON')
         self.sushy.get_system().reset_system.assert_called_once_with(
             sushy.RESET_ON)
+
+    def test_press_pwr_btn(self):
+        self.rf_client.press_pwr_btn()
+        self.sushy.get_system().push_power_button.assert_called_once_with(
+            sys_cons.PUSH_POWER_BUTTON_PRESS)
+
+    def test_press_pwr_btn_fail(self):
+        self.sushy.get_system().push_power_button.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to press power button',
+            self.rf_client.press_pwr_btn)
+
+    def test_hold_pwr_btn(self):
+        self.rf_client.hold_pwr_btn()
+        self.sushy.get_system().push_power_button.assert_called_once_with(
+            sys_cons.PUSH_POWER_BUTTON_PRESS_AND_HOLD)
+
+    def test_hold_pwr_btn_fail(self):
+        self.sushy.get_system().push_power_button.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to press and hold power button',
+            self.rf_client.hold_pwr_btn)

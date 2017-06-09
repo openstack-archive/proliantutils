@@ -21,7 +21,7 @@ from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
-
+from proliantutils.redfish.resources.system import constants as sys_cons
 
 """
 Class specific for Redfish APIs.
@@ -39,6 +39,8 @@ POWER_RESET_MAP = {
     'OFF': sushy.RESET_FORCE_OFF,
 }
 
+# Assuming only one sushy_system present as part of collection,
+# as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
 
 LOG = log.get_logger(__name__)
@@ -47,17 +49,11 @@ LOG = log.get_logger(__name__)
 class RedfishOperations(operations.IloOperations):
     """Operations supported on redfish based hardware.
 
-    This is the list of APIs which are currently supported via Redfish mode
+    This class holds APIs which are currently supported via Redfish mode
     of operation. This is a growing list which needs to be updated as and when
     the existing API/s (of its cousin RIS and RIBCL interfaces) are migrated.
-
-    --- START ---
-
-    * get_product_name(self)
-    * get_host_power_status(self)
-
-    --- END ---
-
+    For operations currently supported on the client object, please refer:
+    *proliantutils.ilo.client.SUPPORTED_REDFISH_METHODS*
     """
 
     def __init__(self, redfish_controller_ip, username, password,
@@ -129,8 +125,6 @@ class RedfishOperations(operations.IloOperations):
         :returns: server model name.
         :raises: IloError, on an error from iLO.
         """
-        # Assuming only one system present as part of collection,
-        # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return sushy_system.json.get('Model')
 
@@ -140,8 +134,6 @@ class RedfishOperations(operations.IloOperations):
         :returns: Power State of the server, 'ON' or 'OFF'
         :raises: IloError, on an error from iLO.
         """
-        # Assuming only one sushy_system present as part of collection,
-        # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
 
@@ -150,8 +142,6 @@ class RedfishOperations(operations.IloOperations):
 
         :raises: IloError, on an error from iLO.
         """
-        # Assuming only one sushy_system present as part of collection,
-        # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
             sushy_system.reset_system(sushy.RESET_FORCE_RESTART)
@@ -185,8 +175,6 @@ class RedfishOperations(operations.IloOperations):
                              "state."), {'target_value': target_value})
             return
 
-        # Assuming only one system present as part of collection,
-        # as we are dealing with iLO's here.
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
             sushy_system.reset_system(POWER_RESET_MAP[target_value])
@@ -194,5 +182,36 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish controller failed to set power state '
                           'of server to %(target_value)s. Error %(error)s') %
                    {'target_value': target_value, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def press_pwr_btn(self):
+        """Simulates a physical press of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            sushy_system.push_power_button(sys_cons.PUSH_POWER_BUTTON_PRESS)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to press power button'
+                          ' of server. Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def hold_pwr_btn(self):
+        """Simulate a physical press and hold of the server power button.
+
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            sushy_system.push_power_button(
+                sys_cons.PUSH_POWER_BUTTON_PRESS_AND_HOLD)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to press and hold '
+                          'power button of server. Error %(error)s') %
+                   {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
