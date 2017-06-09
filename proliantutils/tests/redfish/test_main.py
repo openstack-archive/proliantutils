@@ -23,6 +23,7 @@ from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
+from proliantutils.redfish.resources import update_service
 
 
 class HPESushyTestCase(testtools.TestCase):
@@ -78,3 +79,12 @@ class HPESushyTestCase(testtools.TestCase):
         mock_manager.assert_called_once_with(self.hpe_sushy._conn,
                                              '1234',
                                              self.hpe_sushy.redfish_version)
+
+    @mock.patch.object(update_service, 'HPEUpdateService', autospec=True)
+    def test_get_update_service(self, mock_update_service):
+        us_inst = self.hpe_sushy.get_update_service()
+        self.assertIsInstance(us_inst,
+                              update_service.HPEUpdateService.__class__)
+        mock_update_service.assert_called_once_with(
+            self.hpe_sushy._conn, "/redfish/v1/UpdateService/",
+            self.hpe_sushy.redfish_version)
