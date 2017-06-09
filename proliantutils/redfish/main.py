@@ -18,6 +18,7 @@ import sushy
 
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
+from proliantutils.redfish.resources import update_service
 from proliantutils.redfish import utils
 
 
@@ -51,3 +52,14 @@ class HPESushy(sushy.Sushy):
         """
         return manager.HPEManager(self._conn, identity,
                                   redfish_version=self.redfish_version)
+
+    def get_update_service(self):
+        """Return a HPEUpdateService object
+
+        :returns: The UpdateService object
+        """
+        update_service_url = utils.get_subresource_path_by(self,
+                                                           'UpdateService')
+        return (update_service.
+                HPEUpdateService(self._conn, update_service_url,
+                                 redfish_version=self.redfish_version))
