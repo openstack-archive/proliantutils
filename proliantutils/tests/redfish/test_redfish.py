@@ -224,3 +224,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to update the license',
             self.rf_client.activate_license, 'key')
+
+    def test_update_firmware(self):
+        self.rf_client.update_firmware('fw_file_url', 'ilo')
+        (self.sushy.get_update_service.return_value.flash_firmware.
+         assert_called_once_with(self.rf_client, 'fw_file_url'))
+
+    def test_update_firmware_fail(self):
+        (self.sushy.get_update_service.return_value.
+         flash_firmware.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update firmware',
+            self.rf_client.update_firmware, 'fw_file_url', 'cpld')
