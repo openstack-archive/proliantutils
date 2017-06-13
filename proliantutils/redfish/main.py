@@ -14,8 +14,11 @@
 
 __author__ = 'HPE'
 
-from proliantutils.redfish.resources.system import system
 import sushy
+
+from proliantutils.redfish.resources.manager import manager
+from proliantutils.redfish.resources.system import system
+from proliantutils.redfish import utils
 
 
 class HPESushy(sushy.Sushy):
@@ -25,6 +28,9 @@ class HPESushy(sushy.Sushy):
     required to customize the functionality of different resources
     """
 
+    def get_system_collection_path(self):
+        return utils.get_subresource_path_by(self, 'Systems')
+
     def get_system(self, identity):
         """Given the identity return a HPESystem object
 
@@ -33,3 +39,15 @@ class HPESushy(sushy.Sushy):
         """
         return system.HPESystem(self._conn, identity,
                                 redfish_version=self.redfish_version)
+
+    def get_manager_collection_path(self):
+        return utils.get_subresource_path_by(self, 'Managers')
+
+    def get_manager(self, identity):
+        """Given the identity return a HPEManager object
+
+        :param identity: The identity of the Manager resource
+        :returns: The Manager object
+        """
+        return manager.HPEManager(self._conn, identity,
+                                  redfish_version=self.redfish_version)
