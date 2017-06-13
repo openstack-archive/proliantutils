@@ -16,6 +16,7 @@ __author__ = 'HPE'
 
 from sushy.resources.manager import manager
 
+from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish import utils
 
 
@@ -26,6 +27,8 @@ class HPEManager(manager.Manager):
     from sushy
     """
 
+    _virtual_media = None
+
     def set_license(self, key):
         """Set the license on a redfish system
 
@@ -35,3 +38,18 @@ class HPEManager(manager.Manager):
         license_service_uri = (utils.get_subresource_path_by(self,
                                ['Oem', 'Hpe', 'Links', 'LicenseService']))
         self._conn.post(license_service_uri, data=data)
+
+    @property
+    def virtual_media(self):
+        """Property to provide reference to `VirtualMediaCollection` instance.
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._virtual_media is None:
+            self._virtual_media = virtual_media.VirtualMediaCollection(
+                self._conn,
+                utils.get_subresource_path_by(self, 'VirtualMedia'),
+                redfish_version=self.redfish_version)
+
+        return self._virtual_media

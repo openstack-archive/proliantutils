@@ -68,6 +68,9 @@ SUPPORTED_REDFISH_METHODS = [
     'get_pending_boot_mode',
     'get_current_boot_mode',
     'activate_license',
+    'eject_virtual_media',
+    'insert_virtual_media',
+    'set_vm_status'
 ]
 
 LOG = log.get_logger(__name__)
