@@ -22,6 +22,7 @@ from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
+from proliantutils.redfish.resources.manager import constants as mgr_cons
 from proliantutils.redfish.resources.system import constants as sys_cons
 
 """
@@ -60,6 +61,13 @@ BOOT_MODE_MAP_REV = (
 # collection, as we are dealing with iLO's here.
 PROLIANT_MANAGER_ID = '1'
 PROLIANT_SYSTEM_ID = '1'
+
+BOOT_OPTION_MAP = {'BOOT_ONCE': True,
+                   'BOOT_ALWAYS': False,
+                   'NO_BOOT': False}
+
+VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
+                     'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
 
 LOG = log.get_logger(__name__)
 
@@ -304,5 +312,115 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The current BIOS Settings was not found. Error '
                           '%(error)s') %
                    {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _validate_virtual_media(self, device):
+        """Check if the device is valid device.
+
+        :param device: virtual media device
+        :raises: IloInvalidInputError, if the device is not valid.
+        """
+        if device not in VIRTUAL_MEDIA_MAP:
+            msg = (self._("Invalid device '%s'. Valid devices: FLOPPY or "
+                          "CDROM.")
+                   % device)
+            LOG.debug(msg)
+            raise exception.IloInvalidInputError(msg)
+
+    def eject_virtual_media(self, device):
+        """Ejects the Virtual Media image if one is inserted.
+
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, if the device is not valid.
+        """
+        self._validate_virtual_media(device)
+        manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        try:
+            vmedia_device = (
+                manager.virtual_media.get_member_from_device(
+                    VIRTUAL_MEDIA_MAP[device]))
+            if not vmedia_device.inserted:
+                LOG.debug(self._("No media available in the device '%s' to "
+                                 "perform eject operation.") % device)
+                return
+
+            LOG.debug(self._("Ejecting the media image '%(url)s' from the "
+                             "device %(device)s.") %
+                      {'url': vmedia_device.image_url, 'device': device})
+            vmedia_device.eject_vmedia()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller failed to eject the virtual"
+                          " media device '%(device)s'. Error %(error)s.") %
+                   {'device': device, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def insert_virtual_media(self, url, device):
+        """Inserts the Virtual Media image to the device.
+
+        :param url: URL to image
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, if the device is not valid.
+        """
+        self._validate_virtual_media(device)
+        manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        try:
+            vmedia_device = (
+                manager.virtual_media.get_member_from_device(
+                    VIRTUAL_MEDIA_MAP[device]))
+            if vmedia_device.inserted:
+                vmedia_device.eject_vmedia()
+
+            LOG.debug(self._("Inserting the image url '%(url)s' to the "
+                             "device %(device)s.") %
+                      {'url': url, 'device': device})
+            vmedia_device.insert_vmedia(url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller failed to insert the media "
+                          "url %(url)s in the virtual media device "
+                          "'%(device)s'. Error %(error)s.") %
+                   {'url': url, 'device': device, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def set_vm_status(self, device='FLOPPY',
+                      boot_option='BOOT_ONCE', write_protect='YES'):
+        """Sets the Virtual Media drive status
+
+        It sets the boot option for virtual media device.
+        Note: boot option can be set only for CD device.
+
+        :param device: virual media device
+        :param boot_option: boot option to set on the virtual media device
+        :param write_protect: set the write protect flag on the vmedia device
+                              Note: It's ignored. In Redfish it is read-only.
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, if the device is not valid.
+        """
+        # CONNECT is a RIBCL call. There is no such property to set in Redfish.
+        if boot_option == 'CONNECT':
+            return
+
+        self._validate_virtual_media(device)
+
+        if boot_option not in BOOT_OPTION_MAP:
+            msg = (self._("Virtual media boot option '%s' is invalid.")
+                   % boot_option)
+            LOG.debug(msg)
+            raise exception.IloInvalidInputError(msg)
+
+        manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        try:
+            vmedia_device = (
+                manager.virtual_media.get_member_from_device(
+                    VIRTUAL_MEDIA_MAP[device]))
+            vmedia_device.set_vm_status(BOOT_OPTION_MAP[boot_option])
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller failed to set the virtual "
+                          "media status for '%(device)s'. Error %(error)s") %
+                   {'device': device, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)

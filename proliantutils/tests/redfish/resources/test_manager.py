@@ -18,6 +18,7 @@ import mock
 import testtools
 
 from proliantutils.redfish.resources.manager import manager
+from proliantutils.redfish.resources.manager import virtual_media
 
 
 class HPEManagerTestCase(testtools.TestCase):
@@ -38,3 +39,24 @@ class HPEManagerTestCase(testtools.TestCase):
         self.mgr_inst._conn.post.assert_called_once_with(
             '/redfish/v1/Managers/1/LicenseService/',
             data={'LicenseKey': 'testkey'})
+
+    def test_virtual_media(self):
+        self.assertIsNone(self.mgr_inst._virtual_media)
+
+        self.conn.get.return_value.json.reset_mock()
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        actual_vmedia = self.mgr_inst.virtual_media
+
+        self.assertIsInstance(actual_vmedia,
+                              virtual_media.VirtualMediaCollection)
+        self.conn.get.return_value.json.assert_called_once_with()
+
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+
+        self.assertIs(actual_vmedia,
+                      self.mgr_inst.virtual_media)
+        self.conn.get.return_value.json.assert_not_called()
