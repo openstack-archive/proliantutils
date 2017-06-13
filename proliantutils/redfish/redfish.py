@@ -53,6 +53,8 @@ DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
 # as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
 
+PROLIANT_MANAGER_ID = '1'
+
 LOG = log.get_logger(__name__)
 
 
@@ -264,3 +266,22 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def eject_virtual_media(self, device):
+        """Ejects the Virtual Media image if one is inserted.
+
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        sushy_manager.eject_vmedia(device)
+
+    def insert_virtual_media(self, url, device):
+        """Inserts the Virtual Media image to the device.
+
+        :param url: URL to image
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        sushy_manager.insert_vmedia(url, device)
