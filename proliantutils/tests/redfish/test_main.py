@@ -18,6 +18,7 @@ from sushy import connector
 import testtools
 
 from proliantutils.redfish import main
+from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
 
 
@@ -38,3 +39,12 @@ class HPESushyTestCase(testtools.TestCase):
         mock_system.assert_called_once_with(self.hpe_sushy._conn,
                                             '1234',
                                             self.hpe_sushy.redfish_version)
+
+    @mock.patch.object(manager, 'HPEManager', autospec=True)
+    def test_get_manager(self, mock_manager):
+        sys_inst = self.hpe_sushy.get_manager('1234')
+        self.assertTrue(isinstance(sys_inst,
+                                   manager.HPEManager.__class__))
+        mock_manager.assert_called_once_with(self.hpe_sushy._conn,
+                                             '1234',
+                                             self.hpe_sushy.redfish_version)

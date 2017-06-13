@@ -13,4 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from proliantutils.tests.redfish import manager_mock  # noqa
+import sys
+
+import mock
+from oslo_utils import importutils
+import six
+
+
+SUSHY_MANAGER_SPEC = (
+    'manager',
+    'resources',
+    )
+
+sushy = importutils.try_import('sushy')
+if sushy:
+    sushy = mock.MagicMock(spec_set=SUSHY_MANAGER_SPEC)
+    sys.modules['sushy.resources.manager'] = sushy.resources.manager
+    sys.modules['sushy.resources.manager.manager'] = \
+        sushy.resources.manager.manager
+    sushy.resources.manager.manager.Manager = mock.MagicMock()
+    if 'proliantutils.redfish.resources.manager' in sys.modules:
+        six.moves.reload_module(
+            sys.modules['proliantutils.redfish.resources.manager'])
