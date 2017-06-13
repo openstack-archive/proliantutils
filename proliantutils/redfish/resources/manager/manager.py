@@ -14,7 +14,10 @@
 
 __author__ = 'HPE'
 
+from sushy.resources import base
 from sushy.resources.manager import manager
+
+from proliantutils.redfish.resources.manager import virtual_media
 
 
 class HPEManager(manager.Manager):
@@ -23,3 +26,24 @@ class HPEManager(manager.Manager):
     This class extends the functionality of Manager resource class
     from sushy
     """
+
+    _virtual_media_path = base.Field(['VirtualMedia', '@odata.id'],
+                                     required=True)
+    """VirtualMediaCollection path"""
+
+    _virtual_media = None
+
+    @property
+    def virtual_media(self):
+        """Property to provide reference to `VirtualMediaCollection` instance.
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._virtual_media is None:
+            self._virtual_media = virtual_media.VirtualMediaCollection(
+                self._conn,
+                self._virtual_media_path,
+                redfish_version=self.redfish_version)
+
+        return self._virtual_media

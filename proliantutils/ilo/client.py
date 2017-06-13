@@ -64,6 +64,9 @@ SUPPORTED_REDFISH_METHODS = [
     'reset_server',
     'press_pwr_btn',
     'hold_pwr_btn',
+    'eject_virtual_media',
+    'insert_virtual_media',
+    'set_vm_status'
 ]
 
 LOG = log.get_logger(__name__)
