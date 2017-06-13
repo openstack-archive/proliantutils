@@ -1,0 +1,197 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Managers/Members/$entity",
+    "@odata.etag": "W/\"FD28A1E2\"",
+    "@odata.id": "/redfish/v1/Managers/1/",
+    "@odata.type": "#Manager.v1_1_0.Manager",
+    "Actions": {
+        "#Manager.Reset": {
+            "target": "/redfish/v1/Managers/1/Actions/Manager.Reset/"
+        }
+    },
+    "CommandShell": {
+        "ConnectTypesSupported": [
+            "SSH",
+            "Oem"
+        ],
+        "MaxConcurrentSessions": 9,
+        "ServiceEnabled": true
+    },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Managers/1/EthernetInterfaces/"
+    },
+    "FirmwareVersion": "iLO 5 v1.15",
+    "GraphicalConsole": {
+        "ConnectTypesSupported": [
+            "KVMIP"
+        ],
+        "MaxConcurrentSessions": 10,
+        "ServiceEnabled": true
+    },
+    "Id": "1",
+    "Links": {
+        "ManagerForChassis": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/1/"
+            }
+        ],
+        "ManagerForServers": [
+            {
+                "@odata.id": "/redfish/v1/Systems/1/"
+            }
+        ],
+        "ManagerInChassis": {
+            "@odata.id": "/redfish/v1/Chassis/1/"
+        }
+    },
+    "LogServices": {
+        "@odata.id": "/redfish/v1/Managers/1/LogServices/"
+    },
+    "ManagerType": "BMC",
+    "Name": "Manager",
+    "NetworkProtocol": {
+        "@odata.id": "/redfish/v1/Managers/1/NetworkService/"
+    },
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeiLO.v2_1_0.HpeiLO",
+            "Actions": {
+                "#HpeiLO.ClearRestApiState": {
+                    "target": "/redfish/v1/Managers/1/Actions/Oem/Hpe/HpeiLO.ClearRestApiState/"
+                },
+                "#HpeiLO.DisableiLOFunctionality": {
+                    "target": "/redfish/v1/Managers/1/Actions/Oem/Hpe/HpeiLO.DisableiLOFunctionality/"
+                },
+                "#HpeiLO.ResetToFactoryDefaults": {
+                    "ResetType@Redfish.AllowableValues": [
+                        "Default"
+                    ],
+                    "target": "/redfish/v1/Managers/1/Actions/Oem/Hpe/HpeiLO.ResetToFactoryDefaults/"
+                }
+            },
+            "ClearRestApiStatus": "DataPresent",
+            "ConfigurationSettings": "Current",
+            "FederationConfig": {
+                "IPv6MulticastScope": "Site",
+                "MulticastAnnouncementInterval": 600,
+                "MulticastDiscovery": "Enabled",
+                "MulticastTimeToLive": 5,
+                "iLOFederationManagement": "Enabled"
+            },
+            "Firmware": {
+                "Current": {
+                    "Date": "Jun 05 2017",
+                    "DebugBuild": false,
+                    "MajorVersion": 1,
+                    "MinorVersion": 15,
+                    "VersionString": "iLO 5 v1.15"
+                }
+            },
+            "FrontPanelUSB": {
+                "State": "Ready"
+            },
+            "IdleConnectionTimeoutMinutes": 30,
+            "License": {
+                "LicenseKey": "XXXXX-XXXXX-XXXXX-XXXXX-456N6",
+                "LicenseString": "iLO Advanced limited-distribution test",
+                "LicenseType": "Internal"
+            },
+            "Links": {
+                "ActiveHealthSystem": {
+                    "@odata.id": "/redfish/v1/Managers/1/ActiveHealthSystem/"
+                },
+                "DateTimeService": {
+                    "@odata.id": "/redfish/v1/Managers/1/DateTime/"
+                },
+                "EmbeddedMediaService": {
+                    "@odata.id": "/redfish/v1/Managers/1/EmbeddedMedia/"
+                },
+                "FederationDispatch": {
+                    "extref": "/dispatch"
+                },
+                "FederationGroups": {
+                    "@odata.id": "/redfish/v1/Managers/1/FederationGroups/"
+                },
+                "FederationPeers": {
+                    "@odata.id": "/redfish/v1/Managers/1/FederationPeers/"
+                },
+                "LicenseService": {
+                    "@odata.id": "/redfish/v1/Managers/1/LicenseService/"
+                },
+                "SecurityService": {
+                    "@odata.id": "/redfish/v1/Managers/1/SecurityService/"
+                },
+                "Thumbnail": {
+                    "extref": "/images/thumbnail.bmp"
+                },
+                "VSPLogLocation": {
+                    "extref": "/sol.log.gz"
+                }
+            },
+            "PersistentMouseKeyboardEnabled": false,
+            "RIBCLEnabled": true,
+            "RequiredLoginForiLORBSU": false,
+            "SerialCLISpeed": 9600,
+            "SerialCLIStatus": "EnabledAuthReq",
+            "VSPDlLoggingEnabled": false,
+            "VSPLogDownloadEnabled": false,
+            "WebGuiEnabled": true,
+            "iLOFunctionalityRequired": false,
+            "iLORBSUEnabled": true,
+            "iLOSelfTestResults": [
+                {
+                    "Notes": "",
+                    "SelfTestName": "NVRAMData",
+                    "Status": "OK"
+                },
+                {
+                    "Notes": "Controller firmware revision  2.10.00  ",
+                    "SelfTestName": "EmbeddedFlash",
+                    "Status": "OK"
+                },
+                {
+                    "Notes": "",
+                    "SelfTestName": "HostRom",
+                    "Status": "OK"
+                },
+                {
+                    "Notes": "",
+                    "SelfTestName": "SupportedHost",
+                    "Status": "OK"
+                },
+                {
+                    "Notes": "Version 1.0.2",
+                    "SelfTestName": "PowerManagementController",
+                    "Status": "Informational"
+                },
+                {
+                    "Notes": "ProLiant DL180 Gen10 System Programmable Logic Device 0x07",
+                    "SelfTestName": "CPLDPAL0",
+                    "Status": "Informational"
+                }
+            ],
+            "iLOServicePort": {
+                "MassStorageAuthenticationRequired": false,
+                "USBEthernetAdaptersEnabled": true,
+                "USBFlashDriveEnabled": true,
+                "iLOServicePortEnabled": true
+            }
+        }
+    },
+    "SerialConsole": {
+        "ConnectTypesSupported": [
+            "SSH",
+            "IPMI",
+            "Oem"
+        ],
+        "MaxConcurrentSessions": 13,
+        "ServiceEnabled": true
+    },
+    "Status": {
+        "State": "Enabled"
+    },
+    "UUID": null,
+    "VirtualMedia": {
+        "@odata.id": "/redfish/v1/Managers/1/VirtualMedia/"
+    }
+}
+
