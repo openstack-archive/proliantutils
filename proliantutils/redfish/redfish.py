@@ -41,6 +41,8 @@ POWER_RESET_MAP = {
 
 PROLIANT_SYSTEM_ID = '1'
 
+PROLIANT_MANAGER_ID = '1'
+
 LOG = log.get_logger(__name__)
 
 
@@ -222,3 +224,22 @@ class RedfishOperations(operations.IloOperations):
                    {'target_value': target_value, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def eject_vmedia(self, device='FLOPPY'):
+        """Ejects the Virtual Media image if one is inserted.
+
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        sushy_manager.eject_vmedia(device)
+
+    def insert_vmedia(self, url, device='FLOPPY'):
+        """Inserts the Virtual Media image to the device.
+
+        :param url: URL to image
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        sushy_manager.insert_vmedia(url, device)
