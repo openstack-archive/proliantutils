@@ -1,5 +1,5 @@
 {
-  "Default": {
+  "default": {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
     "@odata.etag": "W/\"0E79655D\"",
     "@odata.id": "/redfish/v1/Systems/1/",

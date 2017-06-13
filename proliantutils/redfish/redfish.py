@@ -103,14 +103,6 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloConnectionError(msg)
 
-    def _get_system_collection_path(self):
-        """Helper function to find the SystemCollection path"""
-        systems_col = self._sushy.json.get('Systems')
-        if not systems_col:
-            raise exception.MissingAttributeError(attribute='Systems',
-                                                  resource=self._root_prefix)
-        return systems_col.get('@odata.id')
-
     def _get_sushy_system(self, system_id):
         """Get the sushy system for system_id
 
@@ -118,7 +110,7 @@ class RedfishOperations(operations.IloOperations):
         :returns: the Sushy system instance
         :raises: IloError
         """
-        system_url = parse.urljoin(self._get_system_collection_path(),
+        system_url = parse.urljoin(self._sushy.get_system_collection_path(),
                                    system_id)
         try:
             return self._sushy.get_system(system_url)
@@ -126,6 +118,24 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish System "%(system)s" was not found. '
                           'Error %(error)s') %
                    {'system': system_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _get_sushy_manager(self, manager_id):
+        """Get the sushy Manager for manager_id
+
+        :param manager_id: The identity of the Manager resource
+        :returns: the Sushy Manager instance
+        :raises: IloError
+        """
+        manager_url = parse.urljoin(self._sushy.get_manager_collection_path(),
+                                    manager_id)
+        try:
+            return self._sushy.get_manager(manager_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish Manager "%(manager)s" was not found. '
+                          'Error %(error)s') %
+                   {'manager': manager_id, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
 

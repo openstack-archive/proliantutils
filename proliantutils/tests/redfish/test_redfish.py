@@ -32,6 +32,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def setUp(self, sushy_mock):
         super(RedfishOperationsTestCase, self).setUp()
         self.sushy = mock.MagicMock()
+        self.sushy.get_system_collection_path.return_value = (
+            '/redfish/v1/Systems')
+        self.sushy.get_manager_collection_path.return_value = (
+            '/redfish/v1/Managers')
         sushy_mock.return_value = self.sushy
         with open('proliantutils/tests/redfish/'
                   'json_samples/root.json', 'r') as f:
@@ -51,17 +55,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
             redfish.RedfishOperations,
             '1.2.3.4', username='foo', password='bar')
 
-    def test__get_system_collection_path(self):
-        self.assertEqual('/redfish/v1/Systems/',
-                         self.rf_client._get_system_collection_path())
-
-    def test__get_system_collection_path_missing_systems_attr(self):
-        self.rf_client._sushy.json.pop('Systems')
-        self.assertRaisesRegex(
-            exception.MissingAttributeError,
-            'The attribute Systems is missing',
-            self.rf_client._get_system_collection_path)
-
     def test__get_sushy_system_fail(self):
         self.rf_client._sushy.get_system.side_effect = (
             sushy.exceptions.SushyError)
@@ -70,11 +63,19 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish System "apple" was not found.',
             self.rf_client._get_sushy_system, 'apple')
 
+    def test__get_sushy_manager_fail(self):
+        self.rf_client._sushy.get_manager.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish Manager "banana" was not found.',
+            self.rf_client._get_sushy_manager, 'banana')
+
     def test_get_product_name(self):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
             system_json = json.loads(f.read())
-        self.sushy.get_system().json = system_json['Default']
+        self.sushy.get_system().json = system_json['default']
         product_name = self.rf_client.get_product_name()
         self.assertEqual('ProLiant DL180 Gen10', product_name)
 
@@ -156,7 +157,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
             system_json = json.loads(f.read())
-        self.sushy.get_system().json = system_json['Default']
+        self.sushy.get_system().json = system_json['default']
         boot = self.rf_client.get_one_time_boot()
         self.assertEqual('Normal', boot)
 
