@@ -22,6 +22,8 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.manager import manager
+from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import constants as sys_cons
 from sushy.resources.system import system
 
@@ -174,3 +176,158 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    def test__get_vm_device(self, manager_mock):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        manager_mock.return_value = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            vmedia_collection_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia.json', 'r') as f:
+            vmedia_json = json.loads(f.read())
+
+        self.conn.get.return_value.json.side_effect = [
+            vmedia_collection_json, vmedia_json['Vmedia_Not_Inserted']]
+
+        obj = self.rf_client._get_vm_device('CDROM')
+
+        self.assertIsInstance(obj, virtual_media.VirtualMedia)
+
+    def test__get_vm_device_invalid(self):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        self.man_inst = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        msg = "Invalid device. Valid devices: FLOPPY or CDROM."
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError, msg,
+            self.rf_client._get_vm_device, 'XXXX')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    def test_eject_virtual_media(self, eject_mock, manager_mock):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        manager_mock.return_value = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            vmedia_collection_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia.json', 'r') as f:
+            vmedia_json = json.loads(f.read())
+
+        eject_mock.return_value = mock.MagicMock(status_code=201)
+        self.conn.get.return_value.json.side_effect = [
+            vmedia_collection_json, vmedia_json['Vmedia_Inserted']]
+
+        self.rf_client.eject_virtual_media('CDROM')
+
+        eject_mock.assert_called_once_with()
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    def test_eject_virtual_media_not_inserted(self, eject_mock, manager_mock):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        manager_mock.return_value = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            vmedia_collection_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia.json', 'r') as f:
+            vmedia_json = json.loads(f.read())
+
+        eject_mock.return_value = mock.MagicMock(status_code=201)
+        self.conn.get.return_value.json.side_effect = [
+            vmedia_collection_json, vmedia_json['Vmedia_Not_Inserted']]
+
+        self.rf_client.eject_virtual_media('CDROM')
+
+        self.assertFalse(eject_mock.called)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    def test_insert_virtual_media(self, insert_mock, eject_mock, manager_mock):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        manager_mock.return_value = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            vmedia_collection_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia.json', 'r') as f:
+            vmedia_json = json.loads(f.read())
+
+        self.conn.get.return_value.json.side_effect = [
+            vmedia_collection_json, vmedia_json['Vmedia_Not_Inserted']]
+        url = 'http://1.2.3.4:5678/xyz.iso'
+        insert_mock.return_value = mock.MagicMock(status_code=201)
+
+        self.rf_client.insert_virtual_media(url, 'CDROM')
+
+        self.assertFalse(eject_mock.called)
+        insert_mock.assert_called_once_with(url)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    def test_insert_virtual_media_inserted(self, insert_mock, eject_mock,
+                                           manager_mock):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        manager_mock.return_value = manager.HPEManager(
+            self.conn, '/redfish/v1/Managers/1',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            vmedia_collection_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia.json', 'r') as f:
+            vmedia_json = json.loads(f.read())
+
+        self.conn.get.return_value.json.side_effect = [
+            vmedia_collection_json, vmedia_json['Vmedia_Inserted']]
+        url = 'http://1.2.3.4:5678/xyz.iso'
+        insert_mock.return_value = mock.MagicMock(status_code=201)
+
+        self.rf_client.insert_virtual_media(url, 'CDROM')
+
+        eject_mock.assert_called_once_with()
+        insert_mock.assert_called_once_with(url)

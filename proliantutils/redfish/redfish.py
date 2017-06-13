@@ -53,6 +53,8 @@ DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
 # as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
 
+PROLIANT_MANAGER_ID = '1'
+
 LOG = log.get_logger(__name__)
 
 
@@ -264,3 +266,64 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def _get_vm_device(self, device):
+        """Returns the given virtual media device object.
+
+        :param  device: virtual media device to be queried
+        :returns virtual media device object.
+        :raises: IloInvalidInputError if device provided is not a valid
+            vmedia device.
+        """
+
+        valid_devices = {'FLOPPY': 'floppy',
+                         'CDROM': 'cd'}
+
+        # Check if the input is valid
+        if device not in valid_devices:
+                raise exception.IloInvalidInputError(
+                    "Invalid device. Valid devices: FLOPPY or CDROM.")
+
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+
+        for vmedia_device in sushy_manager.vmedia_resources.get_members():
+            if (valid_devices[device] in
+                    [item.lower() for item in vmedia_device.media_types]):
+                return vmedia_device
+
+    def eject_virtual_media(self, device):
+        """Ejects the Virtual Media image if one is inserted.
+
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        vmedia_device = self._get_vm_device(device)
+
+        if vmedia_device.is_vmedia_inserted is False:
+            return
+
+        response = vmedia_device.eject_vmedia()
+
+        if response.status_code >= 300:
+            msg = ("%s is not a valid response code received "
+                   % response.status_code)
+            raise exception.IloError(msg)
+
+    def insert_virtual_media(self, url, device):
+        """Inserts the Virtual Media image to the device.
+
+        :param url: URL to image
+        :param device: virual media device
+        :raises: IloError, on an error from iLO.
+        """
+        vmedia_device = self._get_vm_device(device)
+
+        if vmedia_device.is_vmedia_inserted is True:
+            vmedia_device.eject_vmedia()
+
+        response = vmedia_device.insert_vmedia(url)
+
+        if response.status_code >= 300:
+            msg = ("%s is not a valid response code received "
+                   % response.status_code)
+            raise exception.IloError(msg)
