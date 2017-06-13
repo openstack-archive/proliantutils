@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
 import sushy
 
@@ -33,3 +34,12 @@ class HPESushy(sushy.Sushy):
         """
         return system.HPESystem(self._conn, identity,
                                 redfish_version=self.redfish_version)
+
+    def get_manager(self, identity):
+        """Given the identity return a HPEManager object
+
+        :param identity: The identity of the Manager resource
+        :returns: The Manager object
+        """
+        return manager.HPEManager(self._conn, identity,
+                                  redfish_version=self.redfish_version)
