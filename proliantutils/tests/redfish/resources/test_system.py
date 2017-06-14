@@ -21,6 +21,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
+from proliantutils.tests.redfish.json_samples import system as system_outputs
 
 
 class HPESystemTestCase(testtools.TestCase):
@@ -28,9 +29,8 @@ class HPESystemTestCase(testtools.TestCase):
     def setUp(self):
         super(HPESystemTestCase, self).setUp()
         self.conn = mock.MagicMock()
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/system.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = json.loads(
+            system_outputs.RESPONSE_BODY_FOR_SYSTEM)
 
         self.sys_inst = system.HPESystem(
             self.conn, '/redfish/v1/Systems/1',
