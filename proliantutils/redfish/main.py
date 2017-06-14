@@ -16,9 +16,14 @@ __author__ = 'HPE'
 
 import sushy
 
+from proliantutils import exception
+from proliantutils import log
+from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
 from proliantutils.redfish import utils
+
+LOG = log.get_logger(__name__)
 
 
 class HPESushy(sushy.Sushy):
@@ -51,3 +56,35 @@ class HPESushy(sushy.Sushy):
         """
         return manager.HPEManager(self._conn, identity,
                                   redfish_version=self.redfish_version)
+
+    def get_account_service(self, identity):
+        """Given the identity return a HPEAccountService object
+
+        :param identity: The identity of the AccountService resource
+        :returns: The AccountService object
+        """
+        return account_service.\
+            HPEAccountService(self._conn, identity,
+                              redfish_version=self.redfish_version)
+
+    def _get_account_service_collection_path(self):
+        """Helper function to find the AccountService path"""
+        account_service = self.json.get('AccountService')
+        if not account_service:
+            raise exception.MissingAttributeError(attribute='AccountService',
+                                                  resource=self._root_prefix)
+        return account_service.get('@odata.id')
+
+    def _get_account_service(self):
+        """Get the AccountService
+
+        """
+        account_service_url = self._get_account_service_collection_path()
+        try:
+            return self.get_account_service(account_service_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish System "%(account_service)s" '
+                          'was not found. Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
