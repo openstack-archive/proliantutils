@@ -995,6 +995,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         capabilities.update(self._get_ilo_firmware_version())
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_iscsi_boot_supported())
+        capabilities.update(self._get_iscsi_initiator_iqn())
         if self._get_tpm_capability():
             capabilities['trusted_boot'] = 'true'
         if self._get_cpu_virtualization():
@@ -1563,3 +1564,13 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def _get_iscsi_initiator_iqn(self):
+        """Get initiator iqn for iscsi boot
+
+        :returns: initiator iqn.
+        """
+        headers, iscsi_uri, settings = self._get_iscsi_resource()
+        if iscsi_uri:
+            iqn = settings['iSCSIInitiatorName']
+            return {'iscsi_initiator_iqn': iqn}
