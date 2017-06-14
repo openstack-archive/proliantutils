@@ -39,6 +39,16 @@ POWER_RESET_MAP = {
     'OFF': sushy.RESET_FORCE_OFF,
 }
 
+DEVICE_COMMON_TO_REDFISH = {
+    'NETWORK': sushy.BOOT_SOURCE_TARGET_PXE,
+    'HDD': sushy.BOOT_SOURCE_TARGET_HDD,
+    'CDROM': sushy.BOOT_SOURCE_TARGET_CD,
+    'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET
+}
+
+DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
+
+
 # Assuming only one sushy_system present as part of collection,
 # as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
@@ -215,3 +225,16 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_one_time_boot(self):
+        """Retrieves the current setting for the one time boot.
+
+        :returns: Returns the first boot device that would be used in next
+                  boot. Returns 'Normal' if no device is set.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if (sushy_system.boot['enabled'] == sushy.BOOT_SOURCE_ENABLED_ONCE):
+            return DEVICE_REDFISH_TO_COMMON.get(sushy_system.boot['target'])
+        else:
+            # value returned by RIBCL if one-time boot setting are absent
+            return 'Normal'
