@@ -122,3 +122,21 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.set_host_power('ON')
         self.sushy.get_system().reset_system.assert_called_once_with(
             sushy.RESET_ON)
+
+    def test_get_one_time_boot_not_set(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.sushy.get_system().json = json.loads(f.read())
+        boot = self.rf_client.get_one_time_boot()
+        self.assertEqual('Normal', boot)
+
+    def test_get_one_time_boot_set(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.sushy.get_system().json = json.loads(f.read())
+        import pdb
+        pdb.set_trace()
+        self.sushy.get_system().boot = {'enabled': 'once', 'target': 'none'}
+        self.sushy.get_system().BOOT_SOURCE_ENABLED_ONCE = 'once'
+        ret = self.rf_client.get_one_time_boot()
+        self.assertEqual(ret, 'NONE')
