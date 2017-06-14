@@ -1,3 +1,19 @@
+# Copyright 2017 Hewlett Packard Enterprise Development LP
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+RESPONSE_BODY_FOR_SYSTEM = r"""
 {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
     "@odata.etag": "W/\"0E79655D\"",
@@ -224,3 +240,68 @@
     ],
     "UUID": "00000000-0000-0000-0000-000000000000"
 }
+"""
+
+RESP_BODY_FOR_SYSTEM_WITH_CDROM = r"""
+{
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
+  "@odata.etag": "W/\"0E79655D\"",
+  "@odata.id": "/redfish/v1/Systems/1/",
+  "@odata.type": "#ComputerSystem.v1_2_0.ComputerSystem",
+  "Actions": {
+        "#ComputerSystem.Reset": {
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "ForceRestart",
+                "Nmi",
+                "PushPowerButton"
+            ],
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset/"
+        }
+    },
+  "HostName": "",
+  "Id": "1",
+  "IndicatorLED": "Off",
+  "Manufacturer": "HPE",
+  "Name": "Computer System",
+  "PowerState": "On",
+  "Boot": {
+    "BootSourceOverrideEnabled": "Once",
+    "BootSourceOverrideMode": "UEFI",
+    "BootSourceOverrideTarget": "Cd",
+    "BootSourceOverrideTarget@Redfish.AllowableValues": [
+      "None",
+      "Cd",
+      "Hdd",
+      "Usb",
+      "SDCard",
+      "Utilities",
+      "Diags",
+      "BiosSetup",
+      "Pxe",
+      "UefiShell",
+      "UefiHttp",
+      "UefiTarget"
+    ],
+    "UefiTargetBootSourceOverride": "None",
+    "UefiTargetBootSourceOverride@Redfish.AllowableValues": [
+      "HD(1,GPT,4029CE09-5C2D-464D-9C2D-EC6E607F06A1,0x800,0x100000)/\\EFI\\redhat\\shim.efi",
+      "HD(1,GPT,4029CE09-5C2D-464D-9C2D-EC6E607F06A1,0x800,0x100000)/\\EFI\\ubuntu\\shimx64.efi",
+      "HD(1,GPT,7F14DF43-6600-420A-9950-C028836F6A5D,0x800,0x64000)/\\EFI\\centos\\shim.efi",
+      "PciRoot(0x0)/Pci(0x17,0x0)/Sata(0x3,0x0,0x0)",
+      "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+    ]
+   },
+  "SerialNumber": "                ",
+  "SKU": "                ",
+  "SystemType": "Physical",
+  "UUID": "00000000-0000-0000-0000-000000000000",
+  "MemorySummary": {
+        "Status": {
+            "HealthRollup": "OK"
+        },
+        "TotalSystemMemoryGiB": 8
+    }
+}
+"""

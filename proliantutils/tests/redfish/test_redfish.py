@@ -23,6 +23,8 @@ from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.tests.redfish.json_samples import system as system_outputs
+from sushy.resources.system import system
 
 
 class RedfishOperationsTestCase(testtools.TestCase):
@@ -70,9 +72,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             self.rf_client._get_sushy_system, 'apple')
 
     def test_get_product_name(self):
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/system.json', 'r') as f:
-            self.sushy.get_system().json = json.loads(f.read())
+        self.sushy.get_system().json = json.loads(
+            system_outputs.RESPONSE_BODY_FOR_SYSTEM)
         product_name = self.rf_client.get_product_name()
         self.assertEqual('ProLiant DL180 Gen10', product_name)
 
@@ -149,3 +150,21 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to press and hold power button',
             self.rf_client.hold_pwr_btn)
+
+    def test_get_one_time_boot_not_set(self):
+        self.sushy.get_system().json = json.loads(
+            system_outputs.RESPONSE_BODY_FOR_SYSTEM)
+        boot = self.rf_client.get_one_time_boot()
+        self.assertEqual('Normal', boot)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_one_time_boot_set_cdrom(self, get_system_mock):
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.return_value = json.loads(
+            system_outputs.RESP_BODY_FOR_SYSTEM_WITH_CDROM)
+        self.sys_inst = system.System(self.conn,
+                                      '/redfish/v1/Systems/437XR1138R2',
+                                      redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        ret = self.rf_client.get_one_time_boot()
+        self.assertEqual(ret, 'CDROM')
