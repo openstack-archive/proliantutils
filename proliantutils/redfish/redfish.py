@@ -21,6 +21,7 @@ from proliantutils import exception
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
+from proliantutils.redfish.resources.account_service import account
 from proliantutils.redfish.resources.system import constants as sys_cons
 
 """
@@ -91,6 +92,7 @@ class RedfishOperations(operations.IloOperations):
         # for error reporting purpose
         self.host = redfish_controller_ip
         self._root_prefix = root_prefix
+        self.username = username
 
         try:
             self._sushy = main.HPESushy(
@@ -248,3 +250,33 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        acc_service = self._sushy.get_account_service()
+        try:
+            member_uri = account.get_member_uri(
+                self.username, acc_service.accounts.get_members())
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Not able to get Account uri.Error'
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        mod_user = {}
+        mod_user = {
+            'Password': password,
+        }
+        update_res = acc_service.update_credentials(member_uri,
+                                                    mod_user)
+        if update_res.status_code != 200:
+            msg = ("%s invalid response code received"
+                   " for update credentials" % update_res.status_code)
+            raise exception.IloError(msg)
+        return
