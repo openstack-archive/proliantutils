@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.system import system
 import sushy
 
@@ -33,3 +34,13 @@ class HPESushy(sushy.Sushy):
         """
         return system.HPESystem(self._conn, identity,
                                 redfish_version=self.redfish_version)
+
+    def get_account_service(self, identity):
+        """Given the identity return a HPEAccountService object
+
+        :param identity: The identity of the AccountService resource
+        :returns: The AccountService object
+        """
+        return account_service.\
+            HPEAccountService(self._conn, identity,
+                              redfish_version=self.redfish_version)
