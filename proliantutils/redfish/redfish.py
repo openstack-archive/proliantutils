@@ -13,6 +13,7 @@
 # under the License.
 
 __author__ = 'HPE'
+import json
 
 from six.moves.urllib import parse
 import sushy
@@ -85,6 +86,7 @@ class RedfishOperations(operations.IloOperations):
         # for error reporting purpose
         self.host = redfish_controller_ip
         self._root_prefix = root_prefix
+        self.username = username
 
         try:
             self._sushy = main.HPESushy(
@@ -120,6 +122,28 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish System "%(system)s" was not found. '
                           'Error %(error)s') %
                    {'system': system_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _get_account_service_collection_path(self):
+        """Helper function to find the AccountService path"""
+        account_service = self._sushy.json.get('AccountService')
+        if not account_service:
+            raise exception.MissingAttributeError(attribute='AccountService',
+                                                  resource=self._root_prefix)
+        return account_service.get('@odata.id')
+
+    def _get_account_service(self):
+        """Get the AccountService
+
+        """
+        account_service_url = self._get_account_service_collection_path()
+        try:
+            return self._sushy.get_account_service(account_service_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish System "%(account_service)s" '
+                          'was not found. Error %(error)s') %
+                   {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
 
@@ -196,3 +220,35 @@ class RedfishOperations(operations.IloOperations):
                    {'target_value': target_value, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        acc_service = self._get_account_service()
+        acc_service_url = acc_service.json['Accounts']['@odata.id']
+        response = acc_service.get_account_data(acc_service_url)
+        response_data = json.loads(response.text)
+        member_count = response_data['Members@odata.count']
+        while member_count > 0:
+            member_uri = response_data['Members'][member_count-1]['@odata.id']
+
+            account_res = acc_service.get_account_data(member_uri)
+            account = json.loads(account_res.text)
+            if account['UserName'] == self.username:
+                mod_user = {}
+                mod_user = {
+                    'Password': password,
+                }
+                update_res = acc_service.update_credentials(member_uri, mod_user)
+                if update_res.status_code != 200:
+                    msg = ("%s invalid response code received"
+                           " for update credentials" % response.status_code)
+                    raise exception.IloError(msg)
+                return
+            else:
+                member_count = member_count-1
