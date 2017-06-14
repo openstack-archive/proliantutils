@@ -34,6 +34,16 @@ GET_POWER_STATE_MAP = {
     sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
 }
 
+BOOT_DEVICE_MAP = {
+    sushy.BOOT_SOURCE_TARGET_PXE: 'NETWORK',
+    sushy.BOOT_SOURCE_TARGET_HDD: 'HDD',
+    sushy.BOOT_SOURCE_TARGET_CD: 'CDROM',
+    sushy.BOOT_SOURCE_TARGET_UEFI_TARGET: 'ISCSI',
+    sushy.BOOT_SOURCE_TARGET_NONE: 'NONE'
+}
+
+BOOT_DEVICE_MAP_REV = {v: k for k, v in BOOT_DEVICE_MAP.items()}
+
 POWER_RESET_MAP = {
     'ON': sushy.RESET_ON,
     'OFF': sushy.RESET_FORCE_OFF,
@@ -196,3 +206,17 @@ class RedfishOperations(operations.IloOperations):
                    {'target_value': target_value, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_one_time_boot(self):
+        """Retrieves the current setting for the one time boot.
+
+        :returns: Returns the first boot device that would be used in next
+                  boot. Returns 'Normal' if no device is set.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if (sushy_system.boot.get(
+                'enabled') == sushy_system.BOOT_SOURCE_ENABLED_ONCE):
+            return BOOT_DEVICE_MAP.get(sushy_system.boot.get('target'))
+        else:
+            # value returned by RIBCL if one-time boot setting are absent
+            return 'Normal'
