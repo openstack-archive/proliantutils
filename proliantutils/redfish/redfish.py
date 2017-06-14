@@ -117,6 +117,7 @@ class RedfishOperations(operations.IloOperations):
         # for error reporting purpose
         self.host = redfish_controller_ip
         self._root_prefix = root_prefix
+        self._username = username
 
         try:
             self._sushy = main.HPESushy(
@@ -568,5 +569,27 @@ class RedfishOperations(operations.IloOperations):
                           'one time boot device %(device)s. '
                           'Error: %(error)s') %
                    {'device': device, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def reset_ilo_credential(self, password):
+        """Resets the iLO password.
+
+        :param password: The password to be set.
+        :raises: IloError, if account not found or on an error from iLO.
+        """
+        try:
+            acc_service = self._sushy.get_account_service()
+            member = acc_service.accounts.get_member_details(self._username)
+            if member is None:
+                msg = (self._("No account found with username: %s")
+                       % self._username)
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+            member.update_credentials(password)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to update '
+                          'credentials for %(user)s %(error)s') %
+                   {'user': self._username, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)

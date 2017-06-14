@@ -1,0 +1,15 @@
+{
+  "@odata.context": "/redfish/v1/$metadata#Accounts",
+  "@odata.etag": "W/\"72D11D4D\"",
+  "@odata.id": "/redfish/v1/AccountService/Accounts/",
+  "@odata.type": "#ManagerAccountCollection.ManagerAccountCollection",
+  "Description": "iLO User Accounts",
+  "Members":
+  [
+      {
+          "@odata.id": "/redfish/v1/AccountService/Accounts/1/"
+      }
+  ],
+  "Members@odata.count": 1,
+  "Name": "Accounts"
+}
