@@ -71,6 +71,7 @@ SUPPORTED_REDFISH_METHODS = [
     'eject_virtual_media',
     'insert_virtual_media',
     'set_vm_status'
+    'reset_ilo_credential',
 ]
 
 LOG = log.get_logger(__name__)

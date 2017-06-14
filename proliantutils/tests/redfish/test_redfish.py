@@ -22,6 +22,8 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.account_service import account
+from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import constants as sys_cons
@@ -418,3 +420,52 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.set_vm_status(device='CDROM', boot_option='CONNECT')
         self.assertFalse(manager_mock.called)
         self.assertFalse(set_mock.called)
+
+    def _get_member(self):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        account_mock = account_service.HPEAccountService(
+            self.conn, '/redfish/v1/AccountService',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account_data.json', 'r') as f:
+            account_data_json = json.loads(f.read())
+
+        return account_mock, account_data_json
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    @mock.patch.object(account.HPEAccount, 'update_credentials')
+    def test_reset_ilo_credential(self, update_mock, account_mock):
+        account_mock.return_value, account_data_json = (self._get_member())
+        self.conn.get.return_value.json.side_effect = [
+            account_data_json['GET_ACCOUNT_INFO'],
+            account_data_json['GET_ACCOUNT_DETAILS']]
+
+        self.rf_client.reset_ilo_credential('fake-password')
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential_fail(self, account_mock):
+        account_mock.return_value, account_data_json = (self._get_member())
+        self.conn.get.return_value.json.side_effect = [
+            account_data_json['GET_ACCOUNT_INFO'],
+            account_data_json['GET_ACCOUNT_DETAILS']]
+
+        (self.sushy.get_account_service.return_value.accounts.
+         get_member_details.return_value.
+         update_credentials.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update credentials',
+            self.rf_client.reset_ilo_credential, 'fake-password')
+
+    def test_reset_ilo_credential_get_account_service_fail(self):
+        self.sushy.get_account_service.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update credentials',
+            self.rf_client.reset_ilo_credential, 'fake-password')
