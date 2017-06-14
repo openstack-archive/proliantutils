@@ -66,6 +66,7 @@ SUPPORTED_REDFISH_METHODS = [
     'hold_pwr_btn',
     'get_one_time_boot',
     'get_pending_boot_mode',
+    'reset_ilo_credential',
 ]
 
 LOG = log.get_logger(__name__)

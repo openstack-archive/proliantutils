@@ -22,6 +22,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.system import constants as sys_cons
 from sushy.resources.system import system
 
@@ -194,3 +195,45 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The pending BIOS Settings was not found.',
             self.rf_client.get_pending_boot_mode)
+
+    def _get_member(self):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        account_mock = account_service.HPEAccountService(
+            self.conn, '/redfish/v1/AccountService',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account_data.json', 'r') as f:
+            account_data_json = json.loads(f.read())
+
+        return account_mock, account_data_json
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential(self, account_mock):
+        account_mock.return_value, account_data_json = (self._get_member())
+        self.conn.get.return_value.json.side_effect = [
+            account_data_json['GET_ACCOUNT_INFO'],
+            account_data_json['GET_ACCOUNT_DETAILS']]
+
+        (self.sushy.get_account_service.return_value.update_credentials.
+         return_value.status_code) = 200
+
+        self.rf_client.reset_ilo_credential('fake-password')
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential_fail(self, account_mock):
+        account_mock.return_value, account_data_json = (self._get_member())
+        self.conn.get.return_value.json.side_effect = [
+            account_data_json['GET_ACCOUNT_INFO'],
+            account_data_json['GET_ACCOUNT_DETAILS']]
+
+        (self.sushy.get_account_service.return_value.update_credentials.
+         return_value.status_code) = 301
+
+        self.assertRaises(exception.IloError,
+                          self.rf_client.reset_ilo_credential,
+                          'fake-password')
