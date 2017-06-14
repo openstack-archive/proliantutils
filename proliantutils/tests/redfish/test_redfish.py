@@ -60,13 +60,28 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The attribute Systems is missing',
             self.rf_client._get_system_collection_path)
 
+    def test__get_sushy_system(self):
+        self.rf_client._get_sushy_system()
+        self.assertTrue(self.sushy.get_system.called)
+
+        self.sushy.reset_mock()
+
+        self.rf_client._get_sushy_system()
+        self.assertFalse(self.sushy.get_system.called)
+        self.assertTrue(self.rf_client._sushy_system.refresh.called)
+
     def test__get_sushy_system_fail(self):
         self.rf_client._sushy.get_system.side_effect = (
             sushy.exceptions.SushyError)
         self.assertRaisesRegex(
             exception.IloError,
-            'The Redfish System "apple" was not found.',
-            self.rf_client._get_sushy_system, 'apple')
+            'The Redfish System "1" was not found.',
+            self.rf_client._get_sushy_system)
+
+    def test__get_sushy_system_not_reconnect(self):
+        self.rf_client._sushy_system = 'sushy system instance - mango'
+        self.rf_client._get_sushy_system(reconnect=False)
+        self.assertFalse(self.sushy.get_system.called)
 
     def test_get_product_name(self):
         with open('proliantutils/tests/redfish/'

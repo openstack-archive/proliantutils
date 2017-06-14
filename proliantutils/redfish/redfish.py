@@ -97,6 +97,8 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloConnectionError(msg)
 
+        self._sushy_system = None
+
     def _get_system_collection_path(self):
         """Helper function to find the SystemCollection path"""
         systems_col = self._sushy.json.get('Systems')
@@ -105,23 +107,37 @@ class RedfishOperations(operations.IloOperations):
                                                   resource=self._root_prefix)
         return systems_col.get('@odata.id')
 
-    def _get_sushy_system(self, system_id):
-        """Get the sushy system for system_id
+    def _get_sushy_system(self, reconnect=True):
+        """Get the sushy system for system_id as PROLIANT_SYSTEM_ID
 
-        :param system_id: The identity of the System resource
+        This doesn't accept any parameter as system_id as it assumes the
+        system id as PROLIANT_SYSTEM_ID
+        :param reconnect: boolean value, tries to reconnect to Redfish and
+            recreates the sushy system even if it is already cached.
+            Defaults to True
         :returns: the Sushy system instance
         :raises: IloError
         """
+        system_id = PROLIANT_SYSTEM_ID  # the identity of the System resource
+
+        if self._sushy_system and not reconnect:
+            return self._sushy_system
+
         system_url = parse.urljoin(self._get_system_collection_path(),
                                    system_id)
         try:
-            return self._sushy.get_system(system_url)
+            if self._sushy_system:
+                self._sushy_system.refresh()
+            else:
+                self._sushy_system = self._sushy.get_system(system_url)
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish System "%(system)s" was not found. '
                           'Error %(error)s') %
                    {'system': system_id, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+        return self._sushy_system
 
     def get_product_name(self):
         """Gets the product name of the server.
@@ -131,7 +147,7 @@ class RedfishOperations(operations.IloOperations):
         """
         # Assuming only one system present as part of collection,
         # as we are dealing with iLO's here.
-        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system = self._get_sushy_system()
         return sushy_system.json.get('Model')
 
     def get_host_power_status(self):
@@ -142,7 +158,7 @@ class RedfishOperations(operations.IloOperations):
         """
         # Assuming only one sushy_system present as part of collection,
         # as we are dealing with iLO's here.
-        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system = self._get_sushy_system()
         return GET_POWER_STATE_MAP.get(sushy_system.power_state)
 
     def reset_server(self):
@@ -152,7 +168,7 @@ class RedfishOperations(operations.IloOperations):
         """
         # Assuming only one sushy_system present as part of collection,
         # as we are dealing with iLO's here.
-        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system = self._get_sushy_system()
         try:
             sushy_system.reset_system(sushy.RESET_FORCE_RESTART)
         except sushy.exceptions.SushyError as e:
@@ -187,7 +203,7 @@ class RedfishOperations(operations.IloOperations):
 
         # Assuming only one system present as part of collection,
         # as we are dealing with iLO's here.
-        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system = self._get_sushy_system()
         try:
             sushy_system.reset_system(POWER_RESET_MAP[target_value])
         except sushy.exceptions.SushyError as e:
