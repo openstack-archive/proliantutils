@@ -402,3 +402,14 @@ class RedfishOperations(operations.IloOperations):
                                                      " ISCSI or CDROM.")
 
         self._update_persistent_boot(device_type, persistent=True, mac=mac)
+
+    def set_one_time_boot(self, device, mac=None):
+        """Configures a single boot from a specific device.
+
+        :param device: Device to be set as a one time boot device
+        :param mac: intiator mac address, optional parameter
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        self._update_persistent_boot([device], persistent=False, mac=mac)
