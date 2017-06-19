@@ -331,3 +331,74 @@ class RedfishOperations(operations.IloOperations):
 
         else:
             return None
+
+    def _update_persistent_boot(self, device_type=[], persistent=False,
+                                mac=None):
+        """Changes the persistent boot device order in BIOS boot mode for host
+
+        Note: It uses first boot device from the device_type and ignores rest.
+
+        :param device_type: ordered list of boot devices
+        :param persistent: Boolean flag to indicate if the device to be set as
+                           a persistent boot device
+        :param mac: intiator mac address, mandotory for iSCSI uefi boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        tenure = 'Once'
+        new_device = device_type[0]
+
+        if device_type[0].upper() in BOOT_DEVICE_MAP:
+            new_device = BOOT_DEVICE_MAP[device_type[0].upper()]
+
+        if persistent:
+            tenure = 'Continuous'
+
+        systems_uri = self._get_system_collection_path()
+        # Need to set this option first if device is 'UefiTarget'
+        if new_device is 'UefiTarget':
+            if not mac:
+                msg = ('Mac is needed for iscsi uefi boot')
+                raise exception.IloInvalidInputError(msg)
+
+            # Get the Boot resource and Mappings resource.
+            StructuredBootString = None
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            boot_settings = sushy_system.bios_boot_settings
+            for boot_setting in boot_settings.BootSources:
+                if(mac.upper() in boot_setting['UEFIDevicePath'] and
+                   'iSCSI' in boot_setting['UEFIDevicePath']):
+                    StructuredBootString = boot_setting['StructuredBootString']
+                    break
+            if not StructuredBootString:
+                msg = ('MAC provided is Invalid "%s"' % mac)
+                raise exception.IloInvalidInputError(msg)
+
+            new_boot_settings = {}
+            new_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                         StructuredBootString}
+            sushy_system.conn.post(systems_uri, data=new_boot_settings)
+
+        new_boot_settings = {}
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
+                                     'BootSourceOverrideTarget': new_device}
+        sushy_system.conn.post(systems_uri, data=new_boot_settings)
+
+    def update_persistent_boot(self, device_type=[], mac=None):
+        """Changes the persistent boot device order for the host
+
+        :param device_type: ordered list of boot devices
+        :param mac: intiator mac address, mandatory for iSCSI uefi boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        # Check if the input is valid
+        for item in device_type:
+            if item.upper() not in BOOT_DEVICE_MAP:
+                raise exception.IloInvalidInputError("Invalid input. Valid "
+                                                     "devices: NETWORK, HDD,"
+                                                     " ISCSI or CDROM.")
+
+        self._update_persistent_boot(device_type, persistent=True, mac=mac)
