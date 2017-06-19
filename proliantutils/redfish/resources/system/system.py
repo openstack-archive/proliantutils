@@ -48,8 +48,9 @@ class HPESystem(system.System):
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     bios_odataid = base.Field(['Bios', '@odata.id'])
+    system_odataid = base.Field('@odata.id')
     """Oem specific system extensibility actions"""
-
+       
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
         if not push_action:
@@ -80,6 +81,16 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+    def _change_system_settings(self, system_uri, action_data):
+        """Change the bios settings to specified values.
+
+        :param system_uri: System uri.
+        :param action_data: dict providing path to system.
+        :returns: response object of the post operation
+        """
+        if system_uri is not None:
+            return self._conn.post(system_uri, data=action_data)
 
     @property
     def bios_resource(self):
