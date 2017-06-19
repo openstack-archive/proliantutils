@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -33,6 +34,16 @@ GET_POWER_STATE_MAP = {
     sushy.SYSTEM_POWER_STATE_OFF: 'OFF',
     sushy.SYSTEM_POWER_STATE_POWERING_OFF: 'OFF'
 }
+
+BOOT_DEVICE_MAP = {
+    sushy.BOOT_SOURCE_TARGET_PXE: 'NETWORK',
+    sushy.BOOT_SOURCE_TARGET_HDD: 'HDD',
+    sushy.BOOT_SOURCE_TARGET_CD: 'CDROM',
+    sushy.BOOT_SOURCE_TARGET_UEFI_TARGET: 'ISCSI'
+}
+
+BOOT_DEVICE_MAP_REV = {v: k for k, v in BOOT_DEVICE_MAP.items()}
+
 
 POWER_RESET_MAP = {
     'ON': sushy.RESET_ON,
@@ -229,3 +240,94 @@ class RedfishOperations(operations.IloOperations):
         if boot_mode == 'LegacyBios':
             boot_mode = 'legacy'
         return boot_mode.upper()
+
+    def _is_boot_mode_uefi(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: 'True' if the boot mode is uefi else 'False'
+        :raises: IloError, on an error from iLO.
+        """
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'UEFI':
+            return True
+        else:
+            return False
+
+    def _get_persistent_boot_devices(self):
+        """Get details of persistent boot devices, its order
+
+        :returns: List of dictionary of boot sources and
+                  list of boot device order
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+
+        # Get the Boot resource.
+        boot_settings = sushy_system.bios_boot_settings
+
+        # Get the BootSources resource
+        try:
+            boot_sources = boot_settings.BootSources
+        except KeyError:
+            msg = ("BootSources resource not found.")
+            raise exception.IloError(msg)
+
+        try:
+            boot_order = boot_settings.PersistentBootConfigOrder
+        except KeyError:
+            msg = ("PersistentBootConfigOrder resource not found.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return boot_sources, boot_order
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns: persistent boot device for the system
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            # Return boot device if it is persistent.
+            if sushy_system.boot['enabled'] == 'Continuous':
+                device = sushy_system.boot['target']
+                if device in BOOT_DEVICE_MAP_REV:
+                    return BOOT_DEVICE_MAP_REV[device]
+                return device
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        # Check if we are in BIOS boot mode.
+        # There is no resource to fetch boot device order for BIOS boot mode
+        if not self._is_boot_mode_uefi():
+            return None
+
+        # Get persistent boot device order for UEFI
+        boot_sources, boot_devices = self._get_persistent_boot_devices()
+
+        boot_string = ""
+        try:
+            for source in boot_sources:
+                if (source["StructuredBootString"] == boot_devices[0]):
+                    boot_string = source["BootString"]
+                    break
+        except KeyError as e:
+            msg = "get_persistent_boot_device failed with the KeyError:%s"
+            raise exception.IloError((msg) % e)
+
+        if 'iLO Virtual CD-ROM' in boot_string:
+            return 'CDROM'
+
+        elif ('NIC' in boot_string or
+              'PXE' in boot_string or
+              "iSCSI" in boot_string):
+            return 'NETWORK'
+
+        elif common.isDisk(boot_string):
+            return 'HDD'
+
+        else:
+            return None

@@ -20,6 +20,8 @@ class BiosResource(base.ResourceBase):
     BootMode = base.Field(["Attributes", "BootMode"])
     bios_settings_odataid = base.Field(["@Redfish.Settings", "SettingsObject",
                                        "@odata.id"])
+    bios_boot_settings_odataid = base.Field(["Oem", "Hpe", "Links", "Boot",
+                                   "@odata.id"])
 
     def __init__(self, connector, identity, redfish_version=None):
         """A class representing a BootResource
@@ -47,3 +49,20 @@ class BiosSettings(base.ResourceBase):
         """
         super(BiosSettings, self).__init__(connector, identity,
                                            redfish_version)
+
+
+class BiosBootSettings(base.ResourceBase):
+
+    BootSources = base.Field(["BootSources"], adapter=list)
+    PersistentBootConfigOrder = base.Field(["PersistentBootConfigOrder"],
+                                           adapter=list)
+    def __init__(self, connector, identity, redfish_version=None):
+        """A class representing a BootResource
+
+        :param connector: A Connector instance
+        :param identity: The identity of the BootResource
+        :param redfish_version: The version of RedFish. Used to construct
+            the object according to schema of the given version.
+        """
+        super(BiosBootSettings, self).__init__(connector, identity,
+                                               redfish_version)
