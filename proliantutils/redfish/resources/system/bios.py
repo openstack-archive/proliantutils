@@ -37,6 +37,7 @@ class BIOSSettings(base.ResourceBase):
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
     _pending_settings = None
     _boot_settings = None
+    _base_configs = None
 
     @property
     def pending_settings(self):
@@ -70,6 +71,37 @@ class BIOSSettings(base.ResourceBase):
 
         return self._boot_settings
 
+    @property
+    def base_configs(self):
+        """Property to provide reference to bios settings instance"""
+        if self._base_configs is None:
+            self._base_configs = BIOSBaseConfigs(
+                self._conn, utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
+                redfish_version=self.redfish_version)
+
+        return self._base_configs
+
+    def update_bios_to_default(self):
+        """Updates bios default settings"""
+        self.pending_settings.update_bios_data(
+            self.base_configs.default_config)
+
+    def refresh(self):
+        super(BIOSSettings, self).refresh()
+        self._pending_settings = None
+        self._boot_settings = None
+        self._base_configs = None
+
+
+def _get_default(base_configs):
+    return base_configs[0]['default']
+
+
+class BIOSBaseConfigs(base.ResourceBase):
+
+    default_config = base.Field("BaseConfigs", adapter=_get_default)
+
 
 class BIOSPendingSettings(base.ResourceBase):
 
@@ -90,6 +122,16 @@ class BIOSPendingSettings(base.ResourceBase):
             bios_properties['UefiOptimizedBoot'] = 'Enabled'
 
         self._conn.patch(self._path, bios_properties)
+
+    def update_bios_data(self, data):
+        """Update bios data
+
+        :param data: default bios config data
+        """
+        bios_settings_data = {
+            'Attributes': data
+        }
+        self._conn.post(self.path, bios_settings_data)
 
 
 class BIOSBootSettings(base.ResourceBase):
