@@ -78,6 +78,34 @@ class BIOSSettingsTestCase(testtools.TestCase):
                       self.bios_inst.boot_settings)
         self.conn.get.return_value.json.assert_not_called()
 
+    def test_base_configs(self):
+        self.assertIsNone(self.bios_inst._base_configs)
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_base_configs.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        default_settings = self.bios_inst.base_configs
+        self.assertIsInstance(default_settings, bios.BIOSBaseConfigs)
+
+
+class BIOSBaseConfigsTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(BIOSBaseConfigsTestCase, self).setUp()
+        self.conn = mock.MagicMock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_base_configs.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        self.bios_base_inst = bios.BIOSBaseConfigs(
+            self.conn, '/redfish/v1/Systems/1/bios/baseconfigs',
+            redfish_version='1.0.2')
+
+    def test_attributes(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_base_configs.json', 'r') as f:
+            bios_default = json.loads(f.read())['BaseConfigs'][0]['default']
+
+        self.assertEqual(bios_default, self.bios_base_inst.default_config)
+
 
 class BIOSPendingSettingsTestCase(testtools.TestCase):
 
