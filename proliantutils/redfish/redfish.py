@@ -570,3 +570,21 @@ class RedfishOperations(operations.IloOperations):
                    {'device': device, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def reset_bios_to_default(self):
+        """Resets the BIOS settings to default values.
+
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            default_bios_settings = (
+                sushy_system.bios_settings.base_config_setting.base_config)
+            (sushy_system.bios_settings.pending_settings.
+             update_bios_default_data(default_bios_settings))
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller is unable to update bios "
+                          "settings to default Error %(error)s") %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
