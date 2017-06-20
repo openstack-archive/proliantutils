@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+import json
 from six.moves.urllib import parse
 import sushy
 
@@ -252,3 +253,38 @@ class RedfishOperations(operations.IloOperations):
         if boot_mode == 'LegacyBios':
             boot_mode = 'legacy'
         return boot_mode.upper()
+
+    def reset_bios_to_default(self):
+        """Resets the BIOS settings to default values.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        bios_resource = sushy_system.bios_resource
+        bios_settings_uri = sushy_system.bios_settings.json['@odata.id']
+
+        response = bios_resource.get_bios_default_data()
+        config = json.loads(response.text)
+
+        new_bios_settings = {}
+        for cfg in config['BaseConfigs']:
+            default_settings = cfg.get('default', None)
+            if default_settings is not None:
+                new_bios_settings = default_settings
+                break
+        else:
+            msg = ("Default Settings not found in 'BaseConfigs' resource.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        new_bios_settings = {
+            'Attributes': new_bios_settings
+        }
+        update_res = bios_resource.update_bios_default_data(bios_settings_uri,
+                                                            new_bios_settings)
+        if update_res.status_code != 200:
+            msg = ("%s invalid response code received"
+                   " for update credentials" % response.status_code)
+            raise exception.IloError(msg)
+        return
