@@ -77,6 +77,7 @@ SUPPORTED_REDFISH_METHODS = [
     'update_persistent_boot',
     'set_pending_boot_mode',
     'reset_ilo_credential',
+    'reset_bios_to_default',
 ]
 
 LOG = log.get_logger(__name__)
