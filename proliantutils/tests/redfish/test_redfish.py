@@ -24,7 +24,9 @@ from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
+from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
 
 
@@ -573,3 +575,49 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to set one time boot.',
             self.rf_client.set_one_time_boot,
             'CDROM')
+
+    @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_default_data')
+    def test_reset_bios_to_default(self, update_bios_mock, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_default.json', 'r') as f:
+            bios_default_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            bios_default_json, bios_default_json['BaseConfigs'][0]['default']]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        data = bios_default_json['BaseConfigs'][0]['default']
+        self.rf_client.reset_bios_to_default()
+        update_bios_mock.assert_called_once_with(data)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_reset_bios_to_default_fail(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_default.json', 'r') as f:
+            bios_default_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            bios_json['BIOS_pending_settings_default'], bios_default_json]
+        (get_system_mock.return_value.bios_settings.
+         pending_settings.update_bios_default_data.side_effect) = (
+             sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller is unable to update bios settings"
+            " to default", self.rf_client.reset_bios_to_default)
