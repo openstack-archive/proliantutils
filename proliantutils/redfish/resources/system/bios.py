@@ -32,11 +32,13 @@ BOOT_SOURCE_TARGET_TO_PARTIAL_STRING_MAP = {
 
 
 class BIOSSettings(base.ResourceBase):
+    """Class that defines the functionality for BIOS Resources."""
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
     _pending_settings = None
     _boot_settings = None
+    _base_configs = None
 
     @property
     def pending_settings(self):
@@ -70,8 +72,37 @@ class BIOSSettings(base.ResourceBase):
 
         return self._boot_settings
 
+    def _get_base_configs(self):
+        """Property to provide reference to bios settings instance"""
+        if self._base_configs is None:
+            self._base_configs = BIOSBaseConfigs(
+                self._conn, utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
+                redfish_version=self.redfish_version)
+
+        return self._base_configs
+
+    def update_bios_to_default(self):
+        """Updates bios default settings"""
+        self.pending_settings.update_bios_data(
+            self._get_base_configs().default_config)
+
+    def refresh(self):
+        super(BIOSSettings, self).refresh()
+        self._pending_settings = None
+        self._boot_settings = None
+        self._base_configs = None
+
+
+class BIOSBaseConfigs(base.ResourceBase):
+    """Class that defines the functionality for BIOS base configuration."""
+
+    default_config = base.Field(
+        "BaseConfigs", adapter=lambda base_configs: base_configs[0]['default'])
+
 
 class BIOSPendingSettings(base.ResourceBase):
+    """Class that defines the functionality for BIOS settings."""
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
@@ -89,7 +120,17 @@ class BIOSPendingSettings(base.ResourceBase):
         if boot_mode == sys_cons.BIOS_BOOT_MODE_UEFI:
             bios_properties['UefiOptimizedBoot'] = 'Enabled'
 
-        self._conn.patch(self._path, bios_properties)
+        self._conn.patch(self.path, bios_properties)
+
+    def update_bios_data(self, data):
+        """Update bios data
+
+        :param data: default bios config data
+        """
+        bios_settings_data = {
+            'Attributes': data
+        }
+        self._conn.post(self.path, bios_settings_data)
 
 
 class BIOSBootSettings(base.ResourceBase):
