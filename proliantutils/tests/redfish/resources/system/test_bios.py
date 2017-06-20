@@ -78,6 +78,14 @@ class BIOSSettingsTestCase(testtools.TestCase):
                       self.bios_inst.boot_settings)
         self.conn.get.return_value.json.assert_not_called()
 
+    def test_base_config_setting(self):
+        self.assertIsNone(self.bios_inst._base_settings)
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_default.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        default_settings = self.bios_inst.base_config_setting
+        self.assertIsInstance(default_settings, bios.BIOSBaseSettings)
+
 
 class BIOSPendingSettingsTestCase(testtools.TestCase):
 

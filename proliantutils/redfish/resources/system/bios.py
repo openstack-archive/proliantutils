@@ -36,6 +36,7 @@ class BIOSSettings(base.ResourceBase):
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
     _pending_settings = None
     _boot_settings = None
+    _base_settings = None
 
     @property
     def pending_settings(self):
@@ -69,11 +70,47 @@ class BIOSSettings(base.ResourceBase):
 
         return self._boot_settings
 
+    @property
+    def base_config_setting(self):
+        """Property to provide reference to bios settings instance
+
+        """
+        if self._base_settings is None:
+            self._base_settings = BIOSBaseSettings(
+                self._conn, utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
+                redfish_version=self.redfish_version)
+
+        return self._base_settings
+
+
+def get_default(base_configs):
+    return base_configs[0]['default']
+
+
+class BIOSBaseSettings(base.ResourceBase):
+
+    base_config = base.Field("BaseConfigs", adapter=get_default)
+
 
 class BIOSPendingSettings(base.ResourceBase):
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
+
+    def update_bios_default_data(self, data):
+        """Update bios default settings
+
+        :param bios_uri: bios settings uri
+        :param data: default bios config data
+        :returns response object of the post operation
+        """
+        bios_settings_uri = self.path
+        default_bios_settings = {
+            'Attributes': data
+        }
+        if bios_settings_uri is not None:
+            return self._conn.post(bios_settings_uri, default_bios_settings)
 
 
 class BIOSBootSettings(base.ResourceBase):
