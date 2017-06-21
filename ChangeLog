@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+2.3.0
+-----
+
+* Instrumenting Redfish support
+* Add support to get cpu virtualization capability
+* Add upper-constraints to testenv setup
+* Adding capability to check NVDIMM_N availability
+* Add support perform Erase operation on all disks
+
 2.2.1
 -----
 
