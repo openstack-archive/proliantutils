@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -264,3 +265,16 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def get_ilo_firmware_version_as_major_minor(self):
+        """Gets the ilo firmware version for server capabilities
+
+        :returns: String with the format "<major>.<minor>" or None.
+
+        """
+        try:
+            sushy_manager = self._get_sushy_manager('1')
+            ilo_fw_ver_str = sushy_manager.firmware_version
+            return common.get_major_minor(ilo_fw_ver_str)
+        except Exception:
+            return None
