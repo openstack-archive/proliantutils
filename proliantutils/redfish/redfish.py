@@ -18,6 +18,7 @@ from six.moves.urllib import parse
 import sushy
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -52,6 +53,7 @@ DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
 # Assuming only one sushy_system present as part of collection,
 # as we are dealing with iLO's here.
 PROLIANT_SYSTEM_ID = '1'
+PROLIANT_MANAGER_ID = '1'
 
 LOG = log.get_logger(__name__)
 
@@ -264,3 +266,18 @@ class RedfishOperations(operations.IloOperations):
         else:
             # value returned by RIBCL if one-time boot setting are absent
             return 'Normal'
+
+    def get_ilo_firmware_version_as_major_minor(self):
+        """Gets the ilo firmware version for server capabilities
+
+        :returns: String with the format "<major>.<minor>" or None.
+
+        """
+        try:
+            sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+            ilo_fw_ver_str = sushy_manager.firmware_version
+            return common.get_major_minor(ilo_fw_ver_str)
+        except Exception:
+            LOG.warning('The Redfish controller failed to retrieve'
+                        ' firmware version of iLO.')
+            return None
