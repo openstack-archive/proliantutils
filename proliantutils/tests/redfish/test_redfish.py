@@ -22,6 +22,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import constants as sys_cons
 from sushy.resources.system import system
 
@@ -174,3 +175,36 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value = self.sys_inst
         ret = self.rf_client.get_one_time_boot()
         self.assertEqual(ret, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    def test_get_ilo_firmware_version_as_major_minor(self, get_manager_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            manager_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.return_value = manager_json[
+            'GET_MANAGER_DETAILS']
+        self.man_inst = manager.HPEManager(self.conn,
+                                           '/redfish/v1/Managers/1',
+                                           redfish_version='1.0.2')
+        get_manager_mock.return_value = self.man_inst
+        ilo_firm = self.rf_client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = "1.15"
+        self.assertEqual(expected_ilo_firm, ilo_firm)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    def test_get_ilo_firmware_version_as_major_minor_no_firmware(
+            self, get_manager_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            manager_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.return_value = manager_json[
+            'GET_MANAGER_DETAILS_NO_FIRMWARE']
+        self.man_inst = manager.HPEManager(self.conn,
+                                           '/redfish/v1/Managers/1',
+                                           redfish_version='1.0.2')
+        get_manager_mock.return_value = self.man_inst
+        ilo_firm = self.rf_client.get_ilo_firmware_version_as_major_minor()
+        expected_ilo_firm = None
+        self.assertEqual(expected_ilo_firm, ilo_firm)
