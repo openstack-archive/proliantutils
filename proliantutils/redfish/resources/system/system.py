@@ -22,8 +22,10 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+
 from proliantutils.redfish import utils
 
 
@@ -65,6 +67,7 @@ class HPESystem(system.System):
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
     _pci_devices = None
+    _memory = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -181,3 +184,19 @@ class HPESystem(system.System):
         self._bios_settings = None
         self._pci_devices = None
         self._secure_boot = None
+        self._memory = None
+
+    @property
+    def memory(self):
+        """Property to provide reference to `MemoryCollection` instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._memory is None:
+            self._memory = memory.MemoryCollection(
+                self._conn, utils.get_subresource_path_by(
+                    self, 'Memory'),
+                redfish_version=self.redfish_version)
+
+        return self._memory

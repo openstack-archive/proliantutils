@@ -631,6 +631,10 @@ class RedfishOperations(operations.IloOperations):
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
                           sushy_system.secure_boot.current_boot)),) if value})
+            memory_data = sushy_system.memory.memory_data()
+            if False not in memory_data.values():
+                capabilities.update(memory_data)
+
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
