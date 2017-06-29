@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
+import collections
 
 import ddt
+import json
 import mock
 import sushy
 import testtools
@@ -31,6 +32,7 @@ from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import iscsi
+from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system import system as pro_sys
@@ -710,6 +712,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = [
             mock.MagicMock(array_controller.HPEArrayController)]
+        MemoryData = collections.namedtuple(
+            'MemoryData', ['has_persistent_memory', 'has_nvdimm_n',
+                           'has_logical_nvdimm_n'])
+        mem = MemoryData(has_persistent_memory=True,
+                         has_nvdimm_n=True,
+                         has_logical_nvdimm_n=False)
+        memory_mock = mock.MagicMock(spec=memory.MemoryCollection)
+        memory_mock.details = mock.MagicMock(return_value=mem)
+        get_system_mock.return_value.memory = memory_mock
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -720,7 +731,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'server_model': 'ProLiant DL180 Gen10',
                     'boot_mode_bios': 'true',
                     'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
-                    'raid_support': 'true'}
+                    'raid_support': 'true',
+                    'persistent_memory': 'true',
+                    'nvdimm_n': 'true',
+                    'logical_nvdimm_n': 'false'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -760,6 +774,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
             iscsi_mock)
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = []
+        MemoryData = collections.namedtuple(
+            'MemoryData', ['has_persistent_memory', 'has_nvdimm_n',
+                           'has_logical_nvdimm_n'])
+        mem = MemoryData(has_persistent_memory=False,
+                         has_nvdimm_n=False,
+                         has_logical_nvdimm_n=False)
+        memory_mock = mock.MagicMock(spec=memory.MemoryCollection)
+        get_system_mock.return_value.memory = memory_mock
+        memory_mock.details = mock.MagicMock(return_value=mem)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',

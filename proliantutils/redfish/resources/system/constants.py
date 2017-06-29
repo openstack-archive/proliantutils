@@ -68,3 +68,5 @@ HEALTH_STATE_DISABLED = 'disabled'
 HEALTH_OK = 'ok'
 HEALTH_WARNING = 'warning'
 HEALTH_CRITICAL = 'critical'
+MEMORY_TYPE_NVDIMM_N = "nvdimm_n"
+MEMORY_DEVICE_TYPE_LOGICAL = "logical"
