@@ -31,6 +31,7 @@ from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import iscsi
+from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
@@ -706,6 +707,14 @@ class RedfishOperationsTestCase(testtools.TestCase):
         iscsi_mock.is_iscsi_boot_supported = mock.MagicMock(return_value=True)
         type(get_system_mock.return_value.bios_settings).iscsi_settings = (
             iscsi_mock)
+        mem = {
+            'persistent_memory': True,
+            'nvdimm_n': True,
+            'logical_nvdimm_n': True
+        }
+        memory_mock = mock.MagicMock(spec=memory.MemoryCollection)
+        memory_mock.memory_data = mock.MagicMock(return_value=mem)
+        type(get_system_mock.return_value).memory = (memory_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -715,7 +724,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'trusted_boot': 'true',
                     'server_model': 'ProLiant DL180 Gen10',
                     'boot_mode_bios': 'true',
-                    'boot_mode_uefi': 'true', 'iscsi_boot': 'true'}
+                    'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
+                    'persistent_memory': True,
+                    'nvdimm_n': True,
+                    'logical_nvdimm_n': True}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
