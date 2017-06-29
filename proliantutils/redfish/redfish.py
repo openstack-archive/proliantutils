@@ -675,6 +675,9 @@ class RedfishOperations(operations.IloOperations):
                       len(sushy_system.smart_storage.array_controllers.
                           members_identities) > 0),
                      ) if value})
+            memory_data = sushy_system.memory_collection.memory_data()
+            if any(memory_data.values()):
+                capabilities.update(memory_data)
 
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
