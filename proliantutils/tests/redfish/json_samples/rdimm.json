@@ -1,0 +1,39 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/Memory/Members/$entity",
+    "@odata.etag": "W/\"D7E2558F\"",
+    "@odata.id": "/redfish/v1/Systems/1/Memory/proc1dimm12/",
+    "@odata.type": "#Memory.v1_1_0.Memory",
+    "BaseModuleType": "RDIMM",
+    "BusWidthBits": 72,
+    "CapacityMiB": 32768,
+    "DataWidthBits": 64,
+    "DeviceLocator": "PROC 1 DIMM 12",
+    "ErrorCorrection": "MultiBitECC",
+    "Id": "proc1dimm12",
+    "MemoryDeviceType": "DDR4",
+    "MemoryLocation": {
+        "Channel": 3,
+        "MemoryController": 1,
+        "Slot": 12,
+        "Socket": 1
+    },
+    "MemoryMedia": [
+        "DRAM"
+    ],
+    "MemoryType": "DRAM",
+    "Name": "proc1dimm12",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeMemoryExt.v2_0_0.HpeMemoryExt",
+            "DIMMStatus": "GoodInUse",
+            "MinimumVoltageVoltsX10": 12
+        }
+    },
+    "OperatingSpeedMhz": 2400,
+    "RankCount": 2,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "VendorID": "52736"
+}

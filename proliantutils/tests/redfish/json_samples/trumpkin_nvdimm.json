@@ -1,0 +1,46 @@
+{
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/Memory/Members/$entity",
+  "@odata.etag": "W/\"288858E9\"",
+  "@odata.id": "/redfish/v1/Systems/1/Memory/proc1dimm1/",
+  "@odata.type": "#Memory.v1_1_0.Memory",
+  "BaseModuleType": "RNVDIMM",
+  "BusWidthBits": 72,
+  "CapacityMiB": 16384,
+  "DataWidthBits": 64,
+  "DeviceLocator": "PROC 1 DIMM 1",
+  "ErrorCorrection": "MultiBitECC",
+  "Id": "proc1dimm1",
+  "Manufacturer": "HPE    ",
+  "MemoryDeviceType": "DDR4",
+  "MemoryLocation": {
+    "Channel": 6,
+    "MemoryController": 2,
+    "Slot": 1,
+    "Socket": 1
+  },
+  "MemoryMedia": [
+    "NAND"
+  ],
+  "MemoryType": "DRAM",
+  "Name": "proc1dimm1",
+  "Oem": {
+    "Hpe": {
+      "@odata.type": "#HpeMemoryExt.v2_0_0.HpeMemoryExt",
+      "Attributes": [
+        "HpeSmartMemory"
+      ],
+      "DIMMStatus": "GoodInUse",
+      "MinimumVoltageVoltsX10": 12
+    }
+  },
+  "OperatingSpeedMhz": 2400,
+  "PartNumber": "825109-091",
+  "RankCount": 1,
+  "Status": {
+    "Health": "OK",
+    "State": "Enabled"
+  },
+  "VendorID": "44288"
+}
+
+

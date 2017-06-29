@@ -76,3 +76,31 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+     def _get_memory_collection_path(self):
+          """Helper function to find the MemoryCollection path"""
+        memory_col = self.json.get('Memory')
+        if not memory_col:
+            raise exceptions.MissingAttributeError(
+                attribute='Memory', resource=self._path)
+        return memory_col.get('@odata.id')
+
+    @property
+    def memory_data(self):
+        persistent_memory = False
+        nvdimm_n = False
+        logical_nvdimm_n = False 
+        mem_collection = Memory.MemoryCollection(
+            self._conn, self._get_memory_collection_path(),
+            redfish_version=self.redfish_version)
+        members = mem_collection.get_members()
+        for mem in members:
+            if mem.MemoryType == 'NVDIMM-N':
+                persistent_memory = True
+                nvdimm_n = True
+            if mem.MemoryDeviceType == 'Logical':
+                logical_nvdimm_n = True
+        memory_types = {'persistent_memory': persistent_memory,
+                        'nvdimm_n': nvdimm_n,
+                        'logical_nvdimm_n': logical_nvdimm_n}
+        return memory_types
