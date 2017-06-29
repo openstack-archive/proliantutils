@@ -22,8 +22,10 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+
 from proliantutils.redfish import utils
 
 
@@ -181,3 +183,24 @@ class HPESystem(system.System):
         self._bios_settings = None
         self._pci_devices = None
         self._secure_boot = None
+
+    @property
+    def memory_data(self):
+        persistent_memory = False
+        nvdimm_n = False
+        logical_nvdimm_n = False
+        mem_collection = memory.MemoryCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, 'Memory'),
+            redfish_version=self.redfish_version)
+        members = mem_collection.get_members()
+        for mem in members:
+            if mem.memory_type == 'NVDIMM_N':
+                persistent_memory = True
+                nvdimm_n = True
+            if mem.memory_device_type == 'Logical':
+                logical_nvdimm_n = True
+        memory_types = {'persistent_memory': persistent_memory,
+                        'nvdimm_n': nvdimm_n,
+                        'logical_nvdimm_n': logical_nvdimm_n}
+        return memory_types

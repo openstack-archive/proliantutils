@@ -260,3 +260,33 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.secure_boot,
                               secure_boot.SecureBoot)
+
+    def test_memory_data_nvdimm_n(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/memory_collection.json', 'r') as f:
+            mem_col = (
+                json.loads(f.read())['default'])
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/logical_nvdimm.json', 'r') as f:
+            mem1 = (
+                json.loads(f.read())['logical_nvdimm'])
+        self.conn.get.return_value.json.side_effect = [mem_col, mem1]
+        exp_value = {'persistent_memory': True,
+                     'nvdimm_n': True,
+                     'logical_nvdimm_n': True}
+        self.assertEqual(self.sys_inst.memory_data, exp_value)
+
+    def test_memory_data_logical(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/memory_collection.json', 'r') as f:
+            mem_col = (
+                json.loads(f.read())['logical'])
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/logical_nvdimm.json', 'r') as f:
+            mem1 = (
+                json.loads(f.read())['default'])
+        self.conn.get.return_value.json.side_effect = [mem_col, mem1]
+        exp_value = {'persistent_memory': False,
+                     'nvdimm_n': False,
+                     'logical_nvdimm_n': True}
+        self.assertEqual(self.sys_inst.memory_data, exp_value)
