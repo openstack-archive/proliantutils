@@ -672,6 +672,9 @@ class RedfishOperations(operations.IloOperations):
                       (sushy_system.bios_settings.iscsi_settings.
                        is_iscsi_boot_supported())),
                      ) if value})
+            memory_data = sushy_system.memory.memory_data()
+            if any(memory_data.values()):
+                capabilities.update(memory_data)
 
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
