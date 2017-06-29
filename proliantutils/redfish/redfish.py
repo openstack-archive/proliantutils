@@ -14,6 +14,8 @@
 
 __author__ = 'HPE'
 
+import json
+
 from six.moves.urllib import parse
 import sushy
 from sushy import utils
@@ -675,6 +677,16 @@ class RedfishOperations(operations.IloOperations):
                       len(sushy_system.smart_storage.array_controllers.
                           members_identities) > 0),
                      ) if value})
+
+            memory_data = sushy_system.memory.details()
+            if memory_data.has_nvdimm_n:
+                capabilities.update(
+                    {'persistent_memory': (
+                     json.dumps(memory_data.has_persistent_memory)),
+                     'nvdimm_n': (
+                     json.dumps(memory_data.has_nvdimm_n)),
+                     'logical_nvdimm_n': (
+                     json.dumps(memory_data.has_logical_nvdimm_n))})
 
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
