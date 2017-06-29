@@ -1,0 +1,73 @@
+{
+  "default": {
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/Memory/Members/$entity",
+    "@odata.etag": "W/\"5F85A795\"",
+    "@odata.id": "/redfish/v1/Systems/1/Memory/proc1logicalnvdimm1/",
+    "@odata.type": "#Memory.v1_1_0.Memory",
+    "BaseModuleType": "RNVDIMM",
+    "BusWidthBits": 72,
+    "CapacityMiB": 32768,
+    "DataWidthBits": 64,
+    "DeviceLocator": "PROC 1 Logical NVDIMM 1",
+    "ErrorCorrection": "MultiBitECC",
+    "Id": "proc1logicalnvdimm1",
+    "Manufacturer": "HPE    ",
+    "MemoryDeviceType": "DDR4",
+    "MemoryLocation": null,
+    "MemoryMedia": [
+        "NAND"
+    ],
+    "MemoryType": "NVDIMM_N",
+    "Name": "proc1logicalnvdimm1",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeMemoryExt.v2_0_0.HpeMemoryExt",
+            "DIMMStatus": "Unknown",
+            "MinimumVoltageVoltsX10": 12
+        }
+    },
+    "OperatingSpeedMhz": 2400,
+    "RankCount": 2
+  },
+
+ "logical_nvdimm": {
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/Memory/Members/$entity",
+  "@odata.etag": "W/\"5E848A23\"",
+  "@odata.id": "/redfish/v1/Systems/1/Memory/proc1logicalnvdimm1/",
+  "@odata.type": "#Memory.v1_1_0.Memory",
+  "BaseModuleType": "RNVDIMM",
+  "BusWidthBits": 72,
+  "CapacityMiB": 32768,
+  "DataWidthBits": 64,
+  "DeviceLocator": "PROC 1 Logical NVDIMM 1",
+  "ErrorCorrection": "MultiBitECC",
+  "Id": "proc1logicalnvdimm1",
+  "Manufacturer": "HPE    ",
+  "MemoryDeviceType": "Logical",
+  "MemoryLocation": null,
+  "MemoryMedia": [
+    "Proprietary"
+  ],
+  "MemoryType": "NVDIMM_N",
+  "Name": "proc1logicalnvdimm1",
+  "Oem": {
+    "Hpe": {
+      "@odata.type": "#HpeMemoryExt.v2_0_0.HpeMemoryExt",
+      "Armed": false,
+      "DIMMStatus": "Unknown",
+      "MinimumVoltageVoltsX10": 12,
+      "ProductName": "HPE Scalable Persistent Memory",
+      "RelatedPowerBackupUnitBays": [
+        1,
+        2
+      ]
+    }
+  },
+  "OperatingSpeedMhz": 2400,
+  "RankCount": 2,
+  "Status": {
+    "Health": "OK",
+    "State": "Enabled"
+  }
+  }
+}
