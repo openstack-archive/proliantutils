@@ -800,7 +800,7 @@ class IloRisTestCase(testtools.TestCase):
         _uefi_boot_mode_mock.return_value = False
         ret = self.client.get_persistent_boot_device()
         get_host_details_mock.assert_called_once_with()
-        self.assertEqual(ret, None)
+        self.assertIsNone(ret)
 
     @mock.patch.object(ris.RISOperations, '_get_persistent_boot_devices')
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
