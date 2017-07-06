@@ -53,8 +53,8 @@ class HPESushyTestCase(testtools.TestCase):
     @mock.patch.object(system, 'HPESystem', autospec=True)
     def test_get_system(self, mock_system):
         sys_inst = self.hpe_sushy.get_system('1234')
-        self.assertTrue(isinstance(sys_inst,
-                                   system.HPESystem.__class__))
+        self.assertIsInstance(sys_inst,
+                              system.HPESystem.__class__)
         mock_system.assert_called_once_with(self.hpe_sushy._conn,
                                             '1234',
                                             self.hpe_sushy.redfish_version)
@@ -73,8 +73,8 @@ class HPESushyTestCase(testtools.TestCase):
     @mock.patch.object(manager, 'HPEManager', autospec=True)
     def test_get_manager(self, mock_manager):
         sys_inst = self.hpe_sushy.get_manager('1234')
-        self.assertTrue(isinstance(sys_inst,
-                                   manager.HPEManager.__class__))
+        self.assertIsInstance(sys_inst,
+                              manager.HPEManager.__class__)
         mock_manager.assert_called_once_with(self.hpe_sushy._conn,
                                              '1234',
                                              self.hpe_sushy.redfish_version)
