@@ -211,3 +211,123 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The current BIOS Settings was not found.',
             self.rf_client.get_current_boot_mode)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_uefi(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = 'UEFI'
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_bios(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = 'LEGACY'
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertFalse(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_persistent_boot_devices(self, get_sushy_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        (get_sushy_system_mock.return_value.
+         bios_settings.boot_settings.
+         boot_sources) = bios_json['BIOS_boot_default']['BootSources']
+        (get_sushy_system_mock.return_value.
+         bios_settings.boot_settings.
+         persistent_boot_config_order) = (bios_json['BIOS_boot_default']
+                                          ['PersistentBootConfigOrder'])
+        (boot_sources,
+         boot_order) = self.rf_client._get_persistent_boot_devices()
+        self.assertEqual(bios_json['BIOS_boot_default']['BootSources'],
+                         boot_sources)
+        self.assertEqual(
+            bios_json['BIOS_boot_default']['PersistentBootConfigOrder'],
+            boot_order)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_persistent_boot_devices_no_bootsources(
+            self, get_sushy_system_mock):
+        boot_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        (type(get_sushy_system_mock.return_value.bios_settings.boot_settings).
+         boot_sources) = boot_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The BIOS Boot settings boot sources was not found.',
+            self.rf_client._get_persistent_boot_devices)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_persistent_boot_devices_no_boot_order(
+            self, get_sushy_system_mock):
+        boot_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        (type(get_sushy_system_mock.return_value.bios_settings.boot_settings).
+         persistent_boot_config_order) = boot_mock
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedError,
+            'The BIOS Boot settings persistent boot config order not found.',
+            self.rf_client._get_persistent_boot_devices)
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_persistent_boot_devices')
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_uefi_cdrom(self, get_sushy_system_mock,
+                                                   _uefi_boot_mode_mock,
+                                                   boot_devices_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        (boot_devices_mock.
+         return_value) = (bios_json['BIOS_boot_default']['BootSources'],
+                          (bios_json['BIOS_boot_order_cdrom']
+                           ['PersistentBootConfigOrder']))
+        _uefi_boot_mode_mock.return_value = True
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(result, 'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_persistent_boot_devices')
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_uefi_pxe(self, get_sushy_system_mock,
+                                                 _uefi_boot_mode_mock,
+                                                 boot_devices_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        (boot_devices_mock.
+         return_value) = (bios_json['BIOS_boot_default']['BootSources'],
+                          (bios_json['BIOS_boot_order_pxe']
+                           ['PersistentBootConfigOrder']))
+        _uefi_boot_mode_mock.return_value = True
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(result, 'NETWORK')
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_bios(self, get_sushy_system_mock,
+                                             _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(result, None)
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_persistent_boot_devices')
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_exc(self, get_sushy_system_mock,
+                                            _uefi_boot_mode_mock,
+                                            boot_devices_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        (boot_devices_mock.
+         return_value) = (bios_json['BIOS_boot_without_boot']['BootSources'],
+                          (bios_json['BIOS_boot_without_boot']
+                           ['PersistentBootConfigOrder']))
+        _uefi_boot_mode_mock.return_value = True
+        self.assertRaisesRegex(
+            exception.IloCommandNotSupportedError,
+            'get_persistent_boot_device failed with the KeyError.',
+            self.rf_client.get_persistent_boot_device)

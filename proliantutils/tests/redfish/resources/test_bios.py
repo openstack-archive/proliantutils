@@ -75,3 +75,27 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
     def test_attributes(self):
         self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
                          self.bios_settings_inst.boot_mode)
+
+
+class BIOSBootSettingsTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(BIOSBootSettingsTestCase, self).setUp()
+        self.conn = mock.MagicMock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['BIOS_boot_default'])
+
+        self.bios_boot_inst = bios.BIOSBootSettings(
+            self.conn, '/redfish/v1/Systems/1/bios/boot',
+            redfish_version='1.0.2')
+
+    def test__attributes(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            boot_json = (json.loads(f.read())['BIOS_boot_default'])
+        self.assertEqual(boot_json['BootSources'],
+                         self.bios_boot_inst.boot_sources)
+        self.assertEqual(boot_json['PersistentBootConfigOrder'],
+                         self.bios_boot_inst.persistent_boot_config_order)
