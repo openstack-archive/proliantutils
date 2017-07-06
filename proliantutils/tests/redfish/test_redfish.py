@@ -418,3 +418,55 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.set_vm_status(device='CDROM', boot_option='CONNECT')
         self.assertFalse(manager_mock.called)
         self.assertFalse(set_mock.called)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_uefi(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = (
+            redfish.BOOT_MODE_MAP.get(sys_cons.BIOS_BOOT_MODE_UEFI))
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_bios(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = (
+            redfish.BOOT_MODE_MAP.get(sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS))
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertFalse(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_uefi_cdrom(self, get_sushy_system_mock,
+                                                   _uefi_boot_mode_mock):
+        (get_sushy_system_mock.return_value.
+         bios_settings.boot_settings.
+         get_persistent_boot_device.return_value) = (sushy.
+                                                     BOOT_SOURCE_TARGET_CD)
+        _uefi_boot_mode_mock.return_value = True
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(
+            result,
+            redfish.DEVICE_REDFISH_TO_COMMON.get(sushy.BOOT_SOURCE_TARGET_CD))
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_bios(self, get_sushy_system_mock,
+                                             _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(result, None)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_cdrom_continuous(self,
+                                                         get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.return_value = system_json[
+            'System_op_for_cdrom_persistent_boot']
+        self.sys_inst = system.System(self.conn,
+                                      '/redfish/v1/Systems/437XR1138R2',
+                                      redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        ret = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(ret, 'CDROM')
