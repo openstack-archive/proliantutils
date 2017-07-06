@@ -23,6 +23,7 @@ class BIOSSettings(base.ResourceBase):
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
     _pending_settings = None
+    _boot_settings = None
 
     @property
     def pending_settings(self):
@@ -39,8 +40,31 @@ class BIOSSettings(base.ResourceBase):
 
         return self._pending_settings
 
+    @property
+    def boot_settings(self):
+        """Property to provide reference to bios boot instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._boot_settings is None:
+            self._boot = BIOSBootSettings(
+                self._conn,
+                utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "Boot"],
+                    redfish_version=self.redfish_version))
+
+        return self._boot_settings
+
 
 class BIOSPendingSettings(base.ResourceBase):
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
+
+
+class BIOSBootSettings(base.ResourceBase):
+
+    boot_sources = base.Field(["BootSources"], adapter=list)
+    persistent_boot_config_order = base.Field(["PersistentBootConfigOrder"],
+                                              adapter=list)

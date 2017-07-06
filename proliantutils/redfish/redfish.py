@@ -19,6 +19,7 @@ import sushy
 from sushy import utils
 
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
@@ -289,3 +290,93 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def _is_boot_mode_uefi(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: 'True' if the boot mode is uefi else 'False'
+        """
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == 'UEFI':
+            return True
+        else:
+            return False
+
+    def _get_persistent_boot_devices(self):
+        """Get details of persistent boot devices, its order
+
+        :returns: List of dictionary of boot sources and
+                  list of boot device order
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+
+        # Get the BootSources resource
+        try:
+            boot_sources = (sushy_system.bios_settings.boot_settings.
+                            boot_sources)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Boot settings boot sources was not found. '
+                          'Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+        try:
+            boot_order = (sushy_system.bios_settings.boot_settings.
+                          persistent_boot_config_order)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Boot settings persistent boot config '
+                          'order not found. Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloCommandNotSupportedError(msg)
+
+        return boot_sources, boot_order
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns: persistent boot device for the system
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        # Return boot device if it is persistent.
+        if ((sushy_system.
+             boot.enabled) == sushy.BOOT_SOURCE_ENABLED_CONTINUOUS):
+            return DEVICE_REDFISH_TO_COMMON.get(sushy_system.boot.target)
+
+        # Check if we are in BIOS boot mode.
+        # There is no resource to fetch boot device order for BIOS boot mode
+        if not self._is_boot_mode_uefi():
+            return None
+
+        # Get persistent boot device order for UEFI
+        boot_sources, boot_devices = self._get_persistent_boot_devices()
+
+        boot_string = ""
+        try:
+            for source in boot_sources:
+                if (source["StructuredBootString"] == boot_devices[0]):
+                    boot_string = source["BootString"]
+                    break
+        except KeyError as e:
+            msg = (self._('get_persistent_boot_device failed with the'
+                          ' KeyError. Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloCommandNotSupportedError(msg)
+
+        if 'HPE Virtual CD-ROM' in boot_string:
+            return 'CDROM'
+        elif ('NIC' in boot_string or
+              'PXE' in boot_string or
+              'iSCSI' in boot_string):
+            return 'NETWORK'
+        elif common.isDisk(boot_string):
+            return 'HDD'
+        else:
+            return None
