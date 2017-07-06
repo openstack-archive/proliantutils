@@ -1,0 +1,228 @@
+{
+ "Default": {
+   "@Redfish.Settings":
+    {
+        "@odata.type": "#Settings.v1_0_0.Settings",
+        "ETag": "",
+        "Messages":
+        [
+            {
+                "MessageId": "Base.1.0.Success"
+            }
+        ],
+        "SettingsObject":
+        {
+            "@odata.id": "/redfish/v1/systems/1/bios/boot/settings/"
+        },
+        "Time": ""
+    },
+    "@odata.context": "/redfish/v1/$metadata#HpeServerBootSettings.HpeServerBootSettings",
+    "@odata.etag": "W/\"86E6D5239B54171717C211D20C60F195\"",
+    "@odata.id": "/redfish/v1/systems/1/bios/boot/",
+    "@odata.type": "#HpeServerBootSettings.v2_0_0.HpeServerBootSettings",
+    "BootSources":
+    [
+        {
+            "BootOptionNumber": "0014",
+            "BootString": "Embedded Storage : HPE Smart Array S100i SR Gen10 - LogVol (Lun:1 VolId:1) 931.48 GiB, RAID 0",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)",
+            "StructuredBootString": "HD.EmbSWRAID.3.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)/Scsi(0x0,0x1)"
+        },
+        {
+            "BootOptionNumber": "0013",
+            "BootString": "Embedded Storage : HPE Smart Array S100i SR Gen10 - LogVol (Lun:0 VolId:0) 1117.78 GiB, RAID 0",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)",
+            "StructuredBootString": "HD.EmbSWRAID.1.2",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)/Scsi(0x0,0x0)"
+        },
+        {
+            "BootOptionNumber": "0009",
+            "BootString": "Generic USB Boot",
+            "CorrelatableID": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+            "StructuredBootString": "Generic.USB.1.1",
+            "UEFIDevicePath": "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)"
+        },
+        {
+            "BootOptionNumber": "000D",
+            "BootString": "Embedded LOM 1 Port 1 : HPE Ethernet 1Gb 4-port 331i Adapter - NIC (PXE IPv4)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv4",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(30E17155B124,0x0)/IPv4(0.0.0.0)"
+        },
+        {
+            "BootOptionNumber": "000E",
+            "BootString": "Embedded LOM 1 Port 1 : HPE Ethernet 1Gb 4-port 331i Adapter - NIC (PXE IPv6)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.IPv6",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(30E17155B124,0x0)/IPv6(0000:0000:0000:0000:0000:0000:0000:0000)"
+        },
+        {
+            "BootOptionNumber": "000B",
+            "BootString": "Embedded LOM 1 Port 1 : HPE Ethernet 1Gb 4-port 331i Adapter - NIC (HTTP(S) IPv4)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.Httpv4",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(30E17155B124,0x0)/IPv4(0.0.0.0)/Uri()"
+        },
+        {
+            "BootOptionNumber": "000C",
+            "BootString": "Embedded LOM 1 Port 1 : HPE Ethernet 1Gb 4-port 331i Adapter - NIC (HTTP(S) IPv6)",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.Httpv6",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(30E17155B124,0x0)/IPv6(0000:0000:0000:0000:0000:0000:0000:0000)/Uri()"
+        },
+        {
+            "BootOptionNumber": "000A",
+            "BootString": "Internal SD Card 1 : Generic USB3.0-CRW",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x14,0x0)/USB(0x13,0x0)",
+            "StructuredBootString": "HD.SD.1.2",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x14,0x0)/USB(0x13,0x0)"
+        },
+        {
+            "BootOptionNumber": "0001",
+            "BootString": "Embedded UEFI Shell",
+            "CorrelatableID": "Fv(CDBB7B35-6833-4ED6-9AB2-57D2ACDDF6F0)/FvFile(C57AD6B7-0515-40A8-9D21-551652854E37)",
+            "StructuredBootString": "Shell.Emb.1.2",
+            "UEFIDevicePath": "Fv(CDBB7B35-6833-4ED6-9AB2-57D2ACDDF6F0)/FvFile(C57AD6B7-0515-40A8-9D21-551652854E37)"
+        },
+        {
+            "BootOptionNumber": "0011",
+            "BootString": "iLO Virtual USB 3 : HPE Virtual CD-ROM",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x1,0x0)",
+            "StructuredBootString": "CD.Virtual.3.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x1,0x0)"
+        },
+        {
+            "BootOptionNumber": "0010",
+            "BootString": "Red Hat Enterprise Linux",
+            "CorrelatableID": "HD(1,GPT,6FB3037E-EB9E-4FEC-BE72-8DA4A2D225D9,0x800,0x64000)/\\EFI\\redhat\\shim.efi",
+            "StructuredBootString": "Unknown.Unknown.200.1",
+            "UEFIDevicePath": "HD(1,GPT,6FB3037E-EB9E-4FEC-BE72-8DA4A2D225D9,0x800,0x64000)/\\EFI\\redhat\\shim.efi"
+        },
+        {
+            "BootOptionNumber": "0012",
+            "BootString": "iLO Virtual USB 4 : HPE Virtual USB Key",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)",
+            "StructuredBootString": "FD.Virtual.4.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)"
+        }
+    ],
+    "DefaultBootOrder":
+    [
+        "Floppy",
+        "Cd",
+        "Usb",
+        "EmbeddedStorage",
+        "PcieSlotStorage",
+        "EmbeddedFlexLOM",
+        "PcieSlotNic",
+        "UefiShell"
+    ],
+    "DesiredBootDevices":
+    [
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        },
+        {
+            "CorrelatableID": "",
+            "Lun": "",
+            "Wwn": "",
+            "iScsiTargetName": ""
+        }
+    ],
+    "Id": "boot",
+    "Name": "Boot Order Current Settings",
+    "Oem":
+    {
+        "Hpe":
+        {
+            "@odata.type": "#HpeBiosExt.v2_0_0.HpeBiosExt",
+            "Links":
+            {
+                "BaseConfigs":
+                {
+                    "@odata.id": "/redfish/v1/systems/1/bios/boot/baseconfigs/"
+                }
+            },
+            "SettingsObject":
+            {
+                "UnmodifiedETag": "W/\"CF56F5DDD086DDDDDD700DE91FAC4D22\""
+            }
+        }
+    },
+    "PersistentBootConfigOrder":
+    [
+        "HD.EmbSWRAID.3.1",
+        "HD.EmbSWRAID.1.2",
+        "Generic.USB.1.1",
+        "NIC.LOM.1.1.IPv4",
+        "NIC.LOM.1.1.IPv6",
+        "NIC.LOM.1.1.Httpv4",
+        "NIC.LOM.1.1.Httpv6",
+        "HD.SD.1.2",
+        "Shell.Emb.1.2",
+        "CD.Virtual.3.1",
+        "Unknown.Unknown.200.1",
+        "FD.Virtual.4.1"
+    ]
+  },
+
+   "BIOS_boot_without_boot": {
+    "@Redfish.Settings":
+    {
+        "@odata.type": "#Settings.v1_0_0.Settings",
+        "ETag": "",
+        "Messages":
+        [
+            {
+                "MessageId": "Base.1.0.Success"
+            }
+        ],
+        "SettingsObject":
+        {
+            "@odata.id": "/redfish/v1/systems/1/bios/boot/settings/"
+        },
+        "Time": ""
+    },
+    "@odata.context": "/redfish/v1/$metadata#HpeServerBootSettings.HpeServerBootSettings",
+    "@odata.etag": "W/\"86E6D5239B54171717C211D20C60F195\"",
+    "@odata.id": "/redfish/v1/systems/1/bios/boot/",
+    "@odata.type": "#HpeServerBootSettings.v2_0_0.HpeServerBootSettings",
+    "BootSources":
+    [
+     {
+            "BootOptionNumber": "0014",
+            "BootString": "Embedded Storage : HPE Smart Array S100i SR Gen10 - LogVol (Lun:1 VolId:1) 931.48 GiB, RAID 0",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x7)/Scsi(0x0,0x1)"
+     }
+    ],
+    "PersistentBootConfigOrder":
+    [
+      "HD.EmbSWRAID.3.1"
+    ],
+    "Id": "boot",
+    "Name": "Boot Order Current Settings"
+ }
+}

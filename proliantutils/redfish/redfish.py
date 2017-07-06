@@ -44,7 +44,8 @@ DEVICE_COMMON_TO_REDFISH = {
     'NETWORK': sushy.BOOT_SOURCE_TARGET_PXE,
     'HDD': sushy.BOOT_SOURCE_TARGET_HDD,
     'CDROM': sushy.BOOT_SOURCE_TARGET_CD,
-    'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET
+    'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
+    'NONE': sushy.BOOT_SOURCE_TARGET_NONE
 }
 
 DEVICE_REDFISH_TO_COMMON = {v: k for k, v in DEVICE_COMMON_TO_REDFISH.items()}
@@ -56,6 +57,14 @@ BOOT_MODE_MAP = {
 
 BOOT_MODE_MAP_REV = (
     utils.revert_dictionary(BOOT_MODE_MAP))
+
+PERSISTENT_BOOT_MAP = {
+    sushy.BOOT_SOURCE_TARGET_PXE: 'NETWORK',
+    sushy.BOOT_SOURCE_TARGET_HDD: 'HDD',
+    sushy.BOOT_SOURCE_TARGET_CD: 'CDROM',
+    sushy.BOOT_SOURCE_TARGET_UEFI_TARGET: 'NETWORK',
+    sushy.BOOT_SOURCE_TARGET_NONE: 'NONE'
+}
 # Assuming only one sushy_system and sushy_manager present as part of
 # collection, as we are dealing with iLO's here.
 PROLIANT_MANAGER_ID = '1'
@@ -306,3 +315,33 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def _is_boot_mode_uefi(self):
+        """Checks if the system is in uefi boot mode.
+
+        :return: 'True' if the boot mode is uefi else 'False'
+        """
+        boot_mode = self.get_current_boot_mode()
+        if boot_mode == BOOT_MODE_MAP.get(sys_cons.BIOS_BOOT_MODE_UEFI):
+            return True
+        else:
+            return False
+
+    def get_persistent_boot_device(self):
+        """Get current persistent boot device set for the host
+
+        :returns: persistent boot device for the system
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        # Return boot device if it is persistent.
+        if ((sushy_system.
+             boot.enabled) == sushy.BOOT_SOURCE_ENABLED_CONTINUOUS):
+            return PERSISTENT_BOOT_MAP.get(sushy_system.boot.target)
+        # Check if we are in BIOS boot mode.
+        # There is no resource to fetch boot device order for BIOS boot mode
+        if not self._is_boot_mode_uefi():
+            return None
+
+        boot_device = (sushy_system.bios_settings.boot_settings.
+                       get_persistent_boot_device())
+        return PERSISTENT_BOOT_MAP.get(boot_device)
