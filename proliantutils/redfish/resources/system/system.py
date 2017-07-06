@@ -16,6 +16,7 @@ __author__ = 'HPE'
 
 from sushy.resources import base
 from sushy.resources.system import system
+from sushy.resources.system import ethernetinterface
 
 from proliantutils import exception
 from proliantutils import log
@@ -45,6 +46,9 @@ class HPESystem(system.System):
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     """Oem specific system extensibility actions"""
+
+    _hpe_ethernet_interface = HpeEthernetInterface(['Oem', 'Hpe', 'EthernetInterfaces'])
+    _eth_collection = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -76,3 +80,24 @@ class HPESystem(system.System):
             self._get_hpe_push_power_button_action_element().target_uri)
 
         self._conn.post(target_uri, data={'PushType': value})
+
+    def _get_hpe_sub_resource_collection_path(self, sub_resource):
+        eth_collection = None
+        try:
+            eth_collection = self.get_sub_resource_collection_path(sub_resource)
+        except:
+            eth_collection = self._hpe_ethernet_interface.get('@odata.id')
+            if not eth_collection:
+                raise exceptions.MissingAttributeError(attribute=sub_resource,
+                                                       resource=self._path)
+        self._eth_collection = eth_collection
+
+    @property
+    def ethernet_interfaces(self):
+        if self._connected_mac_addresses is None:
+            sub_res = 'EthernetInterfaces'
+            eth_collection = ethernetinterface.EthernetInterfaceCollection(
+                self._conn, self._get_hpe_sub_resource_collection_path(sub_res),
+                redfish_version=self.redfish_version)
+
+        return self._connected_mac_addresses
