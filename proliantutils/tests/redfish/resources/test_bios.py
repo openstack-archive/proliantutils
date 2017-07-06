@@ -16,8 +16,10 @@
 import json
 
 import mock
+import sushy
 import testtools
 
+from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 
@@ -58,6 +60,24 @@ class BIOSSettingsTestCase(testtools.TestCase):
                       self.bios_inst.pending_settings)
         self.conn.get.return_value.json.assert_not_called()
 
+    def test_boot_settings(self):
+        self.assertIsNone(self.bios_inst._boot_settings)
+
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        actual_settings = self.bios_inst.boot_settings
+        self.assertIsInstance(actual_settings,
+                              bios.BIOSBootSettings)
+        self.conn.get.return_value.json.assert_called_once_with()
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_settings,
+                      self.bios_inst.boot_settings)
+        self.conn.get.return_value.json.assert_not_called()
+
 
 class BIOSPendingSettingsTestCase(testtools.TestCase):
 
@@ -76,3 +96,61 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
     def test_attributes(self):
         self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
                          self.bios_settings_inst.boot_mode)
+
+
+class BIOSBootSettingsTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(BIOSBootSettingsTestCase, self).setUp()
+        self.conn = mock.MagicMock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+
+        self.bios_boot_inst = bios.BIOSBootSettings(
+            self.conn, '/redfish/v1/Systems/1/bios/boot',
+            redfish_version='1.0.2')
+
+    def test__attributes(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (json.loads(f.read())['Default'])
+        self.assertEqual(boot_json['BootSources'],
+                         self.bios_boot_inst.boot_sources)
+        self.assertEqual(boot_json['PersistentBootConfigOrder'],
+                         self.bios_boot_inst.persistent_boot_config_order)
+
+    def test_get_persistent_boot_device(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (json.loads(f.read())['Default'])
+        self.bios_boot_inst.persistent_boot_config_order = (
+            boot_json['PersistentBootConfigOrder'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        result = self.bios_boot_inst.get_persistent_boot_device()
+        self.assertEqual(result, sushy.BOOT_SOURCE_TARGET_HDD)
+
+    def test_get_persistent_boot_device_without_boot(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (json.loads(f.read())['BIOS_boot_without_boot'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        self.bios_boot_inst.persistent_boot_config_order = (
+            boot_json['PersistentBootConfigOrder'])
+        self.assertRaisesRegex(
+            exception.IloError,
+            'Persistent boot device failed, as no matched boot sources '
+            'found for device:',
+            self.bios_boot_inst.get_persistent_boot_device)
+
+    def test_get_persistent_boot_device_none(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (
+                json.loads(f.read())['BIOS_persistent_boot_device_none'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        self.bios_boot_inst.persistent_boot_config_order = (
+            boot_json['PersistentBootConfigOrder'])
+        result = self.bios_boot_inst.get_persistent_boot_device()
+        self.assertEqual(result, sushy.BOOT_SOURCE_TARGET_NONE)

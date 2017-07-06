@@ -287,5 +287,54 @@
         "TotalSystemMemoryGiB": 8
     }
 
-  }
+  },
+
+  "System_op_for_cdrom_persistent_boot": {
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
+  "@odata.etag": "W/\"0E79655D\"",
+  "@odata.id": "/redfish/v1/Systems/1/",
+  "@odata.type": "#ComputerSystem.v1_2_0.ComputerSystem",
+  "Actions": {
+        "#ComputerSystem.Reset": {
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "ForceRestart",
+                "Nmi",
+                "PushPowerButton"
+            ],
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset/"
+        }
+    },
+  "HostName": "",
+  "Id": "1",
+  "IndicatorLED": "Off",
+  "Manufacturer": "HPE",
+  "Name": "Computer System",
+  "PowerState": "On",
+  "Boot": {
+    "BootSourceOverrideEnabled": "Continuous",
+    "BootSourceOverrideMode": "UEFI",
+    "BootSourceOverrideTarget": "Cd",
+    "BootSourceOverrideTarget@Redfish.AllowableValues": [
+     "None",
+      "Cd",
+      "Hdd",
+      "Usb",
+      "SDCard",
+      "Utilities",
+      "Diags",
+      "BiosSetup",
+      "Pxe",
+      "UefiShell",
+      "UefiHttp",
+      "UefiTarget"
+    ],
+    "UefiTargetBootSourceOverride": "None"
+   },
+  "SerialNumber": "                ",
+  "SKU": "                ",
+  "SystemType": "Physical",
+  "UUID": "00000000-0000-0000-0000-000000000000"
+  } 
 }
