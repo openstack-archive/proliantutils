@@ -224,3 +224,39 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to update the license',
             self.rf_client.activate_license, 'key')
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_uefi(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = (
+            redfish.BOOT_MODE_MAP.get(sys_cons.BIOS_BOOT_MODE_UEFI))
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_current_boot_mode')
+    def test__is_boot_mode_uefi_bios(self, get_current_boot_mode_mock):
+        get_current_boot_mode_mock.return_value = (
+            redfish.BOOT_MODE_MAP.get(sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS))
+        result = self.rf_client._is_boot_mode_uefi()
+        self.assertFalse(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_uefi_cdrom(self, get_sushy_system_mock,
+                                                   _uefi_boot_mode_mock):
+        (get_sushy_system_mock.return_value.
+         bios_settings.boot_settings.
+         _get_persistent_boot_device.return_value) = (sushy.
+                                                      BOOT_SOURCE_TARGET_CD)
+        _uefi_boot_mode_mock.return_value = True
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(
+            result,
+            redfish.DEVICE_REDFISH_TO_COMMON.get(sushy.BOOT_SOURCE_TARGET_CD))
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_persistent_boot_device_bios(self, get_sushy_system_mock,
+                                             _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        result = self.rf_client.get_persistent_boot_device()
+        self.assertEqual(result, None)
