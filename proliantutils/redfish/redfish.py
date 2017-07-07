@@ -273,3 +273,21 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_essential_properties(self):
+        """Constructs the dictionary of essential properties
+
+        Constructs the dictionary of essential properties, named
+        cpu, cpu_arch, local_gb, memory_mb. The MACs are also returned
+        as part of this method.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        memory = sushy_system.memory_summary
+        processor_details = sushy_system.processors.summary
+        macs = sushy_system.ethernet_interfaces.eth_summary
+        properties = {'memory_mb': memory,
+                      'cpu': processor_details.count,
+                      'cpu_arch': processor_details.architecture,
+                      'local_gb': 'TBD',
+                      'macs': macs}
+        return properties
