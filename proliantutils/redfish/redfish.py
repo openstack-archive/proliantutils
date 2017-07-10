@@ -273,3 +273,20 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+     def get_server_capabilities(self):
+         capabilities = {}
+         capabilities.update(self._get_number_of_gpu_devices_connected)
+         return capabilities
+
+     def _get_number_of_gpu_devices_connected(self):
+         """Gets the number of GPU devices connected"""
+         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+         members = sushy_system.pci_device.get_members()
+         gpu_list = []
+         for member in members:
+             if member.class_code in CLASSCODE_FOR_GPU_DEVICES:
+                 if member.sub_class_code in SUBCLASSCODE_FOR_GPU_DEVICES:
+                     gpu_list.append(member)
+         gpu_devices_count = len(gpu_list)
+         return {'pci_gpu_devices': gpu_devices_count}
