@@ -573,3 +573,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to set one time boot.',
             self.rf_client.set_one_time_boot,
             'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_number_of_gpu_devices_connected')
+    def test_get_server_capabilities(self, gpu):
+        gpu.return_value = {'pci_gpu_devices': 2}
+        expected = {'pci_gpu_devices': 2}
+        actual = self.rf_client.get_server_capabilities()
+        self.assertEqual(expected, actual)
+        gpu.assert_called_once_with()
