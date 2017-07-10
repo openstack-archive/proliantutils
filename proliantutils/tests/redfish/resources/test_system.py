@@ -79,3 +79,34 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_bios,
                       self.sys_inst.bios_settings)
         self.conn.get.return_value.json.assert_not_called()
+
+    def test_pci_device(self):
+        pci_dev1_return_value = None
+        pci_dev2_return_value = None
+        pci_dev3_return_value = None
+        pci_coll_return_value = None
+        self.assertIsNone(self.sys_inst._pci_device)
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/pci_device_collection.json') as f:
+            pci_coll_return_value = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/pci_device.json') as f:
+            pci_device_json = json.loads(f.read())
+            pci_dev1_return_value = pci_device_json['pci_device1']
+            pci_dev2_return_value = pci_device_json['pci_device2']
+            pci_dev3_return_value = pci_device_json['pci_device3']
+        self.conn.get.return_value.json.side_effect = ['pci_coll_return_value',
+                                                       'pci_dev1_return_value',
+                                                       'pci_dev2_return_value',
+                                                       'pci_dev3_return_value']
+        actual_pci = self.sys_inst.pci_device
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_pci,
+                      self.sys_inst.pci_device)
+        self.conn.get.return_value.json.assert_not_called()
+
+    def test_hpe_oem_uri_pci_device_path(self):
+        value = self.sys_inst._oem_path.pci_device_path
+        self.assertEqual("/redfish/v1/Systems/1/PCIDevices/",
+                         value)
