@@ -17,6 +17,7 @@ from sushy.resources import base
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
@@ -74,6 +75,22 @@ class BIOSPendingSettings(base.ResourceBase):
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
+
+    def set_pending_boot_mode(self, boot_mode):
+        """Sets the boot mode of the system for next boot.
+
+        :param boot_mode: either sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS,
+         sys_cons.BIOS_BOOT_MODE_UEFI.
+        """
+        bios_properties = {}
+        bios_properties['BootMode'] = (
+            mappings.GET_BIOS_BOOT_MODE_MAP_REV.get(boot_mode))
+
+        if boot_mode == sys_cons.BIOS_BOOT_MODE_UEFI:
+            bios_properties['UefiOptimizedBoot'] = 'Enabled'
+
+        bios_pending_settings_uri = self._path
+        self._conn.patch(bios_pending_settings_uri, bios_properties)
 
 
 class BIOSBootSettings(base.ResourceBase):
