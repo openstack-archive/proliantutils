@@ -615,7 +615,8 @@ class RedfishOperations(operations.IloOperations):
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
                  'rom_firmware_version': sushy_system.rom_version,
-                 'server_model': sushy_system.model})
+                 'server_model': sushy_system.model,
+                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity})
 
             capabilities.update(
                 {key: 'true'
