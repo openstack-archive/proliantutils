@@ -297,6 +297,13 @@ class RedfishOperations(operations.IloOperations):
         capabilities = {}
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_nic_capacity())
+        try:
+            self.get_secure_boot_mode()
+            capabilities['secure_boot'] = 'true'
+        except exception.IloCommandNotSupportedError:
+            # If an error is raised dont populate the capability
+            # secure_boot
+            pass
         return capabilities
 
     def _get_number_of_gpu_devices_connected(self):
