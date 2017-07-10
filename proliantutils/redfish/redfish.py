@@ -430,3 +430,15 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('System is not in UEFI boot mode. "SecureBoot" '
                           'related resources cannot be changed.'))
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def get_server_capabilities(self):
+        capabilities = {}
+        capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_nic_capacity())
+        try:
+            capabilities['secure_boot'] = self.get_secure_boot_mode()
+        except exception.IloCommandNotSupportedError:
+            # If an error is raised dont populate the capability
+            # secure_boot
+            pass
+        return capabilities
