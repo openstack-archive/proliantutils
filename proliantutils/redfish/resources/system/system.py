@@ -23,6 +23,7 @@ from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
@@ -59,6 +60,8 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+
+    _pci_devices = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -155,3 +158,20 @@ class HPESystem(system.System):
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
                                      'BootSourceOverrideTarget': new_device}
         self._conn.patch(self._path, new_boot_settings)
+
+    @property
+    def pci_devices(self):
+        """Provides PCI device
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._pci_devices is None:
+            try:
+                self._pci_devices = pci_device.PCIDeviceCollection(
+                    self._conn, utils.get_subresource_path_by(
+                        self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
+            except sushy.exceptions.SushyError:
+                msg = ('The PCIDevices resource was not found')
+                raise exception.IloError(msg)
+        return self._pci_devices
