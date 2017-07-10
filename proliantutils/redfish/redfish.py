@@ -611,11 +611,13 @@ class RedfishOperations(operations.IloOperations):
         sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
+            capacity = sushy_system.pci_devices.max_nic_capacity
             capabilities.update(
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
                  'rom_firmware_version': sushy_system.rom_version,
-                 'server_model': sushy_system.model})
+                 'server_model': sushy_system.model,
+                 'nic_capacity': capacity})
 
             capabilities.update(
                 {key: 'true'
