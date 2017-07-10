@@ -645,3 +645,25 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'No account found with username: foo',
             self.rf_client.reset_ilo_credential, 'fake-password')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_server_capabilities(self, get_system_mock):
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'pci_device.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        gpu_mock = mock.PropertyMock(return_value=val)
+        type(get_system_mock.return_value.pci_devices).gpu_devices = (
+            gpu_mock)
+        actual = self.rf_client.get_server_capabilities()
+        expected = {'pci_gpu_devices': 1}
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_server_capabilities_gpu_fail(self, get_system_mock):
+        gpu_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.pci_devices).gpu_devices = (
+            gpu_mock)
+        self.assertRaises(exception.IloError,
+                          self.rf_client.get_server_capabilities)
