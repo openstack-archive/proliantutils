@@ -74,6 +74,7 @@ SUPPORTED_REDFISH_METHODS = [
     'update_firmware',
     'set_vm_status',
     'get_persistent_boot_device',
+    'get_server_capabilities',
 ]
 
 LOG = log.get_logger(__name__)

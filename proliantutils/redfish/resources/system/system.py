@@ -21,6 +21,7 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
@@ -50,6 +51,8 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+
+    _pci_devices = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -95,3 +98,17 @@ class HPESystem(system.System):
                 redfish_version=self.redfish_version)
 
         return self._bios_settings
+
+    @property
+    def pci_devices(self):
+        """Provides PCI device
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._pci_devices is None:
+            self._pci_devices = pci_device.PCIDeviceCollection(
+                self._conn, utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
+
+        return self._pci_devices
