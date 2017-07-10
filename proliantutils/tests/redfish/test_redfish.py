@@ -504,3 +504,70 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller is unable to get persistent boot device.',
             self.rf_client.get_persistent_boot_device)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_pending_boot_mode(self, get_system_mock):
+        self.rf_client.set_pending_boot_mode('uefi')
+        (get_system_mock.return_value.
+         bios_settings.pending_settings.set_pending_boot_mode.
+         assert_called_once_with('uefi'))
+
+    def test_set_pending_boot_mode_invalid_input(self):
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError,
+            'Invalid Boot mode specified',
+            self.rf_client.set_pending_boot_mode, 'test')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_pending_boot_mode_fail(self, get_system_mock):
+        (get_system_mock.return_value.bios_settings.
+         pending_settings.set_pending_boot_mode.side_effect) = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to set pending boot mode.',
+            self.rf_client.set_pending_boot_mode, 'uefi')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_update_persistent_boot(self, get_system_mock):
+        self.rf_client.update_persistent_boot(['NETWORK'])
+        (get_system_mock.return_value.update_persistent_boot.
+         assert_called_once_with(['NETWORK'], mac=None, persistent=True))
+
+    def test_update_persistent_boot_invalid_input(self):
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError,
+            'Invalid input. Valid devices: NETWORK, HDD, ISCSI or CDROM.',
+            self.rf_client.update_persistent_boot, 'test')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_update_persistent_boot_fail(self, get_system_mock):
+        get_system_mock.return_value.update_persistent_boot.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update persistent boot.',
+            self.rf_client.update_persistent_boot,
+            ['NETWORK'])
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_one_time_boot(self, get_system_mock):
+        self.rf_client.set_one_time_boot('CDROM')
+        (get_system_mock.return_value.update_persistent_boot.
+         assert_called_once_with(['CDROM'], mac=None, persistent=False))
+
+    def test_set_one_time_boot_invalid_input(self):
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError,
+            'Invalid input. Valid devices: NETWORK, HDD, ISCSI or CDROM.',
+            self.rf_client.set_one_time_boot, 'test')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_one_time_boot_fail(self, get_system_mock):
+        get_system_mock.return_value.update_persistent_boot.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to set one time boot.',
+            self.rf_client.set_one_time_boot,
+            'CDROM')
