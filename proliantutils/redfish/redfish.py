@@ -345,3 +345,46 @@ class RedfishOperations(operations.IloOperations):
         boot_device = (sushy_system.bios_settings.boot_settings.
                        get_persistent_boot_device())
         return PERSISTENT_BOOT_MAP.get(boot_device)
+
+    def set_pending_boot_mode(self, boot_mode):
+        """Sets the boot mode of the system for next boot.
+
+        :param boot_mode: either 'uefi' or 'legacy'.
+        :raises: IloInvalidInputError, on an invalid input.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+
+        if boot_mode.upper() not in BOOT_MODE_MAP_REV.keys():
+            msg = 'Invalid Boot mode specified'
+            raise exception.IloInvalidInputError(msg)
+
+        sushy_system.bios_settings.pending_settings.set_pending_boot_mode(
+            BOOT_MODE_MAP_REV.get(boot_mode.upper()))
+
+    def update_persistent_boot(self, device_type=[], mac=None):
+        """Changes the persistent boot device order for the host
+
+        :param device_type: ordered list of boot devices
+        :param mac: intiator mac address, mandatory for iSCSI uefi boot
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        # Check if the input is valid
+        for item in device_type:
+            if item.upper() not in DEVICE_COMMON_TO_REDFISH:
+                raise exception.IloInvalidInputError("Invalid input. Valid "
+                                                     "devices: NETWORK, HDD,"
+                                                     " ISCSI or CDROM.")
+        sushy_system.update_persistent_boot(
+            device_type, persistent=True, mac=mac)
+
+    def set_one_time_boot(self, device, mac=None):
+        """Configures a single boot from a specific device.
+
+        :param device: Device to be set as a one time boot device
+        :param mac: intiator mac address, optional parameter
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system.update_persistent_boot(
+            [device], persistent=False, mac=mac)

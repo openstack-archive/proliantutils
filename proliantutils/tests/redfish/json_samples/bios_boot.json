@@ -105,7 +105,14 @@
             "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)",
             "StructuredBootString": "FD.Virtual.4.1",
             "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)"
-        }
+        },
+        {
+           
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 2-port 361i Adapter - NIC (iSCSI IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/MAC (C4346BB7EF30,0x1)/IPv4(0.0.0.0)/iSCSI(iqn.2016.org.de:,0x1,0x0,None,None,None,TCP)"
+        }       
     ],
     "DefaultBootOrder":
     [
@@ -224,5 +231,30 @@
     ],
     "Id": "boot",
     "Name": "Boot Order Current Settings"
- }
+ },
+
+  "BIOS_without_bootsource": {
+     "@Redfish.Settings":
+    {
+        "@odata.type": "#Settings.v1_0_0.Settings",
+        "ETag": "",
+        "Messages":
+        [
+            {
+                "MessageId": "Base.1.0.Success"
+            }
+        ],
+        "SettingsObject":
+        {
+            "@odata.id": "/redfish/v1/systems/1/bios/boot/settings/"
+        },
+        "Time": ""
+    },
+    "@odata.context": "/redfish/v1/$metadata#HpeServerBootSettings.HpeServerBootSettings",
+    "@odata.etag": "W/\"86E6D5239B54171717C211D20C60F195\"",
+    "@odata.id": "/redfish/v1/systems/1/bios/boot/",
+    "@odata.type": "#HpeServerBootSettings.v2_0_0.HpeServerBootSettings",
+    "Id": "boot",
+    "Name": "Boot Order Current Settings"
+  }  
 }

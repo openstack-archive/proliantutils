@@ -17,6 +17,7 @@ from sushy.resources import base
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
@@ -75,10 +76,27 @@ class BIOSPendingSettings(base.ResourceBase):
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
 
+    def set_pending_boot_mode(self, boot_mode):
+        """Sets the boot mode of the system for next boot.
+
+        :param boot_mode: either sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS,
+         sys_cons.BIOS_BOOT_MODE_UEFI.
+        :raises: IloInvalidInputError, on an invalid input.
+        """
+        bios_properties = {}
+        if boot_mode == sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS:
+            bios_properties['BootMode'] = (
+                mappings.GET_BIOS_BOOT_MODE_MAP_REV.get(boot_mode))
+        else:
+            bios_properties['UefiOptimizedBoot'] = 'Enabled'
+
+        bios_pending_settings_uri = self._path
+        self._conn.patch(bios_pending_settings_uri, bios_properties)
+
 
 class BIOSBootSettings(base.ResourceBase):
 
-    boot_sources = base.Field("BootSources", adapter=list)
+    boot_sources = base.Field("BootSources", required=True, adapter=list)
     persistent_boot_config_order = base.Field("PersistentBootConfigOrder",
                                               adapter=list)
 

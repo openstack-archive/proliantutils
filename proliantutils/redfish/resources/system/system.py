@@ -14,16 +14,25 @@
 
 __author__ = 'HPE'
 
+import sushy
 from sushy.resources import base
 from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
+
+PERSISTENT_BOOT_DEVICE_MAP = {
+    'CDROM': sys_cons.BOOT_SOURCE_TARGET_CD,
+    'NETWORK': sys_cons.BOOT_SOURCE_TARGET_PXE,
+    'ISCSI': sys_cons.BOOT_SOURCE_TARGET_UEFI_TARGET,
+    'HDD': sys_cons.BOOT_SOURCE_TARGET_HDD
+}
 
 
 class PowerButtonActionField(base.CompositeField):
@@ -95,3 +104,56 @@ class HPESystem(system.System):
                 redfish_version=self.redfish_version)
 
         return self._bios_settings
+
+    def update_persistent_boot(self, device_type=[], persistent=False,
+                               mac=None):
+        """Changes the persistent boot device order in BIOS boot mode for host
+
+        Note: It uses first boot device from the device_type and ignores rest.
+
+        :param device_type: ordered list of boot devices
+        :param persistent: Boolean flag to indicate if the device to be set as
+                           a persistent boot device
+        :param mac: intiator mac address, mandotory for iSCSI uefi boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        new_device = device_type[0]
+        system_uri = self._path
+        tenure = 'Continuous' if persistent else 'Once'
+
+        try:
+            boot_settings = self.bios_settings.boot_settings.boot_sources
+        except sushy.exceptions.SushyError:
+            msg = ('The BIOS Boot Settings was not found.')
+            raise exception.IloError(msg)
+
+        if device_type[0].upper() in PERSISTENT_BOOT_DEVICE_MAP:
+            new_device = PERSISTENT_BOOT_DEVICE_MAP[device_type[0].upper()]
+
+        new_boot_settings = {}
+        if new_device is 'UefiTarget':
+            if not mac:
+                msg = ('Mac is needed for iscsi uefi boot')
+                raise exception.IloInvalidInputError(msg)
+
+            boot_string = None
+            for boot_setting in boot_settings:
+                if(mac.upper() in boot_setting['UEFIDevicePath'] and
+                   'iSCSI' in boot_setting['UEFIDevicePath']):
+                    boot_string = boot_setting['StructuredBootString']
+                    break
+
+            if not boot_string:
+                msg = ('MAC provided is Invalid "%s"' % mac)
+                raise exception.IloInvalidInputError(msg)
+
+            uefi_boot_settings = {}
+            uefi_boot_settings['Boot'] = (
+                {'UefiTargetBootSourceOverride': boot_string})
+            self._conn.patch(system_uri, uefi_boot_settings)
+
+        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
+                                     'BootSourceOverrideTarget': new_device}
+        self._conn.patch(system_uri, new_boot_settings)
