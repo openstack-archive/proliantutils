@@ -485,7 +485,87 @@ class RedfishOperations(operations.IloOperations):
             return PERSISTENT_BOOT_MAP.get(boot_device)
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
-                          "persistent boot device.' Error %(error)s") %
+                          "persistent boot device. Error %(error)s") %
                    {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def set_pending_boot_mode(self, boot_mode):
+        """Sets the boot mode of the system for next boot.
+
+        :param boot_mode: either 'uefi' or 'legacy'.
+        :raises: IloInvalidInputError, on an invalid input.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+
+        if boot_mode.upper() not in BOOT_MODE_MAP_REV.keys():
+            msg = (('Invalid Boot mode: %(boot_mode)s specified')
+                   % {'boot_mode': boot_mode})
+            raise exception.IloInvalidInputError(msg)
+
+        try:
+            sushy_system.bios_settings.pending_settings.set_pending_boot_mode(
+                BOOT_MODE_MAP_REV.get(boot_mode.upper()))
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to set '
+                          'pending boot mode to %(boot_mode)s. '
+                          'Error: %(error)s') %
+                   {'boot_mode': boot_mode, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def update_persistent_boot(self, devices=[], mac=None):
+        """Changes the persistent boot device order for the host
+
+        :param devices: ordered list of boot devices
+        :param mac: intiator mac address, mandatory for iSCSI uefi boot
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, if the given input is not valid.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        # Check if the input is valid
+        for item in devices:
+            if item.upper() not in DEVICE_COMMON_TO_REDFISH:
+                msg = (self._('Invalid input "%(device)s". Valid devices: '
+                              'NETWORK, HDD, ISCSI or CDROM.') %
+                       {'device': item})
+                raise exception.IloInvalidInputError(msg)
+
+        try:
+            sushy_system.update_persistent_boot(
+                devices, persistent=True, mac=mac)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to update '
+                          'persistent boot device %(devices)s.'
+                          'Error: %(error)s') %
+                   {'devices': devices, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def set_one_time_boot(self, device, mac=None):
+        """Configures a single boot from a specific device.
+
+        :param device: Device to be set as a one time boot device
+        :param mac: intiator mac address, optional parameter
+        :raises: IloError, on an error from iLO.
+        :raises: IloInvalidInputError, if the given input is not valid.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        # Check if the input is valid
+        if device.upper() not in DEVICE_COMMON_TO_REDFISH:
+            msg = (self._('Invalid input "%(device)s". Valid devices: '
+                          'NETWORK, HDD, ISCSI or CDROM.') %
+                   {'device': device})
+            raise exception.IloInvalidInputError(msg)
+
+        try:
+            sushy_system.update_persistent_boot(
+                [device], persistent=False, mac=mac)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to set '
+                          'one time boot device %(device)s. '
+                          'Error: %(error)s') %
+                   {'device': device, 'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
