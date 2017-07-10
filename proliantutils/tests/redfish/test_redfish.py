@@ -656,8 +656,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
         gpu_mock = mock.PropertyMock(return_value=val)
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        nic_mock = mock.PropertyMock(return_value='1Gb')
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1,
+                    'nic_capacity': '1Gb'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -665,5 +669,13 @@ class RedfishOperationsTestCase(testtools.TestCase):
         gpu_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        self.assertRaises(exception.IloError,
+                          self.rf_client.get_server_capabilities)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_server_capabilities_nic_fail(self, get_system_mock):
+        nic_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
         self.assertRaises(exception.IloError,
                           self.rf_client.get_server_capabilities)
