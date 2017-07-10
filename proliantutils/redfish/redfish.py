@@ -575,14 +575,28 @@ class RedfishOperations(operations.IloOperations):
         """Returns the server capabilities"""
         capabilities = {}
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_nic_capacity())
         return capabilities
 
     def _get_number_of_gpu_devices_connected(self):
         """Gets the number of GPU devices connected"""
-        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
             count = sushy_system.pci_devices.gpu_devices_count
             return {'pci_gpu_devices': count}
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller is unable to get "
+                          "PCIDevice resource or its members. Error"
+                          "%(error)s)") % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _get_nic_capacity(self):
+        """Gets the maximum NIC capacity"""
+        try:
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            capacity = sushy_system.pci_devices.nic_capacity
+            return {'nic_capacity': capacity}
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "PCIDevice resource or its members. Error"

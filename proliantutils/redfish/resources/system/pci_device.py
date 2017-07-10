@@ -41,6 +41,7 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
 
     _gpu_devices_count = None
     _gpu_devices = None
+    _nic_capacity = None
 
     @property
     def gpu_devices(self):
@@ -56,3 +57,17 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
         gpu_list = self.gpu_devices
         self._gpu_devices_count = len(gpu_list)
         return self._gpu_devices_count
+
+    @property
+    def nic_capacity(self):
+        """Gets the maximum NIC capacity"""
+        val = 0
+        for member in self.get_members():
+            name_split = member.name.split(" ")
+            for item in name_split:
+                if 'Gb' in item:
+                    capacity = item.strip('Gb')
+                    if (capacity.isdigit() and val < int(capacity)):
+                        val = capacity
+                        self._nic_capacity = item
+        return self._nic_capacity

@@ -573,10 +573,46 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'CDROM')
 
     @mock.patch.object(redfish.RedfishOperations,
+                       '_get_nic_capacity')
+    @mock.patch.object(redfish.RedfishOperations,
                        '_get_number_of_gpu_devices_connected')
-    def test_get_server_capabilities(self, gpu):
+    def test_get_server_capabilities(self, gpu, nic):
         gpu.return_value = {'pci_gpu_devices': 2}
-        expected = {'pci_gpu_devices': 2}
+        nic.return_value = {'nic_capacity': '1Gb'}
+        expected = {'pci_gpu_devices': 2,
+                    'nic_capacity': '1Gb'}
         actual = self.rf_client.get_server_capabilities()
         self.assertEqual(expected, actual)
         gpu.assert_called_once_with()
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_number_of_gpu_devices_connected(self, get_system_mock):
+        gpu_mock = mock.PropertyMock(return_value=1)
+        type(get_system_mock.return_value.pci_devices).gpu_devices_count = (
+            gpu_mock)
+        actual = self.rf_client._get_number_of_gpu_devices_connected()
+        self.assertEqual({'pci_gpu_devices': 1}, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_number_of_gpu_devices_connected_fail(self, get_system_mock):
+        gpu_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.pci_devices).gpu_devices_count = (
+            gpu_mock)
+        self.assertRaises(exception.IloError,
+                          self.rf_client._get_number_of_gpu_devices_connected)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_nic_capacity(self, get_system_mock):
+        nic_mock = mock.PropertyMock(return_value='1Gb')
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
+        actual = self.rf_client._get_nic_capacity()
+        self.assertEqual({'nic_capacity': '1Gb'}, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_nic_capacity_fail(self, get_system_mock):
+        nic_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
+        self.assertRaises(exception.IloError,
+                          self.rf_client._get_nic_capacity)

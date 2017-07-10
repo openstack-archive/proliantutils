@@ -117,3 +117,20 @@ class PCIDeviceCollectionTestCase(testtools.TestCase):
         actual_count = self.sys_pci_col.gpu_devices_count
         expected_count = 1
         self.assertEqual(expected_count, actual_count)
+
+    def test_nic_capacity(self):
+        self.assertIsNone(self.sys_pci_col._nic_capacity)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'pci_device.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'pci_device1.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        self.conn.get.return_value.json.side_effect = val
+        actual_capacity = self.sys_pci_col.nic_capacity
+        expected = '1Gb'
+        self.assertEqual(expected, actual_capacity)
