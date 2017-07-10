@@ -581,6 +581,8 @@ class RedfishOperations(operations.IloOperations):
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
+            capacity = sushy_system.pci_devices.nic_capacity
+            capabilities.update({'nic_capacity': capacity})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "PCIDevice resource or its members. Error"
