@@ -28,6 +28,7 @@ from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
 
@@ -650,16 +651,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_get_server_capabilities(self, get_system_mock):
-        val = []
-        path = ('proliantutils/tests/redfish/json_samples/'
-                'pci_device.json')
-        with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
-        gpu_mock = mock.PropertyMock(return_value=val)
+        gpu_mock = ([mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        nic_mock = mock.PropertyMock(return_value='1Gb')
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1,
+                    'nic_capacity': '1Gb'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -715,3 +715,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             "The Redfish controller is unable to update bios settings"
             " to default", self.rf_client.reset_bios_to_default)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_server_capabilities_nic_fail(self, get_system_mock):
+        nic_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
+        self.assertRaises(exception.IloError,
+                          self.rf_client.get_server_capabilities)
