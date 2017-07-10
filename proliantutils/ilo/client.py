@@ -76,6 +76,7 @@ SUPPORTED_REDFISH_METHODS = [
     'set_one_time_boot',
     'update_persistent_boot',
     'set_pending_boot_mode',
+    'get_server_capabilities',
 ]
 
 LOG = log.get_logger(__name__)
