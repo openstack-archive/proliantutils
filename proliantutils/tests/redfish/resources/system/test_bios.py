@@ -97,6 +97,23 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
         self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
                          self.bios_settings_inst.boot_mode)
 
+    def test_set_pending_boot_mode_bios(self):
+        self.bios_settings_inst.set_pending_boot_mode(
+            sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS)
+        data = {}
+        data['BootMode'] = 'LegacyBios'
+        self.bios_settings_inst._conn.patch.assert_called_once_with(
+            '/redfish/v1/Systems/1/bios/settings', data)
+
+    def test_set_pending_boot_mode_uefi(self):
+        self.bios_settings_inst.set_pending_boot_mode(
+            sys_cons.BIOS_BOOT_MODE_UEFI)
+        data = {}
+        data['UefiOptimizedBoot'] = 'Enabled'
+        data['BootMode'] = 'Uefi'
+        self.bios_settings_inst._conn.patch.assert_called_once_with(
+            '/redfish/v1/Systems/1/bios/settings', data)
+
 
 class BIOSBootSettingsTestCase(testtools.TestCase):
 
