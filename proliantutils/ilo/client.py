@@ -525,15 +525,22 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         capabilities = self._call_method('get_server_capabilities')
-        major_minor = (
-            self._call_method('get_ilo_firmware_version_as_major_minor'))
+        # TODO(nisha): Assumption is that Redfish always see the pci_device
+        # member name field populated similarly to IPMI.
+        # If redfish is not able to get nic_capacity, we can fall back to
+        # IPMI way of retrieving nic_capacity in the future. As of now
+        # the IPMI is not tested on Gen10, hence assuming that
+        # Redfish will always be able to give the data.
+        if ('Gen10' not in self.model):
+            major_minor = (
+                self._call_method('get_ilo_firmware_version_as_major_minor'))
 
-        # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
-        # as we still want to try getting nic capacity through ipmitool
-        # irrespective of what firmware we are using.
-        nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
-        if nic_capacity:
-            capabilities.update({'nic_capacity': nic_capacity})
+            # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
+            # as we still want to try getting nic capacity through ipmitool
+            # irrespective of what firmware we are using.
+            nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
+            if nic_capacity:
+                capabilities.update({'nic_capacity': nic_capacity})
         if capabilities:
             return capabilities
 
