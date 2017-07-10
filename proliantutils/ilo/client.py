@@ -68,6 +68,7 @@ SUPPORTED_REDFISH_METHODS = [
     'get_pending_boot_mode',
     'get_current_boot_mode',
     'activate_license',
+    'get_server_capabilities',
 ]
 
 LOG = log.get_logger(__name__)
