@@ -85,8 +85,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().power_state = sushy.SYSTEM_POWER_STATE_ON
         power_state = self.rf_client.get_host_power_status()
         self.assertEqual('ON', power_state)
-
-    def test_reset_server(self):
         self.rf_client.reset_server()
         self.sushy.get_system().reset_system.assert_called_once_with(
             sushy.RESET_FORCE_RESTART)
@@ -573,3 +571,17 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to set one time boot.',
             self.rf_client.set_one_time_boot,
             'CDROM')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_server_capabilities(self, get_system_mock):
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'pci_device.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        gpu_mock = mock.PropertyMock(return_value=val)
+        type(get_system_mock.return_value.pci_devices).gpu_devices = (
+            gpu_mock)
+        actual = self.rf_client.get_server_capabilities()
+        expected = {'pci_gpu_devices': 1}
+        self.assertEqual(expected, actual)

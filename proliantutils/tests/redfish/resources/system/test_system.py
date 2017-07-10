@@ -171,3 +171,27 @@ class HPESystemTestCase(testtools.TestCase):
             exception.IloError,
             'The BIOS Boot Settings was not found.',
             self.sys_inst.update_persistent_boot, ['CDROM'], True, None)
+
+    def test_pci_devices(self):
+        pci_dev_return_value = None
+        pci_dev1_return_value = None
+        pci_coll_return_value = None
+        self.assertIsNone(self.sys_inst._pci_devices)
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/pci_device_collection.json') as f:
+            pci_coll_return_value = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/pci_device.json') as f:
+            pci_dev_return_value = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/pci_device1.json') as f:
+            pci_dev1_return_value = json.loads(f.read())
+            self.conn.get.return_value.json.side_effect = (
+                [pci_coll_return_value, pci_dev_return_value,
+                 pci_dev1_return_value])
+        actual_pci = self.sys_inst.pci_devices
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_pci,
+                      self.sys_inst.pci_devices)
+        self.conn.get.return_value.json.assert_not_called()
