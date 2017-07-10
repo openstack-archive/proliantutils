@@ -16,6 +16,7 @@
 import json
 
 import mock
+import sushy
 import testtools
 
 from proliantutils import exception
@@ -79,3 +80,92 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_bios,
                       self.sys_inst.bios_settings)
         self.conn.get.return_value.json.assert_not_called()
+
+    def test_update_persistent_boot_persistent(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_mock = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as g:
+            boot_mock = json.loads(g.read())
+        self.conn.get.return_value.json.side_effect = [bios_mock['Default'],
+                                                       boot_mock['Default']]
+        self.sys_inst.update_persistent_boot(['CDROM'], True)
+        data = {}
+        data['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                        'BootSourceOverrideTarget': 'Cd'}
+        self.sys_inst._conn.patch.assert_called_once_with(
+            '/redfish/v1/Systems/1', data)
+
+    def test_update_persistent_boot_not_persistent(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_mock = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_mock = json.loads(f.read())
+        self.conn.get.return_value.json.side_effect = [bios_mock['Default'],
+                                                       boot_mock['Default']]
+        self.sys_inst.update_persistent_boot(['CDROM'], False)
+        data = {}
+        data['Boot'] = {'BootSourceOverrideEnabled': 'Once',
+                        'BootSourceOverrideTarget': 'Cd'}
+        self.sys_inst._conn.patch.assert_called_once_with(
+            '/redfish/v1/Systems/1', data)
+
+    def test_update_persistent_boot_uefi_target(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_mock = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_mock = json.loads(f.read())
+        self.conn.get.return_value.json.side_effect = [bios_mock['Default'],
+                                                       boot_mock['Default']]
+        self.sys_inst.update_persistent_boot(['ISCSI'], persistent=True,
+                                             mac='C4346BB7EF30')
+        data = {}
+        data['Boot'] = {'UefiTargetBootSourceOverride': 'NIC.LOM.1.1.iSCSI'}
+        new_data = {}
+        new_data['Boot'] = {'BootSourceOverrideEnabled': 'Continuous',
+                            'BootSourceOverrideTarget': 'UefiTarget'}
+        calls = [mock.call('/redfish/v1/Systems/1', data),
+                 mock.call('/redfish/v1/Systems/1', new_data)]
+        self.sys_inst._conn.patch.assert_has_calls(calls)
+
+    def test_update_persistent_boot_uefi_target_without_mac(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_mock = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_mock = json.loads(f.read())
+        self.conn.get.return_value.json.side_effect = [bios_mock['Default'],
+                                                       boot_mock['Default']]
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError,
+            'Mac is needed for iscsi uefi boot',
+            self.sys_inst.update_persistent_boot, ['ISCSI'], True, None)
+
+    def test_update_persistent_boot_uefi_target_invalid_mac(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_mock = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_mock = json.loads(f.read())
+        self.conn.get.return_value.json.side_effect = [bios_mock['Default'],
+                                                       boot_mock['Default']]
+        self.assertRaisesRegex(
+            exception.IloInvalidInputError,
+            'MAC provided is Invalid',
+            self.sys_inst.update_persistent_boot, ['ISCSI'], True, '12345678')
+
+    def test_update_persistent_boot_fail(self):
+        boot_settings_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(self.sys_inst.bios_settings).boot_settings = boot_settings_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The BIOS Boot Settings was not found.',
+            self.sys_inst.update_persistent_boot, ['CDROM'], True, None)
