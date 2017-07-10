@@ -605,14 +605,14 @@ class RedfishOperations(operations.IloOperations):
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
-
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
                      'sriov_enabled',
                      sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
                      ),)})
-
+            capacity = sushy_system.pci_devices.max_nic_capacity
+            capabilities.update({'nic_capacity': capacity})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
