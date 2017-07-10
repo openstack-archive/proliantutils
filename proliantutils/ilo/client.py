@@ -72,6 +72,9 @@ SUPPORTED_REDFISH_METHODS = [
     'insert_virtual_media',
     'set_vm_status',
     'get_persistent_boot_device',
+    'set_one_time_boot',
+    'update_persistent_boot',
+    'set_pending_boot_mode'
 ]
 
 LOG = log.get_logger(__name__)

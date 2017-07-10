@@ -23,3 +23,10 @@ PUSH_POWER_BUTTON_PRESS_AND_HOLD = 'press and hold'
 
 BIOS_BOOT_MODE_LEGACY_BIOS = 'legacy bios'
 BIOS_BOOT_MODE_UEFI = 'uefi'
+
+# Persistent boot device for set
+
+BOOT_SOURCE_TARGET_CD = 'Cd'
+BOOT_SOURCE_TARGET_PXE = 'Pxe'
+BOOT_SOURCE_TARGET_UEFI_TARGET = 'UefiTarget'
+BOOT_SOURCE_TARGET_HDD = 'Hdd'

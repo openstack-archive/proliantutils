@@ -105,7 +105,14 @@
             "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)",
             "StructuredBootString": "FD.Virtual.4.1",
             "UEFIDevicePath": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x4)/USB(0x2,0x0)"
-        }
+        },
+        {
+           
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 2-port 361i Adapter - NIC (iSCSI IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/MAC (C4346BB7EF30,0x1)/IPv4(0.0.0.0)/iSCSI(iqn.2016.org.de:,0x1,0x0,None,None,None,TCP)"
+        }       
     ],
     "DefaultBootOrder":
     [
