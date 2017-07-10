@@ -661,6 +661,19 @@ class IloClientTestCase(testtools.TestCase):
                                  'nic_capacity': '10Gb'}
         self.assertEqual(expected_capabilities, capabilities)
 
+    @mock.patch.object(redfish, 'RedfishOperations')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    @mock.patch.object(ipmi, 'get_nic_capacity')
+    def test_get_server_capabilities_Gen10(self, ipmi_mock,
+                                           ribcl_product_name_mock,
+                                           redfish_mock):
+        ribcl_product_name_mock.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "admin", "secret")
+        cap_mock = (redfish_mock.return_value.get_server_capabilities)
+        self.client.get_server_capabilities()
+        self.assertFalse(ipmi_mock.called)
+        self.assertTrue(cap_mock.called)
+
     @mock.patch.object(client.IloClient, '_call_method')
     def test_activate_license(self, call_mock):
         self.client.activate_license('fake-key')

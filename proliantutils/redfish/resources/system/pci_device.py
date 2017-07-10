@@ -32,10 +32,30 @@ class PCIDevice(base.ResourceBase):
 
     sub_class_code = base.Field('SubclassCode')
 
+    _nic_capacity = None
+
+    def refresh(self):
+        super(PCIDevice, self).refresh()
+        self._nic_capacity = None
+
+    @property
+    def nic_capacity(self):
+        if self._nic_capacity is None:
+            for item in self.name.split():
+                if 'Gb' in item:
+                    capacity = item.strip('Gb')
+                    self._nic_capacity = (
+                        int(capacity) if capacity.isdigit() else 0)
+                    break
+            else:
+                self._nic_capacity = 0
+        return self._nic_capacity
+
 
 class PCIDeviceCollection(base.ResourceCollectionBase):
 
     _gpu_devices = None
+    _max_nic_capacity = None
 
     @property
     def _resource_type(self):
@@ -54,3 +74,12 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
     def refresh(self):
         super(PCIDeviceCollection, self).refresh()
         self._gpu_devices = None
+        self._max_nic_capacity = None
+
+    @property
+    def max_nic_capacity(self):
+        """Gets the maximum NIC capacity"""
+        if self._max_nic_capacity is None:
+            self._max_nic_capacity = (
+                str(max([m.nic_capacity for m in self.get_members()])) + 'Gb')
+        return self._max_nic_capacity
