@@ -280,6 +280,7 @@ class RedfishOperations(operations.IloOperations):
      def get_server_capabilities(self):
          capabilities = {}
          capabilities.update(self._get_number_of_gpu_devices_connected)
+         capabilities.update(self._get_nic_capacity())
          return capabilities
 
      def _get_number_of_gpu_devices_connected(self):
@@ -293,3 +294,16 @@ class RedfishOperations(operations.IloOperations):
                      gpu_list.append(member)
          gpu_devices_count = len(gpu_list)
          return {'pci_gpu_devices': gpu_devices_count}
+
+     def _get_nic_capacity(self):
+         """Gets the maximum NIC capacity"""
+         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+         members = sushy_system.pci_device.get_members()
+         capacity = None
+         for member in members:
+             for item in member.name:
+                 if 'Gb' in item:
+                     capacity_int = member.name.strip('Gb')
+                     if capacity_int.isdigit():
+                         capacity = item
+        return {'nic_capacity': capacity}
