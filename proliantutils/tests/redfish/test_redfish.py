@@ -504,3 +504,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller is unable to get persistent boot device.',
             self.rf_client.get_persistent_boot_device)
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_number_of_gpu_devices_connected')
+    def test_get_server_capabilities(self, gpu):
+        gpu.return_value = {'pci_gpu_devices': 2}
+        expected = {'pci_gpu_devices': 2}
+        actual = self.rf_client.get_server_capabilities()
+        self.assertEqual(expected, actual)
+        gpu.assert_called_once_with()

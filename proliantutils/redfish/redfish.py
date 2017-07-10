@@ -489,3 +489,22 @@ class RedfishOperations(operations.IloOperations):
                    {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_server_capabilities(self):
+        """Returns the server capabilities"""
+
+        capabilities = {}
+        capabilities.update(self._get_number_of_gpu_devices_connected())
+        return capabilities
+
+    def _get_number_of_gpu_devices_connected(self):
+        """Gets the number of GPU devices connected"""
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            count = sushy_system.pci_devices.gpu_devices
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller is unable to get "
+                          "PCIDevice resource or its members. Error"
+                          "%(error)s)") % {'error': str(e)})
+            LOG.debug(msg)
+        return {'pci_gpu_devices': count}
