@@ -58,3 +58,9 @@ SECUREBOOT_RESET_KEYS_MAP = {
 
 SECUREBOOT_RESET_KEYS_MAP_REV = (
     utils.revert_dictionary(SECUREBOOT_RESET_KEYS_MAP))
+
+TPM_MAP = {
+    'PresentEnabled': constants.TPM_PRESENT_ENABLED,
+    'PresentDisabled': constants.TPM_PRESENT_DISABLED,
+    'NotPresent': constants.TPM_NOT_PRESENT
+}

@@ -46,3 +46,7 @@ SECUREBOOT_CURRENT_BOOT_DISABLED = 'disabled'
 SECUREBOOT_RESET_KEYS_DEFAULT = 'default'
 SECUREBOOT_RESET_KEYS_DELETE_ALL = 'delete all'
 SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
+
+TPM_PRESENT_ENABLED = 'Tpm present enabled'
+TPM_PRESENT_DISABLED = 'Tpm present disabled'
+TPM_NOT_PRESENT = 'Tpm not present'

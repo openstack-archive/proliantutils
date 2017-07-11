@@ -618,12 +618,16 @@ class RedfishOperations(operations.IloOperations):
                  'server_model': sushy_system.model,
                  'nic_capacity': sushy_system.pci_devices.max_nic_capacity})
 
+            tpm_state = sushy_system.bios_settings.tpm_state
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
                      'sriov_enabled',
                      sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
-                     ),)
+                     ),
+                     ('trusted_boot',
+                      (tpm_state == sys_cons.TPM_PRESENT_ENABLED
+                       or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),)
                  if value})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "

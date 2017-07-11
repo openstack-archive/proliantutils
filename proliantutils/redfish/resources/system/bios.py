@@ -39,6 +39,8 @@ class BIOSSettings(base.ResourceBase):
 
     sriov = base.MappedField(['Attributes', 'Sriov'], mappings.SRIOV_MAP)
 
+    tpm_state = base.MappedField(["Attributes", "TpmState"], mappings.TPM_MAP)
+
     _pending_settings = None
     _boot_settings = None
     _base_configs = None
