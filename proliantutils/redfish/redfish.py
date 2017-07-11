@@ -79,6 +79,10 @@ BOOT_OPTION_MAP = {'BOOT_ONCE': True,
 VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
                      'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
 
+TPM_STATE_MAP = {'PresentEnabled': True,
+                 'PresentDisabled': True,
+                 'NotPresent': False}
+
 LOG = log.get_logger(__name__)
 
 
@@ -576,6 +580,8 @@ class RedfishOperations(operations.IloOperations):
         capabilities = {}
         capabilities.update(self._get_number_of_gpu_devices_connected())
         capabilities.update(self._get_nic_capacity())
+        if self._get_tpm_capability():
+            capabilities['trusted_boot'] = 'true'
         return capabilities
 
     def _get_number_of_gpu_devices_connected(self):
@@ -603,3 +609,18 @@ class RedfishOperations(operations.IloOperations):
                           "%(error)s)") % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def _get_tpm_capability(self):
+        """Gets if trusted_boot is supported or not
+
+        :returns:True if TpmState is either "PresentEnabled"
+            or "PresentDisabled" and False if TpmState is
+            "NotPresent".
+        """
+        try:
+            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+            tpm_state = sushy_system.bios_settings.tpm_state
+        except sushy.exceptions.SushyError:
+            tpm_state = "NotPresent"
+        tpm_result = TPM_STATE_MAP[tpm_state]
+        return tpm_result

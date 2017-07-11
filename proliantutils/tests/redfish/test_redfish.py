@@ -575,12 +575,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
     @mock.patch.object(redfish.RedfishOperations,
                        '_get_nic_capacity')
     @mock.patch.object(redfish.RedfishOperations,
+                       '_get_tpm_capability')
+    @mock.patch.object(redfish.RedfishOperations,
                        '_get_number_of_gpu_devices_connected')
-    def test_get_server_capabilities(self, gpu, nic):
+    def test_get_server_capabilities(self, gpu, tpm, nic):
         gpu.return_value = {'pci_gpu_devices': 2}
         nic.return_value = {'nic_capacity': '1Gb'}
+        tpm.return_value = True
         expected = {'pci_gpu_devices': 2,
-                    'nic_capacity': '1Gb'}
+                    'nic_capacity': '1Gb',
+                    'trusted_boot': 'true'}
         actual = self.rf_client.get_server_capabilities()
         self.assertEqual(expected, actual)
         gpu.assert_called_once_with()
@@ -616,3 +620,24 @@ class RedfishOperationsTestCase(testtools.TestCase):
             nic_mock)
         self.assertRaises(exception.IloError,
                           self.rf_client._get_nic_capacity)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_true(self, get_system_mock):
+        val = "PresentEnabled"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_true1(self, get_system_mock):
+        val = "PresentDisabled"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_false(self, get_system_mock):
+        val = "NotPresent"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertFalse(result)
