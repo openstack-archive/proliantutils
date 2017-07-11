@@ -658,9 +658,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
         nic_mock = mock.PropertyMock(return_value='1Gb')
         type(get_system_mock.return_value.pci_devices).max_nic_capacity = (
             nic_mock)
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
+        tpm_mock = mock.PropertyMock(return_value='PresentEnabled')
+        type(get_system_mock.return_value.bios_settings).tpm_state = (
+            tpm_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'nic_capacity': '1Gb',
+                    'trusted_boot': 'true',
                     'sriov_enabled': 'true'}
         self.assertEqual(expected, actual)
 

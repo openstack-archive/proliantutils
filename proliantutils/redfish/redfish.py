@@ -79,6 +79,10 @@ BOOT_OPTION_MAP = {'BOOT_ONCE': True,
 VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
                      'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
 
+TPM_STATE_MAP = {'PresentEnabled': True,
+                 'PresentDisabled': True,
+                 'NotPresent': False}
+
 LOG = log.get_logger(__name__)
 
 
@@ -613,6 +617,9 @@ class RedfishOperations(operations.IloOperations):
                      ),)})
             capacity = sushy_system.pci_devices.max_nic_capacity
             capabilities.update({'nic_capacity': capacity})
+            tpm_state = sushy_system.bios_settings.tpm_state
+            if(TPM_STATE_MAP[tpm_state]):
+                capabilities['trusted_boot'] = 'true'
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
