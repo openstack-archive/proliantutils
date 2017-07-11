@@ -625,6 +625,17 @@ class RedfishOperations(operations.IloOperations):
                      sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
                      ),)
                  if value})
+            capacity = sushy_system.pci_devices.max_nic_capacity
+            capabilities.update({'nic_capacity': capacity})
+            tpm_state = sushy_system.bios_settings.tpm_state
+            capabilities.update(
+                {key: 'true'
+                 for (key, value) in ((
+                     'trusted_boot',
+                     (tpm_state == sys_cons.TPM_PRESENT_ENABLED
+                      or tpm_state == sys_cons.TPM_PRESENT_DISABLED)
+                     ),)
+                 if value})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
