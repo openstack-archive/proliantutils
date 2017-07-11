@@ -662,11 +662,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
         nic_mock = mock.PropertyMock(return_value='1Gb')
         type(get_system_mock.return_value.pci_devices).max_nic_capacity = (
             nic_mock)
+        tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_PRESENT_ENABLED)
+        type(get_system_mock.return_value.bios_settings).tpm_state = (
+            tpm_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
+                    'trusted_boot': 'true',
                     'server_model': 'ProLiant DL180 Gen10'}
         self.assertEqual(expected, actual)
 
@@ -690,6 +694,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
         nic_mock = mock.PropertyMock(return_value='1Gb')
         type(get_system_mock.return_value.pci_devices).max_nic_capacity = (
             nic_mock)
+        type(get_system_mock.return_value.pci_devices).nic_capacity = (
+            nic_mock)
+        tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_NOT_PRESENT)
+        type(get_system_mock.return_value.bios_settings).tpm_state = (
+            tpm_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
