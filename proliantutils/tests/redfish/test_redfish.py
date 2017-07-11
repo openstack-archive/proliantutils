@@ -506,10 +506,35 @@ class RedfishOperationsTestCase(testtools.TestCase):
             self.rf_client.get_persistent_boot_device)
 
     @mock.patch.object(redfish.RedfishOperations,
+                       '_get_tpm_capability')
+    @mock.patch.object(redfish.RedfishOperations,
                        '_get_number_of_gpu_devices_connected')
-    def test_get_server_capabilities(self, gpu):
+    def test_get_server_capabilities(self, gpu, tpm):
         gpu.return_value = {'pci_gpu_devices': 2}
-        expected = {'pci_gpu_devices': 2}
+        tpm.return_value = True
+        expected = {'pci_gpu_devices': 2,
+                    'trusted_boot': 'true'}
         actual = self.rf_client.get_server_capabilities()
         self.assertEqual(expected, actual)
         gpu.assert_called_once_with()
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_true(self, get_system_mock):
+        val = "PresentEnabled"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_true1(self, get_system_mock):
+        val = "PresentDisabled"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertTrue(result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_tpm_capability_returns_false(self, get_system_mock):
+        val = "NotPresent"
+        get_system_mock.return_value.bios_settings.tpm_state = val
+        result = self.rf_client._get_tpm_capability()
+        self.assertFalse(result)
