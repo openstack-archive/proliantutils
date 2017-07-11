@@ -79,6 +79,10 @@ BOOT_OPTION_MAP = {'BOOT_ONCE': True,
 VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
                      'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
 
+TPM_STATE_MAP = {'PresentEnabled': True,
+                 'PresentDisabled': True,
+                 'NotPresent': False}
+
 LOG = log.get_logger(__name__)
 
 
@@ -589,4 +593,10 @@ class RedfishOperations(operations.IloOperations):
                           "%(error)s)") % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+        try:
+            tpm_state = sushy_system.bios_settings.tpm_state
+        except sushy.exceptions.SushyError:
+            tpm_state = "NotPresent"
+        if(TPM_STATE_MAP[tpm_state]):
+            capabilities['trusted_boot'] = 'true'
         return capabilities
