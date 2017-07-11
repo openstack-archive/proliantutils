@@ -313,6 +313,8 @@ class RedfishOperations(operations.IloOperations):
     def get_server_capabilities(self):
         capabilities = {}
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        if self._get_tpm_capability():
+            capabilities['trusted_boot'] = 'true'
         return capabilities
 
     def _get_number_of_gpu_devices_connected(self):
@@ -326,3 +328,17 @@ class RedfishOperations(operations.IloOperations):
                     gpu_list.append(member)
         gpu_devices_count = len(gpu_list)
         return {'pci_gpu_devices': gpu_devices_count}
+
+    def _get_tpm_capability(self):
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        import pdb
+        pdb.set_trace()
+        tpm_values = {"NotPresent": False,
+                      "PresentDisabled": True,
+                      "PresentEnabled": True}
+        try:
+            tpm_state = sushy_system.bios_settings.tpm_state
+        except exception.IloCommandNotSupportedError:
+            tpm_state = "NotPresent"
+        tpm_result = tpm_values[tpm_state]
+        return tpm_result

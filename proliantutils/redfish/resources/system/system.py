@@ -111,6 +111,8 @@ class HPESystem(system.System):
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
+        import pdb
+        pdb.set_trace()
         if self._pci_device is None:
             self._pci_device = pcidevice.PciDeviceCollection(
                 self._conn, self._oem_path.pci_device_path,

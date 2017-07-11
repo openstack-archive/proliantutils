@@ -22,6 +22,7 @@ class BIOSSettings(base.ResourceBase):
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
+    tpm_state = base.Field(["Attributes", "TpmState"])
     _pending_settings = None
 
     @property
