@@ -39,13 +39,13 @@ class VirtualMediaCollectionTestCase(testtools.TestCase):
             self.conn, '/redfish/v1/Managers/1/VirtualMedia',
             redfish_version='1.0.2')
 
-    def test_get_member_from_device(self):
+    def test_get_member_device(self):
         with open('proliantutils/tests/redfish/'
                   'json_samples/vmedia.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
 
-        obj = self.vmedia_coll_inst.get_member_from_device(
+        obj = self.vmedia_coll_inst.get_member_device(
             constants.VIRTUAL_MEDIA_CD)
 
         self.assertIsInstance(obj, virtual_media.VirtualMedia)
