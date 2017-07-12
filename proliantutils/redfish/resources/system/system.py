@@ -20,8 +20,12 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import drives
 from proliantutils.redfish.resources.system import ethernetinterface
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import simplestorage
+from proliantutils.redfish.resources.system import storage
+from proliantutils.redfish.resources.system import volumes
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
@@ -55,6 +59,13 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+    _simple_storage_path = base.Field(['SimpleStorage', '@odata.id'])
+    _storage_path = base.Field(['Storage', '@odata.id'])
+
+    _local_gb = None
+    _simplestorage = None
+    _storage = None
+    _volume = None
 
     _connected_mac_addresses = None
     _hpe_eth_interface = HpeEthernetInterface(['Oem', 'Hpe',
@@ -130,3 +141,140 @@ class HPESystem(system.System):
                     redfish_version=self.redfish_version))
 
         return self._connected_mac_addresses
+
+    @property
+    def simplestorage(self):
+        path = self._simple_storage_path
+        if path:
+            self._simplestorage = simplestorage.SimpleStorageCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._simplestorage
+
+    @property
+    def storage(self):
+        path = self._storage_path
+        if path:
+            self._storage = storage.StorageCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._storage
+
+    @property
+    def volume(self, path):
+        path = self._storage.volumes.get('@odata.id')
+        if path:
+            self._volume = volumes.VolumesCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._volume
+
+    @property
+    def storage_summary(self):
+        """Gets the storage size.
+
+        Redfish standards supports the disk data in following possible ways:
+        1. /redfish/v1/Systems/<System_id>/SimpleStorage - simple collection
+        2. /redfish/v1/Systems/<System_id>/Storage - Storage collection
+        3. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/Volumes -
+           Volume collection.
+        4. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/<Drive_id>
+           - Drive URIs.
+           or
+          /redfish/v1/Chassis/<Chassis_id>/<Drive_id> - drive URIs
+
+        The algorithm followed is:
+        1. Get the biggest size from SimpleStorage if SimpleStorage is present.
+        2. If the volume is present, get the biggest volume size else get the
+           biggest disk size(DAS).
+        3. Compares the disk size returned in 1 and 2 above.
+
+        There is a possibility that the system does not have "SimpleStorage"
+        and "Storage" URIs both and has the vendor specific storage URI.
+        """
+        size = 0
+        if self._simple_storage_path:
+            members = self.simplestorage.get_members()
+            if members:
+                for mem in members:
+                    for device in mem.Devices:
+                        if size < device.get("CapacityBytes"):
+                            size = device.get("CapacityBytes")
+        size_2 = self.get_disk_size_from_storage_uri()
+        if size_2:
+            self._local_gb = size_2
+        else:
+            self._local_gb = size
+        self._local_gb = (self._local_gb / (1024 * 1024 * 1024))
+        return self._local_gb
+
+    def get_disk_size_from_storage_uri(self):
+        """Gets volume/disk size.
+
+        The pseudo algo followed is:
+            1. Get members from Storage collection.
+            2. Check if ['Volumes'] is present in each of the Storage member.
+            3. If present, get Volumes collection given in the Storage member
+               data.
+            4. parse through each volume member and get the max volume size.
+            5. If ['Volumes'] is not present in any of the Storage, then
+               check if the ['Drives'] is present.(DAS case)
+            6. if '5' is yes, then traverse through each drive URI and get the
+               disk with greatest size.(drive URI may or may not be part of
+               Storage collection).
+            7. Follow steps 2 to 6 for each member of Storage collection.
+        """
+        size = 0
+        if self._storage_path:
+            members = self.storage.get_members()
+            if members:
+                for mem in members:
+                    vol = mem.volumes
+                    if vol is not None:
+                        vol_collection_uri = vol.get('@odata.id')
+                        vol_members = self.volumes_members(vol_collection_uri)
+                        for vol_mem in vol_members:
+                            if size < vol_mem.capacity_bytes:
+                                size = vol_mem.capacity_bytes
+                    else:
+                        drives_list = mem.drives
+                        if drives_list is not None:
+                            dr_size = self._get_size_by_drives(drives_list)
+                            if size < dr_size:
+                                size = dr_size
+        return size
+
+    def _get_size_by_drives(self, drives_list):
+        """Gets the disk of greatest size.
+
+        :param: drives_list: A list of drives as
+            [{'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'}]
+        Note: There is no collection as "Drives", hence if tried to get
+        data for '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives'
+        or '</redfish/v1/Chassis/<chassis_id>/Drives' will lead to no data or
+        invalid URI. The links can be even as follows:
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/<drive_id>'
+        or
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/<Dr_id>'.
+        In these cases the URIs,
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/'
+        or
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/'
+        gives no data and is invalid URI.
+
+        """
+
+        size = 0
+        for drive_mem in drives_list:
+            drive_uri = drive_mem.get('@odata.id')
+            dr_obj = drives.Drives(self._conn, drive_uri,
+                                   self.redfish_version)
+            if size < dr_obj.capacity_bytes:
+                size = dr_obj.capacity_bytes
+        return size
