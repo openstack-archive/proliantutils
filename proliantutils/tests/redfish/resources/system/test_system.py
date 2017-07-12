@@ -22,8 +22,10 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import system
 from sushy.resources.system import system as sushy_system
+from proliantutils.redfish import utils
 
 
 class HPESystemTestCase(testtools.TestCase):
@@ -169,3 +171,54 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_pci,
                       self.sys_inst.pci_devices)
         self.conn.get.return_value.json.assert_not_called()
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path(self, res_mock):
+        res = 'EthernetInterfaces'
+        res_mock.return_value = '/redfish/v1/Systems/1/EthernetInterfaces'
+        path = self.sys_inst._get_hpe_sub_resource_collection_path(res)
+        self.assertTrue(res_mock.called)
+        self.assertEqual(path, res_mock.return_value)
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path_oem_path(self, res_mock):
+        res = 'EthernetInterfaces'
+        error_val = exception.MissingAttributeError
+        oem_path = '/redfish/v1/Systems/1/EthernetInterfaces'
+        res_mock.side_effect = [error_val, oem_path]
+        path = self.sys_inst._get_hpe_sub_resource_collection_path(res)
+        self.assertTrue(res_mock.called)
+        self.assertEqual(path, oem_path)
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path_fail(self, res_mock):
+        error_val = exception.MissingAttributeError
+        res_mock.side_effect = [error_val, error_val]
+        self.assertRaises(
+            exception.MissingAttributeError,
+            self.sys_inst._get_hpe_sub_resource_collection_path,
+            'EthernetInterfaces')
+        self.assertTrue(res_mock.called)
+
+    @mock.patch.object(system.HPESystem,
+                       '_get_hpe_sub_resource_collection_path')
+    def test_ethernet_interfaces(self, path_mock):
+        self.conn.get.return_value.json.reset_mock()
+        eth_coll = None
+        eth_value = None
+        path_mock.return_value = '/redfish/v1/Systems/1/EthernetInterfaces'
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'ethernet_interfaces_collection.json')
+        with open(path, 'r') as f:
+            eth_coll = json.loads(f.read())
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'ethernet_interfaces.json', 'r') as f:
+            eth_value = (json.loads(f.read()))
+        self.conn.get.return_value.json.side_effect = [eth_coll,
+                                                       eth_value]
+        self.assertIsNone(self.sys_inst._ethernet_interfaces)
+        actual_macs = self.sys_inst.ethernet_interfaces.summary
+        self.assertEqual({'12:44:6A:3B:04:11': sys_cons.HEALTH_STATE_ENABLED},
+                         actual_macs)
+        self.assertIsInstance(self.sys_inst._ethernet_interfaces,
+                              ethernet_interface.EthernetInterfaceCollection)
