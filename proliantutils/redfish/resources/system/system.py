@@ -26,6 +26,8 @@ from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system.storage import \
+    smart_storage as hpe_smart_storage
 from proliantutils.redfish import utils
 
 
@@ -72,6 +74,12 @@ class HPESystem(system.System):
 
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
+
+    _local_gb = None
+    _simple_storages = None
+    _storages = None
+    _smart_storage = None
+
     _pci_devices = None
     _ethernet_interfaces = None
 
@@ -191,6 +199,7 @@ class HPESystem(system.System):
         self._pci_devices = None
         self._secure_boot = None
         self._ethernet_interfaces = None
+        self._smart_storage = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -213,3 +222,18 @@ class HPESystem(system.System):
                     redfish_version=self.redfish_version))
 
         return self._ethernet_interfaces
+
+    @property
+    def smart_storage(self):
+        """This property gets the object for smart storage.
+
+        This property gets the object for smart storage.
+        There is no collection for smart storages.
+        :returns: an instance of smart storage
+        """
+        if self._smart_storage is None:
+            self._smart_storage = hpe_smart_storage.HPESmartStorage(
+                self._conn, utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+                redfish_version=self.redfish_version)
+        return self._smart_storage
