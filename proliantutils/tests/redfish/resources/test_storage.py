@@ -1,0 +1,135 @@
+# Copyright 2017 Hewlett Packard Enterprise Development LP
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import json
+
+import mock
+import testtools
+
+from proliantutils.redfish.resources.system import storage
+
+
+class StorageTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(StorageTestCase, self).setUp()
+        self.conn = mock.Mock()
+        storage_file = 'proliantutils/tests/redfish/json_samples/storage1.json'
+        with open(storage_file, 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        path = ("/redfish/v1/Systems/437XR1138R2/Storage/1")
+        self.sys_stor = storage.Storage(
+            self.conn, path, redfish_version='1.0.2')
+
+    def test__parse_attributes(self):
+        self.sys_stor._parse_attributes()
+        self.assertEqual('1.0.2', self.sys_stor.redfish_version)
+        self.assertEqual('1', self.sys_stor.identity)
+        self.assertEqual('Local Storage Controller', self.sys_stor.name)
+        self.assertEqual('Integrated RAID Controller',
+                         self.sys_stor.description)
+        self.assertEqual('Enabled', self.sys_stor.status.state)
+        self.assertEqual('OK', self.sys_stor.status.health)
+        expected_controller = [{
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1#/"
+                         "StorageControllers/0",
+            "@odata.type": "#Storage.v1_0_0.StorageController",
+            "Id": "0",
+            "Name": "Contoso Integrated RAID",
+            "Description": "Contoso Integrated RAID",
+            "Status": {
+                "State": "Enabled",
+                "Health": "OK"
+            },
+            "Identifiers": [{
+                "DurableNameFormat": "NAA",
+                "DurableName": "345C59DBD970859C"
+            }],
+            "Manufacturer": "Contoso",
+            "Model": "12Gbs Integrated RAID",
+            "SerialNumber": "2M220100SL",
+            "PartNumber": "CT18754",
+            "SpeedGbps": 12,
+            "FirmwareVersion": "1.0.0.7",
+            "SupportedControllerProtocols": [
+                "PCIe"
+            ],
+            "SupportedDeviceProtocols": [
+                "SAS",
+                "SATA"
+            ]
+            }]
+        self.assertEqual(expected_controller,
+                         self.sys_stor.storage_controllers)
+        drives = [{
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
+                         "Drives/35D38F11ACEF7BD3"
+            }, {
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
+                         "Drives/3F5A8C54207B7233"
+            }, {
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
+                         "Drives/32ADF365C6C1B7BD"
+            }, {
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
+                         "Drives/3D58ECBC375FD9F2"
+            }]
+        self.assertEqual(drives, self.sys_stor.drives)
+        volumes = {
+            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Volumes"
+        }
+        self.assertEqual(volumes, self.sys_stor.volumes)
+
+
+class StorageCollectionTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(StorageCollectionTestCase, self).setUp()
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'storage1_collection.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        self.sys_stor_col = storage.StorageCollection(
+            self.conn, '/redfish/v1/Systems/437XR1138R2/Storage',
+            redfish_version='1.0.2')
+
+    def test__parse_attributes(self):
+        self.sys_stor_col._parse_attributes()
+        self.assertEqual('1.0.2', self.sys_stor_col.redfish_version)
+        self.assertEqual('Storage Collection',
+                         self.sys_stor_col.name)
+        path = ('/redfish/v1/Systems/437XR1138R2/Storage/1',)
+        self.assertEqual(path, self.sys_stor_col.members_identities)
+
+    @mock.patch.object(storage, 'Storage', autospec=True)
+    def test_get_member(self, mock_eth):
+        self.sys_stor_col.get_member(
+            '/redfish/v1/Systems/437XR1138R2/Storage/1')
+        mock_eth.assert_called_once_with(
+            self.sys_stor_col._conn,
+            ('/redfish/v1/Systems/437XR1138R2/Storage/1'),
+            redfish_version=self.sys_stor_col.redfish_version)
+
+    @mock.patch.object(storage, 'Storage', autospec=True)
+    def test_get_members(self, mock_eth):
+        members = self.sys_stor_col.get_members()
+        path = ("/redfish/v1/Systems/437XR1138R2/Storage/1")
+        calls = [
+            mock.call(self.sys_stor_col._conn, path,
+                      redfish_version=self.sys_stor_col.redfish_version),
+        ]
+        mock_eth.assert_has_calls(calls)
+        self.assertIsInstance(members, list)
+        self.assertEqual(1, len(members))
