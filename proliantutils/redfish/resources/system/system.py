@@ -22,6 +22,7 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
@@ -47,6 +48,10 @@ class HpeActionsField(base.CompositeField):
         PowerButtonActionField('#HpeComputerSystemExt.PowerButton'))
 
 
+class HpeEthernetInterface(base.CompositeField):
+    eth_interface_path = base.Field(['EthernetInterface', '@odata.id'])
+
+
 class HPESystem(system.System):
     """Class that extends the functionality of System resource class
 
@@ -59,6 +64,10 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+
+    _connected_mac_addresses = None
+    _hpe_eth_interface = HpeEthernetInterface(['Oem', 'Hpe',
+                                               'EthernetInterfaces'])
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -155,3 +164,25 @@ class HPESystem(system.System):
         new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
                                      'BootSourceOverrideTarget': new_device}
         self._conn.patch(self._path, new_boot_settings)
+
+    def _get_hpe_sub_resource_collection_path(self, sub_res):
+        path = None
+        try:
+            path = utils.get_subresource_path_by(self, sub_res)
+        except exception.MissingAttributeError:
+                path = utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', sub_res])
+        return path
+
+    @property
+    def ethernet_interfaces(self):
+        """Provide reference to EthernetInterfacesCollection instance"""
+        if self._connected_mac_addresses is None:
+            sub_res = 'EthernetInterfaces'
+            self._connected_mac_addresses = (
+                ethernet_interface.EthernetInterfaceCollection(
+                    self._conn,
+                    self._get_hpe_sub_resource_collection_path(sub_res),
+                    redfish_version=self.redfish_version))
+
+        return self._connected_mac_addresses
