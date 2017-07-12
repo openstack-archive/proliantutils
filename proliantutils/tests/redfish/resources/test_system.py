@@ -20,6 +20,7 @@ import testtools
 
 from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import ethernetinterface
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
 
@@ -79,3 +80,26 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_bios,
                       self.sys_inst.bios_settings)
         self.conn.get.return_value.json.assert_not_called()
+
+    def test_ethernet_interfaces(self):
+        self.conn.get.return_value.json.reset_mock()
+        eth_coll_return_value = None
+        eth_return_value = None
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'ethernetinterfaces_collection.json')
+        with open(path, 'r') as f:
+            eth_coll_return_value = json.loads(f.read())
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'ethernetinterfaces.json', 'r') as f:
+            eth_return_value = (json.loads(f.read()))
+
+        self.conn.get.return_value.json.side_effect = [eth_coll_return_value,
+                                                       eth_return_value]
+
+        self.assertIsNone(self.sys_inst._connected_mac_addresses)
+        actual_macs = self.sys_inst.ethernet_interfaces.eth_summary
+        self.assertEqual({'12:44:6A:3B:04:11': 'Enabled'},
+                         actual_macs)
+        self.assertIsInstance(self.sys_inst._connected_mac_addresses,
+                              ethernetinterface.EthernetInterfaceCollection)
+

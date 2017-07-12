@@ -38,6 +38,10 @@ class HpeActionsField(base.CompositeField):
         PowerButtonActionField('#HpeComputerSystemExt.PowerButton'))
 
 
+class HpeEthernetInterfacePath(base.CompositeField):
+    ethernet_interface_path = base.Field(['EthernetInterface', '@odata.id'])
+
+
 class HPESystem(system.System):
     """Class that extends the functionality of System resource class
 
@@ -50,6 +54,9 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+
+    _connected_mac_addresses = None
+    _hpe_ethernet_interface = HpeEthernetInterface(['Oem', 'Hpe', 'EthernetInterfaces'])
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -95,3 +102,30 @@ class HPESystem(system.System):
                 redfish_version=self.redfish_version)
 
         return self._bios_settings
+
+
+    def _get_hpe_sub_resource_collection_path(self, sub_resource):
+        """Gets the path to the EthernetInterfaces"""
+        eth_collection = None
+        try:
+            eth_collection = utils.get_subresource_path_by(self,sub_resource)
+        except:
+            eth_collection = self._hpe_ethernet_interface.ethernet_interface_path
+            if not eth_collection:
+                raise exceptions.MissingAttributeError(attribute=sub_resource,
+                                                       resource=self._path)
+        return eth_collection
+
+    @property
+    def ethernet_interfaces(self):
+        """Provide reference to EthernetInterfacesCollection instance"""
+        if self._connected_mac_addresses is None:
+            sub_res = 'EthernetInterfaces'
+            self._connected_mac_addresses = (
+                ethernetinterface.EthernetInterfaceCollection(
+                    self._conn,
+                    self._get_hpe_sub_resource_collection_path(sub_res),
+                    redfish_version=self.redfish_version))
+
+        return self._connected_mac_addresses
+
