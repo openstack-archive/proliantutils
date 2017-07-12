@@ -23,6 +23,7 @@ from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage
 from proliantutils.redfish.resources.system import system
 from sushy.resources.system import system as sushy_system
 
@@ -260,3 +261,15 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.secure_boot,
                               secure_boot.SecureBoot)
+
+    def test_smart_storages(self):
+        self.conn.get.return_value.json.reset_mock()
+        value = None
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'smart_storage.json', 'r') as f:
+            value = (json.loads(f.read()))
+        self.conn.get.return_value.json.return_value = value
+        self.assertIsNone(self.sys_inst._smart_storages)
+        self.sys_inst.smart_storages
+        self.assertIsInstance(self.sys_inst._smart_storages,
+                              smart_storage.SmartStorage)

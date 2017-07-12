@@ -24,6 +24,7 @@ from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage
 from proliantutils.redfish import utils
 
 
@@ -64,6 +65,12 @@ class HPESystem(system.System):
 
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
+
+    _local_gb = None
+    _simple_storages = None
+    _storages = None
+    _smart_storages = None
+
     _pci_devices = None
 
     def _get_hpe_push_power_button_action_element(self):
@@ -181,3 +188,19 @@ class HPESystem(system.System):
         self._bios_settings = None
         self._pci_devices = None
         self._secure_boot = None
+        self._smart_storages = None
+
+    @property
+    def smart_storages(self):
+        """This property gets the object for smart storage.
+
+        This property gets the object for smart storage.
+        There is no collection for smart storages.
+        :returns: an instance of smart storage
+        """
+        if self._smart_storages is None:
+            self._smart_storages = smart_storage.SmartStorage(
+                self._conn, utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+                redfish_version=self.redfish_version)
+        return self._smart_storages

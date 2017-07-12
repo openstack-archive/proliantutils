@@ -208,6 +208,9 @@
         "@odata.id": "/redfish/v1/Systems/1/SecureBoot/"
     },
     "SerialNumber": "                ",
+    "SimpleStorage": {
+        "@odata.id": "/redfish/v1/Systems/1/SimpleStorage/"
+    },
     "Status": {
         "Health": "OK",
         "State": "Enabled"
