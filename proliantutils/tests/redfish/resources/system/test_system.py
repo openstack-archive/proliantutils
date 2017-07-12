@@ -22,8 +22,10 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import system
 from sushy.resources.system import system as sushy_system
+from proliantutils.redfish import utils
 
 
 class HPESystemTestCase(testtools.TestCase):
@@ -169,3 +171,26 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIs(actual_pci,
                       self.sys_inst.pci_devices)
         self.conn.get.return_value.json.assert_not_called()
+
+    @mock.patch.object(utils,
+                       'get_hpe_sub_resource_collection_path')
+    def test_ethernet_interfaces(self, path_mock):
+        self.conn.get.return_value.json.reset_mock()
+        eth_coll = None
+        eth_value = None
+        path_mock.return_value = '/redfish/v1/Systems/1/EthernetInterfaces'
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'ethernet_interfaces_collection.json')
+        with open(path, 'r') as f:
+            eth_coll = json.loads(f.read())
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'ethernet_interfaces.json', 'r') as f:
+            eth_value = (json.loads(f.read()))
+        self.conn.get.return_value.json.side_effect = [eth_coll,
+                                                       eth_value]
+        self.assertIsNone(self.sys_inst._ethernet_interfaces)
+        actual_macs = self.sys_inst.ethernet_interfaces.summary
+        self.assertEqual({'12:44:6A:3B:04:11': sys_cons.HEALTH_STATE_ENABLED},
+                         actual_macs)
+        self.assertIsInstance(self.sys_inst._ethernet_interfaces,
+                              ethernet_interface.EthernetInterfaceCollection)

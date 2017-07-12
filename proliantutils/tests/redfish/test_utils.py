@@ -69,3 +69,31 @@ class UtilsTestCase(testtools.TestCase):
             '"subresource_path" cannot be empty',
             utils.get_subresource_path_by,
             self.sys_inst, [])
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path(self, res_mock):
+        res = 'EthernetInterfaces'
+        res_mock.return_value = '/redfish/v1/Systems/1/EthernetInterfaces'
+        path = utils.get_hpe_sub_resource_collection_path(res)
+        self.assertTrue(res_mock.called)
+        self.assertEqual(path, res_mock.return_value)
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path_oem_path(self, res_mock):
+        res = 'EthernetInterfaces'
+        error_val = exception.MissingAttributeError
+        oem_path = '/redfish/v1/Systems/1/EthernetInterfaces'
+        res_mock.side_effect = [error_val, oem_path]
+        path = utils.get_hpe_sub_resource_collection_path(res)
+        self.assertTrue(res_mock.called)
+        self.assertEqual(path, oem_path)
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    def test_get_hpe_sub_resource_collection_path_fail(self, res_mock):
+        error_val = exception.MissingAttributeError
+        res_mock.side_effect = [error_val, error_val]
+        self.assertRaises(
+            exception.MissingAttributeError,
+            utils.get_hpe_sub_resource_collection_path,
+            'EthernetInterfaces')
+        self.assertTrue(res_mock.called)

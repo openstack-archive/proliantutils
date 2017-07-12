@@ -21,6 +21,8 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish import utils
@@ -47,6 +49,10 @@ class HpeActionsField(base.CompositeField):
         PowerButtonActionField('#HpeComputerSystemExt.PowerButton'))
 
 
+class HpeEthernetInterface(base.CompositeField):
+    eth_interface_path = base.Field(['EthernetInterface', '@odata.id'])
+
+
 class HPESystem(system.System):
     """Class that extends the functionality of System resource class
 
@@ -60,7 +66,13 @@ class HPESystem(system.System):
 
     _bios_settings = None
 
+<<<<<<< HEAD
     _pci_devices = None
+=======
+    _ethernet_interfaces = None
+    _hpe_eth_interface = HpeEthernetInterface(['Oem', 'Hpe',
+                                               'EthernetInterfaces'])
+>>>>>>> 07b27be... Redfish: Adds macs discovery
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -88,11 +100,6 @@ class HPESystem(system.System):
             raise exception.InvalidInputError(msg)
 
         value = mappings.PUSH_POWER_BUTTON_VALUE_MAP_REV[target_value]
-        target_uri = (
-            self._get_hpe_push_power_button_action_element().target_uri)
-
-        self._conn.post(target_uri, data={'PushType': value})
-
     @property
     def bios_settings(self):
         """Property to provide reference to bios_settings instance
@@ -161,3 +168,20 @@ class HPESystem(system.System):
     def refresh(self):
         super(HPESystem, self).refresh()
         self._pci_devices = None
+        self._ethernet_interfaces = None
+
+    @property
+    def ethernet_interfaces(self):
+        """Provide reference to EthernetInterfacesCollection instances
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._ethernet_interfaces is None:
+            sub_res = 'EthernetInterfaces'
+            self._ethernet_interfaces = (
+                ethernet_interface.EthernetInterfaceCollection(
+                    self._conn,
+                    utils.get_hpe_sub_resource_collection_path(sub_res),
+                    redfish_version=self.redfish_version))
+        return self._ethernet_interfaces
