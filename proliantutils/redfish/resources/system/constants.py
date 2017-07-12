@@ -23,3 +23,7 @@ PUSH_POWER_BUTTON_PRESS_AND_HOLD = 'press and hold'
 
 BIOS_BOOT_MODE_LEGACY_BIOS = 'legacy bios'
 BIOS_BOOT_MODE_UEFI = 'uefi'
+
+
+HEALTH_STATE_ENABLED = 'Enabled'
+HEALTH_STATE_DISABLED = 'Disabled'
