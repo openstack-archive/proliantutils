@@ -50,3 +50,10 @@ SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
 TPM_PRESENT_ENABLED = 'Tpm present enabled'
 TPM_PRESENT_DISABLED = 'Tpm present disabled'
 TPM_NOT_PRESENT = 'Tpm not present'
+
+# Health related constants
+HEALTH_STATE_ENABLED = 'Enabled'
+HEALTH_STATE_DISABLED = 'Disabled'
+HEALTH_OK = 'OK'
+HEALTH_WARNING = 'Warning'
+HEALTH_CRITICAL = 'Critical'
