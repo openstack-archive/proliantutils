@@ -1,0 +1,42 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/SmartStorage/ArrayControllers/Members/0/DiskDrives/Members/$entity",
+    "@odata.etag": "W/\"559F84DD\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/DiskDrives/3/",
+    "@odata.type": "#HpeSmartStorageDiskDrive.v2_0_0.HpeSmartStorageDiskDrive",
+    "BlockSizeBytes": 512,
+    "CapacityGB": 600,
+    "CapacityLogicalBlocks": 1172123568,
+    "CapacityMiB": 572325,
+    "CarrierApplicationVersion": "0",
+    "CarrierAuthenticationStatus": "Fail",
+    "CurrentTemperatureCelsius": 29,
+    "Description": "HPE Smart Storage Disk Drive View",
+    "DiskDriveStatusReasons": [
+        "NonAuthenticDrive"
+    ],
+    "DiskDriveUse": "Raw",
+    "EncryptedDrive": false,
+    "FirmwareVersion": {
+        "Current": {
+            "VersionString": "HPDC"
+        }
+    },
+    "Id": "3",
+    "InterfaceSpeedMbps": 6000,
+    "InterfaceType": "SAS",
+    "LegacyBootPriority": "Primary",
+    "Location": "1I:0:1",
+    "LocationFormat": "ControllerPort:Box:Bay",
+    "MaximumTemperatureCelsius": 40,
+    "MediaType": "HDD",
+    "Model": "EG0600FBVFP",
+    "Name": "HpeSmartStorageDiskDrive",
+    "PowerOnHours": null,
+    "RotationalSpeedRpm": 10000,
+    "SSDEnduranceUtilizationPercentage": null,
+    "SerialNumber": "KWGER73R",
+    "Status": {
+        "Health": "Warning",
+        "State": "Enabled"
+    }
+}

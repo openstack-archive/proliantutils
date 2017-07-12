@@ -1,0 +1,29 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/SmartStorage/ArrayControllers/Members/0/LogicalDrives/Members/$entity",
+    "@odata.etag": "W/\"21D690E9\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/LogicalDrives/1/",
+    "@odata.type": "#HpeSmartStorageLogicalDrive.v2_1_0.HpeSmartStorageLogicalDrive",
+    "CapacityMiB": 953837,
+    "Description": "HPE Smart Storage Logical Drive View",
+    "Id": "1",
+    "InterfaceType": "SATA",
+    "LegacyBootPriority": "None",
+    "Links": {
+        "DataDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/LogicalDrives/1/DataDrives/"
+        }
+    },
+    "LogicalDriveEncryption": false,
+    "LogicalDriveName": "019D4217PWDRE0XRH57093 7DA4",
+    "LogicalDriveNumber": 1,
+    "LogicalDriveType": "Data",
+    "MediaType": "HDD",
+    "Name": "HpeSmartStorageLogicalDrive",
+    "Raid": "0",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "StripeSizeBytes": 262144,
+    "VolumeUniqueIdentifier": "600508B1001CC8EF62AC74E1ABD407C1"
+}
