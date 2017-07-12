@@ -22,6 +22,7 @@ from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants
+from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
@@ -72,6 +73,7 @@ class HPESystem(system.System):
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
     _pci_devices = None
+    _ethernet_interfaces = None
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -188,3 +190,26 @@ class HPESystem(system.System):
         self._bios_settings = None
         self._pci_devices = None
         self._secure_boot = None
+        self._ethernet_interfaces = None
+
+    def _get_hpe_sub_resource_collection_path(self, sub_res):
+        path = None
+        try:
+            path = utils.get_subresource_path_by(self, sub_res)
+        except exception.MissingAttributeError:
+                path = utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', sub_res])
+        return path
+
+    @property
+    def ethernet_interfaces(self):
+        """Provide reference to EthernetInterfacesCollection instance"""
+        if self._ethernet_interfaces is None:
+            sub_res = 'EthernetInterfaces'
+            self._ethernet_interfaces = (
+                ethernet_interface.EthernetInterfaceCollection(
+                    self._conn,
+                    self._get_hpe_sub_resource_collection_path(sub_res),
+                    redfish_version=self.redfish_version))
+
+        return self._ethernet_interfaces

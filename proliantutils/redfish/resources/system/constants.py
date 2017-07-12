@@ -61,3 +61,10 @@ CPUVT_DISABLED = 'cpu_vt disabled'
 SUPPORTED_LEGACY_BIOS_ONLY = 'legacy bios only'
 SUPPORTED_UEFI_ONLY = 'uefi only'
 SUPPORTED_LEGACY_BIOS_AND_UEFI = 'legacy bios and uefi'
+
+# Health related constants
+HEALTH_STATE_ENABLED = 'Enabled'
+HEALTH_STATE_DISABLED = 'Disabled'
+HEALTH_OK = 'OK'
+HEALTH_WARNING = 'Warning'
+HEALTH_CRITICAL = 'Critical'
