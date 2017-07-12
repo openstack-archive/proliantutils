@@ -46,6 +46,9 @@
             "PciRoot(0x0)/Pci(0x17,0x0)/Sata(0x3,0x0,0x0)"
         ]
     },
+    "EthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/"
+    },
     "HostName": "",
     "Id": "1",
     "IndicatorLED": "Off",
@@ -225,6 +228,87 @@
     ],
     "UUID": "00000000-0000-0000-0000-000000000000"
   },
+
+"System_for_oem_ethernet_interfaces":{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
+    "@odata.etag": "W/\"0E79655D\"",
+    "@odata.id": "/redfish/v1/Systems/1/",
+    "@odata.type": "#ComputerSystem.v1_2_0.ComputerSystem",
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "ForceRestart",
+                "Nmi",
+                "PushPowerButton"
+            ],
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset/"
+        }
+    },
+    "AssetTag": "",
+    "Bios": {
+        "@odata.id": "/redfish/v1/systems/1/bios/"
+    },
+    "BiosVersion": "U31 v1.00 (03/11/2017)",
+    "Boot": {
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideMode": "UEFI",
+        "BootSourceOverrideTarget": "None",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "SDCard",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiHttp",
+            "UefiTarget"
+        ],
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverride@Redfish.AllowableValues": [
+            "HD(1,GPT,7F14DF43-6600-420A-9950-C028836F6A5D,0x800,0x64000)/\\EFI\\centos\\shim.efi",
+            "UsbClass(0xFFFF,0xFFFF,0xFF,0xFF,0xFF)",
+            "PciRoot(0x0)/Pci(0x17,0x0)/Sata(0x3,0x0,0x0)"
+        ]
+    },
+    "HostName": "",
+    "Id": "1",
+    "Model": "ProLiant DL180 Gen10",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeComputerSystemExt.v2_1_0.HpeComputerSystemExt",
+            "Actions": {
+                "#HpeComputerSystemExt.PowerButton": {
+                    "PushType@Redfish.AllowableValues": [
+                        "Press",
+                        "PressAndHold"
+                    ],
+                    "target": "/redfish/v1/Systems/1/Actions/Oem/Hpe/HpeComputerSystemExt.PowerButton/"
+                },
+                "#HpeComputerSystemExt.SystemReset": {
+                    "ResetType@Redfish.AllowableValues": [
+                        "ColdBoot"
+                    ],
+                    "target": "/redfish/v1/Systems/1/Actions/Oem/Hpe/HpeComputerSystemExt.SystemReset/"
+                }
+            },
+            "Links": {
+                "EthernetInterfaces": {
+                    "@odata.id": "/redfish/v1/Systems/1/EthernetInterfaces/"
+                },
+                "SmartStorage": {
+                    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/"
+                }
+            }
+
+         }
+      }
+   },
 
  "System_op_for_one_time_boot_cdrom": {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
