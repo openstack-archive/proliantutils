@@ -55,3 +55,10 @@ TPM_NOT_PRESENT = 'Tpm not present'
 
 CPUVT_ENABLED = 'cpu_vt enabled'
 CPUVT_DISABLED = 'cpu_vt disabled'
+
+# Health related constants
+HEALTH_STATE_ENABLED = 'Enabled'
+HEALTH_STATE_DISABLED = 'Disabled'
+HEALTH_OK = 'OK'
+HEALTH_WARNING = 'Warning'
+HEALTH_CRITICAL = 'Critical'
