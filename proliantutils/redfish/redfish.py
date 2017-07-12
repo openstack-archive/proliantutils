@@ -349,7 +349,7 @@ class RedfishOperations(operations.IloOperations):
         manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             vmedia_device = (
-                manager.virtual_media.get_member_from_device(
+                manager.virtual_media.get_member_device(
                     VIRTUAL_MEDIA_MAP[device]))
             if not vmedia_device.inserted:
                 LOG.debug(self._("No media available in the device '%s' to "
@@ -379,7 +379,7 @@ class RedfishOperations(operations.IloOperations):
         manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             vmedia_device = (
-                manager.virtual_media.get_member_from_device(
+                manager.virtual_media.get_member_device(
                     VIRTUAL_MEDIA_MAP[device]))
             if vmedia_device.inserted:
                 vmedia_device.eject_vmedia()
@@ -425,7 +425,7 @@ class RedfishOperations(operations.IloOperations):
         manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             vmedia_device = (
-                manager.virtual_media.get_member_from_device(
+                manager.virtual_media.get_member_device(
                     VIRTUAL_MEDIA_MAP[device]))
             vmedia_device.set_vm_status(BOOT_OPTION_MAP[boot_option])
         except sushy.exceptions.SushyError as e:

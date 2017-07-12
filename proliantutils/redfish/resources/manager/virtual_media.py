@@ -111,7 +111,7 @@ class VirtualMediaCollection(base.ResourceCollectionBase):
     def _resource_type(self):
         return VirtualMedia
 
-    def get_member_from_device(self, device):
+    def get_member_device(self, device):
         """Returns the given virtual media device object.
 
         :param  device: virtual media device to be queried
