@@ -20,11 +20,15 @@ from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import array_controller
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import simple_storage
+from proliantutils.redfish.resources.system import smart_storage
+from proliantutils.redfish.resources.system import storage
 from proliantutils.redfish import utils
 
 
@@ -69,6 +73,13 @@ class HPESystem(system.System):
 
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
+
+    _local_gb = None
+    _simple_storages = None
+    _storages = None
+    _smart_storages = None
+    _array_controllers = None
+
     _pci_devices = None
     _ethernet_interfaces = None
 
@@ -188,6 +199,10 @@ class HPESystem(system.System):
         self._pci_devices = None
         self._secure_boot = None
         self._ethernet_interfaces = None
+        self._storages = None
+        self._smart_storages = None
+        self._simple_storages = None
+        self._array_controllers = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -208,5 +223,210 @@ class HPESystem(system.System):
                     self._conn,
                     self._get_hpe_sub_resource_collection_path(sub_res),
                     redfish_version=self.redfish_version))
-
         return self._ethernet_interfaces
+
+    @property
+    def simple_storages(self):
+        """This property gets the list of instances for SimpleStorages
+
+        This property gets the list of instances for SimpleStorages
+        :returns: a list of instances of SimpleStorages
+        """
+
+        if self._simple_storages is None:
+            try:
+                self._simple_storages = simple_storage.SimpleStorageCollection(
+                    self._conn, utils.get_subresource_path_by(
+                        self, 'SimpleStorage'),
+                    redfish_version=self.redfish_version)
+                return self._simple_storages
+            except exception.MissingAttributeError:
+                LOG.debug("The resource 'SimpleStorage' missing")
+                pass
+
+    @property
+    def storages(self):
+        """This property gets the list of instances for Storages
+
+        This property gets the list of instances for Storages
+        :returns: a list of instances of Storages
+        """
+        if self._storages is None:
+            try:
+                self._storages = storage.StorageCollection(
+                    self._conn, utils.get_subresource_path_by(self, 'Storage'),
+                    redfish_version=self.redfish_version)
+                return self._storages
+            except exception.MissingAttributeError:
+                LOG.debug("The resource 'Storage' missing")
+                pass
+
+    @property
+    def smart_storages(self):
+        """This property gets the object for smart storage.
+
+        This property gets the object for smart storage.
+        There is no collection for smart storages.
+        :returns: an instance of smart storage
+        """
+        if self._smart_storages is None:
+            self._smart_storages = smart_storage.SmartStorage(
+                self._conn, utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+                redfish_version=self.redfish_version)
+        return self._smart_storages
+
+    @property
+    def array_controllers(self):
+        """This property gets the list of instances for array controllers
+
+        This property gets the list of instances for array controllers
+        :returns: a list of instances of array controllers.
+        """
+        if self._array_controllers is None:
+            path = self.smart_storages.links.array_controllers
+            self._array_controllers = (
+                array_controller.ArrayControllerCollection(
+                    self._conn, path,
+                    redfish_version=self.redfish_version))
+        return self._array_controllers
+
+    @property
+    def storage_summary(self):
+        """Gets the storage size.
+
+        Redfish standards supports the disk data in following possible ways:
+        1. /redfish/v1/Systems/<System_id>/SimpleStorage - simple collection
+        2. /redfish/v1/Systems/<System_id>/Storage - Storage collection
+        3. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/Volumes -
+           Volume collection.
+        4. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/<Drive_id>
+           - Drive URIs.
+           or
+          /redfish/v1/Chassis/<Chassis_id>/<Drive_id> - drive URIs
+
+        The algorithm followed is:
+        1. Get the biggest size from SimpleStorage if SimpleStorage is present.
+        2. If the volume is present, get the biggest volume size else get the
+           biggest disk size(DAS).
+        3. Compares the disk size returned in 1 and 2 above.
+
+        There is a possibility that the system does not have "SimpleStorage"
+        and "Storage" URIs both and has the vendor specific storage URI.
+
+        :returns the greatest size in GB.
+        """
+        size = 0
+        disk_size_list = []
+        vol_size_list = []
+        if self.storages.volume_paths is not None:
+            vol_size_list.append(self._get_disk_size_from_storage_uri())
+        else:
+            disk_size_list.append(self._get_disk_size_from_storage_uri())
+
+        if (self.array_controllers.logical_drive is not None):
+            vol_size_list.append(self._get_size_by_smart_storage())
+        else:
+            disk_size_list.append(self._get_size_by_smart_storage())
+
+        if not(self.array_controllers.logical_drive and
+               self.storages.volume):
+            disk_size_list.append(self.simple_storage.size)
+
+        if len(vol_size_list) > 0:
+            for size_member in vol_size_list:
+                if size < size_member:
+                    size = size_member
+        else:
+            for size_member in disk_size_list:
+                if size < size_member:
+                    size = size_member
+
+        self._local_gb = size / (1024 * 1024 * 1024)
+        return self._local_gb
+
+    def _get_disk_size_from_storage_uri(self):
+        """Gets volume/disk size.
+
+        The pseudo algo followed is:
+            1. Get members from Storage collection.
+            2. Check if ['Volumes'] is present in each of the Storage member.
+            3. If present, get Volumes collection given in the Storage member
+               data.
+            4. parse through each volume member and get the max volume size.
+            5. If ['Volumes'] is not present in any of the Storage, then
+               check if the ['Drives'] is present.(DAS case)
+            6. if '5' is yes, then traverse through each drive URI and get the
+               disk with greatest size.(drive URI may or may not be part of
+               Storage collection).
+            7. Follow steps 2 to 6 for each member of Storage collection.
+        :returns the size in Bytes.
+        """
+        size = 0
+        volume_paths = self.storages.volume_paths
+        if volume_paths is not None:
+            size = self.storages.volume.maximum_size
+        else:
+            drives_list = self.storages.disk_drive
+            if drives_list is not None:
+                size = self._get_size_by_drives(drives_list)
+        return size
+
+    def _get_size_by_drives(self, drives_list):
+        """Gets the disk of greatest size.
+
+        :param: drives_list: A list of drives as
+            [{'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'}]
+        Note: There is no collection as "Drives", hence if tried to get
+        data for '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives'
+        or '</redfish/v1/Chassis/<chassis_id>/Drives' will lead to no data or
+        invalid URI. The links can be even as follows:
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/<drive_id>'
+        or
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/<Dr_id>'.
+        In these cases the URIs,
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/'
+        or
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/'
+        gives no data and is invalid URI.
+
+        :returns the size in Bytes.
+        """
+
+        size = 0
+        for dr_obj in drives_list:
+            if size < dr_obj.capacity_bytes:
+                size = dr_obj.capacity_bytes
+        return size
+
+    def _get_size_by_smart_storage(self):
+        """Traverse through SmartStorgae URI
+
+        Traverse through SmartStorage URI and gets the greatest volume size
+        if volume is configured else gets the greatest disk size.
+        :returns the size in Bytes.
+        """
+        size = 0
+        logical_drive_members = self.array_controllers.logical_drives
+        if logical_drive_members:
+            size = self.array_controllers.logical_drives.maximum_size
+        else:
+            smart_disk_drive_members = self.array_controllers.smart_disk_drive
+            if smart_disk_drive_members:
+                size = self.array_controllers.smart_disk_drive.maximum_size
+            unconfigured_mem = (
+                self.array_controllers.unconfigured_disk_drive)
+            if unconfigured_mem:
+                unconfigured_size = unconfigured_mem.maximum_size
+                if size < unconfigured_size:
+                    size = unconfigured_size
+        return size
