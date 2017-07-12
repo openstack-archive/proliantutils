@@ -20,10 +20,19 @@ from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import array_controller
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import disk_drives
+from proliantutils.redfish.resources.system import drives
 from proliantutils.redfish.resources.system import ethernet_interface
+from proliantutils.redfish.resources.system import logical_drives
 from proliantutils.redfish.resources.system import mappings
+from proliantutils.redfish.resources.system import simple_storage
+from proliantutils.redfish.resources.system import smart_storage
+from proliantutils.redfish.resources.system import storage
+from proliantutils.redfish.resources.system import unconfigured_drives
+from proliantutils.redfish.resources.system import volumes
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
@@ -64,6 +73,20 @@ class HPESystem(system.System):
     """Oem specific system extensibility actions"""
 
     _bios_settings = None
+    _simple_storage_path = base.Field(['SimpleStorage', '@odata.id'])
+    _storage_path = base.Field(['Storage', '@odata.id'])
+    _smart_storage_path = base.Field(['Oem', 'Hpe', 'Links',
+                                      'SmartStorage', '@odata.id'])
+
+    _local_gb = None
+    _simple_storages = None
+    _storages = None
+    _volume = None
+    _smart_storages = None
+    _array_controllers = None
+    _logical_drive = None
+    _smart_disk_drive = None
+    _smart_unconfigured_disk_drive = None
 
     _ethernet_interfaces = None
     _hpe_eth_interface = HpeEthernetInterface(['Oem', 'Hpe',
@@ -171,9 +194,221 @@ class HPESystem(system.System):
                     self._conn,
                     self._get_hpe_sub_resource_collection_path(sub_res),
                     redfish_version=self.redfish_version))
-
         return self._ethernet_interfaces
 
     def refresh(self):
         super(HPESystem, self).refresh()
         self._ethernet_interfaces = None
+
+    @property
+    def simple_storages(self):
+        path = self._simple_storage_path
+        if path:
+            self._simple_storages = simple_storage.SimpleStorageCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._simple_storages
+
+    @property
+    def storages(self):
+        path = self._storage_path
+        if path:
+            self._storages = storage.StorageCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._storages
+
+    @property
+    def volume(self):
+        self._volume = []
+        volume_paths = self.storages.volume_paths
+        if volume_paths is not None or len(volume_paths) > 0:
+            for path in volume_paths:
+                vol = volumes.VolumesCollection(
+                    self._conn, path, redfish_version=self.redfish_version)
+                self._volume.append(vol)
+        return self._volume
+
+    @property
+    def diskdrive(self):
+        members = self.storages.get_members()
+        for member in members:
+            path = self._storage.drives.get('@odata.id')
+            self._diskdrive.append(path)
+        return self._diskdrive
+
+    @property
+    def smart_storages(self):
+        path = self._smart_storage_path
+        if path:
+            self._smart_storages = smart_storage.SmartStorageCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._smart_storages
+
+    @property
+    def array_controllers(self):
+        members = self.smart_storages.get_members()
+        for member in members:
+            self._array_controller_path = member.array_controller
+        path = self._array_controller_path
+        if path:
+            self._array_controllers = (
+                array_controller.ArrayControllerCollection(
+                    self._conn, path,
+                    redfish_version=self.redfish_version))
+        return self._array_controller
+
+    @property
+    def logical_drive(self):
+        members = self.array_controllers.get_members()
+        for member in members:
+            self._logical_drive_path = member.logical_drives
+        path = self._logical_drive_path
+        if path:
+            self._logical_drive = logical_drives.LogicalDriveCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._logical_drive
+
+    @property
+    def smart_disk_drive(self):
+        members = self.array_controller.get_members()
+        for member in members:
+            self._smart_disk_drive_path = member.disk_drive
+        path = self._smart_disk_drive_path
+        if path:
+            self._smart_disk_drive = disk_drives.DiskDriveCollection(
+                self._conn, path, redfish_version=self.redfish_version)
+        return self._smart_disk_drive
+
+    @property
+    def smart_unconfigured_disk_drive(self):
+        members = self.array_controller.get_members()
+        for member in members:
+            self._smart_disk_drive_path = member.disk_drive
+        path = self._smart_unconfigured_disk_drive_path
+        if path:
+            self._smart_unconfigured_disk_drive = (
+                unconfigured_drives.DiskDriveCollection(
+                    self._conn, path, redfish_version=self.redfish_version))
+        return self._smart_unconfigured_disk_drive
+
+    @property
+    def storage_summary(self):
+        """Gets the storage size.
+
+        Redfish standards supports the disk data in following possible ways:
+        1. /redfish/v1/Systems/<System_id>/SimpleStorage - simple collection
+        2. /redfish/v1/Systems/<System_id>/Storage - Storage collection
+        3. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/Volumes -
+           Volume collection.
+        4. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/<Drive_id>
+           - Drive URIs.
+           or
+          /redfish/v1/Chassis/<Chassis_id>/<Drive_id> - drive URIs
+
+        The algorithm followed is:
+        1. Get the biggest size from SimpleStorage if SimpleStorage is present.
+        2. If the volume is present, get the biggest volume size else get the
+           biggest disk size(DAS).
+        3. Compares the disk size returned in 1 and 2 above.
+
+        There is a possibility that the system does not have "SimpleStorage"
+        and "Storage" URIs both and has the vendor specific storage URI.
+        """
+        size = 0
+        if self._storage_path:
+            size = self._get_disk_size_from_storage_uri()
+        if self._simple_storage_path and not self._volume:
+            if size < self.simple_storage.size:
+                size = self.simple_storage.size
+        if self._smart_storage_path:
+            smart_size = self._get_size_by_smart_storage()
+            if size < smart_size:
+                size = smart_size
+        self._local_gb = size / (1024 * 1024 * 1024)
+        return self._local_gb
+
+    def get_disk_size_from_storage_uri(self):
+        """Gets volume/disk size.
+
+        The pseudo algo followed is:
+            1. Get members from Storage collection.
+            2. Check if ['Volumes'] is present in each of the Storage member.
+            3. If present, get Volumes collection given in the Storage member
+               data.
+            4. parse through each volume member and get the max volume size.
+            5. If ['Volumes'] is not present in any of the Storage, then
+               check if the ['Drives'] is present.(DAS case)
+            6. if '5' is yes, then traverse through each drive URI and get the
+               disk with greatest size.(drive URI may or may not be part of
+               Storage collection).
+            7. Follow steps 2 to 6 for each member of Storage collection.
+        """
+        size = 0
+        volume_members = self.volume
+        if volume_members:
+            size = self.volume.size
+        else:
+            drives_list = self.diskdrives
+            if drives_list is not None:
+                dr_size = self._get_size_by_drives(drives_list)
+                if size < dr_size:
+                    size = dr_size
+        return size
+
+    def _get_size_by_drives(self, drives_list):
+        """Gets the disk of greatest size.
+
+        :param: drives_list: A list of drives as
+            [{'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_id>'},
+            {'@odata.id':
+                '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_id>'}]
+        Note: There is no collection as "Drives", hence if tried to get
+        data for '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives'
+        or '</redfish/v1/Chassis/<chassis_id>/Drives' will lead to no data or
+        invalid URI. The links can be even as follows:
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/<drive_id>'
+        or
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/<Dr_id>'.
+        In these cases the URIs,
+        '</redfish/v1/Systems/<System_id>/Storage/<St_id>/Drives/<Dr_type>/'
+        or
+        '</redfish/v1/Chassis/<chassis_id>/Drives/<Drive_type>/'
+        gives no data and is invalid URI.
+
+        """
+
+        size = 0
+        for drive_mem in drives_list:
+            drive_uri = drive_mem.get('@odata.id')
+            dr_obj = drives.Drives(self._conn, drive_uri,
+                                   self.redfish_version)
+            if size < dr_obj.capacity_bytes:
+                size = dr_obj.capacity_bytes
+        return size
+
+    def _get_size_by_smart_storage(self):
+        """Traverse through SmartStorgae URI
+
+        Traverse through SmartStorage URI and gets the greatest volume size
+        if volume is configured else gets the greatest disk size.
+        """
+        size = 0
+        logical_drive_members = self.logical_drives
+        if logical_drive_members:
+            size = self.logical_drives.size
+        else:
+            smart_disk_drive_members = self.smart_disk_drive
+            if smart_disk_drive_members:
+                size = self.smart_disk_drive.size
+            unconfigured_disk_drive_mem = self.smart_unconfigured_disk_drive
+            if unconfigured_disk_drive_mem:
+                unconfigured_size = self.smart_unconfigured_disk_drive.size
+                if size < unconfigured_size:
+                    size = unconfigured_size
+        return size

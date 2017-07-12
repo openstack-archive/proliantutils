@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/SmartStorage/ArrayControllers/Members/0/LogicalDrives",
+    "@odata.etag": "W/\"34C0F6B2\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/LogicalDrives/",
+    "@odata.type": "#HpeSmartStorageLogicalDriveCollection.HpeSmartStorageLogicalDriveCollection",
+    "Description": "HPE Smart Storage Logical Drives View",
+    "Members@odata.count": 0,
+    "Name": "HpeSmartStorageLogicalDrives"
+}
