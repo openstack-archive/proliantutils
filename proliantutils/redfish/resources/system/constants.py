@@ -35,3 +35,9 @@ BOOT_SOURCE_TARGET_HDD = 'Hdd'
 
 SRIOV_ENABLED = 'sriov enabled'
 SRIOV_DISABLED = 'sriov disabled'
+
+HEALTH_STATE_ENABLED = 'Enabled'
+HEALTH_STATE_DISABLED = 'Disabled'
+HEALTH_OK = 'OK'
+HEALTH_WARNING = 'Warning'
+HEALTH_CRITICAL = 'Critical'
