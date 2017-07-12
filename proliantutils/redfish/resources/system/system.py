@@ -20,11 +20,15 @@ from sushy.resources.system import system
 
 from proliantutils import exception
 from proliantutils import log
+from proliantutils.redfish.resources.system import array_controller
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import simple_storage
+from proliantutils.redfish.resources.system import smart_storage
+from proliantutils.redfish.resources.system import storage
 from proliantutils.redfish import utils
 
 
@@ -69,6 +73,13 @@ class HPESystem(system.System):
 
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
+
+    _local_gb = None
+    _simple_storages = None
+    _storages = None
+    _smart_storages = None
+    _array_controllers = None
+
     _pci_devices = None
     _ethernet_interfaces = None
 
@@ -188,6 +199,10 @@ class HPESystem(system.System):
         self._pci_devices = None
         self._secure_boot = None
         self._ethernet_interfaces = None
+        self._storages = None
+        self._smart_storages = None
+        self._simple_storages = None
+        self._array_controllers = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -208,5 +223,115 @@ class HPESystem(system.System):
                     self._conn,
                     self._get_hpe_sub_resource_collection_path(sub_res),
                     redfish_version=self.redfish_version))
-
         return self._ethernet_interfaces
+
+    @property
+    def simple_storages(self):
+        """This property gets the list of instances for SimpleStorages
+
+        This property gets the list of instances for SimpleStorages
+        :returns: a list of instances of SimpleStorages
+        """
+
+        if self._simple_storages is None:
+            self._simple_storages = simple_storage.SimpleStorageCollection(
+                self._conn, utils.get_subresource_path_by(
+                    self, 'SimpleStorage'),
+                redfish_version=self.redfish_version)
+        return self._simple_storages
+
+    @property
+    def storages(self):
+        """This property gets the list of instances for Storages
+
+        This property gets the list of instances for Storages
+        :returns: a list of instances of Storages
+        """
+        if self._storages is None:
+            self._storages = storage.StorageCollection(
+                self._conn, utils.get_subresource_path_by(self, 'Storage'),
+                redfish_version=self.redfish_version)
+        return self._storages
+
+    @property
+    def smart_storages(self):
+        """This property gets the object for smart storage.
+
+        This property gets the object for smart storage.
+        There is no collection for smart storages.
+        :returns: an instance of smart storage
+        """
+        if self._smart_storages is None:
+            self._smart_storages = smart_storage.SmartStorage(
+                self._conn, utils.get_subresource_path_by(
+                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+                redfish_version=self.redfish_version)
+        return self._smart_storages
+
+    @property
+    def array_controllers(self):
+        """This property gets the list of instances for array controllers
+
+        This property gets the list of instances for array controllers
+        :returns: a list of instances of array controllers.
+        """
+        if self._array_controllers is None:
+            path = self.smart_storages.links.array_controllers
+            self._array_controllers = (
+                array_controller.ArrayControllerCollection(
+                    self._conn, path,
+                    redfish_version=self.redfish_version))
+        return self._array_controllers
+
+    @property
+    def storage_summary(self):
+        """Gets the storage size.
+
+        Redfish standards supports the disk data in following possible ways:
+        1. /redfish/v1/Systems/<System_id>/SimpleStorage - simple collection
+        2. /redfish/v1/Systems/<System_id>/Storage - Storage collection
+        3. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/Volumes -
+           Volume collection.
+        4. /redfish/v1/Systems/<System_id>/Storage/<storage_id>/<Drive_id>
+           - Drive URIs.
+           or
+          /redfish/v1/Chassis/<Chassis_id>/<Drive_id> - drive URIs
+
+        The algorithm followed is:
+        1. Get the biggest size from SimpleStorage if SimpleStorage is present.
+        2. If the volume is present, get the biggest volume size else get the
+           biggest disk size(DAS).
+        3. Compares the disk size returned in 1 and 2 above.
+
+        There is a possibility that the system does not have "SimpleStorage"
+        and "Storage" URIs both and has the vendor specific storage URI.
+
+        :returns the greatest size in GB.
+        """
+        size = 0
+        disk_size = []
+        log_size = []
+        try:
+            if self.array_controllers is not None:
+                log_size.append(
+                    self.array_controllers.maximum_logical_drive_size)
+                disk_size.append(self.array_controllers.maximum_disk_size)
+            if self.storages is not None:
+                log_size.append(self.storages.maximum_volume_size)
+                disk_size.append(self.storages.maximum_disk_size)
+            if self.simple_storages is not None:
+                disk_size.append(self.storages.maximum_disk_size)
+        except exception.MissingAttributeError:
+            pass
+
+        if len(log_size) > 0:
+            for val in log_size:
+                if size < val:
+                    size = val
+        if size == 0:
+            if len(disk_size) > 0:
+                for val in disk_size:
+                    if size < val:
+                        size = val
+        self._local_gb = size / (1024 * 1024 * 1024)
+        return self._local_gb
