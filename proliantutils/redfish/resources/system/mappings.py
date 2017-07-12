@@ -58,3 +58,20 @@ SECUREBOOT_RESET_KEYS_MAP = {
 
 SECUREBOOT_RESET_KEYS_MAP_REV = (
     utils.revert_dictionary(SECUREBOOT_RESET_KEYS_MAP))
+
+HEALTH_STATE_VALUE_MAP = {
+    'Enabled': constants.HEALTH_STATE_ENABLED,
+    'Disabled': constants.HEALTH_STATE_DISABLED,
+}
+
+HEALTH_STATE_VALUE_MAP_REV = (
+    utils.revert_dictionary(HEALTH_STATE_VALUE_MAP))
+
+HEALTH_VALUE_MAP = {
+    'OK': constants.HEALTH_OK,
+    'Warning': constants.HEALTH_WARNING,
+    'Critical': constants.HEALTH_CRITICAL
+}
+
+HEALTH_VALUE_MAP_REV = (
+    utils.revert_dictionary(HEALTH_VALUE_MAP))
