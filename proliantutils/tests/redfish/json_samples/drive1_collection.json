@@ -1,0 +1,11 @@
+{
+    "@odata.type": "#DrivesCollection.DrivesCollection",
+    "Name": "Drives Collection",
+    "Members@odata.count": 1,
+    "Members": [{
+        "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Drives/3F5A8C54207B7233"
+    }],
+    "@odata.context": "/redfish/v1/$metadata#DriveCollection.DriveCollection",
+    "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Drives"
+}
+
