@@ -577,13 +577,16 @@ class RedfishOperations(operations.IloOperations):
         :raises: IloError if any Sushy error is encountered.
         """
         capabilities = {}
+
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
+            capabilities.update(
+                {'sriov_enabled': sushy_system.bios_settings.sriov_enabled})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
-                          "PCIDevice resource or its members. Error"
+                          "the server capabilities. Error"
                           "%(error)s)") % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
