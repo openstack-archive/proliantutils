@@ -28,6 +28,7 @@ from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
 
@@ -655,11 +656,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
                 'pci_device.json')
         with open(path, 'r') as f:
             val.append(json.loads(f.read()))
-        gpu_mock = mock.PropertyMock(return_value=val)
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
-            gpu_mock)
+            [mock.MagicMock(spec=pci_device.PCIDevice)])
+        type(get_system_mock.return_value.bios_settings).sriov = (
+            sys_cons.SRIOV_ENABLED)
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')

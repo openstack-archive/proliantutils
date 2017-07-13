@@ -597,16 +597,25 @@ class RedfishOperations(operations.IloOperations):
     def get_server_capabilities(self):
         """Returns the server capabilities
 
-        :raises: IloError if any Sushy error is encountered.
+        raises: IloError on an error from iLO.
         """
         capabilities = {}
+
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
+
+            capabilities.update(
+                {key: 'true'
+                 for (key, value) in ((
+                     'sriov_enabled',
+                     sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
+                     ),)})
+
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
-                          "resource or its members. Error"
+                          "resource or its members. Error "
                           "%(error)s)") % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)

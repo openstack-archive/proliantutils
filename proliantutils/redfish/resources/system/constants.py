@@ -30,3 +30,8 @@ BOOT_SOURCE_TARGET_CD = 'Cd'
 BOOT_SOURCE_TARGET_PXE = 'Pxe'
 BOOT_SOURCE_TARGET_UEFI_TARGET = 'UefiTarget'
 BOOT_SOURCE_TARGET_HDD = 'Hdd'
+
+# BIOS Sriov constants
+
+SRIOV_ENABLED = 'sriov enabled'
+SRIOV_DISABLED = 'sriov disabled'
