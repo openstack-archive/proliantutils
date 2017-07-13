@@ -654,10 +654,13 @@ class RedfishOperationsTestCase(testtools.TestCase):
         with open(path, 'r') as f:
             val.append(json.loads(f.read()))
         gpu_mock = mock.PropertyMock(return_value=val)
+        sriov_mock = mock.PropertyMock(return_value='true')
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        type(get_system_mock.return_value.bios_settings).sriov_enabled = (
+            sriov_mock)
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
