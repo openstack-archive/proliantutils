@@ -959,6 +959,10 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except Exception:
             return None
 
+    def _is_sriov_enabled(self):
+        """Return sriov enabled or not"""
+        return True if self._get_bios_setting('Sriov') == 'Enabled' else False
+
     def get_server_capabilities(self):
         """Gets server properties which can be used for scheduling
 
@@ -989,6 +993,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             # If an error is raised dont populate the capability
             # secure_boot
             pass
+        if self._is_sriov_enabled():
+            capabilities['sriov_enabled'] = 'true'
         return capabilities
 
     def activate_license(self, key):

@@ -507,9 +507,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
 
     @mock.patch.object(redfish.RedfishOperations,
                        '_get_number_of_gpu_devices_connected')
-    def test_get_server_capabilities(self, gpu):
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_get_sriov_enabled')
+    def test_get_server_capabilities(self, gpu, sriov_mock):
         gpu.return_value = {'pci_gpu_devices': 2}
-        expected = {'pci_gpu_devices': 2}
+        sriov_mock.return_value = {'sriov_enabled': 'true'}
+        expected = {'pci_gpu_devices': 2, 'sriov_enabled': 'true'}
         actual = self.rf_client.get_server_capabilities()
         self.assertEqual(expected, actual)
         gpu.assert_called_once_with()

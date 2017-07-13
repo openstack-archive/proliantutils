@@ -34,3 +34,10 @@ GET_BIOS_BOOT_MODE_MAP = {
 
 GET_BIOS_BOOT_MODE_MAP_REV = (
     utils.revert_dictionary(GET_BIOS_BOOT_MODE_MAP))
+
+# BIOS Sriov mappings
+
+SRIOV_MAP = {
+    'Enabled': constants.SRIOV_ENABLED,
+    'Disabled': constants.SRIOV_DISABLED
+}

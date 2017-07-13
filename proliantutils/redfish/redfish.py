@@ -495,7 +495,18 @@ class RedfishOperations(operations.IloOperations):
 
         capabilities = {}
         capabilities.update(self._get_number_of_gpu_devices_connected())
+        capabilities.update(self._get_sriov_enabled())
         return capabilities
+
+    def _get_sriov_enabled(self):
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            return {'sriov_enabled': sushy_system.bios_settings.sriov_enabled}
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller is unable to get "
+                          "Sriov attribute. Error %(error)s)")
+                   % {'error': str(e)})
+            LOG.debug(msg)
 
     def _get_number_of_gpu_devices_connected(self):
         """Gets the number of GPU devices connected"""

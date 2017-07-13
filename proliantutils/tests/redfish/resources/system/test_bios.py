@@ -41,6 +41,8 @@ class BIOSSettingsTestCase(testtools.TestCase):
     def test_attributes(self):
         self.assertEqual(sys_cons.BIOS_BOOT_MODE_UEFI,
                          self.bios_inst.boot_mode)
+        self.assertEqual(sys_cons.SRIOV_ENABLED,
+                         self.bios_inst.sriov_enabled)
 
     def test_pending_settings(self):
         self.assertIsNone(self.bios_inst._pending_settings)

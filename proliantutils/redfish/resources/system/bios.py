@@ -34,6 +34,10 @@ class BIOSSettings(base.ResourceBase):
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
+
+    sriov_enabled = base.MappedField(['Attributes', 'Sriov'],
+                                     mappings.SRIOV_MAP)
+
     _pending_settings = None
     _boot_settings = None
 
