@@ -55,3 +55,9 @@ TPM_NOT_PRESENT = 'Tpm not present'
 
 CPUVT_ENABLED = 'cpu_vt enabled'
 CPUVT_DISABLED = 'cpu_vt disabled'
+
+# System supported boot mode contants
+
+SUPPORTED_LEGACY_BIOS_ONLY = 'legacy bios only'
+SUPPORTED_UEFI_ONLY = 'uefi only'
+SUPPORTED_LEGACY_BIOS_AND_UEFI = 'legacy bios and uefi'

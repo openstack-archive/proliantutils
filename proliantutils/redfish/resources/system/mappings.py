@@ -69,3 +69,11 @@ CPUVT_MAP = {
     'Enabled': constants.CPUVT_ENABLED,
     'Disabled': constants.CPUVT_DISABLED
 }
+
+# Supported boot mode map
+
+SUPPORTED_BOOT_MODE = {
+    0: constants.SUPPORTED_LEGACY_BIOS_ONLY,
+    2: constants.SUPPORTED_LEGACY_BIOS_AND_UEFI,
+    3: constants.SUPPORTED_UEFI_ONLY
+}

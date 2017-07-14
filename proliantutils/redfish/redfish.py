@@ -14,6 +14,8 @@
 
 __author__ = 'HPE'
 
+import collections
+
 from six.moves.urllib import parse
 import sushy
 from sushy import utils
@@ -84,6 +86,10 @@ BOOT_OPTION_MAP = {'BOOT_ONCE': True,
 
 VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
                      'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
+
+# Representation of supported boot modes
+SupportedBootModes = collections.namedtuple(
+    'SupportedBootModes', ['boot_mode_bios', 'boot_mode_uefi'])
 
 LOG = log.get_logger(__name__)
 
@@ -600,6 +606,29 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
+    def _get_supported_boot_mode(self, supported_boot_mode):
+        """Return bios and uefi support.
+
+        :param supported_boot_mode: Supported boot modes
+        :return: A tuple of 'true'/'false' based on bios and uefi
+            support respectively.
+        """
+        boot_mode_bios = 'false'
+        boot_mode_uefi = 'false'
+        if (supported_boot_mode ==
+                sys_cons.SUPPORTED_LEGACY_BIOS_ONLY):
+            boot_mode_bios = 'true'
+        elif (supported_boot_mode ==
+                sys_cons.SUPPORTED_UEFI_ONLY):
+            boot_mode_uefi = 'true'
+        elif (supported_boot_mode ==
+                sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI):
+            boot_mode_bios = 'true'
+            boot_mode_uefi = 'true'
+
+        return SupportedBootModes(boot_mode_bios=boot_mode_bios,
+                                  boot_mode_uefi=boot_mode_uefi)
+
     def get_server_capabilities(self):
         """Returns the server capabilities
 
@@ -611,12 +640,16 @@ class RedfishOperations(operations.IloOperations):
         sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
+            boot_mode = self._get_supported_boot_mode(
+                sushy_system.supported_boot_mode)
             capabilities.update(
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
                  'rom_firmware_version': sushy_system.rom_version,
                  'server_model': sushy_system.model,
-                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity})
+                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity,
+                 'boot_mode_bios': boot_mode.boot_mode_bios,
+                 'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
             capabilities.update(
@@ -633,7 +666,12 @@ class RedfishOperations(operations.IloOperations):
                        or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                          sushy_system.secure_boot.current_boot)),) if value})
+                          sushy_system.secure_boot.current_boot)),
+                     ('iscsi_boot',
+                      (hasattr(sushy_system.bios_settings, 'iscsi_settings')
+                       and sushy_system.bios_settings.iscsi_settings)),
+                     ) if value})
+
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

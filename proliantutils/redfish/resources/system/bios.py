@@ -18,6 +18,7 @@ from sushy.resources import base
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import iscsi
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
@@ -43,6 +44,8 @@ class BIOSSettings(base.ResourceBase):
 
     cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
                               mappings.CPUVT_MAP)
+
+    _iscsi_settings = None
 
     _pending_settings = None
     _boot_settings = None
@@ -79,6 +82,22 @@ class BIOSSettings(base.ResourceBase):
                 redfish_version=self.redfish_version)
 
         return self._boot_settings
+
+    @property
+    def iscsi_settings(self):
+        """Property to provide reference to bios iscsi instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._iscsi_settings is None:
+            self._iscsi_settings = iscsi.ISCSISettings(
+                self._conn,
+                utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "iScsi"]),
+                redfish_version=self.redfish_version)
+
+        return self._iscsi_settings
 
     def _get_base_configs(self):
         """Method that returns object of bios base configs."""
