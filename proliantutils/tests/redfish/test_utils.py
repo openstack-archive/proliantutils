@@ -22,6 +22,7 @@ import mock
 import testtools
 
 from proliantutils import exception
+from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
 from proliantutils.redfish import utils
 
@@ -69,3 +70,15 @@ class UtilsTestCase(testtools.TestCase):
             '"subresource_path" cannot be empty',
             utils.get_subresource_path_by,
             self.sys_inst, [])
+
+    @ddt.data((sys_cons.SUPPORTED_LEGACY_BIOS_ONLY,
+               ('true', 'false')),
+              (sys_cons.SUPPORTED_UEFI_ONLY,
+               ('false', 'true')),
+              (sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI,
+               ('true', 'true')))
+    @ddt.unpack
+    def test_get_supported_boot_modes(self, boot_mode,
+                                      expected_boot_modes):
+        actual_boot_modes = utils.get_supported_boot_mode(boot_mode)
+        self.assertEqual(expected_boot_modes, actual_boot_modes)

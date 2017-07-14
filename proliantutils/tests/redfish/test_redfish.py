@@ -28,6 +28,7 @@ from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import iscsi
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
@@ -669,6 +670,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
         tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_PRESENT_ENABLED)
         type(get_system_mock.return_value.bios_settings).tpm_state = (
             tpm_mock)
+        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+            [mock.MagicMock(spec=iscsi.ISCSISettings)])
+        type(get_system_mock.return_value).supported_boot_mode = (
+            sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -676,7 +681,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
                     'trusted_boot': 'true',
-                    'server_model': 'ProLiant DL180 Gen10'}
+                    'server_model': 'ProLiant DL180 Gen10',
+                    'iscsi_boot': 'true', 'boot_mode_bios': 'true',
+                    'boot_mode_uefi': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -708,12 +715,19 @@ class RedfishOperationsTestCase(testtools.TestCase):
         tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_NOT_PRESENT)
         type(get_system_mock.return_value.bios_settings).tpm_state = (
             tpm_mock)
+        type(get_system_mock.return_value).supported_boot_mode = (
+            sys_cons.SUPPORTED_UEFI_ONLY)
+        iscsi_mock = mock.PropertyMock(
+            side_effect=exception.MissingAttributeError)
+        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+            iscsi_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
-                    'server_model': 'ProLiant DL180 Gen10'}
+                    'server_model': 'ProLiant DL180 Gen10',
+                    'boot_mode_bios': 'false', 'boot_mode_uefi': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
