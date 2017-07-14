@@ -21,6 +21,7 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish import utils
@@ -33,6 +34,29 @@ PERSISTENT_BOOT_DEVICE_MAP = {
     'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
     'HDD': sushy.BOOT_SOURCE_TARGET_HDD
 }
+
+
+def get_supported_boot_mode(mode):
+    """Gets the system supported boot modes.
+
+    It retrieves the system supported boot mode and map it as
+    dictionary as::
+        {
+            'BIOS': True/False,
+            'UEFI': True/False
+        }
+    :returns: A dictionary of boot mode as keys and boolean True/False
+        as value.
+    """
+    supported_mode = {'BIOS': False, 'UEFI': False}
+    if mode == constants.SYSTEM_LEGACY_BIOS_ONLY:
+        supported_mode['BIOS'] = True
+    elif mode == constants.SYSTEM_UEFI_ONLY:
+        supported_mode['UEFI'] = True
+    elif mode == constants.SYSTEM_BIOS_AND_UEFI:
+        supported_mode['BIOS'] = True
+        supported_mode['UEFI'] = True
+    return supported_mode
 
 
 class PowerButtonActionField(base.CompositeField):
@@ -53,6 +77,11 @@ class HPESystem(system.System):
     This class extends the functionality of System resource class
     from sushy
     """
+
+    supported_boot_mode = base.Field(['Oem', 'Hpe', 'Bios', 'UefiClass'],
+                                     default=constants.SYSTEM_LEGACY_BIOS_ONLY,
+                                     adapter=get_supported_boot_mode)
+    """System supported boot mode."""
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
 

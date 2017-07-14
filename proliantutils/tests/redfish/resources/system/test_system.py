@@ -26,6 +26,19 @@ from proliantutils.redfish.resources.system import system
 from sushy.resources.system import system as sushy_system
 
 
+class HPESystemUtilsTestCase(testtools.TestCase):
+
+    def test_get_supported_boot_mode_bios(self):
+        exp_ret = {'BIOS': True, 'UEFI': False}
+        ret = system.get_supported_boot_mode(sys_cons.SYSTEM_LEGACY_BIOS_ONLY)
+        self.assertEqual(ret, exp_ret)
+
+    def test_get_supported_boot_mode_uefi(self):
+        exp_ret = {'BIOS': False, 'UEFI': True}
+        ret = system.get_supported_boot_mode(sys_cons.SYSTEM_UEFI_ONLY)
+        self.assertEqual(ret, exp_ret)
+
+
 class HPESystemTestCase(testtools.TestCase):
 
     def setUp(self):
@@ -39,6 +52,10 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst = system.HPESystem(
             self.conn, '/redfish/v1/Systems/1',
             redfish_version='1.0.2')
+
+    def test_attributes(self):
+        self.assertEqual({'BIOS': True, 'UEFI': True},
+                         self.sys_inst.supported_boot_mode)
 
     def test__get_hpe_push_power_button_action_element(self):
         value = self.sys_inst._get_hpe_push_power_button_action_element()
