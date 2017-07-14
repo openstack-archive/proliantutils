@@ -14,9 +14,17 @@
 
 __author__ = 'HPE'
 
+import collections
+
 import six
 
 from proliantutils import exception
+from proliantutils.redfish.resources.system import constants as sys_cons
+
+
+# Representation of supported boot modes
+SupportedBootModes = collections.namedtuple(
+    'SupportedBootModes', ['boot_mode_bios', 'boot_mode_uefi'])
 
 
 def get_subresource_path_by(resource, subresource_path):
@@ -49,3 +57,27 @@ def get_subresource_path_by(resource, subresource_path):
             resource=resource.path)
 
     return body['@odata.id']
+
+
+def get_supported_boot_mode(supported_boot_mode):
+        """Return bios and uefi support.
+
+        :param supported_boot_mode: Supported boot modes
+        :return: A tuple of 'true'/'false' based on bios and uefi
+            support respectively.
+        """
+        boot_mode_bios = 'false'
+        boot_mode_uefi = 'false'
+        if (supported_boot_mode ==
+                sys_cons.SUPPORTED_LEGACY_BIOS_ONLY):
+            boot_mode_bios = 'true'
+        elif (supported_boot_mode ==
+                sys_cons.SUPPORTED_UEFI_ONLY):
+            boot_mode_uefi = 'true'
+        elif (supported_boot_mode ==
+                sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI):
+            boot_mode_bios = 'true'
+            boot_mode_uefi = 'true'
+
+        return SupportedBootModes(boot_mode_bios=boot_mode_bios,
+                                  boot_mode_uefi=boot_mode_uefi)

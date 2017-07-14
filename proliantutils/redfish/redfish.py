@@ -25,6 +25,7 @@ from proliantutils import log
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.manager import constants as mgr_cons
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish import utils as rf_utils
 
 """
 Class specific for Redfish APIs.
@@ -611,12 +612,16 @@ class RedfishOperations(operations.IloOperations):
         sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
+            boot_mode = rf_utils.get_supported_boot_mode(
+                sushy_system.supported_boot_mode)
             capabilities.update(
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
                  'rom_firmware_version': sushy_system.rom_version,
                  'server_model': sushy_system.model,
-                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity})
+                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity,
+                 'boot_mode_bios': boot_mode.boot_mode_bios,
+                 'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
             capabilities.update(
@@ -633,7 +638,12 @@ class RedfishOperations(operations.IloOperations):
                        or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                          sushy_system.secure_boot.current_boot)),) if value})
+                          sushy_system.secure_boot.current_boot)),
+                     ('iscsi_boot',
+                      (hasattr(sushy_system.bios_settings, 'iscsi_settings')
+                       and sushy_system.bios_settings.iscsi_settings)),
+                     ) if value})
+
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

@@ -41,6 +41,10 @@ class HPESystemTestCase(testtools.TestCase):
             self.conn, '/redfish/v1/Systems/1',
             redfish_version='1.0.2')
 
+    def test_attributes(self):
+        self.assertEqual(sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI,
+                         self.sys_inst.supported_boot_mode)
+
     def test__get_hpe_push_power_button_action_element(self):
         value = self.sys_inst._get_hpe_push_power_button_action_element()
         self.assertEqual("/redfish/v1/Systems/1/Actions/Oem/Hpe/"
