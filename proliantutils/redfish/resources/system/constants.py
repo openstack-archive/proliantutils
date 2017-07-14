@@ -50,3 +50,9 @@ SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
 TPM_PRESENT_ENABLED = 'Tpm present enabled'
 TPM_PRESENT_DISABLED = 'Tpm present disabled'
 TPM_NOT_PRESENT = 'Tpm not present'
+
+# System supported boot mode contants
+
+SYSTEM_LEGACY_BIOS_ONLY = 'bios'
+SYSTEM_UEFI_ONLY = 'uefi'
+SYSTEM_BIOS_AND_UEFI = 'bios and uefi'

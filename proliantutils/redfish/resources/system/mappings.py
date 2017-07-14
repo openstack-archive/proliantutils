@@ -64,3 +64,11 @@ TPM_MAP = {
     'PresentDisabled': constants.TPM_PRESENT_DISABLED,
     'NotPresent': constants.TPM_NOT_PRESENT
 }
+
+# Supported boot mode map
+
+SUPPORTED_BOOT_MODE = {
+    0: constants.SYSTEM_LEGACY_BIOS_ONLY,
+    2: constants.SYSTEM_BIOS_AND_UEFI,
+    3: constants.SYSTEM_UEFI_ONLY
+}

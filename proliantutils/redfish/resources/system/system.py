@@ -21,6 +21,7 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
+from proliantutils.redfish.resources.system import constants
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
@@ -59,6 +60,12 @@ class HPESystem(system.System):
     model = base.Field(['Model'])
     rom_version = base.Field(['Oem', 'Hpe', 'Bios', 'Current',
                              'VersionString'])
+
+    supported_boot_mode = base.MappedField(
+        ['Oem', 'Hpe', 'Bios', 'UefiClass'], mappings.SUPPORTED_BOOT_MODE,
+        default=constants.SYSTEM_LEGACY_BIOS_ONLY)
+    """System supported boot mode."""
+
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     """Oem specific system extensibility actions"""
 
