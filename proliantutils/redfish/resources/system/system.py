@@ -21,17 +21,16 @@ from sushy.resources.system import system
 from proliantutils import exception
 from proliantutils import log
 from proliantutils.redfish.resources.system import bios
-from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish import utils
 
 LOG = log.get_logger(__name__)
 
 PERSISTENT_BOOT_DEVICE_MAP = {
-    'CDROM': sys_cons.BOOT_SOURCE_TARGET_CD,
-    'NETWORK': sys_cons.BOOT_SOURCE_TARGET_PXE,
-    'ISCSI': sys_cons.BOOT_SOURCE_TARGET_UEFI_TARGET,
-    'HDD': sys_cons.BOOT_SOURCE_TARGET_HDD
+    'CDROM': sushy.BOOT_SOURCE_TARGET_CD,
+    'NETWORK': sushy.BOOT_SOURCE_TARGET_PXE,
+    'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
+    'HDD': sushy.BOOT_SOURCE_TARGET_HDD
 }
 
 
@@ -118,40 +117,27 @@ class HPESystem(system.System):
         :raises: IloError, on an error from iLO.
         :raises: IloInvalidInputError, if the given input is not valid.
         """
-        new_device = devices[0]
-        tenure = 'Continuous' if persistent else 'Once'
+        device = PERSISTENT_BOOT_DEVICE_MAP.get(devices[0].upper())
 
-        try:
-            boot_sources = self.bios_settings.boot_settings.boot_sources
-        except sushy.exceptions.SushyError:
-            msg = ('The BIOS Boot Settings was not found.')
-            raise exception.IloError(msg)
-
-        if devices[0].upper() in PERSISTENT_BOOT_DEVICE_MAP:
-            new_device = PERSISTENT_BOOT_DEVICE_MAP[devices[0].upper()]
-
-        new_boot_settings = {}
-        if new_device is 'UefiTarget':
+        if device == sushy.BOOT_SOURCE_TARGET_UEFI_TARGET:
             if not mac:
-                msg = ('Mac is needed for iscsi uefi boot')
+                msg = ('Mac is needed for uefi iscsi boot')
                 raise exception.IloInvalidInputError(msg)
 
-            boot_string = None
-            for boot_source in boot_sources:
-                if(mac.upper() in boot_source['UEFIDevicePath'] and
-                   'iSCSI' in boot_source['UEFIDevicePath']):
-                    boot_string = boot_source['StructuredBootString']
-                    break
+            try:
+                uefi_boot_string = (self.bios_settings.boot_settings.
+                                    get_uefi_boot_string(mac))
+            except sushy.exceptions.SushyError:
+                msg = ('The BIOS Boot Settings was not found.')
+                raise exception.IloError(msg)
 
-            if not boot_string:
-                msg = ('MAC provided "%s" is Invalid' % mac)
-                raise exception.IloInvalidInputError(msg)
+            uefi_boot_settings = {
+                'Boot': {'UefiTargetBootSourceOverride': uefi_boot_string}
+            }
+            self._conn.patch(self.path, data=uefi_boot_settings)
+        elif device is None:
+            device = sushy.BOOT_SOURCE_TARGET_NONE
 
-            uefi_boot_settings = {}
-            uefi_boot_settings['Boot'] = (
-                {'UefiTargetBootSourceOverride': boot_string})
-            self._conn.patch(self._path, uefi_boot_settings)
-
-        new_boot_settings['Boot'] = {'BootSourceOverrideEnabled': tenure,
-                                     'BootSourceOverrideTarget': new_device}
-        self._conn.patch(self._path, new_boot_settings)
+        tenure = (sushy.BOOT_SOURCE_ENABLED_CONTINUOUS
+                  if persistent else sushy.BOOT_SOURCE_ENABLED_ONCE)
+        self.set_system_boot_source(device, enabled=tenure)

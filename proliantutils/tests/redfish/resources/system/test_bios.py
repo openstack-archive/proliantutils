@@ -184,3 +184,32 @@ class BIOSBootSettingsTestCase(testtools.TestCase):
             exception.IloError,
             'Boot sources or persistent boot config order not found',
             self.bios_boot_inst.get_persistent_boot_device)
+
+    def test_get_uefi_boot_string(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (json.loads(f.read())['Default'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        result = self.bios_boot_inst.get_uefi_boot_string('C4346BB7EF30')
+        self.assertEqual(result, 'NIC.LOM.1.1.iSCSI')
+
+    def test_get_uefi_boot_string_boot_sources_is_none(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (
+                json.loads(f.read())['BIOS_boot_without_boot_sources'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        self.assertRaisesRegex(
+            exception.IloError,
+            'Boot sources are not found',
+            self.bios_boot_inst.get_uefi_boot_string, '123456')
+
+    def test_get_uefi_boot_string_mac_invalid(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            boot_json = (json.loads(f.read())['Default'])
+        self.bios_boot_inst.boot_sources = boot_json['BootSources']
+        self.assertRaisesRegex(
+            exception.IloError,
+            'MAC provided "123456" is Invalid',
+            self.bios_boot_inst.get_uefi_boot_string, '123456')
