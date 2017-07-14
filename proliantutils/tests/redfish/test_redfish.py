@@ -25,6 +25,7 @@ from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish import utils
 from sushy.resources.system import system
 
 
@@ -572,16 +573,43 @@ class RedfishOperationsTestCase(testtools.TestCase):
             self.rf_client.set_one_time_boot,
             'CDROM')
 
+    @mock.patch.object(redfish.RedfishOperations, '_get_iscsi_boot_supported')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    def test_get_server_capabilities(self, get_system_mock):
+    def test_get_server_capabilities(self, get_system_mock, iscsi_mock):
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
                 'pci_device.json')
         with open(path, 'r') as f:
             val.append(json.loads(f.read()))
+        iscsi_mock.return_value = 'true'
         gpu_mock = mock.PropertyMock(return_value=val)
+        supported_mock = mock.PropertyMock(
+            return_value={'BIOS': True, 'UEFI': True})
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        type(get_system_mock.return_value).supported_boot_mode = (
+            supported_mock)
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1, 'iscsi_boot': 'true',
+                    'boot_mode_bios': True, 'boot_mode_uefi': True}
         self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_iscsi_boot_supported(self, get_system_mock):
+        iscsi_mock = mock.PropertyMock(return_value='iscsi')
+        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+            iscsi_mock)
+        actual = self.rf_client._get_iscsi_boot_supported()
+        self.assertEqual('true', actual)
+
+    @mock.patch.object(utils, 'get_subresource_path_by')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__get_iscsi_boot_supported_missing(self, get_system_mock,
+                                               path_mock):
+        path_mock.side_effect = exception.MissingAttributeError
+        iscsi_mock = mock.PropertyMock(
+            side_effect=exception.MissingAttributeError)
+        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+            iscsi_mock)
+        actual = self.rf_client._get_iscsi_boot_supported()
+        self.assertEqual('false', actual)

@@ -581,10 +581,30 @@ class RedfishOperations(operations.IloOperations):
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
+            capabilities.update(
+                {'iscsi_boot': self._get_iscsi_boot_supported()})
+            capabilities.update(
+                {'boot_mode_bios': sushy_system.supported_boot_mode['BIOS'],
+                 'boot_mode_uefi': sushy_system.supported_boot_mode['UEFI']})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
-                          "PCIDevice resource or its members. Error"
+                          "the server capabilities. Error"
                           "%(error)s)") % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
         return capabilities
+
+    def _get_iscsi_boot_supported(self):
+        """Gets iscsi boot support.
+
+        :returns: 'true' if iscsi boot is supported on the redfish controller
+            else 'false'
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        supported = 'false'
+        try:
+            if sushy_system.bios_settings.iscsi_settings:
+                supported = 'true'
+        except exception.MissingAttributeError:
+            pass
+        return supported
