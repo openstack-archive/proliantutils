@@ -19,12 +19,14 @@ import sushy
 from sushy import utils
 
 from proliantutils import exception
+from proliantutils.ilo import constants as ilo_cons
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.manager import constants as mgr_cons
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish import utils as rf_utils
 
 """
 Class specific for Redfish APIs.
@@ -84,6 +86,14 @@ BOOT_OPTION_MAP = {'BOOT_ONCE': True,
 
 VIRTUAL_MEDIA_MAP = {'FLOPPY': mgr_cons.VIRTUAL_MEDIA_FLOPPY,
                      'CDROM': mgr_cons.VIRTUAL_MEDIA_CD}
+
+SUPPORTED_BOOT_MODE_MAP = {
+    sys_cons.SUPPORTED_LEGACY_BIOS_ONLY: (
+        ilo_cons.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY),
+    sys_cons.SUPPORTED_UEFI_ONLY: ilo_cons.SUPPORTED_BOOT_MODE_UEFI_ONLY,
+    sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI: (
+        ilo_cons.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI)
+}
 
 LOG = log.get_logger(__name__)
 
@@ -600,6 +610,26 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
+    def get_supported_boot_mode(self):
+        """Get the system supported boot modes.
+
+        :return: any one of the following proliantutils.ilo.constants:
+
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
+            SUPPORTED_BOOT_MODE_UEFI_ONLY,
+            SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI
+        :raises: IloError, if account not found or on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            return SUPPORTED_BOOT_MODE_MAP.get(
+                sushy_system.supported_boot_mode)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to get the '
+                          'supported boot modes. Error: %s') % e)
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
     def get_server_capabilities(self):
         """Returns the server capabilities
 
@@ -611,12 +641,16 @@ class RedfishOperations(operations.IloOperations):
         sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
+            boot_mode = rf_utils.get_supported_boot_mode(
+                sushy_system.supported_boot_mode)
             capabilities.update(
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
                  'rom_firmware_version': sushy_system.rom_version,
                  'server_model': sushy_system.model,
-                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity})
+                 'nic_capacity': sushy_system.pci_devices.max_nic_capacity,
+                 'boot_mode_bios': boot_mode.boot_mode_bios,
+                 'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
             capabilities.update(
@@ -634,6 +668,7 @@ class RedfishOperations(operations.IloOperations):
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
                           sushy_system.secure_boot.current_boot)),) if value})
+
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
