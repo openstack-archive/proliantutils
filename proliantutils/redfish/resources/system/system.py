@@ -36,6 +36,29 @@ PERSISTENT_BOOT_DEVICE_MAP = {
 }
 
 
+def get_supported_boot_mode(mode):
+    """Gets the system supported boot modes.
+
+    It retrieves the system supported boot mode and map it as
+    dictionary as::
+        {
+            'BIOS': True/False,
+            'UEFI': True/False
+        }
+    :returns: A dictionary of boot mode as keys and boolean True/False
+        as value.
+    """
+    supported_mode = {'BIOS': False, 'UEFI': False}
+    if mode == sys_cons.SYSTEM_LEGACY_BIOS_ONLY:
+        supported_mode['BIOS'] = True
+    elif mode == sys_cons.SYSTEM_UEFI_ONLY:
+        supported_mode['UEFI'] = True
+    elif mode == sys_cons.SYSTEM_BIOS_AND_UEFI:
+        supported_mode['BIOS'] = True
+        supported_mode['UEFI'] = True
+    return supported_mode
+
+
 class PowerButtonActionField(base.CompositeField):
     allowed_values = base.Field('PushType@Redfish.AllowableValues',
                                 adapter=list)
@@ -54,6 +77,11 @@ class HPESystem(system.System):
     This class extends the functionality of System resource class
     from sushy
     """
+
+    supported_boot_mode = base.Field(['Oem', 'Hpe', 'Bios', 'UefiClass'],
+                                     default=sys_cons.SYSTEM_LEGACY_BIOS_ONLY,
+                                     adapter=get_supported_boot_mode)
+    """System supported boot mode."""
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
 
