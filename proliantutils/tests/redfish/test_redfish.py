@@ -15,11 +15,13 @@
 
 import json
 
+import ddt
 import mock
 import sushy
 import testtools
 
 from proliantutils import exception
+from proliantutils.ilo import constants as ilo_cons
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources.account_service import account
@@ -33,6 +35,7 @@ from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
 
 
+@ddt.ddt
 class RedfishOperationsTestCase(testtools.TestCase):
 
     @mock.patch.object(main, 'HPESushy', autospec=True)
@@ -648,6 +651,22 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'No account found with username: foo',
             self.rf_client.reset_ilo_credential, 'fake-password')
 
+    @ddt.data((sys_cons.SUPPORTED_LEGACY_BIOS_ONLY,
+               ilo_cons.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY),
+              (sys_cons.SUPPORTED_UEFI_ONLY,
+               ilo_cons.SUPPORTED_BOOT_MODE_UEFI_ONLY),
+              (sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI,
+               ilo_cons.SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI))
+    @ddt.unpack
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_supported_boot_mode(self, supported_boot,
+                                     expected_boot_val,
+                                     get_system_mock):
+        type(get_system_mock.return_value).supported_boot_mode = (
+            supported_boot)
+        actual_val = self.rf_client.get_supported_boot_mode()
+        self.assertEqual(expected_boot_val, actual_val)
+
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities(self, get_manager_mock, get_system_mock):
@@ -669,6 +688,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_PRESENT_ENABLED)
         type(get_system_mock.return_value.bios_settings).tpm_state = (
             tpm_mock)
+        type(get_system_mock.return_value).supported_boot_mode = (
+            sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -676,7 +697,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
                     'trusted_boot': 'true',
-                    'server_model': 'ProLiant DL180 Gen10'}
+                    'server_model': 'ProLiant DL180 Gen10',
+                    'boot_mode_bios': 'true',
+                    'boot_mode_uefi': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -708,12 +731,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
         tpm_mock = mock.PropertyMock(return_value=sys_cons.TPM_NOT_PRESENT)
         type(get_system_mock.return_value.bios_settings).tpm_state = (
             tpm_mock)
+        type(get_system_mock.return_value).supported_boot_mode = (
+            sys_cons.SUPPORTED_UEFI_ONLY)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
-                    'server_model': 'ProLiant DL180 Gen10'}
+                    'server_model': 'ProLiant DL180 Gen10',
+                    'boot_mode_bios': 'false', 'boot_mode_uefi': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
