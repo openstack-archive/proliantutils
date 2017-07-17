@@ -60,3 +60,26 @@ class HPEManagerTestCase(testtools.TestCase):
         self.assertIs(actual_vmedia,
                       self.mgr_inst.virtual_media)
         self.conn.get.return_value.json.assert_not_called()
+
+    def test_virtual_media_on_refresh(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        actual_vmedia = self.mgr_inst.virtual_media
+
+        self.assertIsInstance(actual_vmedia,
+                              virtual_media.VirtualMediaCollection)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/manager.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        self.mgr_inst.refresh()
+        self.assertIsNone(self.mgr_inst._virtual_media)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/vmedia_collection.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        self.assertIsInstance(actual_vmedia,
+                              virtual_media.VirtualMediaCollection)

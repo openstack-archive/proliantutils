@@ -53,3 +53,7 @@ class HPEManager(manager.Manager):
                 redfish_version=self.redfish_version)
 
         return self._virtual_media
+
+    def refresh(self):
+        super(HPEManager, self).refresh()
+        self._virtual_media = None
