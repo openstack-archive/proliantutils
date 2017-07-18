@@ -759,3 +759,24 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('System is not in UEFI boot mode. "SecureBoot" '
                           'related resources cannot be changed.'))
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def get_essential_properties(self):
+        """Constructs the dictionary of essential properties
+
+        Constructs the dictionary of essential properties, named
+        cpu, cpu_arch, local_gb, memory_mb. The MACs are also returned
+        as part of this method.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        memory_gib = sushy_system.memory_summary.size_gib
+        memory_mb = memory_gib * 1024
+        processor_details = sushy_system.processors.summary
+        macs = sushy_system.ethernet_interfaces.summary
+        # TODO(nisha): Add local_gb here and return after
+        # local_gb changes are merged.
+        # local_gb = sushy_system.storage_summary
+        properties = {'memory_mb': memory_mb,
+                      'cpus': processor_details.count,
+                      'cpu_arch': processor_details.architecture,
+                      'local_gb': 'dummy_value'}
+        return {'properties': properties, 'macs': macs}

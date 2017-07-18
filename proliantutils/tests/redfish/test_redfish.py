@@ -902,3 +902,26 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to clear secure boot keys '
             'on the server.',
             self.rf_client.clear_secure_boot_keys)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_essential_properties(self, get_system_mock):
+        memory_mock = mock.PropertyMock(return_value=20)
+        type(get_system_mock.return_value.memory_summary).size_gib = (
+            memory_mock)
+        count_mock = mock.PropertyMock(return_value=40)
+        type(get_system_mock.return_value.processors.summary).count = (
+            count_mock)
+        arch_mock = mock.PropertyMock(return_value='x86 or x86-64')
+        type(get_system_mock.return_value.processors.summary).architecture = (
+            arch_mock)
+        type(get_system_mock.return_value.ethernet_interfaces).summary = (
+            {'1': '12:44:6A:3B:04:11'})
+        # TODO(nisha): To add after local_gb changes merge.
+        # type(get_system_mock.return_value).storage_summary = 600
+        actual = self.rf_client.get_essential_properties()
+        expected = {'properties': {'cpus': 40,
+                                   'cpu_arch': 'x86 or x86-64',
+                                   'memory_mb': 20480,
+                                   'local_gb': 'dummy_value'},
+                    'macs': {'1': '12:44:6A:3B:04:11'}}
+        self.assertEqual(expected, actual)
