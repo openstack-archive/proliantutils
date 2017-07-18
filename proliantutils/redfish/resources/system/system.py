@@ -422,3 +422,73 @@ class HPESystem(system.System):
                 if size < unconfigured_size:
                     size = unconfigured_size
         return size
+
+    @property
+    def has_ssd(self):
+        """This property gets the media type of the disk as ssd"""
+        drives_list = self.diskdrive
+        if drives_list is not None:
+            for drive_mem in drives_list:
+                drive_uri = drive_mem.get('@odata.id')
+                dr_obj = drives.Drives(self._conn, drive_uri,
+                                       self.redfish_version)
+                if dr_obj.media_type == sys_cons.MEDIA_TYPE_SSD:
+                    self._has_ssd = True
+        smart_disk_drive_members = self.smart_disk_drive
+        if smart_disk_drive_members:
+            ssd = self.smart_disk_drive.has_ssd
+            if ssd:
+                self._has_ssd = True
+        unconfigured_disk_drive_mem = self.smart_unconfigured_disk_drive
+        if unconfigured_disk_drive_mem:
+            ssd = self.smart_unconfigured_disk_drive.has_ssd
+            if ssd:
+                self._has_ssd = True
+        return self._has_ssd
+
+    @property
+    def has_rotational(self):
+        """This property gets the media type of the disk as HDD"""
+        drives_list = self.diskdrive
+        if drives_list is not None:
+            for drive_mem in drives_list:
+                drive_uri = drive_mem.get('@odata.id')
+                dr_obj = drives.Drives(self._conn, drive_uri,
+                                       self.redfish_version)
+                if dr_obj.media_type == sys_cons.MEDIA_TYPE_HDD:
+                    self._has_rotational = True
+        smart_disk_drive_members = self.smart_disk_drive
+        if smart_disk_drive_members:
+            hdd = self.smart_disk_drive.has_rotational
+            if hdd:
+                self._has_rotational = True
+        unconfigured_disk_drive_mem = self.smart_unconfigured_disk_drive
+        if unconfigured_disk_drive_mem:
+            hdd = self.smart_unconfigured_disk_drive.has_rotational
+            if hdd:
+                self._has_rotational = True
+        return self._has_rotational
+
+    @property
+    def has_nvme_ssd(self):
+        """It is set to True if disk is SSD and protocol is NVMe"""
+        drives_list = self.diskdrive
+        if drives_list is not None:
+            for drive_mem in drives_list:
+                drive_uri = drive_mem.get('@odata.id')
+                dr_obj = drives.Drives(self._conn, drive_uri,
+                                       self.redfish_version)
+                if dr_obj.media_type == sys_cons.MEDIA_TYPE_SSD:
+                    if dr_obj.protocol == sys_cons.DRIVE_PROTOCOL_NVME:
+                        self._has_nvme_ssd = True
+
+    @property
+    def logical_raid_level(self):
+        self._logical_raid_level = []
+        volume_members = self.volume
+        if volume_members:
+            self._logical_raid_level.append(self.volume.raid_levels)
+        logical_drive_members = self.logical_drives
+        if logical_drive_members:
+            self._logical_raid_level.append(self.logical_drives.raid_levels)
+            
