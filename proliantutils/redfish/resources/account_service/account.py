@@ -18,6 +18,7 @@ from sushy.resources import base
 
 
 class HPEAccount(base.ResourceBase):
+    """Class that defines the functionality for Account."""
 
     username = base.Field('UserName')
 
@@ -33,6 +34,7 @@ class HPEAccount(base.ResourceBase):
 
 
 class HPEAccountCollection(base.ResourceCollectionBase):
+    """Class that defines the functionality for AccountCollection."""
 
     @property
     def _resource_type(self):

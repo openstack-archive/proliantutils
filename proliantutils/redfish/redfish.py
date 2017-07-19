@@ -179,7 +179,7 @@ class RedfishOperations(operations.IloOperations):
         :raises: IloError, on an error from iLO.
         """
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
-        return sushy_system.json.get('Model')
+        return sushy_system.model
 
     def get_host_power_status(self):
         """Request the power state of the server.
@@ -608,17 +608,22 @@ class RedfishOperations(operations.IloOperations):
         capabilities = {}
 
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
-            capabilities.update({'pci_gpu_devices': count})
+            capabilities.update(
+                {'pci_gpu_devices': count,
+                 'ilo_firmware_version': sushy_manager.firmware_version,
+                 'rom_firmware_version': sushy_system.rom_version,
+                 'server_model': sushy_system.model})
 
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
                      'sriov_enabled',
                      sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
-                     ),)})
-
+                     ),)
+                 if value})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
@@ -632,8 +637,8 @@ class RedfishOperations(operations.IloOperations):
 
         :raises: IloError, on an error from iLO.
         """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         try:
-            sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
             sushy_system.bios_settings.update_bios_to_default()
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to update bios "
