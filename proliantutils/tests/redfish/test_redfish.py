@@ -77,11 +77,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish Manager "banana" was not found.',
             self.rf_client._get_sushy_manager, 'banana')
 
-    def test_get_product_name(self):
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/system.json', 'r') as f:
-            system_json = json.loads(f.read())
-        self.sushy.get_system().json = system_json['default']
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_product_name(self, get_system_mock):
+        product_mock = mock.PropertyMock(return_value='ProLiant DL180 Gen10')
+        type(get_system_mock.return_value).model = product_mock
         product_name = self.rf_client.get_product_name()
         self.assertEqual('ProLiant DL180 Gen10', product_name)
 
@@ -649,7 +648,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             self.rf_client.reset_ilo_credential, 'fake-password')
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    def test_get_server_capabilities(self, get_system_mock):
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
+    def test_get_server_capabilities(self, get_manager_mock, get_system_mock):
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
                 'pci_device.json')
@@ -658,8 +658,17 @@ class RedfishOperationsTestCase(testtools.TestCase):
         gpu_mock = mock.PropertyMock(return_value=val)
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             gpu_mock)
+        rom_mock = mock.PropertyMock(return_value='U31 v1.00 (03/11/2017)')
+        type(get_system_mock.return_value).rom_version = rom_mock
+        ilo_mock = mock.PropertyMock(return_value='iLO 5 v1.15')
+        type(get_manager_mock.return_value).firmware_version = ilo_mock
+        product_mock = mock.PropertyMock(return_value='ProLiant DL180 Gen10')
+        type(get_system_mock.return_value).model = product_mock
         actual = self.rf_client.get_server_capabilities()
-        expected = {'pci_gpu_devices': 1}
+        expected = {'pci_gpu_devices': 1,
+                    'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
+                    'ilo_firmware_version': 'iLO 5 v1.15',
+                    'server_model': 'ProLiant DL180 Gen10'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')

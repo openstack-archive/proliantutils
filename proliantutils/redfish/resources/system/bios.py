@@ -73,7 +73,7 @@ class BIOSSettings(base.ResourceBase):
         return self._boot_settings
 
     def _get_base_configs(self):
-        """Property to provide reference to bios settings instance"""
+        """Method that returns object of bios base configs."""
         if self._base_configs is None:
             self._base_configs = BIOSBaseConfigs(
                 self._conn, utils.get_subresource_path_by(
@@ -102,7 +102,7 @@ class BIOSBaseConfigs(base.ResourceBase):
 
 
 class BIOSPendingSettings(base.ResourceBase):
-    """Class that defines the functionality for BIOS settings."""
+    """Class that defines the functionality for BIOS pending settings."""
 
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
@@ -130,7 +130,7 @@ class BIOSPendingSettings(base.ResourceBase):
         bios_settings_data = {
             'Attributes': data
         }
-        self._conn.post(self.path, bios_settings_data)
+        self._conn.post(self.path, data=bios_settings_data)
 
 
 class BIOSBootSettings(base.ResourceBase):
