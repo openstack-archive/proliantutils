@@ -55,6 +55,8 @@ class HPESystem(system.System):
     """
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
+    rom_version = base.Field(['Oem', 'Hpe', 'Bios', 'Current',
+                             'VersionString'])
 
     """Oem specific system extensibility actions"""
 

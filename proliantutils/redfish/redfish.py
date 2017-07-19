@@ -601,9 +601,15 @@ class RedfishOperations(operations.IloOperations):
         """
         capabilities = {}
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
         try:
             count = len(sushy_system.pci_devices.gpu_devices)
             capabilities.update({'pci_gpu_devices': count})
+            capabilities.update(
+                {'ilo_firmware_version': sushy_manager.firmware_version})
+            capabilities.update(
+                {'rom_firmware_version': sushy_system.rom_version})
+            capabilities.update({'server_model': self.get_product_name()})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error"
