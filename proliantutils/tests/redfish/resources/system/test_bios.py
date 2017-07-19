@@ -225,7 +225,7 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
         }
         self.bios_settings_inst.update_bios_data(bios_settings)
         self.bios_settings_inst._conn.post.assert_called_once_with(target_uri,
-                                                                   data)
+                                                                   data=data)
 
 
 class BIOSBootSettingsTestCase(testtools.TestCase):
