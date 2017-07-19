@@ -82,9 +82,9 @@ class BIOSPendingSettings(base.ResourceBase):
         :param boot_mode: either sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS,
          sys_cons.BIOS_BOOT_MODE_UEFI.
         """
-        bios_properties = {}
-        bios_properties['BootMode'] = (
-            mappings.GET_BIOS_BOOT_MODE_MAP_REV.get(boot_mode))
+        bios_properties = {
+            'BootMode': mappings.GET_BIOS_BOOT_MODE_MAP_REV.get(boot_mode)
+        }
 
         if boot_mode == sys_cons.BIOS_BOOT_MODE_UEFI:
             bios_properties['UefiOptimizedBoot'] = 'Enabled'
@@ -129,3 +129,23 @@ class BIOSBootSettings(base.ResourceBase):
                 if val in boot_string:
                     return key
         return sushy.BOOT_SOURCE_TARGET_NONE
+
+    def get_uefi_boot_string(self, mac):
+        """Get uefi iscsi boot string for the host
+
+        :returns: iscsi boot string for the system
+        :raises: IloError, on an error from iLO.
+        """
+        boot_sources = self.boot_sources
+        if not boot_sources:
+            msg = ('Boot sources are not found')
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+        for boot_source in boot_sources:
+            if (mac.upper() in boot_source['UEFIDevicePath'] and
+                    'iSCSI' in boot_source['UEFIDevicePath']):
+                return boot_source['StructuredBootString']
+        else:
+            msg = ('MAC provided "%s" is Invalid' % mac)
+            raise exception.IloInvalidInputError(msg)
