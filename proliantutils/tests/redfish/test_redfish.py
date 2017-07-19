@@ -22,6 +22,8 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
+from proliantutils.redfish.resources.account_service import account
+from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import constants as sys_cons
@@ -573,3 +575,73 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to set one time boot.',
             self.rf_client.set_one_time_boot,
             'CDROM')
+
+    def _setup_reset_ilo_credential(self):
+        self.conn = mock.Mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account_service.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+
+        account_mock = account_service.HPEAccountService(
+            self.conn, '/redfish/v1/AccountService',
+            redfish_version='1.0.2')
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account_collection.json', 'r') as f:
+            account_collection_json = json.loads(f.read())
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/account.json', 'r') as f:
+            account_json = json.loads(f.read())
+
+        return account_mock, account_collection_json, account_json
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential(self, account_mock):
+        account_mock.return_value, account_collection_json, account_json = (
+            self._setup_reset_ilo_credential())
+        self.conn.get.return_value.json.side_effect = [
+            account_collection_json, account_json]
+
+        self.rf_client.reset_ilo_credential('fake-password')
+        (self.sushy.get_account_service.return_value.
+         accounts.get_member_details.return_value.
+         update_credentials.assert_called_once_with('fake-password'))
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential_fail(self, account_mock):
+        account_mock.return_value, account_collection_json, account_json = (
+            self._setup_reset_ilo_credential())
+        self.conn.get.return_value.json.side_effect = [
+            account_collection_json, account_json]
+
+        (self.sushy.get_account_service.return_value.accounts.
+         get_member_details.return_value.
+         update_credentials.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update credentials',
+            self.rf_client.reset_ilo_credential, 'fake-password')
+
+    @mock.patch.object(account.HPEAccount, 'update_credentials')
+    def test_reset_ilo_credential_get_account_service_fail(self, update_mock):
+        account_service_not_found_error = sushy.exceptions.SushyError
+        account_service_not_found_error.message = (
+            'HPEAccountService not found!!')
+        self.sushy.get_account_service.side_effect = (
+            account_service_not_found_error)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to update credentials for foo. '
+            'Error HPEAccountService not found!!',
+            self.rf_client.reset_ilo_credential, 'fake-password')
+        self.assertFalse(update_mock.called)
+
+    @mock.patch.object(main.HPESushy, 'get_account_service')
+    def test_reset_ilo_credential_no_member(self, account_mock):
+        (self.sushy.get_account_service.return_value.accounts.
+         get_member_details.return_value) = None
+        self.assertRaisesRegex(
+            exception.IloError,
+            'No account found with username: foo',
+            self.rf_client.reset_ilo_credential, 'fake-password')
