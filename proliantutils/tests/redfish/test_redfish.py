@@ -660,12 +660,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
             sys_cons.SRIOV_ENABLED)
+        type(get_system_mock.return_value.secure_boot).current_boot = (
+            sys_cons.SECUREBOOT_CURRENT_BOOT_ENABLED)
         type(get_system_mock.return_value).rom_version = (
             'U31 v1.00 (03/11/2017)')
         type(get_manager_mock.return_value).firmware_version = 'iLO 5 v1.15'
         type(get_system_mock.return_value).model = 'ProLiant DL180 Gen10'
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
+                    'secure_boot': 'true',
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'server_model': 'ProLiant DL180 Gen10'}
@@ -684,6 +687,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
             sys_cons.SRIOV_DISABLED)
+        type(get_system_mock.return_value.secure_boot).current_boot = (
+            sys_cons.SECUREBOOT_CURRENT_BOOT_DISABLED)
         type(get_system_mock.return_value).rom_version = (
             'U31 v1.00 (03/11/2017)')
         type(get_manager_mock.return_value).firmware_version = 'iLO 5 v1.15'

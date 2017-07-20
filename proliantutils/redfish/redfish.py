@@ -618,12 +618,13 @@ class RedfishOperations(operations.IloOperations):
                  'server_model': sushy_system.model})
 
             capabilities.update(
-                {key: 'true'
-                 for (key, value) in ((
-                     'sriov_enabled',
-                     sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
-                     ),)
-                 if value})
+                {key: 'true' for (key, value) in (
+                    ('sriov_enabled',
+                     sushy_system.bios_settings.sriov == (
+                         sys_cons.SRIOV_ENABLED)),
+                    ('secure_boot',
+                     GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
+                         sushy_system.secure_boot.current_boot)),) if value})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
