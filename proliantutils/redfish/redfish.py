@@ -617,6 +617,9 @@ class RedfishOperations(operations.IloOperations):
                  'rom_firmware_version': sushy_system.rom_version,
                  'server_model': sushy_system.model})
 
+            if self.get_secure_boot_mode():
+                capabilities.update({'secure_boot': 'true'})
+
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
