@@ -627,8 +627,10 @@ class RedfishOperations(operations.IloOperations):
                      ),
                      ('trusted_boot',
                       (tpm_state == sys_cons.TPM_PRESENT_ENABLED
-                       or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),)
-                 if value})
+                       or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
+                     ('secure_boot',
+                      GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
+                          sushy_system.secure_boot.current_boot)),) if value})
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "
