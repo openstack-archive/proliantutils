@@ -201,21 +201,27 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
     def test_set_pending_boot_mode_bios(self):
         self.bios_settings_inst.set_pending_boot_mode(
             sys_cons.BIOS_BOOT_MODE_LEGACY_BIOS)
-        data = {}
-        data['BootMode'] = 'LegacyBios'
+        data = {
+            'Attributes': {
+                'BootMode': 'LegacyBios'
+            }
+        }
         self.bios_settings_inst._conn.patch.assert_called_once_with(
-            '/redfish/v1/Systems/1/bios/settings', data)
+            '/redfish/v1/Systems/1/bios/settings', data=data)
 
     def test_set_pending_boot_mode_uefi(self):
         self.bios_settings_inst.set_pending_boot_mode(
             sys_cons.BIOS_BOOT_MODE_UEFI)
-        data = {}
-        data['UefiOptimizedBoot'] = 'Enabled'
-        data['BootMode'] = 'Uefi'
+        data = {
+            'Attributes': {
+                'BootMode': 'Uefi',
+                'UefiOptimizedBoot': 'Enabled'
+            }
+        }
         self.bios_settings_inst._conn.patch.assert_called_once_with(
-            '/redfish/v1/Systems/1/bios/settings', data)
+            '/redfish/v1/Systems/1/bios/settings', data=data)
 
-    def test_update_bios_data(self):
+    def test_update_bios_data_by_post(self):
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_base_configs.json', 'r') as f:
             bios_settings = json.loads(f.read())['BaseConfigs'][0]['default']
@@ -223,9 +229,21 @@ class BIOSPendingSettingsTestCase(testtools.TestCase):
         data = {
             'Attributes': bios_settings
         }
-        self.bios_settings_inst.update_bios_data(bios_settings)
+        self.bios_settings_inst.update_bios_data_by_post(bios_settings)
         self.bios_settings_inst._conn.post.assert_called_once_with(target_uri,
                                                                    data=data)
+
+    def test_update_bios_data_by_patch(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_base_configs.json', 'r') as f:
+            bios_settings = json.loads(f.read())['BaseConfigs'][0]['default']
+        target_uri = '/redfish/v1/Systems/1/bios/settings'
+        data = {
+            'Attributes': bios_settings
+        }
+        self.bios_settings_inst.update_bios_data_by_patch(bios_settings)
+        self.bios_settings_inst._conn.patch.assert_called_once_with(target_uri,
+                                                                    data=data)
 
 
 class BIOSBootSettingsTestCase(testtools.TestCase):

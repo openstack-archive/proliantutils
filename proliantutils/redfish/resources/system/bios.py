@@ -89,7 +89,7 @@ class BIOSSettings(base.ResourceBase):
 
     def update_bios_to_default(self):
         """Updates bios default settings"""
-        self.pending_settings.update_bios_data(
+        self.pending_settings.update_bios_data_by_post(
             self._get_base_configs().default_config)
 
     def refresh(self):
@@ -125,10 +125,10 @@ class BIOSPendingSettings(base.ResourceBase):
         if boot_mode == sys_cons.BIOS_BOOT_MODE_UEFI:
             bios_properties['UefiOptimizedBoot'] = 'Enabled'
 
-        self._conn.patch(self.path, bios_properties)
+        self.update_bios_data_by_patch(bios_properties)
 
-    def update_bios_data(self, data):
-        """Update bios data
+    def update_bios_data_by_post(self, data):
+        """Update bios data by post
 
         :param data: default bios config data
         """
@@ -136,6 +136,16 @@ class BIOSPendingSettings(base.ResourceBase):
             'Attributes': data
         }
         self._conn.post(self.path, data=bios_settings_data)
+
+    def update_bios_data_by_patch(self, data):
+        """Update bios data by patch
+
+        :param data: default bios config data
+        """
+        bios_settings_data = {
+            'Attributes': data
+        }
+        self._conn.patch(self.path, data=bios_settings_data)
 
 
 class BIOSBootSettings(base.ResourceBase):

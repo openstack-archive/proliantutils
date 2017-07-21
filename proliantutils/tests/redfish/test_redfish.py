@@ -721,7 +721,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
                           self.rf_client.get_server_capabilities)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_data')
+    @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_data_by_post')
     def test_reset_bios_to_default(self, update_bios_mock, get_system_mock):
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
