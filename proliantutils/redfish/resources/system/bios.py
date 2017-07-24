@@ -41,6 +41,9 @@ class BIOSSettings(base.ResourceBase):
 
     tpm_state = base.MappedField(["Attributes", "TpmState"], mappings.TPM_MAP)
 
+    cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
+                              mappings.CPUVT_MAP)
+
     _pending_settings = None
     _boot_settings = None
     _base_configs = None

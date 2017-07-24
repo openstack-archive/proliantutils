@@ -625,6 +625,9 @@ class RedfishOperations(operations.IloOperations):
                      'sriov_enabled',
                      sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
                      ),
+                     ('cpu_vt',
+                      sushy_system.bios_settings.cpu_vt == (
+                          sys_cons.CPUVT_ENABLED)),
                      ('trusted_boot',
                       (tpm_state == sys_cons.TPM_PRESENT_ENABLED
                        or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),

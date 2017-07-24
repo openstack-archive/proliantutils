@@ -50,3 +50,8 @@ SECUREBOOT_RESET_KEYS_DELETE_PK = 'delete pk'
 TPM_PRESENT_ENABLED = 'Tpm present enabled'
 TPM_PRESENT_DISABLED = 'Tpm present disabled'
 TPM_NOT_PRESENT = 'Tpm not present'
+
+# BIOS Cpu Virtualisation contants
+
+CPUVT_ENABLED = 'cpu_vt enabled'
+CPUVT_DISABLED = 'cpu_vt disabled'
