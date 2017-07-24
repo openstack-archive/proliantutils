@@ -18,12 +18,42 @@
 import json
 
 import mock
+from requests.packages import urllib3
+from requests.packages.urllib3 import exceptions as urllib3_exceptions
 import testtools
 
 from proliantutils import exception
 from proliantutils.ilo import common
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
+
+
+class IloRisTestCaseInitTestCase(testtools.TestCase):
+
+    @mock.patch.object(urllib3, 'disable_warnings')
+    def test_init(self, disable_warning_mock):
+        ris_client = ris.RISOperations(
+            "x.x.x.x", "admin", "Admin", bios_password='foo',
+            cacert='/somepath')
+
+        self.assertEqual(ris_client.host, "x.x.x.x")
+        self.assertEqual(ris_client.login, "admin")
+        self.assertEqual(ris_client.password, "Admin")
+        self.assertEqual(ris_client.bios_password, "foo")
+        self.assertEqual({}, ris_client.message_registries)
+        self.assertEqual(ris_client.cacert, '/somepath')
+
+    @mock.patch.object(urllib3, 'disable_warnings')
+    def test_init_without_cacert(self, disable_warning_mock):
+        ris_client = ris.RISOperations(
+            "x.x.x.x", "admin", "Admin", bios_password='foo')
+
+        self.assertEqual(ris_client.host, "x.x.x.x")
+        self.assertEqual(ris_client.login, "admin")
+        self.assertEqual(ris_client.password, "Admin")
+        self.assertIsNone(ris_client.cacert)
+        disable_warning_mock.assert_called_once_with(
+            urllib3_exceptions.InsecureRequestWarning)
 
 
 class IloRisTestCase(testtools.TestCase):
