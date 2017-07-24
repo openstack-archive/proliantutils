@@ -43,6 +43,8 @@ class BIOSSettingsTestCase(testtools.TestCase):
                          self.bios_inst.boot_mode)
         self.assertEqual(sys_cons.SRIOV_ENABLED,
                          self.bios_inst.sriov)
+        self.assertEqual(sys_cons.CPUVT_ENABLED,
+                         self.bios_inst.cpu_vt)
 
     def test_pending_settings(self):
         self.assertIsNone(self.bios_inst._pending_settings)

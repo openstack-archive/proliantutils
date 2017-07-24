@@ -64,3 +64,8 @@ TPM_MAP = {
     'PresentDisabled': constants.TPM_PRESENT_DISABLED,
     'NotPresent': constants.TPM_NOT_PRESENT
 }
+
+CPUVT_MAP = {
+    'Enabled': constants.CPUVT_ENABLED,
+    'Disabled': constants.CPUVT_DISABLED
+}
