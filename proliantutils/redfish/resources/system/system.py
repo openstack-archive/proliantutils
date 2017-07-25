@@ -28,6 +28,7 @@ from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
+from proliantutils.redfish.resources.system.storage import storage
 from proliantutils.redfish import utils
 
 
@@ -200,6 +201,7 @@ class HPESystem(system.System):
         self._secure_boot = None
         self._ethernet_interfaces = None
         self._smart_storage = None
+        self._storages = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -237,3 +239,16 @@ class HPESystem(system.System):
                     self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
                 redfish_version=self.redfish_version)
         return self._smart_storage
+
+    @property
+    def storages(self):
+        """This property gets the list of instances for Storages
+
+        This property gets the list of instances for Storages
+        :returns: a list of instances of Storages
+        """
+        if self._storages is None:
+            self._storages = storage.StorageCollection(
+                self._conn, utils.get_subresource_path_by(self, 'Storage'),
+                redfish_version=self.redfish_version)
+        return self._storages
