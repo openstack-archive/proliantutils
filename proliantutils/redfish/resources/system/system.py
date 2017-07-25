@@ -1,4 +1,4 @@
-# Copyright 2017 Hewlett Packard Enterprise Development LP
+# Copyright 2017 Hewlett Packard Enterprise Development Ln 80gx ====P
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+import collections
 import sushy
 from sushy.resources import base
 from sushy.resources.system import system
@@ -38,6 +39,8 @@ PERSISTENT_BOOT_DEVICE_MAP = {
     'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
     'HDD': sushy.BOOT_SOURCE_TARGET_HDD
 }
+StorageSummary = collections.namedtuple('StorageSummary',
+                                        ['count'])
 
 
 class PowerButtonActionField(base.CompositeField):
@@ -234,3 +237,32 @@ class HPESystem(system.System):
                     self, 'SimpleStorage'),
                 redfish_version=self.redfish_version)
         return self._simple_storages
+
+    def summary(self):
+        size = 0
+        disk_size = []
+        log_size = []
+        try:
+            if self.smart_storagerray_controllers is not None:
+                log_size.append(
+                    self.array_controllers.maximum_logical_drive_size)
+                disk_size.append(self.smart_storage.array_controllers.maximum_disk_size)
+            if self.storages is not None:
+                log_size.append(self.storages.maximum_volume_size)
+                disk_size.append(self.storages.maximum_disk_size)
+            if self.simple_storages is not None:
+                disk_size.append(self.storages.maximum_disk_size)
+        except exception.MissingAttributeError:
+            pass
+
+        if len(log_size) > 0:
+            for val in log_size:
+                if size < val:
+                    size = val
+        if size == 0:
+            if len(disk_size) > 0:
+                for val in disk_size:
+                    if size < val:
+                        size = val
+        self._local_gb = size / (1024 * 1024 * 1024)
+        return self._local_gb

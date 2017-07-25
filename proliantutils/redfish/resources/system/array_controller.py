@@ -77,6 +77,42 @@ class ArrayController(base.ResourceBase):
 
 class ArrayControllerCollection(base.ResourceCollectionBase):
 
+    _maximum_volume_size = None
+    _maximum_drive_size = None
+
     @property
     def _resource_type(self):
         return ArrayController
+
+    @property
+    def maximum_volume_size(self):
+        """Gets the biggest volume
+
+        :returns: size in bytes.
+        """
+        if self._maximum_volume_size is None:
+            self._maximum_volume_size = 0
+            size = []
+            for member in self.get_members():
+                size.append(member.logical_drive.maximum_size)
+            self._maximum_volume_size = max(size)
+        return self._maximum_volume_size
+
+    @property
+    def maximum_drive_size(self):
+        """Gets the biggest disk
+
+        :returns the size in bytes.
+        """
+        if self._maximum_drive_size is None:
+            self._maximum_drive_size = 0
+            size = []
+            for member in self.get_members():
+                size.append(member.physical_drive.maximum_size)
+            self._maximum_drive_size = max(size)
+        return self._maximum_drive_size
+
+    def refresh(self):
+        super(ArrayControllerCollection, self).refresh()
+        self._maximum_drive_size = None
+        self._maximum_volume_size = None
