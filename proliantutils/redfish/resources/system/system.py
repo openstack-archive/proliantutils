@@ -25,6 +25,7 @@ from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system import smart_storage
+from proliantutils.redfish.resources.system import storage
 from proliantutils.redfish import utils
 
 
@@ -189,6 +190,7 @@ class HPESystem(system.System):
         self._pci_devices = None
         self._secure_boot = None
         self._smart_storages = None
+        self._storages = None
 
     @property
     def smart_storages(self):
@@ -204,3 +206,16 @@ class HPESystem(system.System):
                     self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
                 redfish_version=self.redfish_version)
         return self._smart_storages
+
+    @property
+    def storages(self):
+        """This property gets the list of instances for Storages
+
+        This property gets the list of instances for Storages
+        :returns: a list of instances of Storages
+        """
+        if self._storages is None:
+            self._storages = storage.StorageCollection(
+                self._conn, utils.get_subresource_path_by(self, 'Storage'),
+                redfish_version=self.redfish_version)
+        return self._storages
