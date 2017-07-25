@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import logging
 
 from proliantutils.redfish.resources.system import drives as sys_drives
@@ -21,6 +22,8 @@ from sushy.resources import base
 
 LOG = logging.getLogger(__name__)
 
+# Representation of Summary of Storage data
+StorageSummary = collections.namedtuple('StorageSummary', ['local_gb'])
 
 class Storage(base.ResourceBase):
 
@@ -74,3 +77,20 @@ class StorageCollection(base.ResourceCollectionBase):
     @property
     def _resource_type(self):
         return Storage
+
+    @property
+    def summary(self):
+        if self._summary is None:
+            vol_size = []
+            drive_size = []
+            local_gb = 0
+            for member in self.get_members():
+                vol_size.append(member.volume.maximum_size)
+                drive_size.append(max(member.drive.capacity_bytes))
+            if max(vol_size) > 0:
+                local_gb = max(vol_size)
+            else:
+                local_gb = max(drive_size)
+            local_gb = (local_gb / 1024 * 1024 * 1024)
+            self._summary = StorageSummary(local_gb=local_gb)
+        return self._summary

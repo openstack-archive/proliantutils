@@ -63,8 +63,8 @@ class VolumesCollection(base.ResourceCollectionBase):
         if self._maximum_size is None:
             self._maximum_size = 0
             for mem in self.get_members():
-                if self._maximum_size < mem.capacity_bytes:
-                    self._maximum_size = mem.capacity_bytes
+                self._maximum_size = max(self._maximum_size,
+                                         mem.capacity_bytes)
         return self._maximum_size
 
     def refresh(self):
