@@ -26,6 +26,7 @@ from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
 from proliantutils.redfish.resources.system.storage import storage
@@ -202,6 +203,7 @@ class HPESystem(system.System):
         self._ethernet_interfaces = None
         self._smart_storage = None
         self._storages = None
+        self._simple_storages = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -252,3 +254,17 @@ class HPESystem(system.System):
                 self._conn, utils.get_subresource_path_by(self, 'Storage'),
                 redfish_version=self.redfish_version)
         return self._storages
+
+    @property
+    def simple_storages(self):
+        """This property gets the list of instances for SimpleStorages
+
+        :returns: a list of instances of SimpleStorages
+        """
+
+        if self._simple_storages is None:
+            self._simple_storages = simple_storage.SimpleStorageCollection(
+                self._conn, utils.get_subresource_path_by(
+                    self, 'SimpleStorage'),
+                redfish_version=self.redfish_version)
+        return self._simple_storages
