@@ -667,7 +667,11 @@ class RedfishOperations(operations.IloOperations):
                        or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                          sushy_system.secure_boot.current_boot)),) if value})
+                          sushy_system.secure_boot.current_boot)),
+                     ('iscsi_boot',
+                      (sushy_system.bios_settings.iscsi_settings.
+                       is_iscsi_boot_supported())),
+                     ) if value})
 
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "

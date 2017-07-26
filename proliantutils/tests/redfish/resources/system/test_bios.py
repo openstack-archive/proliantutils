@@ -22,6 +22,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system import iscsi
 
 
 class BIOSSettingsTestCase(testtools.TestCase):
@@ -82,6 +83,24 @@ class BIOSSettingsTestCase(testtools.TestCase):
                       self.bios_inst.boot_settings)
         self.conn.get.return_value.json.assert_not_called()
 
+    def test_iscsi_settings(self):
+        self.assertIsNone(self.bios_inst._iscsi_settings)
+
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        actual_settings = self.bios_inst.iscsi_settings
+        self.assertIsInstance(actual_settings,
+                              iscsi.ISCSISettings)
+        self.conn.get.return_value.json.assert_called_once_with()
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_settings,
+                      self.bios_inst.iscsi_settings)
+        self.conn.get.return_value.json.assert_not_called()
+
     def test__get_base_configs(self):
         self.assertIsNone(self.bios_inst._base_configs)
         with open('proliantutils/tests/redfish/'
@@ -139,6 +158,29 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(actual_settings,
                               bios.BIOSBootSettings)
+
+    def test_iscsi_settings_on_refresh(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        actual_settings = self.bios_inst.iscsi_settings
+        self.assertIsInstance(actual_settings,
+                              iscsi.ISCSISettings)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        self.bios_inst.refresh()
+        self.assertIsNone(self.bios_inst._iscsi_settings)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_boot.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        self.assertIsInstance(actual_settings,
+                              iscsi.ISCSISettings)
 
     def test__get_base_configs_on_refresh(self):
         with open('proliantutils/tests/redfish/'
