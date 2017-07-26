@@ -82,3 +82,13 @@ class UtilsTestCase(testtools.TestCase):
                                       expected_boot_modes):
         actual_boot_modes = utils.get_supported_boot_mode(boot_mode)
         self.assertEqual(expected_boot_modes, actual_boot_modes)
+
+    @ddt.data(('SecureBoot', ['HEAD', 'GET', 'PATCH', 'POST']),
+              ('Bios', ['GET', 'HEAD']))
+    @ddt.unpack
+    def test_get_allowed_operations(self, subresource_path, expected):
+        response_mock = mock.MagicMock()
+        response_mock.headers = {'Allow': expected}
+        self.conn.get.return_value = response_mock
+        ret_val = utils.get_allowed_operations(self.sys_inst, subresource_path)
+        self.assertEqual(ret_val, expected)

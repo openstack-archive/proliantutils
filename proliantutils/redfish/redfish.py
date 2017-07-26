@@ -643,6 +643,8 @@ class RedfishOperations(operations.IloOperations):
             count = len(sushy_system.pci_devices.gpu_devices)
             boot_mode = rf_utils.get_supported_boot_mode(
                 sushy_system.supported_boot_mode)
+            iscsi_boot = sushy_system.bios_settings.\
+                iscsi_settings.is_iscsi_boot_supported()
             capabilities.update(
                 {'pci_gpu_devices': count,
                  'ilo_firmware_version': sushy_manager.firmware_version,
@@ -667,7 +669,9 @@ class RedfishOperations(operations.IloOperations):
                        or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
                      ('secure_boot',
                       GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                          sushy_system.secure_boot.current_boot)),) if value})
+                          sushy_system.secure_boot.current_boot)),
+                     ('iscsi_boot', iscsi_boot),
+                     ) if value})
 
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "

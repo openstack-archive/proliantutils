@@ -81,3 +81,16 @@ def get_supported_boot_mode(supported_boot_mode):
 
         return SupportedBootModes(boot_mode_bios=boot_mode_bios,
                                   boot_mode_uefi=boot_mode_uefi)
+
+
+def get_allowed_operations(resource, subresouce_path):
+    """Helper function to get the HTTP allowed methods.
+
+    :param resource: ResourceBase instance from which the path is loaded.
+    :param subresource_path: JSON field to fetch the value from.
+            Either a string, or a list of strings in case of a nested field.
+    :returns: A list of allowed HTTP methods.
+    """
+    uri = get_subresource_path_by(resource, subresouce_path)
+    response = resource._conn.get(path=uri)
+    return response.headers['Allow']
