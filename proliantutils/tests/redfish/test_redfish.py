@@ -33,6 +33,8 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import iscsi
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system.storage import array_controller
+from proliantutils.redfish.resources.system.storage \
+    import common as common_storage
 from proliantutils.redfish.resources.system import system as pro_sys
 from sushy.resources.system import system
 
@@ -956,8 +958,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'on the server.',
             self.rf_client.clear_secure_boot_keys)
 
+    @mock.patch.object(common_storage, 'get_local_gb')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    def test_get_essential_properties(self, get_system_mock):
+    def test_get_essential_properties(self, get_system_mock, local_gb_mock):
         memory_mock = mock.PropertyMock(return_value=20)
         type(get_system_mock.return_value.memory_summary).size_gib = (
             memory_mock)
@@ -969,12 +972,15 @@ class RedfishOperationsTestCase(testtools.TestCase):
             arch_mock)
         type(get_system_mock.return_value.ethernet_interfaces).summary = (
             {'1': '12:44:6A:3B:04:11'})
+
+        local_gb_mock.return_value = 600
         # TODO(nisha): To add after local_gb changes merge.
         # type(get_system_mock.return_value).storage_summary = 600
         actual = self.rf_client.get_essential_properties()
         expected = {'properties': {'cpus': 40,
                                    'cpu_arch': 'x86 or x86-64',
-                                   'memory_mb': 20480},
+                                   'memory_mb': 20480,
+                                   'local_gb': 600},
                     'macs': {'1': '12:44:6A:3B:04:11'}}
         self.assertEqual(expected, actual)
 
