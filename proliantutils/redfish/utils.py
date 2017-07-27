@@ -108,3 +108,17 @@ def is_operation_allowed(method, resource, subresouce_path):
     :returns: True if the operation is allowed else False
     """
     return method in get_allowed_operations(resource, subresouce_path)
+
+
+def max_safe(iterable):
+    """Creates a wrapper over python max() function.
+
+    This function is just a wrapper over pthon max().
+    It catches the exceptions and let max() return without any error.
+    """
+
+    try:
+        value = max(iterable)
+        return value
+    except ValueError:
+        return 0

@@ -78,6 +78,7 @@ class HPESystem(system.System):
     _secure_boot = None  # ref to SecureBoot instance
 
     _smart_storage = None
+    _simple_storages = None
     _storages = None
     _pci_devices = None
     _ethernet_interfaces = None
