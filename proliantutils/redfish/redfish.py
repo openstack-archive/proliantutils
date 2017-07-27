@@ -18,6 +18,7 @@ import json
 
 from six.moves.urllib import parse
 import sushy
+from sushy.resources.system import mappings as sushy_map
 from sushy import utils
 
 from proliantutils import exception
@@ -28,6 +29,8 @@ from proliantutils import log
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.manager import constants as mgr_cons
 from proliantutils.redfish.resources.system import constants as sys_cons
+from proliantutils.redfish.resources.system.storage \
+    import common as common_storage
 from proliantutils.redfish import utils as rf_utils
 
 """
@@ -828,7 +831,9 @@ class RedfishOperations(operations.IloOperations):
             # local_gb = sushy_system.storage_summary
             prop = {'memory_mb': (sushy_system.memory_summary.size_gib * 1024),
                     'cpus': sushy_system.processors.summary.count,
-                    'cpu_arch': sushy_system.processors.summary.architecture}
+                    'cpu_arch': sushy_map.PROCESSOR_ARCH_VALUE_MAP_REV.get(
+                    sushy_system.processors.summary.architecture),
+                    'local_gb': common_storage.get_local_gb(sushy_system)}
             return {'properties': prop,
                     'macs': sushy_system.ethernet_interfaces.summary}
         except sushy.exceptions.SushyError as e:

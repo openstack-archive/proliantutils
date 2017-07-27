@@ -12,12 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 
 from sushy.resources import base
 
-
-LOG = logging.getLogger(__name__)
+from proliantutils.redfish import utils
 
 
 class SimpleStorage(base.ResourceBase):
@@ -45,9 +43,9 @@ class SimpleStorage(base.ResourceBase):
         """
         if self._maximum_size_bytes is None:
             self._maximum_size_bytes = (
-                max([device.get('CapacityBytes')
-                    for device in self.devices
-                    if device.get('CapacityBytes') is not None]))
+                utils.max_safe([device.get('CapacityBytes')
+                               for device in self.devices
+                               if device.get('CapacityBytes') is not None]))
         return self._maximum_size_bytes
 
     def refresh(self):
@@ -71,8 +69,8 @@ class SimpleStorageCollection(base.ResourceCollectionBase):
         """
         if self._maximum_size_bytes is None:
             self._maximum_size_bytes = (
-                max([member.maximum_size_bytes
-                    for member in self.get_members()]))
+                utils.max_safe([member.maximum_size_bytes
+                               for member in self.get_members()]))
         return self._maximum_size_bytes
 
     def refresh(self):

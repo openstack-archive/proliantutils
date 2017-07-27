@@ -104,3 +104,10 @@ class UtilsTestCase(testtools.TestCase):
         ret_val = utils.is_operation_allowed(method, self.sys_inst,
                                              subresource_path)
         self.assertEqual(ret_val, expected)
+
+    @ddt.data(([2, 4, 6], 6),
+              ([], 0))
+    @ddt.unpack
+    def test_max_safe(self, iterable, expected):
+        actual = utils.max_safe(iterable)
+        self.assertEqual(expected, actual)
