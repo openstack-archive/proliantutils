@@ -74,8 +74,8 @@ class Storage(base.ResourceBase):
         """
         if self._drives_maximum_size_bytes is None:
             self._drives_maximum_size_bytes = (
-                max([member.capacity_bytes
-                    for member in self._drives_list()]))
+                utils.max_safe([member.capacity_bytes
+                               for member in self._drives_list()]))
         return self._drives_maximum_size_bytes
 
     def refresh(self):
@@ -101,8 +101,8 @@ class StorageCollection(base.ResourceCollectionBase):
         """
         if self._volumes_maximum_size_bytes is None:
             self._volumes_maximum_size_bytes = (
-                max([member.volumes.maximum_size_bytes
-                    for member in self.get_members()]))
+                utils.max_safe([member.volumes.maximum_size_bytes
+                               for member in self.get_members()]))
         return self._volumes_maximum_size_bytes
 
     @property
@@ -113,8 +113,8 @@ class StorageCollection(base.ResourceCollectionBase):
         """
         if self._drives_maximum_size_bytes is None:
             self._drives_maximum_size_bytes = (
-                max([member.drives_maximum_size_bytes
-                    for member in self.get_members()]))
+                utils.max_safe([member.drives_maximum_size_bytes
+                               for member in self.get_members()]))
         return self._drives_maximum_size_bytes
 
     def refresh(self):
