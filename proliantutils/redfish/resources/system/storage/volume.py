@@ -15,6 +15,8 @@
 
 from sushy.resources import base
 
+from proliantutils.redfish import utils
+
 
 class Volume(base.ResourceBase):
 
@@ -44,7 +46,8 @@ class VolumeCollection(base.ResourceCollectionBase):
         """
         if self._maximum_size_bytes is None:
             self._maximum_size_bytes = (
-                max([member.capacity_bytes for member in self.get_members()]))
+                utils.max_safe([member.capacity_bytes
+                               for member in self.get_members()]))
         return self._maximum_size_bytes
 
     def refresh(self):
