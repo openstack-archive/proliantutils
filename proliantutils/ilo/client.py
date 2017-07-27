@@ -84,6 +84,7 @@ SUPPORTED_REDFISH_METHODS = [
     'clear_secure_boot_keys',
     'get_server_capabilities',
     'get_supported_boot_mode',
+    'get_essential_properties'
 ]
 
 LOG = log.get_logger(__name__)
