@@ -668,6 +668,17 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.assertEqual(expected_boot_val, actual_val)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_supported_boot_mode_error(self, get_system_mock):
+        supported_boot_mode_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value).supported_boot_mode = (
+            supported_boot_mode_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to get the supported boot modes.',
+            self.rf_client.get_supported_boot_mode)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities(self, get_manager_mock, get_system_mock):
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
