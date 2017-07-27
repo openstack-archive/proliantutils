@@ -437,6 +437,7 @@ class IloRisTestCase(testtools.TestCase):
         validate_mock.assert_called_once_with(ris_outputs.GET_HEADERS,
                                               settings_uri)
 
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_rest_patch_allowed')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
     @mock.patch.object(ris.RISOperations,
@@ -451,7 +452,7 @@ class IloRisTestCase(testtools.TestCase):
     def test_get_server_capabilities(self, get_details_mock, ilo_firm_mock,
                                      secure_mock, boot_mode_mock, gpu_mock,
                                      tpm_mock, cpu_vt_mock, nvdimm_n_mock,
-                                     bios_sriov_mock):
+                                     bios_sriov_mock, iscsi_boot_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -463,6 +464,7 @@ class IloRisTestCase(testtools.TestCase):
         nvdimm_n_mock.return_value = True
         tpm_mock.return_value = True
         bios_sriov_mock.return_value = 'Disabled'
+        iscsi_boot_mock.return_value = '/rest/v1/systems/1/bios/iScsi'
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
@@ -472,10 +474,12 @@ class IloRisTestCase(testtools.TestCase):
                          'cpu_vt': 'true',
                          'nvdimm_n': 'true',
                          'boot_mode_bios': 'false',
-                         'boot_mode_uefi': 'true'}
+                         'boot_mode_uefi': 'true',
+                         'iscsi_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_rest_patch_allowed')
     @mock.patch.object(ris.RISOperations, '_get_bios_setting')
     @mock.patch.object(ris.RISOperations, '_get_nvdimm_n_status')
     @mock.patch.object(ris.RISOperations,
@@ -489,7 +493,8 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_server_capabilities_tp_absent(
             self, get_details_mock, ilo_firm_mock, secure_mock, boot_mode_mock,
-            gpu_mock, tpm_mock, cpu_vt_mock, nvdimm_n_mock, bios_sriov_mock):
+            gpu_mock, tpm_mock, cpu_vt_mock, nvdimm_n_mock, bios_sriov_mock,
+            iscsi_mock):
         host_details = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
         get_details_mock.return_value = host_details
         ilo_firm_mock.return_value = {'ilo_firmware_version': 'iLO 4 v2.20'}
@@ -501,6 +506,7 @@ class IloRisTestCase(testtools.TestCase):
         tpm_mock.return_value = False
         cpu_vt_mock.return_value = True
         bios_sriov_mock.return_value = 'Enabled'
+        iscsi_mock.side_effect = exception.IloCommandNotSupportedError('error')
         expected_caps = {'secure_boot': 'true',
                          'ilo_firmware_version': 'iLO 4 v2.20',
                          'rom_firmware_version': u'I36 v1.40 (01/28/2015)',
