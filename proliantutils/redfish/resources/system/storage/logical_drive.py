@@ -16,6 +16,8 @@ import logging
 
 from sushy.resources import base
 
+from proliantutils.redfish import utils
+
 LOG = logging.getLogger(__name__)
 
 
@@ -48,7 +50,8 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
         """
         if self._maximum_size_mib is None:
             self._maximum_size_mib = (
-                max([member.capacity_mib for member in self.get_members()]))
+                utils.max_safe([member.capacity_mib
+                               for member in self.get_members()]))
         return self._maximum_size_mib
 
     def refresh(self):
