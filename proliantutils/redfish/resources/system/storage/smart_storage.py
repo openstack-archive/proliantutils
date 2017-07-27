@@ -56,8 +56,9 @@ class HPESmartStorage(base.ResourceBase):
         """
         if self._logical_drives_maximum_size_mib is None:
             self._logical_drives_maximum_size_mib = (
-                max([member.logical_drives.maximum_size_mib
-                    for member in self.array_controllers.get_members()]))
+                utils.max_safe(
+                    [member.logical_drives.maximum_size_mib
+                     for member in self.array_controllers.get_members()]))
         return self._logical_drives_maximum_size_mib
 
     @property
@@ -68,8 +69,9 @@ class HPESmartStorage(base.ResourceBase):
         """
         if self._physical_drives_maximum_size_mib is None:
             self._physical_drives_maximum_size_mib = (
-                max([member.physical_drives.maximum_size_mib
-                    for member in self.array_controllers.get_members()]))
+                utils.max_safe(
+                    [member.physical_drives.maximum_size_mib
+                     for member in self.array_controllers.get_members()]))
         return self._physical_drives_maximum_size_mib
 
     def refresh(self):

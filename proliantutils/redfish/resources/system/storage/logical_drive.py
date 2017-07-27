@@ -12,11 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils.redfish import utils
 
 
 class HPELogicalDrive(base.ResourceBase):
@@ -48,7 +46,8 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
         """
         if self._maximum_size_mib is None:
             self._maximum_size_mib = (
-                max([member.capacity_mib for member in self.get_members()]))
+                utils.max_safe([member.capacity_mib
+                               for member in self.get_members()]))
         return self._maximum_size_mib
 
     def refresh(self):

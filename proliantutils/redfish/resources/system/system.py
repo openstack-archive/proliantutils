@@ -79,13 +79,14 @@ class HPESystem(system.System):
     _bios_settings = None  # ref to BIOSSettings instance
     _secure_boot = None  # ref to SecureBoot instance
 
-    _smart_storage = None
-    _storages = None
-    _pci_devices = None
+    _smart_storage = None  # SmartStorage instance
+    _simple_storages = None  # SimpleStorage instance
+    _storages = None  # Storage instance
+    _pci_devices = None  # PCIDevice instance
 
-    _ethernet_interfaces = None
+    _ethernet_interfaces = None  # EthernetInterface instance
 
-    _memory = None
+    _memory = None  # Memory instance
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
