@@ -12,12 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 
 from sushy.resources import base
-
-
-LOG = logging.getLogger(__name__)
 
 
 class SimpleStorage(base.ResourceBase):
