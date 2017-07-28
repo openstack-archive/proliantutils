@@ -16,8 +16,11 @@ from sushy.resources import base
 
 from proliantutils.redfish import utils
 
+from proliantutils.redfish.resources.system.storage import mappings
+
 
 class HPELogicalDrive(base.ResourceBase):
+    """This class represents the LogicalDrives resource"""
 
     identity = base.Field('Id')
 
@@ -27,10 +30,11 @@ class HPELogicalDrive(base.ResourceBase):
 
     capacity_mib = base.Field('CapacityMiB', adapter=int)
 
-    raid = base.Field('Raid')
+    raid = base.MappedField('Raid', mappings.RAID_LEVEL_MAP)
 
 
 class HPELogicalDriveCollection(base.ResourceCollectionBase):
+    """This class represents the collection of LogicalDrives resource"""
 
     _maximum_size_mib = None
 

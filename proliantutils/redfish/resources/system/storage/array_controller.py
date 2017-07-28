@@ -23,6 +23,7 @@ LOG = logging.getLogger(__name__)
 
 
 class HPEArrayController(base.ResourceBase):
+    """This class represents the HPEArrayControllers resource"""
 
     identity = base.Field('Id')
     """The identity string"""
@@ -38,6 +39,8 @@ class HPEArrayController(base.ResourceBase):
 
     @property
     def logical_drives(self):
+        """Gets the resource HPELogicalDriveCollection of ArrayControllers"""
+
         if self._logical_drives is None:
             self._logical_drives = (
                 logical_drive.HPELogicalDriveCollection(
@@ -48,6 +51,8 @@ class HPEArrayController(base.ResourceBase):
 
     @property
     def physical_drives(self):
+        """Gets the resource HPEPhysicalDriveCollection of ArrayControllers"""
+
         if self._physical_drives is None:
             self._physical_drives = (
                 physical_drive.HPEPhysicalDriveCollection(
@@ -63,6 +68,7 @@ class HPEArrayController(base.ResourceBase):
 
 
 class HPEArrayControllerCollection(base.ResourceCollectionBase):
+    """This class represents the collection of HPEArrayControllers"""
 
     _logical_drives_maximum_size_mib = None
     _physical_drives_maximum_size_mib = None

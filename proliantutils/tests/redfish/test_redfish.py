@@ -743,11 +743,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities_optional_capabilities_absent(
             self, get_manager_mock, get_system_mock):
-        val = []
-        path = ('proliantutils/tests/redfish/json_samples/'
-                'pci_device.json')
-        with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
