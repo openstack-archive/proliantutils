@@ -1,0 +1,49 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/SmartStorage/ArrayControllers/Members/$entity",
+    "@odata.etag": "W/\"8DF69E2A\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/",
+    "@odata.type": "#HpeSmartStorageArrayController.v2_0_0.HpeSmartStorageArrayController",
+    "AdapterType": "SmartArray",
+    "BackupPowerSourceStatus": "NotPresent",
+    "ControllerPartNumber": "836260-001",
+    "CurrentOperatingMode": "Mixed",
+    "Description": "HPE Smart Storage Array Controller View",
+    "EncryptionCryptoOfficerPasswordSet": false,
+    "EncryptionEnabled": false,
+    "EncryptionFwLocked": false,
+    "EncryptionHasLockedVolumesMissingBootPassword": false,
+    "EncryptionMixedVolumesEnabled": false,
+    "EncryptionStandaloneModeEnabled": false,
+    "ExternalPortCount": 0,
+    "FirmwareVersion": {
+        "Current": {
+            "VersionString": "0.01-808"
+        }
+    },
+    "HardwareRevision": "B",
+    "Id": "0",
+    "InternalPortCount": 2,
+    "Links": {
+        "LogicalDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/LogicalDrives/"
+        },
+        "PhysicalDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/DiskDrives/"
+        },
+        "StorageEnclosures": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/StorageEnclosures/"
+        },
+        "UnconfiguredDrives": {
+            "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/UnconfiguredDrives/"
+        }
+    },
+    "Location": "Slot 0",
+    "LocationFormat": "PCISlot",
+    "Model": "HPE Smart Array P408i-a SR Gen10",
+    "Name": "HpeSmartStorageArrayController",
+    "SerialNumber": "PEYHC0XRH400QI ",
+    "Status": {
+        "Health": "Warning",
+        "State": "Enabled"
+    }
+}
