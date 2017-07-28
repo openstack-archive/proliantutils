@@ -22,6 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class HPESmartStorage(base.ResourceBase):
+    """This class represents the HPE OEM SmartStorage resource"""
 
     name = base.Field('Name')
     """The name of the resource or array element"""
