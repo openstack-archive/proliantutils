@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from sushy.resources import base
 
 from proliantutils.redfish import utils
 
 
 class Volume(base.ResourceBase):
+    """This class represents the Volume resource"""
 
     identity = base.Field('Id', required=True)
     """The processor identity string"""
@@ -26,11 +26,9 @@ class Volume(base.ResourceBase):
     capacity_bytes = base.Field('CapacityBytes', adapter=int)
     """The size in bytes of this Volume"""
 
-    volume_type = base.Field('VolumeType')
-    """The type of this volume."""
-
 
 class VolumeCollection(base.ResourceCollectionBase):
+    """This class represnets the collection of Volume resource"""
 
     _maximum_size_bytes = None
 
