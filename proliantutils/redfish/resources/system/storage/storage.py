@@ -82,11 +82,41 @@ class Storage(base.ResourceBase):
                     for member in self.drives_list]))
         return self._drives_maximum_size_bytes
 
+    @property
+    def has_ssd(self):
+        """Return true if the drive is ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = (
+                True member.media_type=='SSD' for member in self.drive)
+        return self._has_ssd
+
+    @property
+    def has_rotational(self):
+        """Return true if the drive is ssd"""
+
+        if self._has_rotational is None:
+            self._has_rotational = (
+                True member.media_type=='HDD' for member in self.drive)
+        return self._has_rotational
+
+    @property
+    def drive_rotational_speed_rpm(self):
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = {}
+            for member in self.drive:
+                var = 'drive_rotational' + str(member.rotational_speed_rpm) + 'rpm'
+                self._drive_rotational_speed_rpm.update({var: 'true')
+        return self._drive_rotational_speed_rpm
+
 
 class StorageCollection(base.ResourceCollectionBase):
 
     _volumes_maximum_size_bytes = None
     _drives_maximum_size_bytes = None
+    _drive_rotational_speed_rpm = None
+    _has_rotational = None
+    _has_ssd = None
 
     @property
     def _resource_type(self):
@@ -116,7 +146,36 @@ class StorageCollection(base.ResourceCollectionBase):
                     for member in self.get_members()]))
         return self._drives_maximum_size_bytes
 
+    @property
+    def has_ssd(self):
+        """Return true if the drive is ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = (
+                True member.has_ssd is not None for member in self.get_members())
+        return self._has_ssd
+
+    @property
+    def has_rotational(self):
+        """Return true if the drive is HDD"""
+
+        if self._has_rotational is None:
+            self._has_rotational = (
+                True member.has_rotational is not None for member in self.get_members())
+        return self._has_rotational
+
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Creates the dictionary as per rotational speed of the disk"""
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = (
+                member.drive_rotational_speed_rpm for member in self.get_members())
+        return self._drive_rotational_speed_rpm
+
     def refresh(self):
         super(StorageCollection, self).refresh()
         self._volumes_maximum_size_bytes = None
         self._drives_maximum_size_bytes = None
+        self._drive_rotational_speed_rpm = None
+        self._has_rotational = None
+        self._has_ssd = None
