@@ -673,6 +673,9 @@ class RedfishOperations(operations.IloOperations):
                      ('iscsi_boot',
                       (sushy_system.bios_settings.iscsi_settings.
                        is_iscsi_boot_supported())),
+                     ('has_ssd', common.has_ssd(sushy_system)),
+                     ('has_nvme_ssd', common.has_nvme_ssd(sushy_system)),
+                     ('has_rotational', common.has_rotational 
                      ) if value})
 
         except sushy.exceptions.SushyError as e:
