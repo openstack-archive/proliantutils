@@ -653,6 +653,12 @@ class RedfishOperations(operations.IloOperations):
                  'nic_capacity': sushy_system.pci_devices.max_nic_capacity,
                  'boot_mode_bios': boot_mode.boot_mode_bios,
                  'boot_mode_uefi': boot_mode.boot_mode_uefi})
+            speed_rpm = common_storage.drive_rotational_speed_rpm(sushy_system)
+            raid_levels = common_storage.logical_raid_levels(sushy_system)
+            if speed_rpm is not None:
+                capabilities.update(speed_rpm)
+            if raid_levels is not None:
+                capabilities.update(raid_levels)
 
             tpm_state = sushy_system.bios_settings.tpm_state
             capabilities.update(
@@ -673,6 +679,11 @@ class RedfishOperations(operations.IloOperations):
                      ('iscsi_boot',
                       (sushy_system.bios_settings.iscsi_settings.
                        is_iscsi_boot_supported())),
+                     ('has_ssd', common_storage.has_ssd(sushy_system)),
+                     ('has_nvme_ssd',
+                      common_storage.has_nvme_ssd(sushy_system)),
+                     ('has_rotational',
+                      common_storage.has_rotational(sushy_system)),
                      ) if value})
 
         except sushy.exceptions.SushyError as e:

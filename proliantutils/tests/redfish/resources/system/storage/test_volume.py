@@ -92,3 +92,14 @@ class VolumeCollectionTestCase(testtools.TestCase):
         expected = 899527000000
         actual = self.sys_vol_col.maximum_size_bytes
         self.assertEqual(expected, actual)
+
+    def test_logical_raid_level(self):
+        self.assertIsNone(self.sys_vol_col._logical_raid_level)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'volume.json')
+        with open(path, 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        expected = {'logical_raid_level_1': 'true'}
+        actual = self.sys_vol_col.logical_raid_level
+        self.assertEqual(expected, actual)
