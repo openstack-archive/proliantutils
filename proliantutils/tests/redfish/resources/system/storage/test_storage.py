@@ -28,6 +28,7 @@ class StorageTestCase(testtools.TestCase):
         storage_file = 'proliantutils/tests/redfish/json_samples/storage1.json'
         with open(storage_file, 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
+        self.stor_json = self.conn.get.return_value.json.return_value
 
         path = ("/redfish/v1/Systems/437XR1138R2/Storage/1")
         self.sys_stor = storage.Storage(
@@ -40,45 +41,10 @@ class StorageTestCase(testtools.TestCase):
         self.assertEqual('Local Storage Controller', self.sys_stor.name)
         self.assertEqual('Integrated RAID Controller',
                          self.sys_stor.description)
-        expected_controller = [{
-            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1#/"
-                         "StorageControllers/0",
-            "@odata.type": "#Storage.v1_0_0.StorageController",
-            "Id": "0",
-            "Name": "Contoso Integrated RAID",
-            "Description": "Contoso Integrated RAID",
-            "Status": {
-                "State": "Enabled",
-                "Health": "OK"
-            },
-            "Identifiers": [{
-                "DurableNameFormat": "NAA",
-                "DurableName": "345C59DBD970859C"
-            }],
-            "Manufacturer": "Contoso",
-            "Model": "12Gbs Integrated RAID",
-            "SerialNumber": "2M220100SL",
-            "PartNumber": "CT18754",
-            "SpeedGbps": 12,
-            "FirmwareVersion": "1.0.0.7",
-            "SupportedControllerProtocols": [
-                "PCIe"
-            ],
-            "SupportedDeviceProtocols": [
-                "SAS",
-                "SATA"
-            ]
-            }]
-        self.assertEqual(expected_controller,
+        self.assertEqual(self.stor_json.get('StorageControllers'),
                          self.sys_stor.storage_controllers)
-        drives = [{
-            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
-                         "Drives/35D38F11ACEF7BD3"
-            }, {
-            "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/"
-                         "Drives/3F5A8C54207B7233"
-            }]
-        self.assertEqual(drives, self.sys_stor.drives)
+        self.assertEqual(self.stor_json.get('Drives'),
+                         self.sys_stor.drives)
 
     def test_volumes(self):
         log_coll = None
