@@ -671,6 +671,9 @@ class RedfishOperations(operations.IloOperations):
                      ('iscsi_boot',
                       (sushy_system.bios_settings.iscsi_settings.
                        is_iscsi_boot_supported())),
+                     ('raid_support',
+                      len(sushy_system.smart_storage.array_controllers.
+                          members_identities) > 0),
                      ) if value})
 
         except sushy.exceptions.SushyError as e:
