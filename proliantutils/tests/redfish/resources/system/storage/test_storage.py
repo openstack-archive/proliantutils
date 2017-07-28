@@ -41,8 +41,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertEqual('Local Storage Controller', self.sys_stor.name)
         self.assertEqual('Integrated RAID Controller',
                          self.sys_stor.description)
-        self.assertEqual(self.stor_json.get('StorageControllers'),
-                         self.sys_stor.storage_controllers)
         self.assertEqual(self.stor_json.get('Drives'),
                          self.sys_stor.drives)
 
@@ -64,7 +62,7 @@ class StorageTestCase(testtools.TestCase):
         self.sys_stor.refresh()
         self.assertIsNone(self.sys_stor._volumes)
 
-    def test_drives_list(self):
+    def test__drives_list(self):
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/drive.json') as f:
