@@ -35,6 +35,7 @@ class HPELogicalDrive(base.ResourceBase):
 class HPELogicalDriveCollection(base.ResourceCollectionBase):
 
     _maximum_size_mib = None
+    _logical_raid_level = None
 
     @property
     def _resource_type(self):
@@ -51,6 +52,20 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
                 max([member.capacity_mib for member in self.get_members()]))
         return self._maximum_size_mib
 
+    @property
+    def logical_raid_level(self):
+        """Gets the raid level for each logical volume
+
+        :returns the dictionary of such logical raid levels
+        """
+        if self._logical_raid_level is None:
+            self._logical_raid_level = {}
+            for member in self.get_members():
+                var = 'logical_raid_level_' + str(member.raid)
+                self._logical_raid_level.update({var: 'true'})
+        return self._logical_raid_level
+
     def refresh(self):
         super(HPELogicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
+        self._logical_raid_level = None
