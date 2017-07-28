@@ -357,9 +357,8 @@ class HPESystemTestCase(testtools.TestCase):
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.return_value = value
         self.assertIsNone(self.sys_inst._smart_storage)
-        self.sys_inst.smart_storage
-        self.assertIsInstance(self.sys_inst._smart_storage,
-                              smart_storage.HPESmartStorage)
+        value = self.sys_inst.smart_storage
+        self.assertIsInstance(value, smart_storage.HPESmartStorage)
 
     def test_storages(self):
         self.conn.get.return_value.json.reset_mock()
@@ -374,9 +373,8 @@ class HPESystemTestCase(testtools.TestCase):
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [coll, value]
         self.assertIsNone(self.sys_inst._storages)
-        self.sys_inst.storages
-        self.assertIsInstance(self.sys_inst._storages,
-                              storage.StorageCollection)
+        value = self.sys_inst.storages
+        self.assertIsInstance(value, storage.StorageCollection)
 
     def test_simple_storages(self):
         self.conn.get.return_value.json.reset_mock()
@@ -391,34 +389,46 @@ class HPESystemTestCase(testtools.TestCase):
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [coll, value]
         self.assertIsNone(self.sys_inst._simple_storages)
-        self.sys_inst.simple_storages
-        self.assertIsInstance(self.sys_inst._simple_storages,
-                              simple_storage.SimpleStorageCollection)
+        value = self.sys_inst.simple_storages
+        self.assertIsInstance(value, simple_storage.SimpleStorageCollection)
 
     def test_simple_storage_on_refresh(self):
-                # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json',
                   'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
-        # | WHEN & THEN |
+        self.assertIsInstance(self.sys_inst.simple_storages,
+                              simple_storage.SimpleStorageCollection)
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['default'])
+        self.sys_inst.refresh()
+        self.assertIsNone(self.sys_inst._simple_storages)
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'simple_storage_collection.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.simple_storages,
                               simple_storage.SimpleStorageCollection)
 
-        # On refreshing the system instance...
+    def test_storage_on_refresh(self):
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'storage_collection.json',
+                  'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        self.assertIsInstance(self.sys_inst.storages,
+                              storage.StorageCollection)
+
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
         self.sys_inst.refresh()
 
-        # | WHEN & THEN |
-        self.assertIsNone(self.sys_inst._simple_storages)
+        self.assertIsNone(self.sys_inst._storages)
 
-        # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
-        # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.simple_storages,
-                              simple_storage.SimpleStorageCollection)
+        self.assertIsInstance(self.sys_inst.storages,
+                              storage.StorageCollection)

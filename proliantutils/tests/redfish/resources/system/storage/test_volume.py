@@ -17,6 +17,7 @@ import json
 import mock
 import testtools
 
+from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import volume
 
 
@@ -37,7 +38,7 @@ class VolumeTestCase(testtools.TestCase):
         self.sys_vol._parse_attributes()
         self.assertEqual('1.0.2', self.sys_vol.redfish_version)
         self.assertEqual('1', self.sys_vol.identity)
-        self.assertEqual('Mirrored', self.sys_vol.volume_type)
+        self.assertEqual(constants.MIRRORED, self.sys_vol.volume_type)
         self.assertEqual(899527000000, self.sys_vol.capacity_bytes)
 
 
