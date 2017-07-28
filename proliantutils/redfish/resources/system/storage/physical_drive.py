@@ -12,16 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from sushy.resources import base
 
 from proliantutils.redfish import utils
 
-LOG = logging.getLogger(__name__)
+from proliantutils.redfish.resources.system.storage import mappings
 
 
 class HPEPhysicalDrive(base.ResourceBase):
+    """This class represents the PhysicalDrives resource"""
 
     identity = base.Field('Id', required=True)
 
@@ -31,12 +30,13 @@ class HPEPhysicalDrive(base.ResourceBase):
 
     capacity_mib = base.Field('CapacityMiB', adapter=int)
 
-    media_type = base.Field('MediaType')
+    media_type = base.MappedField('MediaType', mappings.MEDIA_TYPE_MAP)
 
     rotational_speed_rpm = base.Field('RotationalSpeedRpm', adapter=int)
 
 
 class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
+    """This class represents the collection of PhysicalDrives resource"""
 
     _maximum_size_mib = None
 
