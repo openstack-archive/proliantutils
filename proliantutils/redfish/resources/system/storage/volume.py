@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from proliantutils.redfish.resources.system import mappings
 
 from sushy.resources import base
 
@@ -24,13 +25,14 @@ class Volume(base.ResourceBase):
     capacity_bytes = base.Field('CapacityBytes', adapter=int)
     """The size in bytes of this Volume"""
 
-    volume_type = base.Field('VolumeType')
+    volume_type = base.MappedField('VolumeType', mappings.VOLUME_TYPE_MAP)
     """The type of this volume."""
 
 
 class VolumeCollection(base.ResourceCollectionBase):
 
     _maximum_size_bytes = None
+    _logical_raid_level = None
 
     @property
     def _resource_type(self):
@@ -47,6 +49,22 @@ class VolumeCollection(base.ResourceCollectionBase):
                 max([member.capacity_bytes for member in self.get_members()]))
         return self._maximum_size_bytes
 
+    @property
+    def logical_raid_level(self):
+        """Gets the raid level for each logical volume
+
+        :returns the dictionary of such logical raid levels
+        """
+        if self._logical_raid_level is None:
+            self._logical_raid_level = {}
+            for member in self.get_members():
+                var = ('logical_raid_level_' +
+                       mappings.MAP_VOLUME_TYPE_TO_RAID_LEVELS.get(
+                           member.volume_type))
+                self._logical_raid_level.update({var: 'true'})
+        return self._logical_raid_level
+
     def refresh(self):
         super(VolumeCollection, self).refresh()
         self._maximum_size_bytes = None
+        self._logical_raid_level = None

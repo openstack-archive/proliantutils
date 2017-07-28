@@ -17,6 +17,7 @@ import json
 import mock
 import testtools
 
+from proliantutils.redfish.resources.system import constants
 from proliantutils.redfish.resources.system.storage import volume
 
 
@@ -37,7 +38,7 @@ class VolumeTestCase(testtools.TestCase):
         self.sys_vol._parse_attributes()
         self.assertEqual('1.0.2', self.sys_vol.redfish_version)
         self.assertEqual('1', self.sys_vol.identity)
-        self.assertEqual('Mirrored', self.sys_vol.volume_type)
+        self.assertEqual(constants.MIRRORED, self.sys_vol.volume_type)
         self.assertEqual(899527000000, self.sys_vol.capacity_bytes)
 
 
@@ -91,4 +92,15 @@ class VolumeCollectionTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         expected = 899527000000
         actual = self.sys_vol_col.maximum_size_bytes
+        self.assertEqual(expected, actual)
+
+    def test_logical_raid_level(self):
+        self.assertIsNone(self.sys_vol_col._logical_raid_level)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'volume.json')
+        with open(path, 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        expected = {'logical_raid_level_1': 'true'}
+        actual = self.sys_vol_col.logical_raid_level
         self.assertEqual(expected, actual)

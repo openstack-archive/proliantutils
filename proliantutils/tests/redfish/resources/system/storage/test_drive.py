@@ -17,6 +17,7 @@ import json
 import mock
 import testtools
 
+from proliantutils.redfish.resources.system import constants
 from proliantutils.redfish.resources.system.storage import drive
 
 
@@ -38,3 +39,6 @@ class DriveTestCase(testtools.TestCase):
     def test__parse_attributes(self):
         self.sys_drive._parse_attributes()
         self.assertEqual('1.0.2', self.sys_drive.redfish_version)
+        self.assertEqual(899527000000, self.sys_drive.capacity_bytes)
+        self.assertEqual(constants.PROTOCOL_SAS, self.sys_drive.protocol)
+        self.assertEqual(constants.MEDIA_TYPE_HDD, self.sys_drive.media_type)

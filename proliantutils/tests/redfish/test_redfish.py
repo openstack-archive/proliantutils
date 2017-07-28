@@ -682,9 +682,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to get the supported boot modes.',
             self.rf_client.get_supported_boot_mode)
 
+    @mock.patch.object(common_storage, 'drive_rotational_speed_rpm')
+    @mock.patch.object(common_storage, 'logical_raid_levels')
+    @mock.patch.object(common_storage, 'has_nvme_ssd')
+    @mock.patch.object(common_storage, 'has_rotational')
+    @mock.patch.object(common_storage, 'has_ssd')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    def test_get_server_capabilities(self, get_manager_mock, get_system_mock):
+    def test_get_server_capabilities(self, get_manager_mock, get_system_mock,
+                                     ssd_mock, rotational_mock, nvme_mock,
+                                     raid_mock, rpm_mock):
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
@@ -712,6 +719,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = [
             mock.MagicMock(array_controller.HPEArrayController)]
+        ssd_mock.return_value = True
+        rotational_mock.return_value = True
+        nvme_mock.return_value = True
+        raid_mock.return_value = {'logical_raid_level_0': 'true'}
+        rpm_mock.return_value = {'drive_rotational_10000_rpm': 'true'}
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -722,13 +734,23 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'server_model': 'ProLiant DL180 Gen10',
                     'boot_mode_bios': 'true',
                     'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
-                    'raid_support': 'true'}
+                    'raid_support': 'true',
+                    'has_ssd': 'true', 'has_nvme_ssd': 'true',
+                    'has_rotational': 'true',
+                    'logical_raid_level_0': 'true',
+                    'drive_rotational_10000_rpm': 'true'}
         self.assertEqual(expected, actual)
 
+    @mock.patch.object(common_storage, 'drive_rotational_speed_rpm')
+    @mock.patch.object(common_storage, 'logical_raid_levels')
+    @mock.patch.object(common_storage, 'has_nvme_ssd')
+    @mock.patch.object(common_storage, 'has_rotational')
+    @mock.patch.object(common_storage, 'has_ssd')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities_optional_capabilities_absent(
-            self, get_manager_mock, get_system_mock):
+            self, get_manager_mock, get_system_mock, ssd_mock,
+            rotational_mock, nvme_mock, raid_mock, rpm_mock):
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
                 'pci_device.json')
@@ -762,6 +784,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
             iscsi_mock)
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = []
+        ssd_mock.return_value = None
+        rotational_mock.return_value = None
+        nvme_mock.return_value = None
+        raid_mock.return_value = None
+        rpm_mock.return_value = None
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',

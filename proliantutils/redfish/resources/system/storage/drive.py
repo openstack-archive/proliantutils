@@ -16,18 +16,21 @@
 # "/redfish/v1/Systems/1/Storage/1/Drives" will be an invalid URI.
 
 
+from proliantutils.redfish.resources.system import mappings as sys_map
+
 from sushy.resources import base
 
 
 class Drive(base.ResourceBase):
+    """This class represents the Drive resource"""
 
     capacity_bytes = base.Field('CapacityBytes', adapter=int)
     """The size in bytes of this Drive"""
 
-    media_type = base.Field('MediaType')
+    media_type = base.MappedField('MediaType', sys_map.MEDIA_TYPE_MAP)
     """The type of media contained in this drive"""
 
-    protocol = base.Field('Protocol')
+    protocol = base.MappedField('Protocol', sys_map.DEVICE_PROTOCOLS_MAP)
     """The protocol this drive is using to communicate to the storage
     controller."""
 

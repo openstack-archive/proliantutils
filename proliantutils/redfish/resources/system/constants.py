@@ -68,3 +68,44 @@ HEALTH_STATE_DISABLED = 'disabled'
 HEALTH_OK = 'ok'
 HEALTH_WARNING = 'warning'
 HEALTH_CRITICAL = 'critical'
+
+# StorageControllers' supported device protocols
+PROTOCOL_PCIe = "PCI Express (Vendor Proprietary)."
+PROTOCOL_AHCI = "Advanced Host Controller Interface."
+PROTOCOL_UHCI = "Universal Host Controller Interface."
+PROTOCOL_SAS = "Serial Attached SCSI."
+PROTOCOL_SATA = "Serial AT Attachment."
+PROTOCOL_USB = "Universal Serial Bus."
+PROTOCOL_NVMe = "Non-Volatile Memory Express."
+PROTOCOL_FC = "Fibre Channel."
+PROTOCOL_iSCSI = "Internet SCSI."
+PROTOCOL_FCoE = "Fibre Channel over Ethernet."
+PROTOCOL_FCP = "Fibre Channel Protocol for SCSI."
+PROTOCOL_FICON = "FIbre CONnection (FICON)."
+PROTOCOL_NVMeOverFabrics = "NVMe over Fabrics."
+PROTOCOL_SMB = "Server Message Block (aka CIFS Common Internet File System)."
+PROTOCOL_NFSv3 = "Network File System version 3."
+PROTOCOL_NFSv4 = "Network File System version 4."
+PROTOCOL_HTTP = "Hypertext Transport Protocol."
+PROTOCOL_HTTPS = "Secure Hypertext Transport Protocol."
+PROTOCOL_FTP = "File Transfer Protocol."
+PROTOCOL_SFTP = "Secure File Transfer Protocol."
+
+# Media types
+MEDIA_TYPE_SSD = "SSD device"
+MEDIA_TYPE_HDD = "HDD device"
+
+# Volume type
+RAW_DEVICE = "raw physical device"
+NON_REDUNDANT = "volume is non-redundant"
+MIRRORED = "Mirrored Volume"
+STRIPED_WITH_PARITY = "volume striped with parity"
+SPANNED_MIRRORS = "volume with spanned mirrors"
+SPANNED_STRIPES_WITH_PARITY = "volume with spanned stripes with parity"
+
+# RAID level constants
+RAID_0 = 'raid 0'
+RAID_1 = 'raid 1'
+RAID_5 = 'raid 5'
+RAID_1_0 = 'raid 1+0'
+RAID_5_0 = 'raid 5+0'

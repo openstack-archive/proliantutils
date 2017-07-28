@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils.redfish.resources.system import constants
+from proliantutils.redfish.resources.system import mappings
 
 
 class HPEPhysicalDrive(base.ResourceBase):
+    """This class represents the PhysicalDrives resource"""
 
     identity = base.Field('Id', required=True)
 
@@ -29,14 +29,18 @@ class HPEPhysicalDrive(base.ResourceBase):
 
     capacity_mib = base.Field('CapacityMiB', adapter=int)
 
-    media_type = base.Field('MediaType')
+    media_type = base.MappedField('MediaType', mappings.MEDIA_TYPE_MAP)
 
     rotational_speed_rpm = base.Field('RotationalSpeedRpm', adapter=int)
 
 
 class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
+    """This class represents the collection of PhysicalDrives resource"""
 
     _maximum_size_mib = None
+    _has_ssd = None
+    _has_rotational = None
+    _drive_rotational_speed_rpm = None
 
     @property
     def _resource_type(self):
@@ -53,6 +57,43 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
                 max([member.capacity_mib for member in self.get_members()]))
         return self._maximum_size_mib
 
+    @property
+    def has_ssd(self):
+        """Return true if the drive is ssd"""
+
+        if self._has_ssd is None:
+            for member in self.get_members():
+                if member.media_type == constants.MEDIA_TYPE_SSD:
+                    self._has_ssd = True
+                    break
+        return self._has_ssd
+
+    @property
+    def has_rotational(self):
+        """Return true if the drive is rotational"""
+
+        if self._has_rotational is None:
+            for member in self.get_members():
+                if member.media_type == constants.MEDIA_TYPE_HDD:
+                    self._has_rotational = True
+                    break
+        return self._has_rotational
+
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Gets the dictionary of rotational speed of the HDD drives"""
+
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = {}
+            for member in self.get_members():
+                var = ('drive_rotational_' +
+                       str(member.rotational_speed_rpm) + '_rpm')
+                self._drive_rotational_speed_rpm.update({var: 'true'})
+        return self._drive_rotational_speed_rpm
+
     def refresh(self):
         super(HPEPhysicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
+        self._has_ssd = None
+        self._has_rotational = None
+        self._drive_rotational_speed_rpm = None

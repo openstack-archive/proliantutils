@@ -12,14 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils.redfish.resources.system import mappings
 
 
 class HPELogicalDrive(base.ResourceBase):
+    """This class represents the LogicalDrives resource"""
 
     identity = base.Field('Id')
 
@@ -29,12 +28,14 @@ class HPELogicalDrive(base.ResourceBase):
 
     capacity_mib = base.Field('CapacityMiB', adapter=int)
 
-    raid = base.Field('Raid')
+    raid = base.MappedField('Raid', mappings.RAID_LEVEL_MAP)
 
 
 class HPELogicalDriveCollection(base.ResourceCollectionBase):
+    """This class represents the collection of LogicalDrives resource"""
 
     _maximum_size_mib = None
+    _logical_raid_level = None
 
     @property
     def _resource_type(self):
@@ -51,6 +52,21 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
                 max([member.capacity_mib for member in self.get_members()]))
         return self._maximum_size_mib
 
+    @property
+    def logical_raid_level(self):
+        """Gets the raid level for each logical volume
+
+        :returns the dictionary of such logical raid levels
+        """
+        if self._logical_raid_level is None:
+            self._logical_raid_level = {}
+            for member in self.get_members():
+                var = ('logical_raid_level_' +
+                       str(mappings.RAID_LEVEL_MAP_REV.get(member.raid)))
+                self._logical_raid_level.update({var: 'true'})
+        return self._logical_raid_level
+
     def refresh(self):
         super(HPELogicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
+        self._logical_raid_level = None
