@@ -706,6 +706,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         iscsi_mock.is_iscsi_boot_supported = mock.MagicMock(return_value=True)
         type(get_system_mock.return_value.bios_settings).iscsi_settings = (
             iscsi_mock)
+        type(get_system_mock.return_value.smart_storage.
+             array_controllers).member_count = 1
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -715,7 +717,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'trusted_boot': 'true',
                     'server_model': 'ProLiant DL180 Gen10',
                     'boot_mode_bios': 'true',
-                    'boot_mode_uefi': 'true', 'iscsi_boot': 'true'}
+                    'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
+                    'raid_support': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
@@ -753,6 +756,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         iscsi_mock.is_iscsi_boot_supported = mock.MagicMock(return_value=False)
         type(get_system_mock.return_value.bios_settings).iscsi_settings = (
             iscsi_mock)
+        type(get_system_mock.return_value.smart_storage.
+             array_controllers).member_count = 0
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',

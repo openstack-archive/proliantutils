@@ -64,6 +64,7 @@ class HPEArrayController(base.ResourceBase):
 
 class HPEArrayControllerCollection(base.ResourceCollectionBase):
 
+    member_count = base.Field('Members@odata.count')
     _logical_drives_maximum_size_mib = None
     _physical_drives_maximum_size_mib = None
 

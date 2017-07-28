@@ -95,6 +95,7 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
                          self.sys_stor_col.name)
         path = ('/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0',)
         self.assertEqual(path, self.sys_stor_col.members_identities)
+        self.assertEqual(1, self.sys_stor_col.member_count)
 
     @mock.patch.object(array_controller, 'HPEArrayController', autospec=True)
     def test_get_member(self, mock_eth):
