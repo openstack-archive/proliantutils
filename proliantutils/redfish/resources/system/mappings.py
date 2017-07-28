@@ -94,3 +94,68 @@ HEALTH_VALUE_MAP = {
 
 HEALTH_VALUE_MAP_REV = (
     utils.revert_dictionary(HEALTH_VALUE_MAP))
+
+DEVICE_PROTOCOLS_MAP = {
+    'PCIe': constants.PROTOCOL_PCIe,
+    'AHCI': constants.PROTOCOL_AHCI,
+    'UHCI': constants.PROTOCOL_UHCI,
+    'SAS': constants.PROTOCOL_SAS,
+    'SATA': constants.PROTOCOL_SATA,
+    'USB': constants.PROTOCOL_USB,
+    'NVMe': constants.PROTOCOL_NVMe,
+    'FC': constants.PROTOCOL_FC,
+    'iSCSI': constants.PROTOCOL_iSCSI,
+    'FCoE': constants.PROTOCOL_FCoE,
+    'FCP': constants.PROTOCOL_FCP,
+    'FICON': constants.PROTOCOL_FICON,
+    'NVMeOverFabrics': constants.PROTOCOL_NVMeOverFabrics,
+    'SMB': constants.PROTOCOL_SMB,
+    'NFSv3': constants.PROTOCOL_NFSv3,
+    'NFSv4': constants.PROTOCOL_NFSv4,
+    'HTTP': constants.PROTOCOL_HTTP,
+    'HTTPS': constants.PROTOCOL_HTTPS,
+    'FTP': constants.PROTOCOL_FTP,
+    'SFTP': constants.PROTOCOL_SFTP
+}
+
+DEVICE_PROTOCOLS_MAP_REV = (
+    utils.revert_dictionary(DEVICE_PROTOCOLS_MAP))
+
+MEDIA_TYPE_MAP = {
+    'SSD': constants.MEDIA_TYPE_SSD,
+    'HDD': constants.MEDIA_TYPE_HDD
+}
+
+MEDIA_TYPE_MAP_REV = (
+    utils.revert_dictionary(MEDIA_TYPE_MAP))
+
+VOLUME_TYPE_MAP = {
+    'RawDevice': constants.RAW_DEVICE,
+    'NonRedundant': constants.NON_REDUNDANT,
+    'Mirrored': constants.MIRRORED,
+    'StripedWithParity': constants.STRIPED_WITH_PARITY,
+    'SpannedMirrors': constants.SPANNED_MIRRORS,
+    'SpannedStripesWithParity': constants.SPANNED_STRIPES_WITH_PARITY
+}
+
+VOLUME_TYPE_MAP_REV = (
+    utils.revert_dictionary(VOLUME_TYPE_MAP))
+
+MAP_VOLUME_TYPE_TO_RAID_LEVELS = {
+    constants.NON_REDUNDANT: "0",
+    constants.MIRRORED: "1",
+    constants.STRIPED_WITH_PARITY: "5",
+    constants.SPANNED_MIRRORS: "10",
+    constants.SPANNED_STRIPES_WITH_PARITY: "50"
+}
+
+RAID_LEVEL_MAP = {
+    '0': constants.RAID_0,
+    '1': constants.RAID_1,
+    '5': constants.RAID_5,
+    '10': constants.RAID_1_0,
+    '50': constants.RAID_5_0
+}
+
+RAID_LEVEL_MAP_REV = (
+    utils.revert_dictionary(RAID_LEVEL_MAP))

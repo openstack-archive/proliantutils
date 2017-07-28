@@ -157,3 +157,58 @@ class CommonMethodsTestCase(testtools.TestCase):
         actual = common.get_safely_value_of(system_obj.simple_storages,
                                             'maximum_size_bytes')
         self.assertEqual(0, actual)
+
+    def test_has_ssd(self):
+        obj = self.system_obj
+        phy_mock = mock.PropertyMock(return_value=True)
+        type(obj.smart_storage.array_controllers.physical_drive).has_ssd = (
+            phy_mock)
+        drive_mock = mock.PropertyMock(return_value=None)
+        type(obj.storage.drive).has_ssd = drive_mock
+        self.assertTrue(common.has_ssd(obj))
+
+    def test_has_rotational(self):
+        obj = self.system_obj
+        phy_mock = mock.PropertyMock(return_value=True)
+        type(obj.smart_storage.array_controllers.
+             physical_drive).has_rotational = phy_mock
+        drive_mock = mock.PropertyMock(return_value=None)
+        type(obj.storage.drive).has_rotational = drive_mock
+        self.assertTrue(common.has_rotational(obj))
+
+    def test_drive_rotational_speed_rpm(self):
+        obj = self.system_obj
+        phy_mock = mock.PropertyMock(
+            return_value={'drive_rotational_15000_rpm': 'true'})
+        type(obj.smart_storage.array_controllers.
+             physical_drive).drive_rotational_speed_rpm = phy_mock
+        drive_mock = mock.PropertyMock(
+            return_value={'drive_rotational_10000_rpm': 'true'})
+        type(obj.storage.drive).drive_rotational_speed_rpm = drive_mock
+        expected = {'drive_rotational_15000_rpm': 'true',
+                    'drive_rotational_10000_rpm': 'true'}
+        actual = common.drive_rotational_speed_rpm(obj)
+        self.assertEqual(actual, expected)
+
+    def test_logical_raid_levels(self):
+        obj = self.system_obj
+        log_mock = mock.PropertyMock(return_value={'logical_raid_level_0':
+                                                   'true'})
+        type(obj.smart_storage.array_controllers.
+             logical_drive).logical_raid_level = log_mock
+        vol_mock = mock.PropertyMock(return_value={'logical_raid_level_1':
+                                                   'true'})
+        type(obj.storage.volume).logical_raid_level = vol_mock
+        expected = {'logical_raid_level_0': 'true',
+                    'logical_raid_level_1': 'true'}
+        actual = common.logical_raid_levels(obj)
+        self.assertEqual(expected, actual)
+
+    def test_has_nvme_ssd(self):
+        obj = self.system_obj
+        phy_mock = mock.PropertyMock(return_value=True)
+        type(obj.smart_storage.array_controllers.
+             physical_drive).has_nvme_ssd = (phy_mock)
+        drive_mock = mock.PropertyMock(return_value=None)
+        type(obj.storage.drive).has_nvme_ssd = drive_mock
+        self.assertTrue(common.has_nvme_ssd(obj))
