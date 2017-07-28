@@ -24,6 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Storage(base.ResourceBase):
+    """This class represents the Storage resource"""
 
     identity = base.Field('Id', required=True)
     """The Storage identity string"""
@@ -33,9 +34,6 @@ class Storage(base.ResourceBase):
 
     description = base.Field('Description')
     """Description"""
-
-    storage_controllers = base.Field('StorageControllers')
-    """The set of storage controllers"""
 
     drives = base.Field('Drives')
     """The set of drives attached to the storage controllers"""
@@ -56,7 +54,7 @@ class Storage(base.ResourceBase):
         return self._volumes
 
     def _drives_list(self):
-        """This property prepares the list of drives
+        """Gets the list of drives
 
         :return a list of drives.
         """
@@ -85,6 +83,7 @@ class Storage(base.ResourceBase):
 
 
 class StorageCollection(base.ResourceCollectionBase):
+    """This class represents the collection of Storage resource"""
 
     _volumes_maximum_size_bytes = None
     _drives_maximum_size_bytes = None

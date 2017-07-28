@@ -84,3 +84,34 @@ def get_local_gb(system_obj):
                 'volume could not be determined.'))
         LOG.debug(msg)
     return local_gb
+
+
+def has_ssd(sys_obj):
+    return (sys_obj.smart_storage.array_controllers.physical_drive.has_ssd
+            or sys_obj.storage.drive.has_ssd)
+
+
+def has_rotational(sys_obj):
+    v = sys_obj.smart_storage.array_controllers.physical_drive.has_rotational
+    return (v or sys_obj.storage.drive.has_rotational)
+
+
+def drive_rotational_speed_rpm(sys_obj):
+    rpm = {}
+    rpm.update(sys_obj.smart_storage.array_controllers.
+               physical_drive.drive_rotational_speed_rpm)
+    rpm.update(sys_obj.storage.drive.drive_rotational_speed_rpm)
+    return rpm if len(rpm.keys()) > 0 else None
+
+
+def logical_raid_levels(sys_obj):
+    raid = {}
+    raid.update(sys_obj.smart_storage.array_controllers.
+                logical_drive.logical_raid_level)
+    raid.update(sys_obj.storage.volume.logical_raid_level)
+    return raid if len(raid.keys()) > 0 else None
+
+
+def has_nvme_ssd(sys_obj):
+    return (sys_obj.smart_storage.array_controllers.physical_drive.has_nvme_ssd
+            or sys_obj.storage.drive.has_nvme_ssd)
