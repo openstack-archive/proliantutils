@@ -70,7 +70,7 @@ SUPPORTED_REDFISH_METHODS = [
     'activate_license',
     'eject_virtual_media',
     'insert_virtual_media',
-    'set_vm_status'
+    'set_vm_status',
     'update_firmware',
     'get_persistent_boot_device',
     'set_one_time_boot',
