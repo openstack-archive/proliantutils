@@ -986,3 +986,52 @@ class IloClientTestCase(testtools.TestCase):
                           self.client.get_essential_properties)
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
+
+
+class IloRedfishClientTestCase(testtools.TestCase):
+
+    @mock.patch.object(redfish, 'RedfishOperations',
+                       spec_set=True, autospec=True)
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def setUp(self, product_mock, redfish_mock):
+        super(IloRedfishClientTestCase, self).setUp()
+        self.redfish_mock = redfish_mock
+        product_mock.return_value = 'Gen10'
+        self.client = client.IloClient("1.2.3.4", "Admin", "admin")
+
+    def test_calling_redfish_operations_gen10(self):
+        self.client.model = 'Gen10'
+
+        def validate_method_calls(methods, method_args, missed_ops):
+            for redfish_method_name in methods:
+                try:
+                    if method_args:
+                        eval('self.client.' + redfish_method_name)(
+                            *method_args)
+                    else:
+                        eval('self.client.' + redfish_method_name)()
+
+                    self.assertTrue(eval(
+                        'self.redfish_mock.return_value.' +
+                        redfish_method_name).called)
+                    validate_method_calls.no_test_cases += 1
+                except TypeError:
+                    missed_ops.append(redfish_method_name)
+
+        validate_method_calls.no_test_cases = 0
+        missed_operations = []
+        validate_method_calls(
+            client.SUPPORTED_REDFISH_METHODS, (), missed_operations)
+
+        more_missed_operations = []
+        validate_method_calls(
+            missed_operations, ('arg',), more_missed_operations)
+
+        even_more_missed_operations = []
+        validate_method_calls(
+            more_missed_operations, ('arg1', 'arg2'),
+            even_more_missed_operations)
+
+        self.assertEqual(0, len(even_more_missed_operations))
+        self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS),
+                         validate_method_calls.no_test_cases)
