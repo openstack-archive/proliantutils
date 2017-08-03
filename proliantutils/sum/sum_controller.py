@@ -32,7 +32,9 @@ from proliantutils import utils
 
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
 
-# List of log files created by hpsum based firmware update.
+WAIT_TIME_DISK_LABEL_TO_BE_VISIBLE = 5
+
+# List of log files created by SUM based firmware update.
 OUTPUT_FILES = ['/var/hp/log/localhost/hpsum_log.txt',
                 '/var/hp/log/localhost/hpsum_detail_log.txt']
 
@@ -46,62 +48,61 @@ EXIT_CODE_TO_STRING = {
     }
 
 
-def _execute_hpsum(hpsum_file_path, components=None):
-    """Executes the hpsum firmware update command.
+def _execute_sum(sum_file_path, components=None):
+    """Executes the SUM based firmware update command.
 
-    This method executes the hpsum firmware update command to update the
+    This method executes the SUM based firmware update command to update the
     components specified, if not, it performs update on all the firmware
     components on th server.
 
-    :param hpsum_file_path: A string with the path to the hpsum binary to be
+    :param sum_file_path: A string with the path to the SUM binary to be
         executed
     :param components: A list of components to be updated. If it is None, all
         the firmware components are updated.
     :returns: A string with the statistics of the updated/failed components.
-    :raises: HpsumOperationError, when the hpsum firmware update operation on
-        the node fails.
+    :raises: SUMOperationError, when the SUM based firmware update operation
+        on the node fails.
     """
     cmd = ' --c ' + ' --c '.join(components) if components else ''
 
     try:
-        processutils.execute(hpsum_file_path, "--s", "--romonly", cmd)
+        processutils.execute(sum_file_path, '--s', '--romonly', cmd)
     except processutils.ProcessExecutionError as e:
-        result = _parse_hpsum_ouput(e.exit_code)
+        result = _parse_sum_ouput(e.exit_code)
         if result:
             return result
         else:
-            msg = ("Unable to perform hpsum firmware update on the node. "
-                   "Error: " + str(e))
-            raise exception.HpsumOperationError(reason=msg)
+            raise exception.SUMOperationError(reason=str(e))
 
 
 def _get_log_file_data_as_encoded_content():
     """Gzip and base64 encode files and BytesIO buffers.
 
-    This method gets the log files created by hpsum based
+    This method gets the log files created by SUM based
     firmware update and tar zip the files.
     :returns: A gzipped and base64 encoded string as text.
     """
     with io.BytesIO() as fp:
         with tarfile.open(fileobj=fp, mode='w:gz') as tar:
             for f in OUTPUT_FILES:
-                tar.add(f)
+                if os.path.isfile(f):
+                    tar.add(f)
 
         fp.seek(0)
         return base64.encode_as_bytes(fp.getvalue())
 
 
-def _parse_hpsum_ouput(exit_code):
-    """Parse the hpsum output log file.
+def _parse_sum_ouput(exit_code):
+    """Parse the SUM output log file.
 
-    This method parses through the hpsum log file in the
-    default location to return the hpsum update status. Sample return
+    This method parses through the SUM log file in the
+    default location to return the SUM update status. Sample return
     string:
 
     "Summary: The installation of the component failed. Status of updated
      components: Total: 5 Success: 4 Failed: 1"
 
-    :param exit_code: A integer returned by the hpsum after command execution.
+    :param exit_code: A integer returned by the SUM after command execution.
     :returns: A string with the statistics of the updated/failed
         components and 'None' when the exit_code is not 0, 1, 3 or 253.
     """
@@ -140,29 +141,28 @@ def _parse_hpsum_ouput(exit_code):
 
 
 def update_firmware(node):
-    """Performs hpsum firmware update on the node.
+    """Performs SUM based firmware update on the node.
 
-    This method performs hpsum firmware update by mounting the
+    This method performs SUM firmware update by mounting the
     SPP ISO on the node. It performs firmware update on all or
     some of the firmware components.
 
     :param node: A node object of type dict.
     :returns: Operation Status string.
-    :raises: HpsumOperationError, when the vmedia device is not found or
+    :raises: SUMOperationError, when the vmedia device is not found or
         when the mount operation fails or when the image validation fails.
     :raises: IloConnectionError, when the iLO connection fails.
     :raises: IloError, when vmedia eject or insert operation fails.
     """
-    hpsum_update_iso = node['clean_step']['args']['firmware_images'][0].get(
-        'url')
+    sum_update_iso = node['clean_step']['args'].get('url')
 
-    # Validates the http image reference for hpsum update ISO.
+    # Validates the http image reference for SUM update ISO.
     try:
-        utils.validate_href(hpsum_update_iso)
+        utils.validate_href(sum_update_iso)
     except exception.ImageRefValidationFailed as e:
-        raise exception.HpsumOperationError(reason=e)
+        raise exception.SUMOperationError(reason=e)
 
-    # Ejects the CDROM device in the iLO and inserts the hpsum update ISO
+    # Ejects the CDROM device in the iLO and inserts the SUM update ISO
     # to the CDROM device.
     info = node.get('driver_info')
     ilo_object = client.IloClient(info.get('ilo_address'),
@@ -170,28 +170,27 @@ def update_firmware(node):
                                   info.get('ilo_password'))
 
     ilo_object.eject_virtual_media('CDROM')
-    ilo_object.insert_virtual_media(hpsum_update_iso, 'CDROM')
+    ilo_object.insert_virtual_media(sum_update_iso, 'CDROM')
 
     # Waits for the OS to detect the disk and update the label file. SPP ISO
     # is identified by matching its label.
-    time.sleep(5)
+    time.sleep(WAIT_TIME_DISK_LABEL_TO_BE_VISIBLE)
     vmedia_device_dir = "/dev/disk/by-label/"
     for file in os.listdir(vmedia_device_dir):
         if fnmatch.fnmatch(file, 'SPP*'):
             vmedia_device_file = os.path.join(vmedia_device_dir, file)
 
     if not os.path.exists(vmedia_device_file):
-        msg = "Unable to find the virtual media device for HPSUM"
-        raise exception.HpsumOperationError(reason=msg)
+        msg = "Unable to find the virtual media device for SUM"
+        raise exception.SUMOperationError(reason=msg)
 
     # Validates the SPP ISO image for any file corruption using the checksum
     # of the ISO file.
-    expected_checksum = node['clean_step']['args']['firmware_images'][0].get(
-        'checksum')
+    expected_checksum = node['clean_step']['args'].get('checksum')
     try:
         utils.verify_image_checksum(vmedia_device_file, expected_checksum)
     except exception.ImageRefValidationFailed as e:
-        raise exception.HpsumOperationError(reason=e)
+        raise exception.SUMOperationError(reason=e)
 
     # Mounts SPP ISO on a temporary directory.
     vmedia_mount_point = tempfile.mkdtemp()
@@ -202,17 +201,14 @@ def update_firmware(node):
         except processutils.ProcessExecutionError as e:
             msg = ("Unable to mount virtual media device %(device)s: "
                    "%(error)s" % {'device': vmedia_device_file, 'error': e})
-            raise exception.HpsumOperationError(reason=msg)
+            raise exception.SUMOperationError(reason=msg)
 
-        # Executes the hpsum based firmware update by passing the default hpsum
+        # Executes the SUM based firmware update by passing the default hpsum
         # executable path and the components specified, if any.
-        hpsum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
-        components = node['clean_step']['args']['firmware_images'][0].get(
-            'component')
-        if components:
-            components = components.strip().split(',')
+        sum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
+        components = node['clean_step']['args'].get('components')
 
-        result = _execute_hpsum(hpsum_file_path, components=components)
+        result = _execute_sum(sum_file_path, components=components)
 
         processutils.trycmd("umount", vmedia_mount_point)
     finally:
