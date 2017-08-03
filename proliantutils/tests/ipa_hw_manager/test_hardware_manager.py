@@ -40,7 +40,7 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
              {'step': 'erase_devices',
               'interface': 'deploy',
               'priority': 0},
-             {'step': 'update_firmware',
+             {'step': 'update_firmware_hpsum',
               'interface': 'management',
               'priority': 0}],
             self.hardware_manager.get_clean_steps("", ""))
