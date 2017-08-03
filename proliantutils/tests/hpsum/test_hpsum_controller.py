@@ -39,9 +39,8 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         clean_step = {
             'interface': 'management',
             'step': 'update_firmware',
-            'args': {'firmware_update_mode': u'hpsum',
-                     'firmware_images': [{'url': 'http://1.2.3.4/SPP.iso',
-                                          'checksum': '1234567890'}]}}
+            'args': {'url': 'http://1.2.3.4/SPP.iso',
+                     'checksum': '1234567890'}}
         self.node = {'driver_info': self.info,
                      'clean_step': clean_step}
 
