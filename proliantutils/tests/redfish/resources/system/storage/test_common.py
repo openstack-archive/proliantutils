@@ -29,6 +29,13 @@ class CommonMethodsTestCase(testtools.TestCase):
         super(CommonMethodsTestCase, self).setUp()
         self.system_obj = mock.MagicMock()
 
+    def _mock_property(self, value):
+        if value is sushy.exceptions.SushyError:
+            mock_value = mock.PropertyMock(side_effect=value)
+        else:
+            mock_value = mock.PropertyMock(return_value=value)
+        return mock_value
+
     @ddt.data((953837, 60000, 60000, 60000, 60000, 930),
               (sushy.exceptions.SushyError, 1000169537536, 60000, 60000,
                60000, 930),
@@ -49,23 +56,17 @@ class CommonMethodsTestCase(testtools.TestCase):
     def test_get_local_gb(self, logical_max, volume_max, physical_max,
                           drive_max, simple_max, expected):
 
-        def _mock_property(value):
-            if value is sushy.exceptions.SushyError:
-                mock_value = mock.PropertyMock(side_effect=value)
-            else:
-                mock_value = mock.PropertyMock(return_value=value)
-            return mock_value
         system_obj = self.system_obj
         type(system_obj.smart_storage).logical_drives_maximum_size_mib = (
-            _mock_property(logical_max))
+            self._mock_property(logical_max))
         type(system_obj.storages).volumes_maximum_size_bytes = (
-            _mock_property(volume_max))
+            self._mock_property(volume_max))
         type(system_obj.smart_storage).physical_drives_maximum_size_mib = (
-            _mock_property(physical_max))
+            self._mock_property(physical_max))
         type(system_obj.storages).drives_maximum_size_bytes = (
-            _mock_property(drive_max))
+            self._mock_property(drive_max))
         type(system_obj.simple_storages).maximum_size_bytes = (
-            _mock_property(simple_max))
+            self._mock_property(simple_max))
         actual = common.get_local_gb(system_obj)
         self.assertEqual(expected, actual)
 
@@ -94,3 +95,17 @@ class CommonMethodsTestCase(testtools.TestCase):
         actual = common._get_attribute_value_of(system_obj.simple_storages,
                                                 'maximum_size_bytes')
         self.assertIsNone(actual)
+
+    @ddt.data((True, False, True),
+              (True, True, True),
+              (False, True, True),
+              (False, False, False))
+    @ddt.unpack
+    def test_has_ssd(self, smart_value, storage_value, expected):
+        system_obj = self.system_obj
+        type(system_obj.smart_storage).has_ssd = (
+            self._mock_property(smart_value))
+        type(system_obj.storages).has_ssd = (
+            self._mock_property(storage_value))
+        actual = common.has_ssd(system_obj)
+        self.assertEqual(expected, actual)

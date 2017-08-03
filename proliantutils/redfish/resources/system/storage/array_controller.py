@@ -72,6 +72,7 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
 
     _logical_drives_maximum_size_mib = None
     _physical_drives_maximum_size_mib = None
+    _has_ssd = None
 
     @property
     def _resource_type(self):
@@ -101,7 +102,20 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
                                for member in self.get_members()]))
         return self._physical_drives_maximum_size_mib
 
+    @property
+    def has_ssd(self):
+        """Return true if any of the drive under ArrayControllers is ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = False
+            for member in self.get_members():
+                if member.physical_drives.has_ssd:
+                    self._has_ssd = True
+                    break
+        return self._has_ssd
+
     def refresh(self):
         super(HPEArrayControllerCollection, self).refresh()
         self._logical_drives_maximum_size_mib = None
         self._physical_drives_maximum_size_mib = None
+        self._has_ssd = None

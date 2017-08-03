@@ -110,3 +110,28 @@ def get_local_gb(system_obj):
                'volume could not be determined.')
         LOG.debug(msg)
     return local_gb
+
+
+def has_ssd(system_obj):
+    """Gets if the system has any drive as SSD drive
+
+    :param system_obj: The HPESystem object.
+    :returns True if system has SSD drives.
+    """
+    smart_value = False
+    storage_value = False
+    smart_resource = _get_attribute_value_of(system_obj, 'smart_storage')
+    if smart_resource is not None:
+        smart_value = _get_attribute_value_of(
+            smart_resource, 'has_ssd', default=False)
+
+    if smart_value:
+        return smart_value
+
+    # Its returned before just to avoid hitting BMC if we have
+    # already got the SSD device above.
+    storage_resource = _get_attribute_value_of(system_obj, 'storages')
+    if storage_resource is not None:
+        storage_value = _get_attribute_value_of(
+            storage_resource, 'has_ssd', default=False)
+    return storage_value

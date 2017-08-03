@@ -153,8 +153,31 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')
         with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
             self.conn.get.return_value.json.side_effect = val
         expected = 572325
         actual = self.sys_stor_col.physical_drives_maximum_size_mib
         self.assertEqual(expected, actual)
+
+    def test_has_ssd(self):
+        self.assertIsNone(self.sys_stor_col._has_ssd)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor_col.has_ssd)
