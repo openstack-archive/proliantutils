@@ -23,35 +23,34 @@ from oslo_serialization import base64
 import testtools
 
 from proliantutils import exception
-from proliantutils.hpsum import hpsum_controller
 from proliantutils.ilo import client as ilo_client
-from proliantutils.tests.hpsum import hpsum_sample_output as constants
+from proliantutils.sum import sum_controller
+from proliantutils.tests.sum import sum_sample_output as constants
 from proliantutils import utils
 
 
-class HpsumFirmwareUpdateTest(testtools.TestCase):
+class SUMFirmwareUpdateTest(testtools.TestCase):
 
     def setUp(self):
-        super(HpsumFirmwareUpdateTest, self).setUp()
+        super(SUMFirmwareUpdateTest, self).setUp()
         self.info = {'ilo_address': '1.2.3.4',
                      'ilo_password': '12345678',
                      'ilo_username': 'admin'}
         clean_step = {
             'interface': 'management',
-            'step': 'update_firmware',
-            'args': {'firmware_update_mode': u'hpsum',
-                     'firmware_images': [{'url': 'http://1.2.3.4/SPP.iso',
-                                          'checksum': '1234567890'}]}}
+            'step': 'update_firmware_sum',
+            'args': {'url': 'http://1.2.3.4/SPP.iso',
+                     'checksum': '1234567890'}}
         self.node = {'driver_info': self.info,
                      'clean_step': clean_step}
 
-    @mock.patch.object(hpsum_controller,
+    @mock.patch.object(sum_controller,
                        '_get_log_file_data_as_encoded_content')
-    @mock.patch.object(hpsum_controller, 'open',
-                       mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA))
+    @mock.patch.object(sum_controller, 'open',
+                       mock.mock_open(read_data=constants.SUM_OUTPUT_DATA))
     @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum(self, execute_mock, exists_mock, log_mock):
+    def test_execute_sum(self, execute_mock, exists_mock, log_mock):
         exists_mock.return_value = True
         log_mock.return_value = "aaabbbcccdddd"
         value = ("hpsum_service_x64 started successfully. Sending Shutdown "
@@ -65,13 +64,14 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                         "Failed: 0.")
             }
 
-        stdout = hpsum_controller._execute_hpsum("hpsum", components=None)
+        stdout = sum_controller._execute_sum("hpsum", components=None)
 
         self.assertEqual(ret_value, stdout)
-        execute_mock.assert_called_once_with("hpsum", "--s", "--romonly", "")
+        execute_mock.assert_called_once_with('./hpsum', '--s', '--romonly',
+                                             '', cwd='hpsum')
 
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_with_args(self, execute_mock):
+    def test_execute_sum_with_args(self, execute_mock):
         value = ("hpsum_service_x64 started successfully. Sending Shutdown "
                  "request to engine. Successfully shutdown the service.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
@@ -79,22 +79,22 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         ret_value = ("Summary: The smart component was not installed. Node is "
                      "already up-to-date.")
 
-        stdout = hpsum_controller._execute_hpsum("hpsum",
-                                                 components=["foo", "bar"])
+        stdout = sum_controller._execute_sum("hpsum",
+                                             components=["foo", "bar"])
 
         execute_mock.assert_called_once_with(
-            "hpsum", "--s", "--romonly", " --c foo --c bar")
+            "./hpsum", "--s", "--romonly", " --c foo --c bar", cwd="hpsum")
         self.assertEqual(ret_value, stdout)
 
-    @mock.patch.object(hpsum_controller,
+    @mock.patch.object(sum_controller,
                        '_get_log_file_data_as_encoded_content')
     @mock.patch.object(
-        hpsum_controller, 'open',
-        mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA_FAILURE))
+        sum_controller, 'open',
+        mock.mock_open(read_data=constants.SUM_OUTPUT_DATA_FAILURE))
     @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_update_fails(self, execute_mock, exists_mock,
-                                        log_mock):
+    def test_execute_sum_update_fails(self, execute_mock, exists_mock,
+                                      log_mock):
         exists_mock.return_value = True
         log_mock.return_value = "aaabbbcccdddd"
         ret = {
@@ -108,33 +108,34 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         execute_mock.side_effect = processutils.ProcessExecutionError(
             stdout=value, stderr=None, exit_code=253)
 
-        stdout = hpsum_controller._execute_hpsum("hpsum", components=None)
+        stdout = sum_controller._execute_sum("hpsum", components=None)
 
         self.assertEqual(ret, stdout)
-        execute_mock.assert_called_once_with("hpsum", "--s", "--romonly", "")
+        execute_mock.assert_called_once_with(
+            "./hpsum", "--s", "--romonly", "", cwd="hpsum")
 
     @mock.patch.object(os.path, 'exists')
     @mock.patch.object(processutils, 'execute')
-    def test_execute_hpsum_fails(self, execute_mock, exists_mock):
+    def test_execute_sum_fails(self, execute_mock, exists_mock):
         exists_mock.return_value = False
         value = ("Error: Cannot launch hpsum_service_x64 locally. Reason: "
                  "General failure.")
         execute_mock.side_effect = processutils.ProcessExecutionError(
             stdout=value, stderr=None, exit_code=255)
 
-        ex = self.assertRaises(exception.HpsumOperationError,
-                               hpsum_controller._execute_hpsum, "hpsum",
+        ex = self.assertRaises(exception.SUMOperationError,
+                               sum_controller._execute_sum, "hpsum",
                                None)
         self.assertIn(value, str(ex))
 
     def test_get_log_file_data_as_encoded_content(self):
-        log_file_content = b'Sample Data for testing hpsum log output'
+        log_file_content = b'Sample Data for testing SUM log output'
         file_object = tempfile.NamedTemporaryFile(delete=False)
         file_object.write(log_file_content)
         file_object.close()
-        hpsum_controller.OUTPUT_FILES = [file_object.name]
+        sum_controller.OUTPUT_FILES = [file_object.name]
 
-        base64_encoded_text = (hpsum_controller.
+        base64_encoded_text = (sum_controller.
                                _get_log_file_data_as_encoded_content())
 
         tar_gzipped_content = base64.decode_as_bytes(base64_encoded_text)
@@ -150,7 +151,7 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
 
     @mock.patch.object(utils, 'validate_href')
     @mock.patch.object(utils, 'verify_image_checksum')
-    @mock.patch.object(hpsum_controller, '_execute_hpsum')
+    @mock.patch.object(sum_controller, '_execute_sum')
     @mock.patch.object(os, 'listdir')
     @mock.patch.object(shutil, 'rmtree', autospec=True)
     @mock.patch.object(tempfile, 'mkdtemp', autospec=True)
@@ -160,27 +161,27 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
     @mock.patch.object(ilo_client, 'IloClient', spec_set=True, autospec=True)
     def test_update_firmware(self, client_mock, execute_mock, mkdir_mock,
                              exists_mock, mkdtemp_mock, rmtree_mock,
-                             listdir_mock, execute_hpsum_mock,
+                             listdir_mock, execute_sum_mock,
                              verify_image_mock, validate_mock):
         ilo_mock_object = client_mock.return_value
         eject_media_mock = ilo_mock_object.eject_virtual_media
         insert_media_mock = ilo_mock_object.insert_virtual_media
-        execute_hpsum_mock.return_value = 'SUCCESS'
+        execute_sum_mock.return_value = 'SUCCESS'
         listdir_mock.return_value = ['SPP_LABEL']
         mkdtemp_mock.return_value = "/tempdir"
         null_output = ["", ""]
         exists_mock.side_effect = [True, False]
         execute_mock.side_effect = [null_output, null_output]
 
-        ret_val = hpsum_controller.update_firmware(self.node)
+        ret_val = sum_controller.update_firmware(self.node)
 
         eject_media_mock.assert_called_once_with('CDROM')
         insert_media_mock.assert_called_once_with('http://1.2.3.4/SPP.iso',
                                                   'CDROM')
         execute_mock.assert_any_call('mount', "/dev/disk/by-label/SPP_LABEL",
                                      "/tempdir")
-        execute_hpsum_mock.assert_any_call('/tempdir/hp/swpackages/hpsum',
-                                           components=None)
+        execute_sum_mock.assert_any_call('/tempdir/hp/swpackages',
+                                         components=None)
         exists_mock.assert_called_once_with("/dev/disk/by-label/SPP_LABEL")
         execute_mock.assert_any_call('umount', "/tempdir")
         mkdtemp_mock.assert_called_once_with()
@@ -196,8 +197,8 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         validate_href_mock.side_effect = exception.ImageRefValidationFailed(
             reason=value, image_href=invalid_file_path)
 
-        exc = self.assertRaises(exception.HpsumOperationError,
-                                hpsum_controller.update_firmware, self.node)
+        exc = self.assertRaises(exception.SUMOperationError,
+                                sum_controller.update_firmware, self.node)
         self.assertIn(value, str(exc))
 
     @mock.patch.object(utils, 'validate_href')
@@ -206,12 +207,12 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                                                  validate_mock):
         ilo_mock_object = client_mock.return_value
         eject_media_mock = ilo_mock_object.eject_virtual_media
-        value = ("Unable to attach hpsum SPP iso http://1.2.3.4/SPP.iso "
+        value = ("Unable to attach SUM SPP iso http://1.2.3.4/SPP.iso "
                  "to the iLO")
         eject_media_mock.side_effect = exception.IloError(value)
 
         exc = self.assertRaises(exception.IloError,
-                                hpsum_controller.update_firmware, self.node)
+                                sum_controller.update_firmware, self.node)
         self.assertEqual(value, str(exc))
 
     @mock.patch.object(utils, 'validate_href')
@@ -228,11 +229,11 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         listdir_mock.return_value = ['SPP_LABEL']
         exists_mock.return_value = False
 
-        msg = ("An error occurred while performing hpsum based firmware "
+        msg = ("An error occurred while performing SUM based firmware "
                "update, reason: Unable to find the virtual media device "
-               "for HPSUM")
-        exc = self.assertRaises(exception.HpsumOperationError,
-                                hpsum_controller.update_firmware, self.node)
+               "for SUM")
+        exc = self.assertRaises(exception.SUMOperationError,
+                                sum_controller.update_firmware, self.node)
         self.assertEqual(msg, str(exc))
         eject_media_mock.assert_called_once_with('CDROM')
         insert_media_mock.assert_called_once_with('http://1.2.3.4/SPP.iso',
@@ -261,20 +262,20 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
 
         msg = ("Unable to mount virtual media device "
                "/dev/disk/by-label/SPP_LABEL")
-        exc = self.assertRaises(exception.HpsumOperationError,
-                                hpsum_controller.update_firmware, self.node)
+        exc = self.assertRaises(exception.SUMOperationError,
+                                sum_controller.update_firmware, self.node)
         self.assertIn(msg, str(exc))
         eject_media_mock.assert_called_once_with('CDROM')
         insert_media_mock.assert_called_once_with('http://1.2.3.4/SPP.iso',
                                                   'CDROM')
         exists_mock.assert_called_once_with("/dev/disk/by-label/SPP_LABEL")
 
-    @mock.patch.object(hpsum_controller,
+    @mock.patch.object(sum_controller,
                        '_get_log_file_data_as_encoded_content')
-    @mock.patch.object(hpsum_controller, 'open',
-                       mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA))
+    @mock.patch.object(sum_controller, 'open',
+                       mock.mock_open(read_data=constants.SUM_OUTPUT_DATA))
     @mock.patch.object(os.path, 'exists')
-    def test__parse_hpsum_ouput(self, exists_mock, log_mock):
+    def test__parse_sum_ouput(self, exists_mock, log_mock):
         exists_mock.return_value = True
         log_mock.return_value = "aaabbbcccdddd"
         expt_ret = {'Log Data': 'aaabbbcccdddd',
@@ -282,18 +283,18 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                                 "successfully. Status of updated components: "
                                 "Total: 2 Success: 2 Failed: 0.")}
 
-        ret = hpsum_controller._parse_hpsum_ouput(0)
+        ret = sum_controller._parse_sum_ouput(0)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
+        exists_mock.assert_called_once_with(sum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)
 
-    @mock.patch.object(hpsum_controller,
+    @mock.patch.object(sum_controller,
                        '_get_log_file_data_as_encoded_content')
     @mock.patch.object(
-        hpsum_controller, 'open',
-        mock.mock_open(read_data=constants.HPSUM_OUTPUT_DATA_FAILURE))
+        sum_controller, 'open',
+        mock.mock_open(read_data=constants.SUM_OUTPUT_DATA_FAILURE))
     @mock.patch.object(os.path, 'exists')
-    def test__parse_hpsum_ouput_some_failed(self, exists_mock, log_mock):
+    def test__parse_sum_ouput_some_failed(self, exists_mock, log_mock):
         exists_mock.return_value = True
         log_mock.return_value = "aaabbbcccdddd"
         expt_ret = {'Log Data': 'aaabbbcccdddd',
@@ -301,17 +302,17 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                                 "Status of updated components: Total: 2 "
                                 "Success: 1 Failed: 1.")}
 
-        ret = hpsum_controller._parse_hpsum_ouput(253)
+        ret = sum_controller._parse_sum_ouput(253)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
+        exists_mock.assert_called_once_with(sum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)
 
     @mock.patch.object(os.path, 'exists')
-    def test__parse_hpsum_ouput_fails(self, exists_mock):
+    def test__parse_sum_ouput_fails(self, exists_mock):
         exists_mock.return_value = False
         expt_ret = ("UPDATE STATUS: UNKNOWN")
 
-        ret = hpsum_controller._parse_hpsum_ouput(1)
+        ret = sum_controller._parse_sum_ouput(1)
 
-        exists_mock.assert_called_once_with(hpsum_controller.OUTPUT_FILES[0])
+        exists_mock.assert_called_once_with(sum_controller.OUTPUT_FILES[0])
         self.assertEqual(expt_ret, ret)

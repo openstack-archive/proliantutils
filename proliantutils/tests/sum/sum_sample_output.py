@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-MODULE = "HPSUM"
+MODULE = "SUM"
 
-HPSUM_OUTPUT_DATA = """
+SUM_OUTPUT_DATA = """
 Scouting completed, node type:LINUX
 Inventory started
 Inventory completed
@@ -58,7 +58,7 @@ Deployed Components:
 Exit status: 0
 """
 
-HPSUM_OUTPUT_DATA_FAILURE = """
+SUM_OUTPUT_DATA_FAILURE = """
 Scouting completed, node type:LINUX
 Inventory started
 Inventory completed
