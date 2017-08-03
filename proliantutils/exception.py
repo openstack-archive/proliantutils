@@ -185,21 +185,21 @@ class ImageRefValidationFailed(ProliantUtilsException):
         super(ImageRefValidationFailed, self).__init__(message)
 
 
-class HpsumOperationError(ProliantUtilsException):
-    """Hpsum based firmware update operation error.
+class SUMOperationError(ProliantUtilsException):
+    """SUM based firmware update operation error.
 
     This exception is used when a problem is encountered in
-    executing a hpsum operation.
+    executing a SUM operation.
     """
 
-    message = ("An error occurred while performing hpsum based firmware "
+    message = ("An error occurred while performing SUM based firmware "
                "update, reason: %(reason)s")
 
     def __init__(self, message=None, **kwargs):
         if not message:
             message = self.message % kwargs
 
-        super(HpsumOperationError, self).__init__(message)
+        super(SUMOperationError, self).__init__(message)
 
 
 class RedfishError(ProliantUtilsException):
