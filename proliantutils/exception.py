@@ -192,7 +192,7 @@ class HpsumOperationError(ProliantUtilsException):
     executing a hpsum operation.
     """
 
-    message = ("An error occurred while performing hpsum based firmware "
+    message = ("An error occurred while performing SUM based firmware "
                "update, reason: %(reason)s")
 
     def __init__(self, message=None, **kwargs):

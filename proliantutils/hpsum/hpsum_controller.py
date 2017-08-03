@@ -153,8 +153,7 @@ def update_firmware(node):
     :raises: IloConnectionError, when the iLO connection fails.
     :raises: IloError, when vmedia eject or insert operation fails.
     """
-    hpsum_update_iso = node['clean_step']['args']['firmware_images'][0].get(
-        'url')
+    hpsum_update_iso = node['clean_step']['args'].get('url')
 
     # Validates the http image reference for hpsum update ISO.
     try:
@@ -181,13 +180,12 @@ def update_firmware(node):
             vmedia_device_file = os.path.join(vmedia_device_dir, file)
 
     if not os.path.exists(vmedia_device_file):
-        msg = "Unable to find the virtual media device for HPSUM"
+        msg = "Unable to find the virtual media device for SUM"
         raise exception.HpsumOperationError(reason=msg)
 
     # Validates the SPP ISO image for any file corruption using the checksum
     # of the ISO file.
-    expected_checksum = node['clean_step']['args']['firmware_images'][0].get(
-        'checksum')
+    expected_checksum = node['clean_step']['args'].get('checksum')
     try:
         utils.verify_image_checksum(vmedia_device_file, expected_checksum)
     except exception.ImageRefValidationFailed as e:
@@ -207,10 +205,7 @@ def update_firmware(node):
         # Executes the hpsum based firmware update by passing the default hpsum
         # executable path and the components specified, if any.
         hpsum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
-        components = node['clean_step']['args']['firmware_images'][0].get(
-            'component')
-        if components:
-            components = components.strip().split(',')
+        components = node['clean_step']['args'].get('components')
 
         result = _execute_hpsum(hpsum_file_path, components=components)
 

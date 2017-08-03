@@ -45,7 +45,7 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                 {'step': 'erase_devices',
                  'interface': 'deploy',
                  'priority': 0},
-                {'step': 'update_firmware',
+                {'step': 'update_firmware_sum',
                  'interface': 'management',
                  'priority': 0}]
 
@@ -109,8 +109,8 @@ class ProliantHardwareManager(hardware.GenericHardwareManager):
                             self).erase_devices(node, port))
         return result
 
-    def update_firmware(self, node, port):
-        """Performs HPSUM based firmware update on the bare metal node.
+    def update_firmware_sum(self, node, port):
+        """Performs SUM based firmware update on the bare metal node.
 
         This method performs firmware update on all or some of the firmware
         components on the bare metal node.

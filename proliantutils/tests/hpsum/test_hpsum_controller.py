@@ -38,10 +38,9 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
                      'ilo_username': 'admin'}
         clean_step = {
             'interface': 'management',
-            'step': 'update_firmware',
-            'args': {'firmware_update_mode': u'hpsum',
-                     'firmware_images': [{'url': 'http://1.2.3.4/SPP.iso',
-                                          'checksum': '1234567890'}]}}
+            'step': 'update_firmware_sum',
+            'args': {'url': 'http://1.2.3.4/SPP.iso',
+                     'checksum': '1234567890'}}
         self.node = {'driver_info': self.info,
                      'clean_step': clean_step}
 
@@ -228,9 +227,9 @@ class HpsumFirmwareUpdateTest(testtools.TestCase):
         listdir_mock.return_value = ['SPP_LABEL']
         exists_mock.return_value = False
 
-        msg = ("An error occurred while performing hpsum based firmware "
+        msg = ("An error occurred while performing SUM based firmware "
                "update, reason: Unable to find the virtual media device "
-               "for HPSUM")
+               "for SUM")
         exc = self.assertRaises(exception.HpsumOperationError,
                                 hpsum_controller.update_firmware, self.node)
         self.assertEqual(msg, str(exc))
