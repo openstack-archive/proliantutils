@@ -677,6 +677,8 @@ class RedfishOperations(operations.IloOperations):
                      ('raid_support',
                       len(sushy_system.smart_storage.array_controllers.
                           members_identities) > 0),
+                     ('has_ssd',
+                      common_storage.has_ssd(sushy_system)),
                      ) if value})
 
         except sushy.exceptions.SushyError as e:

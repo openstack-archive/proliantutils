@@ -96,3 +96,13 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         expected = 572325
         actual = self.sys_stor_col.maximum_size_mib
         self.assertEqual(expected, actual)
+
+    def test_has_ssd(self):
+        self.assertIsNone(self.sys_stor_col._has_ssd)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        actual = self.sys_stor_col.has_ssd
+        self.assertFalse(actual)

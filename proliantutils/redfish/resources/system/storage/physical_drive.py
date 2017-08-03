@@ -16,6 +16,7 @@ from sushy.resources import base
 
 from proliantutils.redfish import utils
 
+from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import mappings
 
 
@@ -39,6 +40,7 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
     """This class represents the collection of PhysicalDrives resource"""
 
     _maximum_size_mib = None
+    _has_ssd = None
 
     @property
     def _resource_type(self):
@@ -56,6 +58,19 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
                                for member in self.get_members()]))
         return self._maximum_size_mib
 
+    @property
+    def has_ssd(self):
+        """Return true if the drive is ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = False
+            for member in self.get_members():
+                if member.media_type == constants.MEDIA_TYPE_SSD:
+                    self._has_ssd = True
+                    break
+        return self._has_ssd
+
     def refresh(self):
         super(HPEPhysicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
+        self._has_ssd = None
