@@ -28,7 +28,8 @@ class HPEPhysicalDriveTestCase(testtools.TestCase):
         logical_file = ('proliantutils/tests/redfish/json_samples/'
                         'disk_drive.json')
         with open(logical_file, 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
+            dr_json = json.loads(f.read())
+            self.conn.get.return_value.json.return_value = dr_json['drive1']
 
         path = ("/redfish/v1/Systems/1/SmartStorage/"
                 "ArrayControllers/0/DiskDrives")
@@ -59,7 +60,9 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         self.assertEqual('HpeSmartStorageDiskDrives',
                          self.sys_stor_col.name)
         path = ('/redfish/v1/Systems/1/SmartStorage/'
-                'ArrayControllers/0/DiskDrives/3',)
+                'ArrayControllers/0/DiskDrives/3',
+                '/redfish/v1/Systems/1/SmartStorage/'
+                'ArrayControllers/0/DiskDrives/4',)
         self.assertEqual(path, self.sys_stor_col.members_identities)
 
     @mock.patch.object(physical_drive, 'HPEPhysicalDrive', autospec=True)
@@ -78,13 +81,17 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         members = self.sys_stor_col.get_members()
         path = ("/redfish/v1/Systems/1/SmartStorage/ArrayControllers/"
                 "0/DiskDrives/3")
+        path2 = ("/redfish/v1/Systems/1/SmartStorage/ArrayControllers/"
+                 "0/DiskDrives/4")
         calls = [
             mock.call(self.sys_stor_col._conn, path,
+                      redfish_version=self.sys_stor_col.redfish_version),
+            mock.call(self.sys_stor_col._conn, path2,
                       redfish_version=self.sys_stor_col.redfish_version),
         ]
         mock_eth.assert_has_calls(calls)
         self.assertIsInstance(members, list)
-        self.assertEqual(1, len(members))
+        self.assertEqual(2, len(members))
 
     def test_maximum_size_mib(self):
         self.assertIsNone(self.sys_stor_col._maximum_size_mib)
@@ -92,7 +99,21 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')
         with open(path, 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
         expected = 572325
         actual = self.sys_stor_col.maximum_size_mib
         self.assertEqual(expected, actual)
+
+    def test_has_ssd(self):
+        self.assertIsNone(self.sys_stor_col._has_ssd)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
+        actual = self.sys_stor_col.has_ssd
+        self.assertTrue(actual)
