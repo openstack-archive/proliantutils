@@ -14,6 +14,7 @@
 
 import logging
 
+from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import drive as sys_drives
 from proliantutils.redfish.resources.system.storage \
     import volume as sys_volumes
@@ -40,6 +41,7 @@ class Storage(base.ResourceBase):
 
     _volumes = None
     _drives_maximum_size_bytes = None
+    _has_ssd = None
 
     @property
     def volumes(self):
@@ -76,10 +78,23 @@ class Storage(base.ResourceBase):
                                for member in self._drives_list()]))
         return self._drives_maximum_size_bytes
 
+    @property
+    def has_ssd(self):
+        """Return true if any of the drive is ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = False
+            for member in self._drives_list():
+                if member.media_type == constants.MEDIA_TYPE_SSD:
+                    self._has_ssd = True
+                    break
+        return self._has_ssd
+
     def refresh(self):
         super(Storage, self).refresh()
         self._drives_maximum_size_bytes = None
         self._volumes = None
+        self._has_ssd = None
 
 
 class StorageCollection(base.ResourceCollectionBase):
@@ -87,6 +102,7 @@ class StorageCollection(base.ResourceCollectionBase):
 
     _volumes_maximum_size_bytes = None
     _drives_maximum_size_bytes = None
+    _has_ssd = None
 
     @property
     def _resource_type(self):
@@ -116,7 +132,20 @@ class StorageCollection(base.ResourceCollectionBase):
                                for member in self.get_members()]))
         return self._drives_maximum_size_bytes
 
+    @property
+    def has_ssd(self):
+        """Return true if Storage has any drive as ssd"""
+
+        if self._has_ssd is None:
+            self._has_ssd = False
+            for member in self.get_members():
+                if member.has_ssd:
+                    self._has_ssd = True
+                    break
+        return self._has_ssd
+
     def refresh(self):
         super(StorageCollection, self).refresh()
         self._volumes_maximum_size_bytes = None
         self._drives_maximum_size_bytes = None
+        self._has_ssd = None

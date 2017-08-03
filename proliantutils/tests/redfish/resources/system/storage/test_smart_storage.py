@@ -105,3 +105,26 @@ class HPESmartStorageTestCase(testtools.TestCase):
         expected = 572325
         actual = self.sys_stor.physical_drives_maximum_size_mib
         self.assertEqual(expected, actual)
+
+    def test_has_ssd(self):
+        self.assertIsNone(self.sys_stor._has_ssd)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+            self.conn.get.return_value.json.side_effect = val
+        self.assertFalse(self.sys_stor.has_ssd)
