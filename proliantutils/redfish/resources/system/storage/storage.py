@@ -44,6 +44,7 @@ class Storage(base.ResourceBase):
     _has_ssd = None
     _has_rotational = None
     _has_nvme_ssd = None
+    _drive_rotational_speed_rpm = None
 
     @property
     def volumes(self):
@@ -116,6 +117,17 @@ class Storage(base.ResourceBase):
                     self._has_nvme_ssd = True
         return self._has_nvme_ssd
 
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Gets list of rotational speed of the disks"""
+
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = []
+            for member in self._drives_list():
+                self._drive_rotational_speed_rpm.append(
+                    member.rotation_speed_rpm)
+        return self._drive_rotational_speed_rpm
+
     def refresh(self):
         super(Storage, self).refresh()
         self._drives_maximum_size_bytes = None
@@ -123,6 +135,7 @@ class Storage(base.ResourceBase):
         self._has_ssd = None
         self._has_rotational = None
         self._has_nvme_ssd = None
+        self._drive_rotational_speed_rpm = None
 
 
 class StorageCollection(base.ResourceCollectionBase):
@@ -197,6 +210,17 @@ class StorageCollection(base.ResourceCollectionBase):
                     self._has_nvme_ssd = True
                     break
         return self._has_nvme_ssd
+
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Gets list of rotational speed of the disks"""
+
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = []
+            for member in self.get_members():
+                for speed in member.drive_rotational_speed_rpm:
+                    self._drive_rotational_speed_rpm.append(speed)
+        return self._drive_rotational_speed_rpm
 
     def refresh(self):
         super(StorageCollection, self).refresh()

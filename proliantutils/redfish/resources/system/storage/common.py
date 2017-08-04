@@ -186,3 +186,29 @@ def logical_raid_levels(system_obj):
         raid_var = 'logical_raid_level_' + str(raid_level)
         raid.update({raid_var: 'true'})
     return raid
+
+def drive_rotational_speed_rpm(system_obj):
+    """Gets the list of rotational speed rpms of the disks.
+
+    :param system_obj: The HPESystem object.
+    :returns the dictionary of such key-value pair
+        {'drive_rotational_<speed>_rpm' : 'true'}
+    """
+    smart_value = []
+    storage_value = []
+    smart_resource = _get_attribute_value_of(system_obj, 'smart_storage')
+    if smart_resource is not None:
+        smart_value = _get_attribute_value_of(
+            smart_resource, 'drive_rotational_speed_rpm', default=[])
+    storage_resource = _get_attribute_value_of(system_obj, 'storages')
+    if storage_resource is not None:
+        storage_value = _get_attribute_value_of(
+            storage_resource, 'drive_rotational_speed_rpm', default=[])
+    speed = {}
+    for speed in smart_value:
+        speed_var = 'drive_rotational_' + str(speed) + '_rpm'
+        speed.update({speed_var: 'true'})
+    for speed in storage_value:
+        speed_var = 'drive_rotational_' + str(speed) + '_rpm'
+        speed.update({speed_var: 'true'})
+    return speed
