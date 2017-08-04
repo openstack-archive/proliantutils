@@ -658,6 +658,7 @@ class RedfishOperations(operations.IloOperations):
                  'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
+
             mapped_values = map(
                 lambda x: ('logical_raid_level_' + str(x), True),
                 sushy_system.smart_storage.logical_raid_levels)
@@ -665,6 +666,15 @@ class RedfishOperations(operations.IloOperations):
                 {key: 'true'
                  for (key, value) in (
                      ((member[0], member[1]) for member in mapped_values))})
+
+            mapped_speed = map(
+                lambda x: ('drive_rotational_' + str(x) + '_rpm', True),
+                common_storage.drive_rotational_speed_rpm(sushy_system))
+            capabilities.update(
+                {key: 'true'
+                 for (key, value) in (
+                     ((member[0], member[1]) for member in mapped_speed))})
+
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
