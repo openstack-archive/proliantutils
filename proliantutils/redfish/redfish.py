@@ -696,7 +696,9 @@ class RedfishOperations(operations.IloOperations):
                      json.dumps(memory_data.has_nvdimm_n)),
                      'logical_nvdimm_n': (
                      json.dumps(memory_data.has_logical_nvdimm_n))})
-
+            raid_levels = common_storage.logical_raid_levels(sushy_system)
+            if len(raid_levels) > 0:
+                capabilities.update(raid_levels)
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

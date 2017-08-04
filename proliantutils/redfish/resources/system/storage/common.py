@@ -167,3 +167,22 @@ def has_nvme_ssd(system_obj):
             storage_resource, 'has_nvme_ssd', default=False)
 
     return storage_value
+
+
+def logical_raid_levels(system_obj):
+    """Gets the list of raid levels configured.
+
+    :param system_obj: The HPESystem object.
+    :returns the dictionary of such key-value pair
+        {'logical_raid_level_<raid_level>' : 'true'}
+    """
+    smart_value = []
+    smart_resource = _get_attribute_value_of(system_obj, 'smart_storage')
+    if smart_resource is not None:
+        smart_value = _get_attribute_value_of(
+            smart_resource, 'logical_raid_levels', default=[])
+    raid = {}
+    for raid_level in smart_value:
+        raid_var = 'logical_raid_level_' + str(raid_level)
+        raid.update({raid_var: 'true'})
+    return raid
