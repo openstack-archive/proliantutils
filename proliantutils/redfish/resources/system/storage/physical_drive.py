@@ -42,6 +42,7 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
     _maximum_size_mib = None
     _has_ssd = None
     _has_rotational = None
+    _drive_rotational_speed_rpm = None
 
     @property
     def _resource_type(self):
@@ -83,8 +84,23 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
                     break
         return self._has_rotational
 
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Gets the list of rotational speed of the HDD drives"""
+
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = []
+            for member in self.get_members():
+                if member.rotational_speed_rpm is not None:
+                    self._drive_rotational_speed_rpm.append(
+                        member.rotational_speed_rpm)
+            self._drive_rotational_speed_rpm = list(set(
+                self._drive_rotational_speed_rpm))
+        return self._drive_rotational_speed_rpm
+
     def refresh(self):
         super(HPEPhysicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
         self._has_ssd = None
         self._has_rotational = None
+        self._drive_rotational_speed_rpm = None

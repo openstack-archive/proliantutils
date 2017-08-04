@@ -688,6 +688,11 @@ class RedfishOperations(operations.IloOperations):
                 sushy_system.smart_storage.logical_raid_levels)
             for item in raid_level_values:
                 all_key_to_value_expression_tuples.append(item)
+            drive_rotational_speed_rpms = map(
+                lambda x: ('drive_rotational_' + str(x) + '_rpm', True),
+                common_storage.drive_rotational_speed_rpm(sushy_system))
+            for item in drive_rotational_speed_rpms:
+                all_key_to_value_expression_tuples.append(item)
             capabilities.update(
                 {key: 'true'
                  for (key, value) in all_key_to_value_expression_tuples
