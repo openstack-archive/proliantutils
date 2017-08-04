@@ -658,6 +658,13 @@ class RedfishOperations(operations.IloOperations):
                  'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
+            mapped_values = map(
+                lambda x: ('logical_raid_level_' + str(x), True),
+                sushy_system.smart_storage.logical_raid_levels)
+            capabilities.update(
+                {key: 'true'
+                 for (key, value) in (
+                     ((member[0], member[1]) for member in mapped_values))})
             capabilities.update(
                 {key: 'true'
                  for (key, value) in ((
@@ -696,7 +703,6 @@ class RedfishOperations(operations.IloOperations):
                      json.dumps(memory_data.has_nvdimm_n)),
                      'logical_nvdimm_n': (
                      json.dumps(memory_data.has_logical_nvdimm_n))})
-
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

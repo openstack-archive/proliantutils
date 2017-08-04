@@ -96,3 +96,14 @@ class HPELogicalDriveCollectionTestCase(testtools.TestCase):
         expected = 953837
         actual = self.sys_stor_col.maximum_size_mib
         self.assertEqual(expected, actual)
+
+    def test_logical_raid_levels(self):
+        self.assertIsNone(self.sys_stor_col._logical_raid_levels)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'logical_drive.json')
+        with open(path, 'r') as f:
+            self.conn.get.return_value.json.return_value = json.loads(f.read())
+        expected = ['0']
+        actual = self.sys_stor_col.logical_raid_levels
+        self.assertEqual(expected, actual)
