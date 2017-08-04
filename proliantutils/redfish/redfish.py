@@ -683,6 +683,8 @@ class RedfishOperations(operations.IloOperations):
                       common_storage.has_ssd(sushy_system)),
                      ('has_rotational',
                       common_storage.has_rotational(sushy_system)),
+                     ('has_nvme_ssd',
+                      common_storage.has_nvme_ssd(sushy_system)),
                      ) if value})
 
             memory_data = sushy_system.memory.details()

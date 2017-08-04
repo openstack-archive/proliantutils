@@ -124,3 +124,13 @@ class CommonMethodsTestCase(testtools.TestCase):
             self._mock_property(storage_value))
         actual = common.has_rotational(system_obj)
         self.assertEqual(expected, actual)
+
+    @ddt.data((False, False),
+              (True, True))
+    @ddt.unpack
+    def test_has_nvme_ssd(self, storage_value, expected):
+        system_obj = self.system_obj
+        type(system_obj.storages).has_nvme_ssd = (
+            self._mock_property(storage_value))
+        actual = common.has_nvme_ssd(system_obj)
+        self.assertEqual(expected, actual)
