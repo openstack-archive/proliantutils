@@ -106,7 +106,7 @@ class Storage(base.ResourceBase):
 
     @property
     def has_nvme_ssd(self):
-        """Return true if the drive is SSD and protocol is NVMe"""
+        """Return True if the drive is SSD and protocol is NVMe"""
 
         if self._has_nvme_ssd is None:
             self._has_nvme_ssd = False
@@ -188,7 +188,7 @@ class StorageCollection(base.ResourceCollectionBase):
 
     @property
     def has_nvme_ssd(self):
-        """Return true if Storage has SSD drive and protocol is NVMe"""
+        """Return True if Storage has SSD drive and protocol is NVMe"""
 
         if self._has_nvme_ssd is None:
             self._has_nvme_ssd = False

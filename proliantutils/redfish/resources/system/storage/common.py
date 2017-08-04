@@ -163,7 +163,7 @@ def has_rotational(system_obj):
 
 
 def has_nvme_ssd(system_obj):
-    """Gets if the system has any drive as SSD drive
+    """Gets if the system has any drive as NVMe SSD drive
 
     :param system_obj: The HPESystem object.
     :returns True if system has SSD drives and protocol is NVMe.

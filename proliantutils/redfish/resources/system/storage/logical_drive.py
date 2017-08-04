@@ -37,6 +37,7 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
     """This class represents the collection of LogicalDrives resource"""
 
     _maximum_size_mib = None
+    _logical_raid_levels = None
 
     @property
     def _resource_type(self):
@@ -54,6 +55,21 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
                                for member in self.get_members()]))
         return self._maximum_size_mib
 
+    @property
+    def logical_raid_levels(self):
+        """Gets the raid level for each logical volume
+
+        :returns the list of raid levels configured.
+        """
+        if self._logical_raid_levels is None:
+            self._logical_raid_levels = []
+            for member in self.get_members():
+                self._logical_raid_levels.append(
+                    mappings.RAID_LEVEL_MAP_REV.get(member.raid))
+            self._logical_raid_levels = list(set(self._logical_raid_levels))
+        return self._logical_raid_levels
+
     def refresh(self):
         super(HPELogicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
+        self._logical_raid_levels = None
