@@ -100,6 +100,19 @@ class StorageTestCase(testtools.TestCase):
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor.has_ssd)
 
+    def test_has_rotational(self):
+        self.assertIsNone(self.sys_stor._has_rotational)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor.has_rotational)
+
 
 class StorageCollectionTestCase(testtools.TestCase):
 
@@ -198,3 +211,20 @@ class StorageCollectionTestCase(testtools.TestCase):
             val.append(dr_json['drive2'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_ssd)
+
+    def test_has_rotational(self):
+        self.assertIsNone(self.sys_stor_col._has_rotational)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'storage.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor_col.has_rotational)
