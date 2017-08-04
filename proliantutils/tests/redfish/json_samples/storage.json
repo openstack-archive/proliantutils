@@ -40,6 +40,8 @@
         "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Drives/35D38F11ACEF7BD3"
     }, {
         "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Drives/3F5A8C54207B7233"
+    }, {
+        "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Drives/3F5A8C54207B7234"
     }],
     "Volumes": {
         "@odata.id": "/redfish/v1/Systems/437XR1138R2/Storage/1/Volumes"

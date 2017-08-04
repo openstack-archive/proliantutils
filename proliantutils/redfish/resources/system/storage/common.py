@@ -175,3 +175,21 @@ def has_nvme_ssd(system_obj):
             storage_resource, 'has_nvme_ssd', default=False)
 
     return storage_value
+
+
+def get_drive_rotational_speed_rpm(system_obj):
+    """Gets the set of rotational speed rpms of the disks.
+
+    :param system_obj: The HPESystem object.
+    :returns the set of rotational speed rpms of the HDD devices.
+    """
+    speed = set()
+    smart_resource = _get_attribute_value_of(system_obj, 'smart_storage')
+    if smart_resource is not None:
+        speed.update(_get_attribute_value_of(
+            smart_resource, 'drive_rotational_speed_rpm', default=set()))
+    storage_resource = _get_attribute_value_of(system_obj, 'storages')
+    if storage_resource is not None:
+        speed.update(_get_attribute_value_of(
+            storage_resource, 'drive_rotational_speed_rpm', default=set()))
+    return speed

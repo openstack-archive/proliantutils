@@ -68,7 +68,8 @@ class StorageTestCase(testtools.TestCase):
                   'json_samples/drive.json') as f:
             dr_json = json.loads(f.read())
         self.conn.get.return_value.json.side_effect = [dr_json['drive1'],
-                                                       dr_json['drive2']]
+                                                       dr_json['drive2'],
+                                                       dr_json['drive3']]
         actual_dr = self.sys_stor._drives_list()
         self.assertIsInstance(actual_dr, list)
 
@@ -82,6 +83,7 @@ class StorageTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         expected = 899527000000
         actual = self.sys_stor.drives_maximum_size_bytes
@@ -97,6 +99,7 @@ class StorageTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor.has_ssd)
 
@@ -110,6 +113,7 @@ class StorageTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor.has_rotational)
 
@@ -123,8 +127,25 @@ class StorageTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor.has_nvme_ssd)
+
+    def test_drive_rotational_speed_rpm(self):
+        self.assertIsNone(self.sys_stor._drive_rotational_speed_rpm)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
+            self.conn.get.return_value.json.side_effect = val
+        expected = set([15000, 10000])
+        self.assertEqual(expected,
+                         self.sys_stor.drive_rotational_speed_rpm)
 
 
 class StorageCollectionTestCase(testtools.TestCase):
@@ -203,6 +224,7 @@ class StorageCollectionTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         expected = 899527000000
         actual = self.sys_stor_col.drives_maximum_size_bytes
@@ -222,6 +244,7 @@ class StorageCollectionTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_ssd)
 
@@ -239,6 +262,7 @@ class StorageCollectionTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_rotational)
 
@@ -256,5 +280,26 @@ class StorageCollectionTestCase(testtools.TestCase):
             dr_json = json.loads(f.read())
             val.append(dr_json['drive1'])
             val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_nvme_ssd)
+
+    def test_drive_rotational_speed_rpm(self):
+        self.assertIsNone(self.sys_stor_col._drive_rotational_speed_rpm)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'storage.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            val.append(dr_json['drive3'])
+            self.conn.get.return_value.json.side_effect = val
+        expected = set([15000, 10000])
+        self.assertEqual(expected,
+                         self.sys_stor_col.drive_rotational_speed_rpm)
