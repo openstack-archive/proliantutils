@@ -181,3 +181,24 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
             val.append(dr_json['drive2'])
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_ssd)
+
+    def test_has_rotational(self):
+        self.assertIsNone(self.sys_stor_col._has_rotational)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val.append(dr_json['drive1'])
+            val.append(dr_json['drive2'])
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor_col.has_rotational)

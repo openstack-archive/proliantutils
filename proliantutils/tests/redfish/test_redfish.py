@@ -684,11 +684,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to get the supported boot modes.',
             self.rf_client.get_supported_boot_mode)
 
+    @mock.patch.object(common_storage, 'has_rotational')
     @mock.patch.object(common_storage, 'has_ssd')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities(self, get_manager_mock, get_system_mock,
-                                     ssd_mock):
+                                     ssd_mock, rotational_mock):
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
@@ -726,6 +727,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         memory_mock.details = mock.MagicMock(return_value=mem)
         get_system_mock.return_value.memory = memory_mock
         ssd_mock.return_value = True
+        rotational_mock.return_value = True
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -740,14 +742,17 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'persistent_memory': 'true',
                     'nvdimm_n': 'true',
                     'logical_nvdimm_n': 'false',
-                    'has_ssd': 'true'}
+                    'has_ssd': 'true',
+                    'has_rotational': 'true'}
         self.assertEqual(expected, actual)
 
+    @mock.patch.object(common_storage, 'has_rotational')
     @mock.patch.object(common_storage, 'has_ssd')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
     def test_get_server_capabilities_optional_capabilities_absent(
-            self, get_manager_mock, get_system_mock, ssd_mock):
+            self, get_manager_mock, get_system_mock, ssd_mock,
+            rotational_mock):
         type(get_system_mock.return_value.pci_devices).gpu_devices = (
             [mock.MagicMock(spec=pci_device.PCIDevice)])
         type(get_system_mock.return_value.bios_settings).sriov = (
@@ -786,6 +791,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         get_system_mock.return_value.memory = memory_mock
         memory_mock.details = mock.MagicMock(return_value=mem)
         ssd_mock.return_value = False
+        rotational_mock.return_value = False
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',

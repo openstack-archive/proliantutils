@@ -34,6 +34,7 @@ class HPESmartStorage(base.ResourceBase):
     _logical_drives_maximum_size_mib = None
     _physical_drives_maximum_size_mib = None
     _has_ssd = None
+    _has_rotational = None
 
     @property
     def array_controllers(self):
@@ -88,9 +89,22 @@ class HPESmartStorage(base.ResourceBase):
                     break
         return self._has_ssd
 
+    @property
+    def has_rotational(self):
+        """Return true if any of the drive under ArrayControllers is HDD"""
+
+        if self._has_rotational is None:
+            self._has_rotational = False
+            for member in self.array_controllers.get_members():
+                if member.physical_drives.has_rotational:
+                    self._has_rotational = True
+                    break
+        return self._has_rotational
+
     def refresh(self):
         super(HPESmartStorage, self).refresh()
         self._logical_drives_maximum_size_mib = None
         self._physical_drives_maximum_size_mib = None
         self._array_controllers = None
         self._has_ssd = None
+        self._has_rotational = None
