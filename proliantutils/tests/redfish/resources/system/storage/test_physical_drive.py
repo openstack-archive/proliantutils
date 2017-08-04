@@ -128,3 +128,16 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
             val = [dr_json['drive1'], dr_json['drive2']]
             self.conn.get.return_value.json.side_effect = val
         self.assertTrue(self.sys_stor_col.has_rotational)
+
+    def test_drive_rotational_speed_rpm(self):
+        self.assertIsNone(self.sys_stor_col._drive_rotational_speed_rpm)
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
+        expected = [10000]
+        self.assertEqual(expected,
+                         self.sys_stor_col.drive_rotational_speed_rpm)

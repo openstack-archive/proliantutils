@@ -75,6 +75,7 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
     _has_ssd = None
     _has_rotational = None
     _logical_raid_levels = None
+    _drive_rotational_speed_rpm = None
 
     @property
     def _resource_type(self):
@@ -143,6 +144,20 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
                     list(set(self._logical_raid_levels)))
         return self._logical_raid_levels
 
+    @property
+    def drive_rotational_speed_rpm(self):
+        """Gets the list of rotational speed of the HDD drives"""
+
+        if self._drive_rotational_speed_rpm is None:
+            self._drive_rotational_speed_rpm = []
+            for member in self.get_members():
+                for speed in (
+                        member.physical_drives.drive_rotational_speed_rpm):
+                    self._drive_rotational_speed_rpm.append(speed)
+            self._drive_rotational_speed_rpm = list(set(
+                self._drive_rotational_speed_rpm))
+        return self._drive_rotational_speed_rpm
+
     def refresh(self):
         super(HPEArrayControllerCollection, self).refresh()
         self._logical_drives_maximum_size_mib = None
@@ -150,3 +165,4 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
         self._has_ssd = None
         self._has_rotational = None
         self._logical_raid_levels = None
+        self._drive_rotational_speed_rpm = None
