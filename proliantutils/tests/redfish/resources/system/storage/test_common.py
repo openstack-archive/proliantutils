@@ -134,3 +134,15 @@ class CommonMethodsTestCase(testtools.TestCase):
             self._mock_property(storage_value))
         actual = common.has_nvme_ssd(system_obj)
         self.assertEqual(expected, actual)
+
+    @ddt.data(([0, 1], {'logical_raid_level_0': 'true',
+                        'logical_raid_level_1': 'true'}),
+              ([], {}))
+    @ddt.unpack
+    def test_logical_raid_levels(self, smart_value,
+                                 expected):
+        system_obj = self.system_obj
+        type(system_obj.smart_storage).logical_raid_levels = (
+            self._mock_property(smart_value))
+        actual = common.logical_raid_levels(system_obj)
+        self.assertEqual(expected, actual)

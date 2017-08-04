@@ -74,6 +74,7 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
     _physical_drives_maximum_size_mib = None
     _has_ssd = None
     _has_rotational = None
+    _logical_raid_levels = None
 
     @property
     def _resource_type(self):
@@ -127,9 +128,23 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
                     break
         return self._has_rotational
 
+    @property
+    def logical_raid_levels(self):
+        """Gets the raid level for each logical volume
+
+        :returns the list of raid levels configured
+        """
+        if self._logical_raid_levels is None:
+            self._logical_raid_levels = []
+            for member in self.get_members():
+                self._logical_raid_levels.append(
+                    member.logical_drives.logical_raid_levels)
+        return self._logical_raid_levels
+
     def refresh(self):
         super(HPEArrayControllerCollection, self).refresh()
         self._logical_drives_maximum_size_mib = None
         self._physical_drives_maximum_size_mib = None
         self._has_ssd = None
         self._has_rotational = None
+        self._logical_raid_levels = None
