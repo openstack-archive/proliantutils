@@ -658,35 +658,40 @@ class RedfishOperations(operations.IloOperations):
                  'boot_mode_uefi': boot_mode.boot_mode_uefi})
 
             tpm_state = sushy_system.bios_settings.tpm_state
+            all_key_to_value_expression_tuples = [
+                ('sriov_enabled',
+                 sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED),
+                ('cpu_vt',
+                 sushy_system.bios_settings.cpu_vt == (
+                     sys_cons.CPUVT_ENABLED)),
+                ('trusted_boot',
+                 (tpm_state == sys_cons.TPM_PRESENT_ENABLED
+                  or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
+                ('secure_boot',
+                 GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
+                     sushy_system.secure_boot.current_boot)),
+                ('iscsi_boot',
+                 (sushy_system.bios_settings.iscsi_settings.
+                  is_iscsi_boot_supported())),
+                ('raid_support',
+                 len(sushy_system.smart_storage.array_controllers.
+                     members_identities) > 0),
+                ('has_ssd',
+                 common_storage.has_ssd(sushy_system)),
+                ('has_rotational',
+                 common_storage.has_rotational(sushy_system)),
+                ('has_nvme_ssd',
+                 common_storage.has_nvme_ssd(sushy_system))
+                ]
+            raid_level_values = map(
+                lambda x: ('logical_raid_level_' + x, True),
+                sushy_system.smart_storage.logical_raid_levels)
+            for item in raid_level_values:
+                all_key_to_value_expression_tuples.append(item)
             capabilities.update(
                 {key: 'true'
-                 for (key, value) in ((
-                     'sriov_enabled',
-                     sushy_system.bios_settings.sriov == sys_cons.SRIOV_ENABLED
-                     ),
-                     ('cpu_vt',
-                      sushy_system.bios_settings.cpu_vt == (
-                          sys_cons.CPUVT_ENABLED)),
-                     ('trusted_boot',
-                      (tpm_state == sys_cons.TPM_PRESENT_ENABLED
-                       or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
-                     ('secure_boot',
-                      GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                          sushy_system.secure_boot.current_boot)),
-                     ('iscsi_boot',
-                      (sushy_system.bios_settings.iscsi_settings.
-                       is_iscsi_boot_supported())),
-                     ('raid_support',
-                      len(sushy_system.smart_storage.array_controllers.
-                          members_identities) > 0),
-                     ('has_ssd',
-                      common_storage.has_ssd(sushy_system)),
-                     ('has_rotational',
-                      common_storage.has_rotational(sushy_system)),
-                     ('has_nvme_ssd',
-                      common_storage.has_nvme_ssd(sushy_system)),
-                     ) if value})
-
+                 for (key, value) in all_key_to_value_expression_tuples
+                 if value})
             memory_data = sushy_system.memory.details()
             if memory_data.has_nvdimm_n:
                 capabilities.update(
@@ -696,7 +701,6 @@ class RedfishOperations(operations.IloOperations):
                      json.dumps(memory_data.has_nvdimm_n)),
                      'logical_nvdimm_n': (
                      json.dumps(memory_data.has_logical_nvdimm_n))})
-
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

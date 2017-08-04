@@ -138,6 +138,27 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         actual = self.sys_stor_col.logical_drives_maximum_size_mib
         self.assertEqual(expected, actual)
 
+    def test_logical_raid_levels(self):
+        self.assertIsNone(self.sys_stor_col._logical_raid_levels)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'logical_drive_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'logical_drive.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+            self.conn.get.return_value.json.side_effect = val
+        expected = ['0']
+        actual = self.sys_stor_col.logical_raid_levels
+        self.assertEqual(expected, actual)
+
     def test_physical_drives_maximum_size_mib(self):
         self.assertIsNone(self.sys_stor_col._physical_drives_maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
