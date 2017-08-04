@@ -35,6 +35,7 @@ class HPESmartStorage(base.ResourceBase):
     _physical_drives_maximum_size_mib = None
     _has_ssd = None
     _has_rotational = None
+    _logical_raid_levels = None
 
     @property
     def array_controllers(self):
@@ -101,6 +102,19 @@ class HPESmartStorage(base.ResourceBase):
                     break
         return self._has_rotational
 
+    @property
+    def logical_raid_levels(self):
+        """Gets the raid level for each logical volume
+
+        :returns the set of list of raid levels configured.
+        """
+        if self._logical_raid_levels is None:
+            self._logical_raid_levels = set()
+            for member in self.array_controllers.get_members():
+                self._logical_raid_levels.update(
+                    member.logical_drives.logical_raid_levels)
+        return self._logical_raid_levels
+
     def refresh(self):
         super(HPESmartStorage, self).refresh()
         self._logical_drives_maximum_size_mib = None
@@ -108,3 +122,4 @@ class HPESmartStorage(base.ResourceBase):
         self._array_controllers = None
         self._has_ssd = None
         self._has_rotational = None
+        self._logical_raid_levels = None
