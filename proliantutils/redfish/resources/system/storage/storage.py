@@ -42,6 +42,7 @@ class Storage(base.ResourceBase):
     _volumes = None
     _drives_maximum_size_bytes = None
     _has_ssd = None
+    _has_rotational = None
 
     @property
     def volumes(self):
@@ -90,11 +91,24 @@ class Storage(base.ResourceBase):
                     break
         return self._has_ssd
 
+    @property
+    def has_rotational(self):
+        """Return true if any of the drive is HDD"""
+
+        if self._has_rotational is None:
+            self._has_rotational = False
+            for member in self._drives_list():
+                if member.media_type == constants.MEDIA_TYPE_HDD:
+                    self._has_rotational = True
+                    break
+        return self._has_rotational
+
     def refresh(self):
         super(Storage, self).refresh()
         self._drives_maximum_size_bytes = None
         self._volumes = None
         self._has_ssd = None
+        self._has_rotational = None
 
 
 class StorageCollection(base.ResourceCollectionBase):
@@ -103,6 +117,7 @@ class StorageCollection(base.ResourceCollectionBase):
     _volumes_maximum_size_bytes = None
     _drives_maximum_size_bytes = None
     _has_ssd = None
+    _has_rotational = None
 
     @property
     def _resource_type(self):
@@ -144,8 +159,21 @@ class StorageCollection(base.ResourceCollectionBase):
                     break
         return self._has_ssd
 
+    @property
+    def has_rotational(self):
+        """Return true if Storage has any drive as HDD"""
+
+        if self._has_rotational is None:
+            self._has_rotational = False
+            for member in self.get_members():
+                if member.has_rotational:
+                    self._has_rotational = True
+                    break
+        return self._has_rotational
+
     def refresh(self):
         super(StorageCollection, self).refresh()
         self._volumes_maximum_size_bytes = None
         self._drives_maximum_size_bytes = None
         self._has_ssd = None
+        self._has_rotational = None

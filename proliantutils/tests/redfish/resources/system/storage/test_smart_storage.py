@@ -128,3 +128,26 @@ class HPESmartStorageTestCase(testtools.TestCase):
             val.append(json.loads(f.read()))
             self.conn.get.return_value.json.side_effect = val
         self.assertFalse(self.sys_stor.has_ssd)
+
+    def test_has_rotaional(self):
+        self.assertIsNone(self.sys_stor._has_rotational)
+        self.conn.get.return_value.json.reset_mock()
+        val = []
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'array_controller.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive_collection.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            val.append(json.loads(f.read()))
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor.has_rotational)

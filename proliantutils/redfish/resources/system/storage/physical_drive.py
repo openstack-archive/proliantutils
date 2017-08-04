@@ -41,6 +41,7 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
 
     _maximum_size_mib = None
     _has_ssd = None
+    _has_rotational = None
 
     @property
     def _resource_type(self):
@@ -70,7 +71,20 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
                     break
         return self._has_ssd
 
+    @property
+    def has_rotational(self):
+        """Return true if the drive is HDD"""
+
+        if self._has_rotational is None:
+            self._has_rotational = False
+            for member in self.get_members():
+                if member.media_type == constants.MEDIA_TYPE_HDD:
+                    self._has_rotational = True
+                    break
+        return self._has_rotational
+
     def refresh(self):
         super(HPEPhysicalDriveCollection, self).refresh()
         self._maximum_size_mib = None
         self._has_ssd = None
+        self._has_rotational = None

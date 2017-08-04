@@ -131,3 +131,24 @@ def has_ssd(system_obj):
             storage_resource, 'has_ssd', default=False)
 
     return (smart_value or storage_value)
+
+
+def has_rotational(system_obj):
+    """Gets if the system has any drive as HDD drive
+
+    :param system_obj: The HPESystem object.
+    :returns True if system has HDD drives.
+    """
+    smart_value = False
+    storage_value = False
+    smart_resource = _get_attribute_value_of(system_obj, 'smart_storage')
+    if smart_resource is not None:
+        smart_value = _get_attribute_value_of(
+            smart_resource, 'has_rotational', default=False)
+
+    storage_resource = _get_attribute_value_of(system_obj, 'storages')
+    if storage_resource is not None:
+        storage_value = _get_attribute_value_of(
+            storage_resource, 'has_rotational', default=False)
+
+    return (smart_value or storage_value)
