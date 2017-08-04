@@ -731,6 +731,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
         ssd_mock.return_value = True
         rotational_mock.return_value = True
         nvme_mock.return_value = True
+        raid_mock = mock.PropertyMock(return_value=set(['0', '1']))
+        type(get_system_mock.return_value.
+             smart_storage).logical_raid_levels = (raid_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1, 'sriov_enabled': 'true',
                     'secure_boot': 'true', 'cpu_vt': 'true',
@@ -747,7 +750,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'logical_nvdimm_n': 'false',
                     'has_ssd': 'true',
                     'has_rotational': 'true',
-                    'has_nvme_ssd': 'true'}
+                    'has_nvme_ssd': 'true',
+                    'logical_raid_level_0': 'true',
+                    'logical_raid_level_1': 'true'}
         self.assertEqual(expected, actual)
 
     @mock.patch.object(common_storage, 'has_nvme_ssd')
@@ -798,6 +803,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
         ssd_mock.return_value = False
         rotational_mock.return_value = False
         nvme_mock.return_value = False
+        raid_mock = mock.PropertyMock(return_value=set())
+        type(get_system_mock.return_value.
+             smart_storage).logical_raid_levels = (raid_mock)
         actual = self.rf_client.get_server_capabilities()
         expected = {'pci_gpu_devices': 1,
                     'rom_firmware_version': 'U31 v1.00 (03/11/2017)',
