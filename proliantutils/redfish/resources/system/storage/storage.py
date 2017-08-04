@@ -43,6 +43,7 @@ class Storage(base.ResourceBase):
     _drives_maximum_size_bytes = None
     _has_ssd = None
     _has_rotational = None
+    _has_nvme_ssd = None
 
     @property
     def volumes(self):
@@ -103,12 +104,25 @@ class Storage(base.ResourceBase):
                     break
         return self._has_rotational
 
+    @property
+    def has_nvme_ssd(self):
+        """Return true if the drive is SSD and protocol is NVMe"""
+
+        if self._has_nvme_ssd is None:
+            self._has_nvme_ssd = False
+            for member in self._drives_list():
+                if (member.media_type == constants.MEDIA_TYPE_SSD and
+                        member.protocol == constants.PROTOCOL_NVMe):
+                    self._has_nvme_ssd = True
+        return self._has_nvme_ssd
+
     def refresh(self):
         super(Storage, self).refresh()
         self._drives_maximum_size_bytes = None
         self._volumes = None
         self._has_ssd = None
         self._has_rotational = None
+        self._has_nvme_ssd = None
 
 
 class StorageCollection(base.ResourceCollectionBase):
@@ -118,6 +132,7 @@ class StorageCollection(base.ResourceCollectionBase):
     _drives_maximum_size_bytes = None
     _has_ssd = None
     _has_rotational = None
+    _has_nvme_ssd = None
 
     @property
     def _resource_type(self):
@@ -171,9 +186,22 @@ class StorageCollection(base.ResourceCollectionBase):
                     break
         return self._has_rotational
 
+    @property
+    def has_nvme_ssd(self):
+        """Return true if Storage has SSD drive and protocol is NVMe"""
+
+        if self._has_nvme_ssd is None:
+            self._has_nvme_ssd = False
+            for member in self.get_members():
+                if member.has_nvme_ssd:
+                    self._has_nvme_ssd = True
+                    break
+        return self._has_nvme_ssd
+
     def refresh(self):
         super(StorageCollection, self).refresh()
         self._volumes_maximum_size_bytes = None
         self._drives_maximum_size_bytes = None
         self._has_ssd = None
         self._has_rotational = None
+        self._has_nvme_ssd = None
