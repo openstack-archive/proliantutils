@@ -150,8 +150,8 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
             self._drive_rotational_speed_rpm = []
             for member in self.get_members():
                 for speed in (
-                    member.physical_drives.drive_rotational_speed_rpm):
-                        self._drive_rotational_speed_rpm.append(speed)
+                        member.physical_drives.drive_rotational_speed_rpm):
+                    self._drive_rotational_speed_rpm.append(speed)
         return self._drive_rotational_speed_rpm
 
     def refresh(self):

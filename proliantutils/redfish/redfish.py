@@ -699,6 +699,9 @@ class RedfishOperations(operations.IloOperations):
             raid_levels = common_storage.logical_raid_levels(sushy_system)
             if len(raid_levels) > 0:
                 capabilities.update(raid_levels)
+            speeds = common_storage.drive_rotational_speed_rpm(sushy_system)
+            if len(speeds) > 0:
+                capabilities.update(speeds)
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller is unable to get "
                           "resource or its members. Error "

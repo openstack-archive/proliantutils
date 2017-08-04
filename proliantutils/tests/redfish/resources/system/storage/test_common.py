@@ -146,3 +146,22 @@ class CommonMethodsTestCase(testtools.TestCase):
             self._mock_property(smart_value))
         actual = common.logical_raid_levels(system_obj)
         self.assertEqual(expected, actual)
+
+    @ddt.data(([10000], [15000],
+              {'drive_rotational_10000_rpm': 'true',
+               'drive_rotational_15000_rpm': 'true'}),
+              ([10000], [],
+               {'drive_rotational_10000_rpm': 'true'}),
+              ([], [15000],
+               {'drive_rotational_15000_rpm': 'true'}),
+              ([], [], {}))
+    @ddt.unpack
+    def test_drive_rotational_speed_rpm(self, smart_value,
+                                        storage_value, expected):
+        system_obj = self.system_obj
+        type(system_obj.smart_storage).drive_rotational_speed_rpm = (
+            self._mock_property(smart_value))
+        type(system_obj.storages).drive_rotational_speed_rpm = (
+            self._mock_property(storage_value))
+        actual = common.drive_rotational_speed_rpm(system_obj)
+        self.assertEqual(expected, actual)

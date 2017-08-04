@@ -36,7 +36,7 @@ class HPESmartStorage(base.ResourceBase):
     _has_ssd = None
     _has_rotational = None
     _logical_raid_levels = None
-    _self._drive_rotational_speed_rpm = None
+    _drive_rotational_speed_rpm = None
 
     @property
     def array_controllers(self):
@@ -124,8 +124,8 @@ class HPESmartStorage(base.ResourceBase):
             self._drive_rotational_speed_rpm = []
             for member in self.array_controllers.get_members():
                 for speed in (
-                    member.physical_drives.drive_rotational_speed_rpm):
-                        self._drive_rotational_speed_rpm.append(speed)
+                        member.physical_drives.drive_rotational_speed_rpm):
+                    self._drive_rotational_speed_rpm.append(speed)
         return self._drive_rotational_speed_rpm
 
     def refresh(self):

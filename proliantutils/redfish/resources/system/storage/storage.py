@@ -146,6 +146,7 @@ class StorageCollection(base.ResourceCollectionBase):
     _has_ssd = None
     _has_rotational = None
     _has_nvme_ssd = None
+    drive_rotational_speed_rpm = None
 
     @property
     def _resource_type(self):
@@ -229,3 +230,4 @@ class StorageCollection(base.ResourceCollectionBase):
         self._has_ssd = None
         self._has_rotational = None
         self._has_nvme_ssd = None
+        self._drive_rotational_speed_rpm = None
