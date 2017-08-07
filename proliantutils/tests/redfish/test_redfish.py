@@ -741,7 +741,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'server_model': 'ProLiant DL180 Gen10',
                     'boot_mode_bios': 'true',
                     'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
-                    'raid_support': 'true',
+                    'hardware_supports_raid': 'true',
                     'persistent_memory': 'true',
                     'nvdimm_n': 'true',
                     'logical_nvdimm_n': 'false',

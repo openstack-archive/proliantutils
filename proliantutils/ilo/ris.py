@@ -1192,7 +1192,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         if raid_details is not None:
             capabilities.update(raid_details)
         if self._is_raid_supported():
-            capabilities['raid_support'] = 'true'
+            capabilities['hardware_supports_raid'] = 'true'
         boot_modes = common.get_supported_boot_modes(
             self.get_supported_boot_mode())
         capabilities.update({

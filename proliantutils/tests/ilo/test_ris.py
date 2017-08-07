@@ -487,7 +487,7 @@ class IloRisTestCase(testtools.TestCase):
                          'has_rotational': True,
                          'rotational_drive_4800_rpm': True,
                          'logical_raid_volume_0': 'true',
-                         'raid_support': 'true'}
+                         'hardware_supports_raid': 'true'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_caps, capabilities)
 
