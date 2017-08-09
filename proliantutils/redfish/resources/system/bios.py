@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import functools
+
 import sushy
 from sushy.resources import base
 
@@ -30,96 +32,6 @@ BOOT_SOURCE_TARGET_TO_PARTIAL_STRING_MAP = {
     sushy.BOOT_SOURCE_TARGET_UEFI_TARGET: ('ISCSI',),
     sushy.BOOT_SOURCE_TARGET_HDD: ('Logical Drive', 'HDD', 'Storage', 'LogVol')
 }
-
-
-class BIOSSettings(base.ResourceBase):
-    """Class that defines the functionality for BIOS Resources."""
-
-    boot_mode = base.MappedField(["Attributes", "BootMode"],
-                                 mappings.GET_BIOS_BOOT_MODE_MAP)
-
-    sriov = base.MappedField(['Attributes', 'Sriov'], mappings.SRIOV_MAP)
-
-    tpm_state = base.MappedField(["Attributes", "TpmState"], mappings.TPM_MAP)
-
-    cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
-                              mappings.CPUVT_MAP)
-
-    _iscsi_settings = None
-
-    _pending_settings = None
-    _boot_settings = None
-    _base_configs = None
-
-    @property
-    def pending_settings(self):
-        """Property to provide reference to bios_pending_settings instance
-
-        It is calculated once when the first time it is queried. On refresh,
-        this property gets reset.
-        """
-        if self._pending_settings is None:
-            self._pending_settings = BIOSPendingSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["@Redfish.Settings", "SettingsObject"]),
-                redfish_version=self.redfish_version)
-
-        return self._pending_settings
-
-    @property
-    def boot_settings(self):
-        """Property to provide reference to bios boot instance
-
-        It is calculated once when the first time it is queried. On refresh,
-        this property gets reset.
-        """
-        if self._boot_settings is None:
-            self._boot_settings = BIOSBootSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "Boot"]),
-                redfish_version=self.redfish_version)
-
-        return self._boot_settings
-
-    @property
-    def iscsi_settings(self):
-        """Property to provide reference to bios iscsi instance
-
-        It is calculated once when the first time it is queried. On refresh,
-        this property gets reset.
-        """
-        if self._iscsi_settings is None:
-            self._iscsi_settings = iscsi.ISCSISettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "iScsi"]),
-                redfish_version=self.redfish_version)
-
-        return self._iscsi_settings
-
-    def _get_base_configs(self):
-        """Method that returns object of bios base configs."""
-        if self._base_configs is None:
-            self._base_configs = BIOSBaseConfigs(
-                self._conn, utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
-                redfish_version=self.redfish_version)
-
-        return self._base_configs
-
-    def update_bios_to_default(self):
-        """Updates bios default settings"""
-        self.pending_settings.update_bios_data_by_post(
-            self._get_base_configs().default_config)
-
-    def refresh(self):
-        super(BIOSSettings, self).refresh()
-        self._pending_settings = None
-        self._boot_settings = None
-        self._base_configs = None
-        self._iscsi_settings = None
 
 
 class BIOSBaseConfigs(base.ResourceBase):
@@ -228,3 +140,86 @@ class BIOSBootSettings(base.ResourceBase):
         else:
             msg = ('MAC provided "%s" is Invalid' % mac)
             raise exception.IloInvalidInputError(msg)
+
+
+class BIOSSettings(base.ResourceBase):
+    """Class that defines the functionality for BIOS Resources."""
+
+    boot_mode = base.MappedField(["Attributes", "BootMode"],
+                                 mappings.GET_BIOS_BOOT_MODE_MAP)
+
+    sriov = base.MappedField(['Attributes', 'Sriov'], mappings.SRIOV_MAP)
+
+    tpm_state = base.MappedField(["Attributes", "TpmState"], mappings.TPM_MAP)
+
+    cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
+                              mappings.CPUVT_MAP)
+
+    _iscsi_settings = None
+
+    _pending_settings = None
+    _boot_settings = None
+    _base_configs = None
+
+    @property
+    @utils.init_and_set_resource_if_not_already(
+        BIOSPendingSettings,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=["@Redfish.Settings", "SettingsObject"]))
+    def pending_settings(self):
+        """Property to provide reference to bios_pending_settings instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        return '_pending_settings'
+
+    @property
+    @utils.init_and_set_resource_if_not_already(
+        BIOSBootSettings,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=["Oem", "Hpe", "Links", "Boot"]))
+    def boot_settings(self):
+        """Property to provide reference to bios boot instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        return '_boot_settings'
+
+    @property
+    @utils.init_and_set_resource_if_not_already(
+        iscsi.ISCSISettings,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=["Oem", "Hpe", "Links", "iScsi"]))
+    def iscsi_settings(self):
+        """Property to provide reference to bios iscsi instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        return '_iscsi_settings'
+
+    @utils.init_and_set_resource_if_not_already(
+        BIOSBaseConfigs,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=["Oem", "Hpe", "Links", "BaseConfigs"]))
+    def _get_base_configs(self):
+        """Method that returns object of bios base configs."""
+        return '_base_configs'
+
+    def update_bios_to_default(self):
+        """Updates bios default settings"""
+        self.pending_settings.update_bios_data_by_post(
+            self._get_base_configs().default_config)
+
+    def refresh(self):
+        super(BIOSSettings, self).refresh()
+        self._pending_settings = None
+        self._boot_settings = None
+        self._base_configs = None
+        self._iscsi_settings = None

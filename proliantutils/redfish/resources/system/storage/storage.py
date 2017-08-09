@@ -12,16 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
+import functools
 
+from sushy.resources import base
+
+from proliantutils import log
 from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import drive as sys_drives
 from proliantutils.redfish.resources.system.storage \
     import volume as sys_volumes
 from proliantutils.redfish import utils
-from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+LOG = log.get_logger(__name__)
 
 
 class Storage(base.ResourceBase):
@@ -47,16 +49,15 @@ class Storage(base.ResourceBase):
     _drive_rotational_speed_rpm = None
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        sys_volumes.VolumeCollection, functools.partial(
+            utils.get_subresource_path_by, subresource_path='Volumes'))
     def volumes(self):
         """This property prepares the list of volumes
 
         :return a list of volumes.
         """
-        if self._volumes is None:
-            self._volumes = sys_volumes.VolumeCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Volumes'),
-                redfish_version=self.redfish_version)
-        return self._volumes
+        return '_volumes'
 
     def _drives_list(self):
         """Gets the list of drives

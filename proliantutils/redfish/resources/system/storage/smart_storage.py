@@ -12,13 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
+import functools
 
-from proliantutils.redfish.resources.system.storage import array_controller
-from proliantutils.redfish import utils
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils import log
+from proliantutils.redfish.resources.system.storage import array_controller
+from proliantutils.redfish import utils
+
+LOG = log.get_logger(__name__)
 
 
 class HPESmartStorage(base.ResourceBase):
@@ -39,19 +41,13 @@ class HPESmartStorage(base.ResourceBase):
     _drive_rotational_speed_rpm = None
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        array_controller.HPEArrayControllerCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path=['Links', 'ArrayControllers']))
     def array_controllers(self):
-        """This property gets the list of instances for array controllers
-
-        This property gets the list of instances for array controllers
-        :returns: a list of instances of array controllers.
-        """
-        if self._array_controllers is None:
-            self._array_controllers = (
-                array_controller.HPEArrayControllerCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'ArrayControllers']),
-                    redfish_version=self.redfish_version))
-        return self._array_controllers
+        """Gets the HPEArrayControllerCollection instance"""
+        return '_array_controllers'
 
     @property
     def logical_drives_maximum_size_mib(self):

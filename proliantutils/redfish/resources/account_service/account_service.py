@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import functools
+
 from sushy.resources import base
 
 from proliantutils.redfish.resources.account_service import account
@@ -28,16 +30,13 @@ class HPEAccountService(base.ResourceBase):
     _accounts = None
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        account.HPEAccountCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='Accounts'))
     def accounts(self):
-        """Property to provide instance of HPEAccountCollection
-
-        """
-        if self._accounts is None:
-            self._accounts = account.HPEAccountCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Accounts'),
-                redfish_version=self.redfish_version)
-
-        return self._accounts
+        """Property to provide instance of HPEAccountCollection"""
+        return '_accounts'
 
     def refresh(self):
         super(HPEAccountService, self).refresh()
