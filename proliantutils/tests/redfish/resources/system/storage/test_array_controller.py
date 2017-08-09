@@ -50,7 +50,9 @@ class HPEArrayControllerTestCase(testtools.TestCase):
         with open('proliantutils/tests/redfish/'
                   'json_samples/logical_drive.json') as f:
             log_dr = json.loads(f.read())
-        self.conn.get.return_value.json.side_effect = [log_coll, log_dr]
+        self.conn.get.return_value.json.side_effect = (
+            [log_coll, log_dr['logical_drive1'],
+             log_dr['logical_drive2']])
         actual_log_dr = self.sys_stor.logical_drives
         self.conn.get.return_value.json.reset_mock()
         self.assertIs(actual_log_dr,
@@ -132,7 +134,9 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
+            f_data = json.loads(f.read())
+            val.append(f_data['logical_drive1'])
+            val.append(f_data['logical_drive2'])
             self.conn.get.return_value.json.side_effect = val
         expected = 953837
         actual = self.sys_stor_col.logical_drives_maximum_size_mib
@@ -153,9 +157,11 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
+            f_data = json.loads(f.read())
+            val.append(f_data['logical_drive1'])
+            val.append(f_data['logical_drive2'])
             self.conn.get.return_value.json.side_effect = val
-        expected = set(['0'])
+        expected = set(['0', '1'])
         actual = self.sys_stor_col.logical_raid_levels
         self.assertEqual(expected, actual)
 
