@@ -12,14 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
+import functools
 
+from sushy.resources import base
+
+from proliantutils import log
 from proliantutils.redfish.resources.system.storage import logical_drive
 from proliantutils.redfish.resources.system.storage import physical_drive
 from proliantutils.redfish import utils
-from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+LOG = log.get_logger(__name__)
 
 
 class HPEArrayController(base.ResourceBase):
@@ -38,28 +40,22 @@ class HPEArrayController(base.ResourceBase):
     _physical_drives = None
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        logical_drive.HPELogicalDriveCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path=['Links', 'LogicalDrives']))
     def logical_drives(self):
         """Gets the resource HPELogicalDriveCollection of ArrayControllers"""
-
-        if self._logical_drives is None:
-            self._logical_drives = (
-                logical_drive.HPELogicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'LogicalDrives']),
-                    redfish_version=self.redfish_version))
-        return self._logical_drives
+        return '_logical_drives'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        physical_drive.HPEPhysicalDriveCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path=['Links', 'PhysicalDrives']))
     def physical_drives(self):
         """Gets the resource HPEPhysicalDriveCollection of ArrayControllers"""
-
-        if self._physical_drives is None:
-            self._physical_drives = (
-                physical_drive.HPEPhysicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'PhysicalDrives']),
-                    redfish_version=self.redfish_version))
-        return self._physical_drives
+        return '_physical_drives'
 
     def refresh(self):
         super(HPEArrayController, self).refresh()

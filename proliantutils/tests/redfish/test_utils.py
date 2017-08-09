@@ -21,6 +21,8 @@ import ddt
 import mock
 import testtools
 
+from sushy.resources import base
+
 from proliantutils import exception
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
@@ -111,3 +113,50 @@ class UtilsTestCase(testtools.TestCase):
     def test_max_safe(self, iterable, expected):
         actual = utils.max_safe(iterable)
         self.assertEqual(expected, actual)
+
+
+class NestedResource(base.ResourceBase):
+
+    def _parse_attributes(self):
+        pass
+
+
+class BaseResource(base.ResourceBase):
+
+    _nested_resource = None
+
+    def _parse_attributes(self):
+        pass
+
+    @utils.init_and_set_resource_if_not_already(
+        NestedResource, "Path / Identity to NestedResource")
+    def get_nested_resource(self):
+        return '_nested_resource'
+
+
+class InitAndSetResourceTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(InitAndSetResourceTestCase, self).setUp()
+        self.conn = mock.Mock()
+        self.res = BaseResource(connector=self.conn, path='/Foo',
+                                redfish_version='1.0.2')
+
+    def test_init_and_set_resource_if_not_already(self):
+        self.assertIsNone(self.res._nested_resource)
+        nested_res = self.res.get_nested_resource()
+        self.assertIsInstance(nested_res, NestedResource)
+        self.assertEqual(nested_res, self.res._nested_resource)
+
+    def test_init_and_set_resource_if_not_already_fails(self):
+        self.assertRaisesRegex(
+            TypeError,
+            "Invalid argument type/s provided:",
+            utils.init_and_set_resource_if_not_already,
+            object, 'any string')
+
+        self.assertRaisesRegex(
+            TypeError,
+            "Invalid argument type/s provided:",
+            utils.init_and_set_resource_if_not_already,
+            BaseResource, [])

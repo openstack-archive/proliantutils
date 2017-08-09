@@ -14,6 +14,8 @@
 
 __author__ = 'HPE'
 
+import functools
+
 from sushy.resources.manager import manager
 
 from proliantutils.redfish.resources.manager import virtual_media
@@ -40,19 +42,17 @@ class HPEManager(manager.Manager):
         self._conn.post(license_service_uri, data=data)
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        virtual_media.VirtualMediaCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='VirtualMedia'))
     def virtual_media(self):
         """Property to provide reference to `VirtualMediaCollection` instance.
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._virtual_media is None:
-            self._virtual_media = virtual_media.VirtualMediaCollection(
-                self._conn,
-                utils.get_subresource_path_by(self, 'VirtualMedia'),
-                redfish_version=self.redfish_version)
-
-        return self._virtual_media
+        return '_virtual_media'
 
     def refresh(self):
         super(HPEManager, self).refresh()
