@@ -14,6 +14,8 @@
 
 __author__ = 'HPE'
 
+import functools
+
 import sushy
 from sushy.resources import base
 from sushy.resources.system import system
@@ -31,7 +33,6 @@ from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
 from proliantutils.redfish.resources.system.storage import storage
-
 from proliantutils.redfish import utils
 
 
@@ -120,18 +121,17 @@ class HPESystem(system.System):
         self._conn.post(target_uri, data={'PushType': value})
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        bios.BIOSSettings,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='Bios'))
     def bios_settings(self):
         """Property to provide reference to `BIOSSettings` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._bios_settings is None:
-            self._bios_settings = bios.BIOSSettings(
-                self._conn, utils.get_subresource_path_by(self, 'Bios'),
-                redfish_version=self.redfish_version)
-
-        return self._bios_settings
+        return '_bios_settings'
 
     def update_persistent_boot(self, devices=[], persistent=False,
                                mac=None):
@@ -172,31 +172,31 @@ class HPESystem(system.System):
         self.set_system_boot_source(device, enabled=tenure)
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        pci_device.PCIDeviceCollection,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=['Oem', 'Hpe', 'Links', 'PCIDevices']))
     def pci_devices(self):
         """Provides the collection of PCI devices
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._pci_devices is None:
-            self._pci_devices = pci_device.PCIDeviceCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
-        return self._pci_devices
+        return '_pci_devices'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        secure_boot.SecureBoot,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='SecureBoot'))
     def secure_boot(self):
         """Property to provide reference to `SecureBoot` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._secure_boot is None:
-            self._secure_boot = secure_boot.SecureBoot(
-                self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
-                redfish_version=self.redfish_version)
-
-        return self._secure_boot
+        return '_secure_boot'
 
     def refresh(self):
         super(HPESystem, self).refresh()
@@ -219,19 +219,21 @@ class HPESystem(system.System):
         return path
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        ethernet_interface.EthernetInterfaceCollection,
+        functools.partial(
+            _get_hpe_sub_resource_collection_path,
+            sub_res='EthernetInterfaces'))
     def ethernet_interfaces(self):
         """Provide reference to EthernetInterfacesCollection instance"""
-        if self._ethernet_interfaces is None:
-            sub_res = 'EthernetInterfaces'
-            self._ethernet_interfaces = (
-                ethernet_interface.EthernetInterfaceCollection(
-                    self._conn,
-                    self._get_hpe_sub_resource_collection_path(sub_res),
-                    redfish_version=self.redfish_version))
-
-        return self._ethernet_interfaces
+        return '_ethernet_interfaces'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        hpe_smart_storage.HPESmartStorage,
+        functools.partial(
+            utils.get_subresource_path_by,
+            subresource_path=['Oem', 'Hpe', 'Links', 'SmartStorage']))
     def smart_storage(self):
         """This property gets the object for smart storage.
 
@@ -239,51 +241,42 @@ class HPESystem(system.System):
         There is no collection for smart storages.
         :returns: an instance of smart storage
         """
-        if self._smart_storage is None:
-            self._smart_storage = hpe_smart_storage.HPESmartStorage(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
-                redfish_version=self.redfish_version)
-        return self._smart_storage
+        return '_smart_storage'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        storage.StorageCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='Storage'))
     def storages(self):
         """This property gets the list of instances for Storages
 
         This property gets the list of instances for Storages
         :returns: a list of instances of Storages
         """
-        if self._storages is None:
-            self._storages = storage.StorageCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Storage'),
-                redfish_version=self.redfish_version)
-        return self._storages
+        return '_storages'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        simple_storage.SimpleStorageCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='SimpleStorage'))
     def simple_storages(self):
         """This property gets the list of instances for SimpleStorages
 
         :returns: a list of instances of SimpleStorages
         """
-
-        if self._simple_storages is None:
-            self._simple_storages = simple_storage.SimpleStorageCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'SimpleStorage'),
-                redfish_version=self.redfish_version)
-        return self._simple_storages
+        return '_simple_storages'
 
     @property
+    @utils.init_and_set_resource_if_not_already(
+        memory.MemoryCollection,
+        functools.partial(utils.get_subresource_path_by,
+                          subresource_path='Memory'))
     def memory(self):
         """Property to provide reference to `MemoryCollection` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._memory is None:
-            self._memory = memory.MemoryCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'Memory'),
-                redfish_version=self.redfish_version)
-
-        return self._memory
+        return '_memory'
