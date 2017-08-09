@@ -75,7 +75,9 @@ class HPESmartStorageTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
+            logical_drive = json.loads(f.read())
+            val.append(logical_drive['logical_drive1'])
+            val.append(logical_drive['logical_drive2'])
             self.conn.get.return_value.json.side_effect = val
         expected = 953837
         actual = self.sys_stor.logical_drives_maximum_size_mib
@@ -100,9 +102,11 @@ class HPESmartStorageTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            val.append(json.loads(f.read()))
+            logical_drive = json.loads(f.read())
+            val.append(logical_drive['logical_drive1'])
+            val.append(logical_drive['logical_drive2'])
             self.conn.get.return_value.json.side_effect = val
-        expected = set(['0'])
+        expected = set(['0', '1'])
         actual = self.sys_stor.logical_raid_levels
         self.assertEqual(expected, actual)
 
