@@ -915,8 +915,7 @@ class IloClientTestCase(testtools.TestCase):
         properties = {'local_gb': 0}
         data = {'properties': properties}
         call_mock.return_value = data
-        self.assertRaises(exception.IloError,
-                          self.client.get_essential_properties)
+        self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
 
@@ -959,8 +958,7 @@ class IloClientTestCase(testtools.TestCase):
         data = {'properties': properties}
         call_mock.return_value = data
         snmp_mock.return_value = 0
-        self.assertRaises(exception.IloError,
-                          self.client.get_essential_properties)
+        self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         snmp_mock.assert_called_once_with(self.client.info['address'],
                                           snmp_credentials)
@@ -982,8 +980,7 @@ class IloClientTestCase(testtools.TestCase):
         properties = {'local_gb': 0}
         data = {'properties': properties}
         call_mock.return_value = data
-        self.assertRaises(exception.IloError,
-                          self.client.get_essential_properties)
+        self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
 

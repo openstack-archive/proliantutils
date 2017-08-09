@@ -515,13 +515,13 @@ class IloClient(operations.IloOperations):
                     data['properties']['local_gb'] = disksize
                 else:
                     msg = self._('Snmp inspection failed to '
-                                 'get the disk size')
+                                 'get the disk size. Assuming '
+                                 'the system to be a diskless system.')
                     LOG.debug(msg)
-                    raise exception.IloError(msg)
             else:
-                msg = self._("Inspection failed to get the disk size")
+                msg = self._("Inspection failed to get the disk size. "
+                             "Assuming the system to be diskless system")
                 LOG.debug(msg)
-                raise exception.IloError(msg)
         return data
 
     def get_server_capabilities(self):
