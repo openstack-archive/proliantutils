@@ -12,11 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils import log
+from proliantutils.redfish import utils
+
+
+LOG = log.get_logger(__name__)
 
 CLASSCODE_FOR_GPU_DEVICES = [3]
 SUBCLASSCODE_FOR_GPU_DEVICES = [0, 1, 2, 128]
@@ -39,17 +41,16 @@ class PCIDevice(base.ResourceBase):
         self._nic_capacity = None
 
     @property
+    @utils.lazy_load_and_cache('_nic_capacity', should_set_attribute=False)
     def nic_capacity(self):
-        if self._nic_capacity is None:
-            for item in self.name.split():
-                if 'Gb' in item:
-                    capacity = item.strip('Gb')
-                    self._nic_capacity = (
-                        int(capacity) if capacity.isdigit() else 0)
-                    break
-            else:
-                self._nic_capacity = 0
-        return self._nic_capacity
+        for item in self.name.split():
+            if 'Gb' in item:
+                capacity = item.strip('Gb')
+                self._nic_capacity = (
+                    int(capacity) if capacity.isdigit() else 0)
+                break
+        else:
+            self._nic_capacity = 0
 
 
 class PCIDeviceCollection(base.ResourceCollectionBase):
@@ -62,14 +63,13 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
         return PCIDevice
 
     @property
+    @utils.lazy_load_and_cache('_gpu_devices', should_set_attribute=False)
     def gpu_devices(self):
-        if self._gpu_devices is None:
-            self._gpu_devices = []
-            for member in self.get_members():
-                if member.class_code in CLASSCODE_FOR_GPU_DEVICES:
-                    if member.sub_class_code in SUBCLASSCODE_FOR_GPU_DEVICES:
-                        self._gpu_devices.append(member)
-        return self._gpu_devices
+        self._gpu_devices = []
+        for member in self.get_members():
+            if member.class_code in CLASSCODE_FOR_GPU_DEVICES:
+                if member.sub_class_code in SUBCLASSCODE_FOR_GPU_DEVICES:
+                    self._gpu_devices.append(member)
 
     def refresh(self):
         super(PCIDeviceCollection, self).refresh()
@@ -77,9 +77,7 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
         self._max_nic_capacity = None
 
     @property
+    @utils.lazy_load_and_cache('_max_nic_capacity')
     def max_nic_capacity(self):
         """Gets the maximum NIC capacity"""
-        if self._max_nic_capacity is None:
-            self._max_nic_capacity = (
-                str(max([m.nic_capacity for m in self.get_members()])) + 'Gb')
-        return self._max_nic_capacity
+        return str(max([m.nic_capacity for m in self.get_members()])) + 'Gb'

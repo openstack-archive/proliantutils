@@ -14,9 +14,8 @@
 
 from sushy.resources import base
 
-from proliantutils.redfish import utils
-
 from proliantutils.redfish.resources.system.storage import mappings
+from proliantutils.redfish import utils
 
 
 class HPELogicalDrive(base.ResourceBase):
@@ -44,29 +43,27 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
         return HPELogicalDrive
 
     @property
+    @utils.lazy_load_and_cache('_maximum_size_mib')
     def maximum_size_mib(self):
         """Gets the biggest logical drive
 
         :returns size in MiB.
         """
-        if self._maximum_size_mib is None:
-            self._maximum_size_mib = (
-                utils.max_safe([member.capacity_mib
-                               for member in self.get_members()]))
-        return self._maximum_size_mib
+        return utils.max_safe([member.capacity_mib
+                               for member in self.get_members()])
 
     @property
+    @utils.lazy_load_and_cache(
+        '_logical_raid_levels', should_set_attribute=False)
     def logical_raid_levels(self):
         """Gets the raid level for each logical volume
 
         :returns the set of list of raid levels configured.
         """
-        if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.get_members():
-                self._logical_raid_levels.add(
-                    mappings.RAID_LEVEL_MAP_REV.get(member.raid))
-        return self._logical_raid_levels
+        self._logical_raid_levels = set()
+        for member in self.get_members():
+            self._logical_raid_levels.add(
+                mappings.RAID_LEVEL_MAP_REV.get(member.raid))
 
     def refresh(self):
         super(HPELogicalDriveCollection, self).refresh()

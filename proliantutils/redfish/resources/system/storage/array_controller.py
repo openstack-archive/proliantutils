@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
+from sushy.resources import base
 
+from proliantutils import log
 from proliantutils.redfish.resources.system.storage import logical_drive
 from proliantutils.redfish.resources.system.storage import physical_drive
 from proliantutils.redfish import utils
-from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+LOG = log.get_logger(__name__)
 
 
 class HPEArrayController(base.ResourceBase):
@@ -38,28 +38,22 @@ class HPEArrayController(base.ResourceBase):
     _physical_drives = None
 
     @property
+    @utils.lazy_load_and_cache('_logical_drives')
     def logical_drives(self):
         """Gets the resource HPELogicalDriveCollection of ArrayControllers"""
-
-        if self._logical_drives is None:
-            self._logical_drives = (
-                logical_drive.HPELogicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'LogicalDrives']),
-                    redfish_version=self.redfish_version))
-        return self._logical_drives
+        return logical_drive.HPELogicalDriveCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Links', 'LogicalDrives']),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_physical_drives')
     def physical_drives(self):
         """Gets the resource HPEPhysicalDriveCollection of ArrayControllers"""
-
-        if self._physical_drives is None:
-            self._physical_drives = (
-                physical_drive.HPEPhysicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'PhysicalDrives']),
-                    redfish_version=self.redfish_version))
-        return self._physical_drives
+        return physical_drive.HPEPhysicalDriveCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Links', 'PhysicalDrives']),
+            redfish_version=self.redfish_version)
 
     def refresh(self):
         super(HPEArrayController, self).refresh()
@@ -82,76 +76,67 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
         return HPEArrayController
 
     @property
+    @utils.lazy_load_and_cache('_logical_drives_maximum_size_mib')
     def logical_drives_maximum_size_mib(self):
         """Gets the biggest logical drive
 
         :returns the size in MiB.
         """
-        if self._logical_drives_maximum_size_mib is None:
-            self._logical_drives_maximum_size_mib = (
-                utils.max_safe([member.logical_drives.maximum_size_mib
-                               for member in self.get_members()]))
-        return self._logical_drives_maximum_size_mib
+        return utils.max_safe([member.logical_drives.maximum_size_mib
+                               for member in self.get_members()])
 
     @property
+    @utils.lazy_load_and_cache('_physical_drives_maximum_size_mib')
     def physical_drives_maximum_size_mib(self):
         """Gets the biggest disk
 
         :returns the size in MiB.
         """
-        if self._physical_drives_maximum_size_mib is None:
-            self._physical_drives_maximum_size_mib = (
-                utils.max_safe([member.physical_drives.maximum_size_mib
-                               for member in self.get_members()]))
-        return self._physical_drives_maximum_size_mib
+        return utils.max_safe([member.physical_drives.maximum_size_mib
+                               for member in self.get_members()])
 
     @property
+    @utils.lazy_load_and_cache('_has_ssd', should_set_attribute=False)
     def has_ssd(self):
-        """Return true if any of the drive under ArrayControllers is ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.get_members():
-                if member.physical_drives.has_ssd:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        """Return True if any of the drive under ArrayControllers is SSD"""
+        self._has_ssd = False
+        for member in self.get_members():
+            if member.physical_drives.has_ssd:
+                self._has_ssd = True
+                break
 
     @property
+    @utils.lazy_load_and_cache('_has_rotational', should_set_attribute=False)
     def has_rotational(self):
-        """Return true if any of the drive under ArrayControllers is ssd"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.get_members():
-                if member.physical_drives.has_rotational:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        """Return True if any drive under ArrayControllers is HDD"""
+        self._has_rotational = False
+        for member in self.get_members():
+            if member.physical_drives.has_rotational:
+                self._has_rotational = True
+                break
 
     @property
+    @utils.lazy_load_and_cache(
+        '_logical_raid_levels', should_set_attribute=False)
     def logical_raid_levels(self):
         """Gets the raid level for each logical volume
 
         :returns the set of list of raid levels configured
         """
-        if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.get_members():
-                self._logical_raid_levels.update(
-                    member.logical_drives.logical_raid_levels)
-        return self._logical_raid_levels
+        self._logical_raid_levels = set()
+        for member in self.get_members():
+            self._logical_raid_levels.update(
+                member.logical_drives.logical_raid_levels)
 
     @property
+    @utils.lazy_load_and_cache(
+        '_drive_rotational_speed_rpm', should_set_attribute=False)
     def drive_rotational_speed_rpm(self):
         """Gets the set of rotational speed of the HDD drives"""
-
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.get_members():
-                self._drive_rotational_speed_rpm.update(
-                    member.physical_drives.drive_rotational_speed_rpm)
-        return self._drive_rotational_speed_rpm
+        self._drive_rotational_speed_rpm = set()
+        for member in self.get_members():
+            self._drive_rotational_speed_rpm.update(
+                member.physical_drives.drive_rotational_speed_rpm)
 
     def refresh(self):
         super(HPEArrayControllerCollection, self).refresh()
