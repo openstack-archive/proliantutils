@@ -1,10 +1,57 @@
 CHANGES
 =======
 
+2.4.0
+-----
+
+* __Redfish support provided for all the existing APIs__
+* Allow local\_gb to be 0
+* Renaming clean step 'update\_firmware' to 'update\_firmware\_sum'
+* Redfish: Adds drive\_rotational\_<speed>\_rpm attribute to server capabilities
+* Redfish: Adds logical\_raid\_level\_<raid\_level> attributes to server capabilities
+* Redfish: Add has\_nvme\_ssd to server capabilities
+* Redfish: Add has\_rotational attribute to server capabilities
+* Redfish: Add has\_ssd attribute to proliantutils
+* Redfish: Add local\_gb attribute to get\_essential\_properties
+* Change server capability 'raid\_support' to 'hardware\_supports\_raid'
+* Redfish: Adds memory attributes to server capabilities
+* Redfish: Adds SimpleStorage URI for local\_gb discovery
+* Redfish: Add the Storage and its related URIs for local\_gb discovery
+* Redfish: Adds capability to get hardware raid support
+* Redfish: Adds SmartStorage and its related URIs for local\_gb discovery
+* Support to get hardware raid support
+* Discover Storage details
+* Redfish: Add 'iscsi\_boot' capability
+* Discover iscsi\_boot attribute
+* Redfish: Adds get\_essential\_properties()
+* Redfish: Adds macs discovery
+* Redfish: Adds support for boot mode capabilities
+* Add supported boot modes to server capabilities
+* Add cpu virtualisation capability
+* Redfish: [Fix] Set pending boot mode json payload
+
 2.3.1
 -----
 
-* Adding near exhaustive Redfish APIs in parity to RIS
+* Redfish: Adds secure\_boot to server capabilities
+* Redfish: Add trusted\_boot capability
+* Redfish: Add the nic\_capacity attributes
+* Redfish: Adds server capabilities
+* Redfish: Add secure boot API support
+* Add 'sriov\_enabled' capability
+* Redfish: Adds 'reset\_bios\_to\_default' API
+* Redfish: Add the get\_server\_capabilities() and pci\_gpu\_device attribute
+* Redfish: Adds 'reset\_ilo\_credential' for redfish systems
+* Redfish: Adding the ability to set boot mode and devices
+* Redfish: Adding the ability to get persistent boot device
+* Redfish: Adds 'update\_firmware' API support through redfish
+* Redfish: Add support for Virtual Media Operations
+* Redfish: Adds 'activate\_license' for redfish systems
+* Redfish: Adding the ability to get current boot mode
+* Redfish: Adding the ability to get pending boot mode
+* Replace assertTrue(isinstance()) with assertIsInstance()
+* Using assertIsNone() instead of assertEqual(None)
+* Redfish: Adds manager support for redfish API's
 
 2.3.0
 -----
@@ -14,6 +61,19 @@ CHANGES
 * Add capability to check NVDIMM_N availability
 * Add support for one-pass disk erase using SSA when sanitize
   disk erase is not supported
+* Redfish: Adding the ability to get one time boot
+* Support to perform erase on all the disks(volumes and drives)
+* Redfish: Add system push power button operations
+* Add HPE extensions support to redfish connection lib
+* Redfish: Add system power operations
+* Aligning redfish calls to new framework
+* Support to return logs for hpsum firmware update
+* Set 'trusted\_boot' capability only when TPM chip is present
+* Adding capability to check NVDIMM\_N availability
+* Add support to get cpu virtualization capability
+* Stop hosting coverage results in htmlcov dir
+* Separate out rest infra from ris
+* Refactor ris-rest infrastructure
 
 2.2.1
 -----
