@@ -19,6 +19,7 @@ import testtools
 from proliantutils import exception
 from proliantutils.hpssa import manager as hpssa_manager
 from proliantutils.ipa_hw_manager import hardware_manager
+from proliantutils.sum import sum_controller
 
 ironic_python_agent = importutils.try_import('ironic_python_agent')
 
@@ -40,7 +41,7 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
              {'step': 'erase_devices',
               'interface': 'deploy',
               'priority': 0},
-             {'step': 'update_firmware',
+             {'step': 'update_firmware_sum',
               'interface': 'management',
               'priority': 0}],
             self.hardware_manager.get_clean_steps("", ""))
@@ -91,3 +92,11 @@ class ProliantHardwareManagerTestCase(testtools.TestCase):
                                 node, port)
 
         self.assertIn(value, str(exc))
+
+    @mock.patch.object(sum_controller, 'update_firmware')
+    def test_update_firmware_sum(self, update_mock):
+        update_mock.return_value = "log files"
+        node = {'foo': 'bar'}
+        ret = self.hardware_manager.update_firmware_sum(node, "")
+        update_mock.assert_called_once_with(node)
+        self.assertEqual('log files', ret)
