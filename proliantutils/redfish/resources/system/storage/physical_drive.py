@@ -14,10 +14,9 @@
 
 from sushy.resources import base
 
-from proliantutils.redfish import utils
-
 from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import mappings
+from proliantutils.redfish import utils
 
 
 class HPEPhysicalDrive(base.ResourceBase):
@@ -49,52 +48,45 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
         return HPEPhysicalDrive
 
     @property
+    @utils.lazy_load_and_cache('_maximum_size_mib')
     def maximum_size_mib(self):
         """Gets the biggest physical drive
 
         :returns size in MiB.
         """
-        if self._maximum_size_mib is None:
-            self._maximum_size_mib = (
-                utils.max_safe([member.capacity_mib
-                               for member in self.get_members()]))
-        return self._maximum_size_mib
+        return utils.max_safe([member.capacity_mib
+                               for member in self.get_members()])
 
     @property
+    @utils.lazy_load_and_cache('_has_ssd', should_set_attribute=False)
     def has_ssd(self):
         """Return true if the drive is ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.get_members():
-                if member.media_type == constants.MEDIA_TYPE_SSD:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        self._has_ssd = False
+        for member in self.get_members():
+            if member.media_type == constants.MEDIA_TYPE_SSD:
+                self._has_ssd = True
+                break
 
     @property
+    @utils.lazy_load_and_cache('_has_rotational', should_set_attribute=False)
     def has_rotational(self):
         """Return true if the drive is HDD"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.get_members():
-                if member.media_type == constants.MEDIA_TYPE_HDD:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        self._has_rotational = False
+        for member in self.get_members():
+            if member.media_type == constants.MEDIA_TYPE_HDD:
+                self._has_rotational = True
+                break
 
     @property
+    @utils.lazy_load_and_cache(
+        '_drive_rotational_speed_rpm', should_set_attribute=False)
     def drive_rotational_speed_rpm(self):
         """Gets the set of rotational speed of the HDD drives"""
-
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.get_members():
-                if member.rotational_speed_rpm is not None:
-                    self._drive_rotational_speed_rpm.add(
-                        member.rotational_speed_rpm)
-        return self._drive_rotational_speed_rpm
+        self._drive_rotational_speed_rpm = set()
+        for member in self.get_members():
+            if member.rotational_speed_rpm is not None:
+                self._drive_rotational_speed_rpm.add(
+                    member.rotational_speed_rpm)
 
     def refresh(self):
         super(HPEPhysicalDriveCollection, self).refresh()
