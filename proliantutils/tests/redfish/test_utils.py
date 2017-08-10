@@ -21,6 +21,8 @@ import ddt
 import mock
 import testtools
 
+from sushy.resources import base
+
 from proliantutils import exception
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
@@ -111,3 +113,101 @@ class UtilsTestCase(testtools.TestCase):
     def test_max_safe(self, iterable, expected):
         actual = utils.max_safe(iterable)
         self.assertEqual(expected, actual)
+
+
+class NestedResource(base.ResourceBase):
+
+    def _parse_attributes(self):
+        pass
+
+    def some_init_operation(self):
+        pass
+
+
+class BaseResource(base.ResourceBase):
+
+    _nested_resource = None
+    _a = None
+    _b = None
+
+    def _parse_attributes(self):
+        pass
+
+    @utils.lazy_load_and_cache('_nested_resource')
+    def get_nested_resource(self):
+        nested_res = NestedResource(
+            self._conn, "Path / Identity to NestedResource",
+            redfish_version=self.redfish_version)
+        nested_res.some_init_operation()
+        return nested_res
+
+    @property
+    @utils.lazy_load_and_cache('_a')
+    def a(self):
+        return 1
+
+    @a.setter
+    def a(self, value):
+        self._a = value
+
+    @property
+    @utils.lazy_load_and_cache('_b', should_set_attribute=False)
+    def b(self):
+        self._b = {'hi': 'little chap'}
+        # Do some complex calculation. Update the intrinsic value.
+        # No need to return any value.
+        self._b.update({'Hello': 'Ladies and gentlemen'})
+
+    @b.setter
+    def b(self, value):
+        self._b = value
+
+
+class LazyLoadAndCacheTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(LazyLoadAndCacheTestCase, self).setUp()
+        self.conn = mock.Mock()
+        self.res = BaseResource(connector=self.conn, path='/Foo',
+                                redfish_version='1.0.2')
+
+    def test_lazy_load_and_cache(self):
+        self.assertIsNone(self.res._a)
+        result = self.res.a
+        self.assertEqual(1, result)
+        self.assertEqual(result, self.res._a)
+
+        # Checking for non-None value
+        self.res.a = 2
+        self.assertEqual(2, self.res.a)
+
+    def test_lazy_load_and_cache_should_not_set_attribute(self):
+        self.assertIsNone(self.res._b)
+        result = self.res.b
+        self.assertEqual({'hi': 'little chap',
+                          'Hello': 'Ladies and gentlemen'}, result)
+        self.assertEqual(result, self.res._b)
+
+        # Checking for non-None value
+        self.res.b = 100
+        self.assertEqual(100, self.res.b)
+
+    def test_lazy_load_and_cache_fail(self):
+        self.assertRaisesRegex(
+            TypeError,
+            "Invalid argument type provided:",
+            utils.lazy_load_and_cache,
+            {})
+
+    @mock.patch.object(NestedResource, 'some_init_operation')
+    def test_lazy_load_and_cache_resource(self, some_init_operation_mock):
+        self.assertIsNone(self.res._nested_resource)
+        nested_res = self.res.get_nested_resource()
+        self.assertIsInstance(nested_res, NestedResource)
+        self.assertEqual(nested_res, self.res._nested_resource)
+        self.assertTrue(some_init_operation_mock.called)
+
+        some_init_operation_mock.reset_mock()
+        # verify subsequent invocation
+        self.assertEqual(nested_res, self.res.get_nested_resource())
+        self.assertFalse(some_init_operation_mock.called)
