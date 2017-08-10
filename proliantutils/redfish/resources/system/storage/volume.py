@@ -37,16 +37,14 @@ class VolumeCollection(base.ResourceCollectionBase):
         return Volume
 
     @property
+    @utils.lazy_load_and_cache('_maximum_size_bytes')
     def maximum_size_bytes(self):
         """Gets the biggest volume
 
         :returns size in bytes.
         """
-        if self._maximum_size_bytes is None:
-            self._maximum_size_bytes = (
-                utils.max_safe([member.capacity_bytes
-                               for member in self.get_members()]))
-        return self._maximum_size_bytes
+        return utils.max_safe([member.capacity_bytes
+                               for member in self.get_members()])
 
     def refresh(self):
         super(VolumeCollection, self).refresh()

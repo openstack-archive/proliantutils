@@ -36,17 +36,15 @@ class SimpleStorage(base.ResourceBase):
     _maximum_size_bytes = None
 
     @property
+    @utils.lazy_load_and_cache('_maximum_size_bytes')
     def maximum_size_bytes(self):
         """Gets the biggest disk drive
 
         :returns size in bytes.
         """
-        if self._maximum_size_bytes is None:
-            self._maximum_size_bytes = (
-                utils.max_safe([device.get('CapacityBytes')
-                               for device in self.devices
-                               if device.get('CapacityBytes') is not None]))
-        return self._maximum_size_bytes
+        return utils.max_safe(
+            [device.get('CapacityBytes') for device in self.devices
+             if device.get('CapacityBytes') is not None])
 
     def refresh(self):
         super(SimpleStorage, self).refresh()
@@ -62,16 +60,14 @@ class SimpleStorageCollection(base.ResourceCollectionBase):
     _maximum_size_bytes = None
 
     @property
+    @utils.lazy_load_and_cache('_maximum_size_bytes')
     def maximum_size_bytes(self):
         """Gets the biggest disk drive
 
         :returns size in bytes.
         """
-        if self._maximum_size_bytes is None:
-            self._maximum_size_bytes = (
-                utils.max_safe([member.maximum_size_bytes
-                               for member in self.get_members()]))
-        return self._maximum_size_bytes
+        return utils.max_safe([member.maximum_size_bytes
+                               for member in self.get_members()])
 
     def refresh(self):
         super(SimpleStorageCollection, self).refresh()

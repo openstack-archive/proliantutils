@@ -21,6 +21,8 @@ import ddt
 import mock
 import testtools
 
+from sushy.resources import base
+
 from proliantutils import exception
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import system
@@ -111,3 +113,79 @@ class UtilsTestCase(testtools.TestCase):
     def test_max_safe(self, iterable, expected):
         actual = utils.max_safe(iterable)
         self.assertEqual(expected, actual)
+
+
+class NestedResource(base.ResourceBase):
+
+    def _parse_attributes(self):
+        pass
+
+
+class BaseResource(base.ResourceBase):
+
+    _nested_resource = None
+    _a = None
+    _b = None
+
+    def _parse_attributes(self):
+        pass
+
+    @utils.lazy_load_and_cache_resource('_nested_resource')
+    def get_nested_resource(self):
+        return NestedResource(
+            self._conn, "Path / Identity to NestedResource",
+            redfish_version=self.redfish_version)
+
+    @property
+    @utils.lazy_load_and_cache('_a')
+    def a(self):
+        return 1
+
+    @property
+    @utils.lazy_load_and_cache('_b', should_set_attribute=False)
+    def b(self):
+        self._b = {'hi': 'little chap'}
+        print('Not returning any value. Setting the intrinsic value here.')
+        self._b.update({'Hello': 'Ladies and gentlemen'})
+
+
+class LazyLoadAndCacheTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(LazyLoadAndCacheTestCase, self).setUp()
+        self.conn = mock.Mock()
+        self.res = BaseResource(connector=self.conn, path='/Foo',
+                                redfish_version='1.0.2')
+
+    def test_lazy_load_and_cache(self):
+        self.assertIsNone(self.res._a)
+        result = self.res.a
+        self.assertEqual(1, result)
+        self.assertEqual(result, self.res._a)
+
+    def test_lazy_load_and_cache_should_not_set_attribute(self):
+        self.assertIsNone(self.res._b)
+        result = self.res.b
+        self.assertEqual({'hi': 'little chap',
+                          'Hello': 'Ladies and gentlemen'}, result)
+        self.assertEqual(result, self.res._b)
+
+    def test_lazy_load_and_cache_fail(self):
+        self.assertRaisesRegex(
+            TypeError,
+            "Invalid argument type provided:",
+            utils.lazy_load_and_cache,
+            {})
+
+    def test_lazy_load_and_cache_resource(self):
+        self.assertIsNone(self.res._nested_resource)
+        nested_res = self.res.get_nested_resource()
+        self.assertIsInstance(nested_res, NestedResource)
+        self.assertEqual(nested_res, self.res._nested_resource)
+
+    def test_lazy_load_and_cache_resource_fail(self):
+        self.assertRaisesRegex(
+            TypeError,
+            "Invalid argument type provided:",
+            utils.lazy_load_and_cache_resource(lambda x: None),
+            [])

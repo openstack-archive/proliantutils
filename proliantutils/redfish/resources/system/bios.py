@@ -52,62 +52,51 @@ class BIOSSettings(base.ResourceBase):
     _base_configs = None
 
     @property
+    @utils.lazy_load_and_cache_resource('_pending_settings')
     def pending_settings(self):
         """Property to provide reference to bios_pending_settings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._pending_settings is None:
-            self._pending_settings = BIOSPendingSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["@Redfish.Settings", "SettingsObject"]),
-                redfish_version=self.redfish_version)
-
-        return self._pending_settings
+        return BIOSPendingSettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["@Redfish.Settings", "SettingsObject"]),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache_resource('_boot_settings')
     def boot_settings(self):
         """Property to provide reference to bios boot instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._boot_settings is None:
-            self._boot_settings = BIOSBootSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "Boot"]),
-                redfish_version=self.redfish_version)
-
-        return self._boot_settings
+        return BIOSBootSettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "Boot"]),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache_resource('_iscsi_settings')
     def iscsi_settings(self):
         """Property to provide reference to bios iscsi instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._iscsi_settings is None:
-            self._iscsi_settings = iscsi.ISCSISettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "iScsi"]),
-                redfish_version=self.redfish_version)
+        return iscsi.ISCSISettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "iScsi"]),
+            redfish_version=self.redfish_version)
 
-        return self._iscsi_settings
-
+    @utils.lazy_load_and_cache_resource('_base_configs')
     def _get_base_configs(self):
         """Method that returns object of bios base configs."""
-        if self._base_configs is None:
-            self._base_configs = BIOSBaseConfigs(
-                self._conn, utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
-                redfish_version=self.redfish_version)
-
-        return self._base_configs
+        return BIOSBaseConfigs(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
+            redfish_version=self.redfish_version)
 
     def update_bios_to_default(self):
         """Updates bios default settings"""
