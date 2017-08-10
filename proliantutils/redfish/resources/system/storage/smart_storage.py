@@ -61,9 +61,7 @@ class HPESmartStorage(base.ResourceBase):
         """
         if self._logical_drives_maximum_size_mib is None:
             self._logical_drives_maximum_size_mib = (
-                utils.max_safe(
-                    [member.logical_drives.maximum_size_mib
-                     for member in self.array_controllers.get_members()]))
+                self.array_controllers.logical_drives_maximum_size_mib)
         return self._logical_drives_maximum_size_mib
 
     @property
@@ -74,9 +72,7 @@ class HPESmartStorage(base.ResourceBase):
         """
         if self._physical_drives_maximum_size_mib is None:
             self._physical_drives_maximum_size_mib = (
-                utils.max_safe(
-                    [member.physical_drives.maximum_size_mib
-                     for member in self.array_controllers.get_members()]))
+                self.array_controllers.physical_drives_maximum_size_mib)
         return self._physical_drives_maximum_size_mib
 
     @property
@@ -84,11 +80,7 @@ class HPESmartStorage(base.ResourceBase):
         """Return true if any of the drive under ArrayControllers is ssd"""
 
         if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.array_controllers.get_members():
-                if member.physical_drives.has_ssd:
-                    self._has_ssd = True
-                    break
+            self._has_ssd = self.array_controllers.has_ssd
         return self._has_ssd
 
     @property
@@ -96,11 +88,8 @@ class HPESmartStorage(base.ResourceBase):
         """Return true if any of the drive under ArrayControllers is HDD"""
 
         if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.array_controllers.get_members():
-                if member.physical_drives.has_rotational:
-                    self._has_rotational = True
-                    break
+            self._has_rotational = (
+                self.array_controllers.has_rotational)
         return self._has_rotational
 
     @property
@@ -110,10 +99,8 @@ class HPESmartStorage(base.ResourceBase):
         :returns the set of list of raid levels configured.
         """
         if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.array_controllers.get_members():
-                self._logical_raid_levels.update(
-                    member.logical_drives.logical_raid_levels)
+            self._logical_raid_levels = (
+                self.array_controllers.logical_raid_levels)
         return self._logical_raid_levels
 
     @property
@@ -121,10 +108,8 @@ class HPESmartStorage(base.ResourceBase):
         """Gets the list of rotational speed of the HDD drives"""
 
         if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.array_controllers.get_members():
-                self._drive_rotational_speed_rpm.update(
-                    member.physical_drives.drive_rotational_speed_rpm)
+            self._drive_rotational_speed_rpm = (
+                self.array_controllers.drive_rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
     def refresh(self):

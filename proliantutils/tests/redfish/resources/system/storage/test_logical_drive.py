@@ -59,7 +59,9 @@ class HPELogicalDriveCollectionTestCase(testtools.TestCase):
         self.assertEqual('HpeSmartStorageLogicalDrives',
                          self.sys_stor_col.name)
         path = ('/redfish/v1/Systems/1/SmartStorage/'
-                'ArrayControllers/0/LogicalDrives/1',)
+                'ArrayControllers/0/LogicalDrives/1',
+                '/redfish/v1/Systems/1/SmartStorage/'
+                'ArrayControllers/0/LogicalDrives/2',)
         self.assertEqual(path, self.sys_stor_col.members_identities)
 
     @mock.patch.object(logical_drive, 'HPELogicalDrive', autospec=True)
@@ -76,15 +78,19 @@ class HPELogicalDriveCollectionTestCase(testtools.TestCase):
     @mock.patch.object(logical_drive, 'HPELogicalDrive', autospec=True)
     def test_get_members(self, mock_eth):
         members = self.sys_stor_col.get_members()
-        path = ("/redfish/v1/Systems/1/SmartStorage/ArrayControllers/"
-                "0/LogicalDrives/1")
+        path1 = ("/redfish/v1/Systems/1/SmartStorage/ArrayControllers/"
+                 "0/LogicalDrives/1")
+        path2 = ("/redfish/v1/Systems/1/SmartStorage/ArrayControllers/"
+                 "0/LogicalDrives/2")
         calls = [
-            mock.call(self.sys_stor_col._conn, path,
+            mock.call(self.sys_stor_col._conn, path1,
+                      redfish_version=self.sys_stor_col.redfish_version),
+            mock.call(self.sys_stor_col._conn, path2,
                       redfish_version=self.sys_stor_col.redfish_version),
         ]
         mock_eth.assert_has_calls(calls)
         self.assertIsInstance(members, list)
-        self.assertEqual(1, len(members))
+        self.assertEqual(2, len(members))
 
     def test_maximum_size_mib(self):
         self.assertIsNone(self.sys_stor_col._maximum_size_mib)
@@ -92,7 +98,9 @@ class HPELogicalDriveCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
+            val = json.loads(f.read())
+            self.conn.get.return_value.json.side_effect = (
+                [val['logical_drive1'], val['logical_drive2']])
         expected = 953837
         actual = self.sys_stor_col.maximum_size_mib
         self.assertEqual(expected, actual)
@@ -103,7 +111,9 @@ class HPELogicalDriveCollectionTestCase(testtools.TestCase):
         path = ('proliantutils/tests/redfish/json_samples/'
                 'logical_drive.json')
         with open(path, 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
-        expected = set(['0'])
+            val = json.loads(f.read())
+            self.conn.get.return_value.json.side_effect = (
+                [val['logical_drive1'], val['logical_drive2']])
+        expected = set(['0', '1'])
         actual = self.sys_stor_col.logical_raid_levels
         self.assertEqual(expected, actual)
