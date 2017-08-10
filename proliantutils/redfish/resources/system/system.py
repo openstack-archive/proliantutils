@@ -31,7 +31,6 @@ from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
 from proliantutils.redfish.resources.system.storage import storage
-
 from proliantutils.redfish import utils
 
 
@@ -120,18 +119,16 @@ class HPESystem(system.System):
         self._conn.post(target_uri, data={'PushType': value})
 
     @property
+    @utils.lazy_load_and_cache('_bios_settings')
     def bios_settings(self):
         """Property to provide reference to `BIOSSettings` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._bios_settings is None:
-            self._bios_settings = bios.BIOSSettings(
-                self._conn, utils.get_subresource_path_by(self, 'Bios'),
-                redfish_version=self.redfish_version)
-
-        return self._bios_settings
+        return bios.BIOSSettings(
+            self._conn, utils.get_subresource_path_by(self, 'Bios'),
+            redfish_version=self.redfish_version)
 
     def update_persistent_boot(self, devices=[], persistent=False,
                                mac=None):
@@ -172,31 +169,29 @@ class HPESystem(system.System):
         self.set_system_boot_source(device, enabled=tenure)
 
     @property
+    @utils.lazy_load_and_cache('_pci_devices')
     def pci_devices(self):
         """Provides the collection of PCI devices
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._pci_devices is None:
-            self._pci_devices = pci_device.PCIDeviceCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
-        return self._pci_devices
+        return pci_device.PCIDeviceCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Oem', 'Hpe', 'Links', 'PCIDevices']),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_secure_boot')
     def secure_boot(self):
         """Property to provide reference to `SecureBoot` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._secure_boot is None:
-            self._secure_boot = secure_boot.SecureBoot(
-                self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
-                redfish_version=self.redfish_version)
-
-        return self._secure_boot
+        return secure_boot.SecureBoot(
+            self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
+            redfish_version=self.redfish_version)
 
     def refresh(self):
         super(HPESystem, self).refresh()
@@ -219,19 +214,15 @@ class HPESystem(system.System):
         return path
 
     @property
+    @utils.lazy_load_and_cache('_ethernet_interfaces')
     def ethernet_interfaces(self):
         """Provide reference to EthernetInterfacesCollection instance"""
-        if self._ethernet_interfaces is None:
-            sub_res = 'EthernetInterfaces'
-            self._ethernet_interfaces = (
-                ethernet_interface.EthernetInterfaceCollection(
-                    self._conn,
-                    self._get_hpe_sub_resource_collection_path(sub_res),
-                    redfish_version=self.redfish_version))
-
-        return self._ethernet_interfaces
+        return ethernet_interface.EthernetInterfaceCollection(
+            self._conn, self._get_hpe_sub_resource_collection_path(
+                'EthernetInterfaces'), redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_smart_storage')
     def smart_storage(self):
         """This property gets the object for smart storage.
 
@@ -239,51 +230,42 @@ class HPESystem(system.System):
         There is no collection for smart storages.
         :returns: an instance of smart storage
         """
-        if self._smart_storage is None:
-            self._smart_storage = hpe_smart_storage.HPESmartStorage(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
-                redfish_version=self.redfish_version)
-        return self._smart_storage
+        return hpe_smart_storage.HPESmartStorage(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_storages')
     def storages(self):
         """This property gets the list of instances for Storages
 
         This property gets the list of instances for Storages
         :returns: a list of instances of Storages
         """
-        if self._storages is None:
-            self._storages = storage.StorageCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Storage'),
-                redfish_version=self.redfish_version)
-        return self._storages
+        return storage.StorageCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Storage'),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_simple_storages')
     def simple_storages(self):
         """This property gets the list of instances for SimpleStorages
 
         :returns: a list of instances of SimpleStorages
         """
-
-        if self._simple_storages is None:
-            self._simple_storages = simple_storage.SimpleStorageCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'SimpleStorage'),
-                redfish_version=self.redfish_version)
-        return self._simple_storages
+        return simple_storage.SimpleStorageCollection(
+            self._conn, utils.get_subresource_path_by(self, 'SimpleStorage'),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_memory')
     def memory(self):
         """Property to provide reference to `MemoryCollection` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._memory is None:
-            self._memory = memory.MemoryCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'Memory'),
-                redfish_version=self.redfish_version)
-
-        return self._memory
+        return memory.MemoryCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Memory'),
+            redfish_version=self.redfish_version)

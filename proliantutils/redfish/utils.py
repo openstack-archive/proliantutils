@@ -122,3 +122,44 @@ def max_safe(iterable):
     except ValueError:
         # The TypeError is not caught here as that should be thrown.
         return 0
+
+
+def lazy_load_and_cache(attribute_name, should_set_attribute=True):
+    """Utility decorator to load the attribute value lazily and cache.
+
+    This decorator is to be used to evaluate the attribute lazily.
+    It expects the decorated method to contain its own logic of evaluation.
+    When the attribute is not set, then it sets the resultant value on the
+    attribute. If the ``should_set_attribute`` value is True then the attribute
+    value is set to the result returned by the decorated method or otherwise
+    it doesn't attempt to set.
+    :param attribute_name: attribute name of the instance
+    :param should_set_attribute: If True, then sets the attribute value to
+        the result returned by the decorated method. Default is True.
+    :returns: the value of attribute
+    :raises: AttributeError, if the named attribute does not exist on
+        the instance (the first parameter of decorated method)
+    """
+    if not isinstance(attribute_name, six.string_types):
+        raise TypeError(
+            ("'attribute_name' must be of type string. Invalid argument "
+             "type provided: %(attribute_name_type)s") %
+            {'attribute_name_type': type(attribute_name)})
+
+    def func_decorator(func):
+
+        @six.wraps(func)
+        def func_wrapper(the_instance):
+
+            instance_attr_val = getattr(the_instance, attribute_name)
+            if instance_attr_val is None:
+
+                result = func(the_instance)
+                if should_set_attribute:
+                    setattr(the_instance, attribute_name, result)
+                return getattr(the_instance, attribute_name)
+
+            return instance_attr_val
+
+        return func_wrapper
+    return func_decorator

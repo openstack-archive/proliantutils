@@ -28,16 +28,12 @@ class HPEAccountService(base.ResourceBase):
     _accounts = None
 
     @property
+    @utils.lazy_load_and_cache('_accounts')
     def accounts(self):
-        """Property to provide instance of HPEAccountCollection
-
-        """
-        if self._accounts is None:
-            self._accounts = account.HPEAccountCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Accounts'),
-                redfish_version=self.redfish_version)
-
-        return self._accounts
+        """Property to provide instance of HPEAccountCollection"""
+        return account.HPEAccountCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Accounts'),
+            redfish_version=self.redfish_version)
 
     def refresh(self):
         super(HPEAccountService, self).refresh()

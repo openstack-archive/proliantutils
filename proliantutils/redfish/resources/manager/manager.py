@@ -40,19 +40,16 @@ class HPEManager(manager.Manager):
         self._conn.post(license_service_uri, data=data)
 
     @property
+    @utils.lazy_load_and_cache('_virtual_media')
     def virtual_media(self):
         """Property to provide reference to `VirtualMediaCollection` instance.
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._virtual_media is None:
-            self._virtual_media = virtual_media.VirtualMediaCollection(
-                self._conn,
-                utils.get_subresource_path_by(self, 'VirtualMedia'),
-                redfish_version=self.redfish_version)
-
-        return self._virtual_media
+        return virtual_media.VirtualMediaCollection(
+            self._conn, utils.get_subresource_path_by(self, 'VirtualMedia'),
+            redfish_version=self.redfish_version)
 
     def refresh(self):
         super(HPEManager, self).refresh()

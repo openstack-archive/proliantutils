@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
-from proliantutils.redfish.resources.system.storage import array_controller
-from proliantutils.redfish import utils
 from sushy.resources import base
 
-LOG = logging.getLogger(__name__)
+from proliantutils import log
+from proliantutils.redfish.resources.system.storage import array_controller
+from proliantutils.redfish import utils
+
+LOG = log.get_logger(__name__)
 
 
 class HPESmartStorage(base.ResourceBase):
@@ -39,93 +39,78 @@ class HPESmartStorage(base.ResourceBase):
     _drive_rotational_speed_rpm = None
 
     @property
+    @utils.lazy_load_and_cache('_array_controllers')
     def array_controllers(self):
-        """This property gets the list of instances for array controllers
-
-        This property gets the list of instances for array controllers
-        :returns: a list of instances of array controllers.
-        """
-        if self._array_controllers is None:
-            self._array_controllers = (
-                array_controller.HPEArrayControllerCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'ArrayControllers']),
-                    redfish_version=self.redfish_version))
-        return self._array_controllers
+        """Gets the HPEArrayControllerCollection instance"""
+        return array_controller.HPEArrayControllerCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Links', 'ArrayControllers']),
+            redfish_version=self.redfish_version)
 
     @property
+    @utils.lazy_load_and_cache('_logical_drives_maximum_size_mib')
     def logical_drives_maximum_size_mib(self):
         """Gets the biggest logical drive
 
         :Returns the size in MiB.
         """
-        if self._logical_drives_maximum_size_mib is None:
-            self._logical_drives_maximum_size_mib = (
-                utils.max_safe(
-                    [member.logical_drives.maximum_size_mib
-                     for member in self.array_controllers.get_members()]))
-        return self._logical_drives_maximum_size_mib
+        return utils.max_safe(
+            [member.logical_drives.maximum_size_mib
+             for member in self.array_controllers.get_members()])
 
     @property
+    @utils.lazy_load_and_cache('_physical_drives_maximum_size_mib')
     def physical_drives_maximum_size_mib(self):
         """Gets the biggest disk drive
 
         :Returns the size in MiB.
         """
-        if self._physical_drives_maximum_size_mib is None:
-            self._physical_drives_maximum_size_mib = (
-                utils.max_safe(
-                    [member.physical_drives.maximum_size_mib
-                     for member in self.array_controllers.get_members()]))
-        return self._physical_drives_maximum_size_mib
+        return utils.max_safe(
+            [member.physical_drives.maximum_size_mib
+             for member in self.array_controllers.get_members()])
 
     @property
+    @utils.lazy_load_and_cache('_has_ssd', should_set_attribute=False)
     def has_ssd(self):
-        """Return true if any of the drive under ArrayControllers is ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.array_controllers.get_members():
-                if member.physical_drives.has_ssd:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        """Return true if any of the drive under ArrayControllers is SSD"""
+        self._has_ssd = False
+        for member in self.array_controllers.get_members():
+            if member.physical_drives.has_ssd:
+                self._has_ssd = True
+                break
 
     @property
+    @utils.lazy_load_and_cache('_has_rotational', should_set_attribute=False)
     def has_rotational(self):
         """Return true if any of the drive under ArrayControllers is HDD"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.array_controllers.get_members():
-                if member.physical_drives.has_rotational:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        self._has_rotational = False
+        for member in self.array_controllers.get_members():
+            if member.physical_drives.has_rotational:
+                self._has_rotational = True
+                break
 
     @property
+    @utils.lazy_load_and_cache(
+        '_logical_raid_levels', should_set_attribute=False)
     def logical_raid_levels(self):
         """Gets the raid level for each logical volume
 
         :returns the set of list of raid levels configured.
         """
-        if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.array_controllers.get_members():
-                self._logical_raid_levels.update(
-                    member.logical_drives.logical_raid_levels)
-        return self._logical_raid_levels
+        self._logical_raid_levels = set()
+        for member in self.array_controllers.get_members():
+            self._logical_raid_levels.update(
+                member.logical_drives.logical_raid_levels)
 
     @property
+    @utils.lazy_load_and_cache(
+        '_drive_rotational_speed_rpm', should_set_attribute=False)
     def drive_rotational_speed_rpm(self):
         """Gets the list of rotational speed of the HDD drives"""
-
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.array_controllers.get_members():
-                self._drive_rotational_speed_rpm.update(
-                    member.physical_drives.drive_rotational_speed_rpm)
-        return self._drive_rotational_speed_rpm
+        self._drive_rotational_speed_rpm = set()
+        for member in self.array_controllers.get_members():
+            self._drive_rotational_speed_rpm.update(
+                member.physical_drives.drive_rotational_speed_rpm)
 
     def refresh(self):
         super(HPESmartStorage, self).refresh()

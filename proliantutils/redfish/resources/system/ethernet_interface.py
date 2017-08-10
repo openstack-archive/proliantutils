@@ -14,9 +14,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from sushy.resources import base
+
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import mappings as sys_map
-from sushy.resources import base
+from proliantutils.redfish import utils
 
 
 class HealthStatusField(base.CompositeField):
@@ -58,6 +60,7 @@ class EthernetInterfaceCollection(base.ResourceCollectionBase):
         return EthernetInterface
 
     @property
+    @utils.lazy_load_and_cache('_summary', should_set_attribute=False)
     def summary(self):
         """property to return the summary MAC addresses and state
 
@@ -69,18 +72,16 @@ class EthernetInterfaceCollection(base.ResourceCollectionBase):
         consumes the data in this format.
         Note: 'Id' is referred to as "Port number".
         """
-        if self._summary is None:
-            mac_dict = {}
-            for eth in self.get_members():
-                if eth.mac_address is not None:
-                    if (eth.status is not None and
-                            eth.status.health == sys_cons.HEALTH_OK
-                            and eth.status.state ==
-                            sys_cons.HEALTH_STATE_ENABLED):
-                        mac_dict.update(
-                            {'Port ' + eth.identity: eth.mac_address})
-            self._summary = mac_dict
-        return self._summary
+        mac_dict = {}
+        for eth in self.get_members():
+            if eth.mac_address is not None:
+                if (eth.status is not None and
+                        eth.status.health == sys_cons.HEALTH_OK
+                        and eth.status.state ==
+                        sys_cons.HEALTH_STATE_ENABLED):
+                    mac_dict.update(
+                        {'Port ' + eth.identity: eth.mac_address})
+        self._summary = mac_dict
 
     def refresh(self):
         super(EthernetInterfaceCollection, self).refresh()
