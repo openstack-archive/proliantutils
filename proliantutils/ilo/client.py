@@ -514,14 +514,15 @@ class IloClient(operations.IloOperations):
                 if disksize:
                     data['properties']['local_gb'] = disksize
                 else:
-                    msg = self._('Snmp inspection failed to '
-                                 'get the disk size')
+                    msg = self._('SNMP inspection failed to '
+                                 'get the disk size. Returning '
+                                 'local_gb as 0.')
                     LOG.debug(msg)
-                    raise exception.IloError(msg)
             else:
-                msg = self._("Inspection failed to get the disk size")
+                msg = self._("SNMP credentials were not set and "
+                             "RIBCL/Redfish failed to get the disk size. "
+                             "Returning local_gb as 0.")
                 LOG.debug(msg)
-                raise exception.IloError(msg)
         return data
 
     def get_server_capabilities(self):
