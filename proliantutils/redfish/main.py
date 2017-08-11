@@ -16,6 +16,7 @@ __author__ = 'HPE'
 
 import sushy
 
+from proliantutils.redfish import connector
 from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
@@ -27,8 +28,34 @@ class HPESushy(sushy.Sushy):
     """Class that extends base Sushy class
 
     This class extends the Sushy class to override certain methods
-    required to customize the functionality of different resources
+    required to customize the functionality of different resources.
+    It bypasses the initialization of the Sushy class and initializes
+    the ResourceBase class with customized HPE specific connector subtype.
     """
+
+    def __init__(self, base_url, username=None, password=None,
+                 root_prefix='/redfish/v1/', verify=True):
+        """Initializes HPE specific sushy object.
+
+        :param base_url: The base URL to the Redfish controller. It
+            should include scheme and authority portion of the URL. For
+            example: https://mgmt.vendor.com
+        :param username: User account with admin/server-profile access
+            privilege
+        :param password: User account password
+        :param root_prefix: The default URL prefix. This part includes
+            the root service and version. Defaults to /redfish/v1
+        :param verify: Either a boolean value, a path to a CA_BUNDLE
+            file or directory with certificates of trusted CAs. If set to
+            True the driver will verify the host certificates; if False
+            the driver will ignore verifying the SSL certificate; if it's
+            a path the driver will use the specified certificate or one of
+            the certificates in the directory. Defaults to True.
+        """
+        self._root_prefix = root_prefix
+        super(sushy.Sushy, self).__init__(
+            connector.HPEConnector(base_url, username, password, verify),
+            path=self._root_prefix)
 
     def get_system_collection_path(self):
         return utils.get_subresource_path_by(self, 'Systems')

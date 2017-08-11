@@ -16,10 +16,10 @@
 import json
 
 import mock
-from sushy import connector
 import testtools
 
 from proliantutils import exception
+from proliantutils.redfish import connector
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
@@ -29,7 +29,7 @@ from proliantutils.redfish.resources import update_service
 
 class HPESushyTestCase(testtools.TestCase):
 
-    @mock.patch.object(connector, 'Connector', autospec=True)
+    @mock.patch.object(connector, 'HPEConnector', autospec=True)
     def setUp(self, connector_mock):
         super(HPESushyTestCase, self).setUp()
         with open('proliantutils/tests/redfish/'
