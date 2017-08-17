@@ -32,11 +32,15 @@ from proliantutils import utils
 
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
 
+SUM_LOCATION = 'packages/smartupdate'
+
 WAIT_TIME_DISK_LABEL_TO_BE_VISIBLE = 5
 
 # List of log files created by SUM based firmware update.
 OUTPUT_FILES = ['/var/hp/log/localhost/hpsum_log.txt',
-                '/var/hp/log/localhost/hpsum_detail_log.txt']
+                '/var/hp/log/localhost/hpsum_detail_log.txt',
+                '/var/log/sum/localhost/sum_log.txt',
+                '/var/log/sum/localhost/sum_detail_log.txt']
 
 EXIT_CODE_TO_STRING = {
     0: "The smart component was installed successfully.",
@@ -204,10 +208,13 @@ def update_firmware(node):
             raise exception.SUMOperationError(reason=msg)
 
         # Executes the SUM based firmware update by passing the default hpsum
-        # executable path and the components specified, if any.
-        sum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
-        components = node['clean_step']['args'].get('components')
+        # executable path if exists else sum executable path and the components
+        # specified, if any.
+        sum_file_path = os.path.join(vmedia_mount_point, SUM_LOCATION)
+        if not os.path.exists(sum_file_path):
+            sum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
 
+        components = node['clean_step']['args'].get('components')
         result = _execute_sum(sum_file_path, components=components)
 
         processutils.trycmd("umount", vmedia_mount_point)
