@@ -32,11 +32,15 @@ from proliantutils import utils
 
 HPSUM_LOCATION = 'hp/swpackages/hpsum'
 
+SUM_LOCATION = 'packages/smartupdate'
+
 WAIT_TIME_DISK_LABEL_TO_BE_VISIBLE = 5
 
 # List of log files created by SUM based firmware update.
 OUTPUT_FILES = ['/var/hp/log/localhost/hpsum_log.txt',
-                '/var/hp/log/localhost/hpsum_detail_log.txt']
+                '/var/hp/log/localhost/hpsum_detail_log.txt',
+                '/var/log/sum/localhost/sum_log.txt',
+                '/var/log/sum/localhost/sum_detail_log.txt']
 
 EXIT_CODE_TO_STRING = {
     0: "The smart component was installed successfully.",
@@ -48,7 +52,7 @@ EXIT_CODE_TO_STRING = {
     }
 
 
-def _execute_sum(sum_file_path, components=None):
+def _execute_sum(sum_file_path, mount_point, components=None):
     """Executes the SUM based firmware update command.
 
     This method executes the SUM based firmware update command to update the
@@ -59,6 +63,7 @@ def _execute_sum(sum_file_path, components=None):
         executed
     :param components: A list of components to be updated. If it is None, all
         the firmware components are updated.
+    :param mount_point: Location in which SPP iso is mounted.
     :returns: A string with the statistics of the updated/failed components.
     :raises: SUMOperationError, when the SUM based firmware update operation
         on the node fails.
@@ -66,7 +71,13 @@ def _execute_sum(sum_file_path, components=None):
     cmd = ' --c ' + ' --c '.join(components) if components else ''
 
     try:
-        processutils.execute(sum_file_path, '--s', '--romonly', cmd)
+        if SUM_LOCATION in sum_file_path:
+            location = os.path.join(mount_point, 'packages')
+            processutils.execute('launch_sum.sh', '--s', '--romonly',
+                                 '--use_location', location, cmd,
+                                 cwd=mount_point)
+        else:
+            processutils.execute(sum_file_path, '--s', '--romonly', cmd)
     except processutils.ProcessExecutionError as e:
         result = _parse_sum_ouput(e.exit_code)
         if result:
@@ -204,11 +215,15 @@ def update_firmware(node):
             raise exception.SUMOperationError(reason=msg)
 
         # Executes the SUM based firmware update by passing the default hpsum
-        # executable path and the components specified, if any.
-        sum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
-        components = node['clean_step']['args'].get('components')
+        # executable path if exists else sum executable path and the components
+        # specified, if any.
+        sum_file_path = os.path.join(vmedia_mount_point, SUM_LOCATION)
+        if not os.path.exists(sum_file_path):
+            sum_file_path = os.path.join(vmedia_mount_point, HPSUM_LOCATION)
 
-        result = _execute_sum(sum_file_path, components=components)
+        components = node['clean_step']['args'].get('components')
+        result = _execute_sum(sum_file_path, vmedia_mount_point,
+                              components=components)
 
         processutils.trycmd("umount", vmedia_mount_point)
     finally:
