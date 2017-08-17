@@ -64,7 +64,8 @@ class SUMFirmwareUpdateTest(testtools.TestCase):
                         "Failed: 0.")
             }
 
-        stdout = sum_controller._execute_sum("hpsum", components=None)
+        stdout = sum_controller._execute_sum("hpsum", "/tmp/hpsum",
+                                             components=None)
 
         self.assertEqual(ret_value, stdout)
         execute_mock.assert_called_once_with('hpsum', '--s', '--romonly', '')
@@ -78,11 +79,13 @@ class SUMFirmwareUpdateTest(testtools.TestCase):
         ret_value = ("Summary: The smart component was not installed. Node is "
                      "already up-to-date.")
 
-        stdout = sum_controller._execute_sum("hpsum",
+        stdout = sum_controller._execute_sum("/tmp/sum/packages/smartupdate",
+                                             "/tmp/sum",
                                              components=["foo", "bar"])
 
         execute_mock.assert_called_once_with(
-            "hpsum", "--s", "--romonly", " --c foo --c bar")
+            "./launch_sum.sh", "--s", "--romonly", "--use_location",
+            "/tmp/sum/packages", " --c foo --c bar", cwd='/tmp/sum')
         self.assertEqual(ret_value, stdout)
 
     @mock.patch.object(sum_controller,
@@ -107,7 +110,8 @@ class SUMFirmwareUpdateTest(testtools.TestCase):
         execute_mock.side_effect = processutils.ProcessExecutionError(
             stdout=value, stderr=None, exit_code=253)
 
-        stdout = sum_controller._execute_sum("hpsum", components=None)
+        stdout = sum_controller._execute_sum("hpsum", "/tmp/hpsum",
+                                             components=None)
 
         self.assertEqual(ret, stdout)
         execute_mock.assert_called_once_with(
@@ -124,6 +128,7 @@ class SUMFirmwareUpdateTest(testtools.TestCase):
 
         ex = self.assertRaises(exception.SUMOperationError,
                                sum_controller._execute_sum, "hpsum",
+                               "/tmp/hpsum",
                                None)
         self.assertIn(value, str(ex))
 
@@ -180,8 +185,53 @@ class SUMFirmwareUpdateTest(testtools.TestCase):
         execute_mock.assert_any_call('mount', "/dev/disk/by-label/SPP_LABEL",
                                      "/tempdir")
         execute_sum_mock.assert_any_call('/tempdir/hp/swpackages/hpsum',
+                                         '/tempdir',
                                          components=None)
-        exists_mock.assert_called_once_with("/dev/disk/by-label/SPP_LABEL")
+        calls = [mock.call("/dev/disk/by-label/SPP_LABEL"),
+                 mock.call("/tempdir/packages/smartupdate")]
+        exists_mock.assert_has_calls(calls, any_order=False)
+        execute_mock.assert_any_call('umount', "/tempdir")
+        mkdtemp_mock.assert_called_once_with()
+        rmtree_mock.assert_called_once_with("/tempdir", ignore_errors=True)
+        self.assertEqual('SUCCESS', ret_val)
+
+    @mock.patch.object(utils, 'validate_href')
+    @mock.patch.object(utils, 'verify_image_checksum')
+    @mock.patch.object(sum_controller, '_execute_sum')
+    @mock.patch.object(os, 'listdir')
+    @mock.patch.object(shutil, 'rmtree', autospec=True)
+    @mock.patch.object(tempfile, 'mkdtemp', autospec=True)
+    @mock.patch.object(os.path, 'exists')
+    @mock.patch.object(os, 'mkdir')
+    @mock.patch.object(processutils, 'execute')
+    @mock.patch.object(ilo_client, 'IloClient', spec_set=True, autospec=True)
+    def test_update_firmware_sum(self, client_mock, execute_mock, mkdir_mock,
+                                 exists_mock, mkdtemp_mock, rmtree_mock,
+                                 listdir_mock, execute_sum_mock,
+                                 verify_image_mock, validate_mock):
+        ilo_mock_object = client_mock.return_value
+        eject_media_mock = ilo_mock_object.eject_virtual_media
+        insert_media_mock = ilo_mock_object.insert_virtual_media
+        execute_sum_mock.return_value = 'SUCCESS'
+        listdir_mock.return_value = ['SPP_LABEL']
+        mkdtemp_mock.return_value = "/tempdir"
+        null_output = ["", ""]
+        exists_mock.side_effect = [True, True]
+        execute_mock.side_effect = [null_output, null_output]
+
+        ret_val = sum_controller.update_firmware(self.node)
+
+        eject_media_mock.assert_called_once_with('CDROM')
+        insert_media_mock.assert_called_once_with('http://1.2.3.4/SPP.iso',
+                                                  'CDROM')
+        execute_mock.assert_any_call('mount', "/dev/disk/by-label/SPP_LABEL",
+                                     "/tempdir")
+        execute_sum_mock.assert_any_call('/tempdir/packages/smartupdate',
+                                         '/tempdir',
+                                         components=None)
+        calls = [mock.call("/dev/disk/by-label/SPP_LABEL"),
+                 mock.call("/tempdir/packages/smartupdate")]
+        exists_mock.assert_has_calls(calls, any_order=False)
         execute_mock.assert_any_call('umount', "/tempdir")
         mkdtemp_mock.assert_called_once_with()
         rmtree_mock.assert_called_once_with("/tempdir", ignore_errors=True)
