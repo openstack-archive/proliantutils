@@ -16,6 +16,7 @@
 Non-iLO related utilities and helper functions.
 """
 import hashlib
+import re
 
 import requests
 import six
@@ -57,7 +58,8 @@ def process_firmware_image(compact_firmware_file, ilo_object):
     # to be on a http store, and hence requires the upload to happen for the
     # firmware file.
     to_upload = False
-    if 'Gen9' in ilo_object.model:
+    m = re.search('Gen(\d+)', ilo_object.model)
+    if int(m.group(1)) > 8:
         to_upload = True
 
     LOG.debug('Extracting firmware file: %s ... done', compact_firmware_file)
