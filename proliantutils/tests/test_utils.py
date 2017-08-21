@@ -115,6 +115,23 @@ class UtilsTestCase(testtools.TestCase):
         self.assertEqual('core_fw_file.bin', raw_fw_file)
         self.assertTrue(to_upload)
 
+    @mock.patch.object(firmware_controller, 'get_fw_extractor',
+                       spec_set=True, autospec=True)
+    def test_process_firmware_image_asks_to_upload_firmware_file_Gen10(
+            self, get_extractor_mock):
+        # if fw_version is greater than or equal to 2.0
+        # | GIVEN |
+        get_extractor_mock.return_value.extract.return_value = (
+            'core_fw_file.bin', True)
+        self.client.model = 'Gen10'
+        # | WHEN |
+        raw_fw_file, to_upload, is_extracted = (
+            utils.process_firmware_image(self.some_compact_fw_file,
+                                         self.client))
+        # | THEN |
+        self.assertEqual('core_fw_file.bin', raw_fw_file)
+        self.assertTrue(to_upload)
+
     @mock.patch.object(utils, 'hashlib', autospec=True)
     def test__get_hash_object(self, hashlib_mock):
         algorithms_available = ('md5', 'sha1', 'sha224',
