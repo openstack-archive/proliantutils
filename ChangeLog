@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+2.4.1
+-----
+
+* Add retrying logic for communicating with Redfish APIs
+* Add firmware update support using Smart Update Manager (ver 8.0.0)
+* Fix #1712260: firmware update in Gen10
+
 2.4.0
 -----
 
