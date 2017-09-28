@@ -2304,3 +2304,10 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         ret = self.client._is_raid_supported()
         self.assertEqual(ret, expt_ret)
         get_array_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_delete_raid_configuration(self, product_name_mock):
+        product_name_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant BL460c Gen9',
+                                self.client.delete_raid_configuration)
