@@ -1834,3 +1834,16 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             raise exception.IloError("Server is not in powered on state.")
 
         self._perform_power_op("Nmi")
+
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        platform = self.get_product_name()
+        msg = ("`delete raid configuration` is not supported on %s" % platform)
+        raise exception.IloCommandNotSupportedError(msg)
