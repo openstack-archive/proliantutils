@@ -1,4 +1,4 @@
-# Copyright 2017 Hewlett Packard Enterprise Development LP
+# Copyright 2018 Hewlett Packard Enterprise Development LP
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -25,6 +25,7 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import smart_storage
 from proliantutils.redfish.resources.system.storage import storage
@@ -497,3 +498,52 @@ class HPESystemTestCase(testtools.TestCase):
     def test_get_host_post_state(self):
         expected = sys_cons.POST_STATE_FINISHEDPOST
         self.assertEqual(expected, self.sys_inst.post_state)
+
+    @mock.patch.object(smart_storage_config, 'HPESmartStorageConfig',
+                       autospec=True)
+    def test_get_smart_storage_config(self, mock_ssc):
+        ssc_element = '/redfish/v1/systems/1/smartstorageconfig/'
+        ssc_inst = self.sys_inst.get_smart_storage_config(ssc_element)
+        self.assertIsInstance(ssc_inst,
+                              smart_storage_config.HPESmartStorageConfig.
+                              __class__)
+        mock_ssc.assert_called_once_with(
+            self.conn, "/redfish/v1/systems/1/smartstorageconfig/",
+            redfish_version='1.0.2')
+
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    def test_delete_raid(self, get_smart_storage_config_mock):
+        config_id = ['/redfish/v1/systems/1/smartstorageconfig/']
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=config_id))
+        (get_smart_storage_config_mock.return_value.
+         delete_raid.return_value) = 'Status: Success'
+        result = self.sys_inst.delete_raid()
+        get_smart_storage_config_mock.assert_called_once_with(config_id[0])
+        self.assertEqual([('/redfish/v1/systems/1/smartstorageconfig/',
+                           'Status: Success')], result)
+
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    def test_delete_raid_controller_failed(self,
+                                           get_smart_storage_config_mock):
+        config_id = ['/redfish/v1/systems/1/smartstorageconfig/',
+                     '/redfish/v1/systems/1/smartstorageconfig1/',
+                     '/redfish/v1/systems/1/smartstorageconfig2/']
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=config_id))
+        get_smart_storage_config_mock.return_value.delete_raid.side_effect = (
+            [None, sushy.exceptions.SushyError, None])
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller failed to delete the "
+            "raid configuration in one or more controllers with",
+            self.sys_inst.delete_raid)
+
+    def test_check_smart_storage_config_ids(self):
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=None))
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller failed to get the SmartStorageConfig "
+            "controller configurations",
+            self.sys_inst.check_smart_storage_config_ids)

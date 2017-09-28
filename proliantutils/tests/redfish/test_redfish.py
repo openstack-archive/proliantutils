@@ -1454,3 +1454,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
         type(get_system_mock.return_value).post_state = post_state
         result = self.rf_client.get_host_post_state()
         self.assertEqual('PowerOff', result)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_delete_raid_configuration(self, get_system_mock):
+        get_system_mock.return_value.delete_raid.return_value = (
+            [('/redfish/v1/systems/1/smartstorageconfig', 'Status: Success')])
+        result = self.rf_client.delete_raid_configuration()
+        self.assertEqual([('/redfish/v1/systems/1/smartstorageconfig',
+                           'Status: Success')], result)

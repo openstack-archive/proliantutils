@@ -1,4 +1,4 @@
-# Copyright 2017 Hewlett Packard Enterprise Development Company, L.P.
+# Copyright 2018 Hewlett Packard Enterprise Development Company, L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -1974,3 +1974,20 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             return utils.apply_bios_properties_filter(
                 default_settings, constants.SUPPORTED_BIOS_PROPERTIES)
         return default_settings
+
+    def _raise_command_not_supported(self, method):
+        platform = self.get_product_name()
+        msg = ("`%(method)s` is not supported on %(platform)s" %
+               {'method': method, 'platform': platform})
+        raise (exception.IloCommandNotSupportedError(msg))
+
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("delete_raid_configuration")
