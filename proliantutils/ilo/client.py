@@ -97,6 +97,7 @@ SUPPORTED_REDFISH_METHODS = [
     'unset_iscsi_info',
     'get_iscsi_initiator_info',
     'set_iscsi_initiator_info',
+    'delete_raid_configuration',
 ]
 
 LOG = log.get_logger(__name__)
@@ -630,6 +631,15 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def delete_raid_configuration(self):
+        """Deletes the logical drives from the system
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('delete_raid_configuration')
 
     def update_firmware(self, firmware_url, component_type):
         """Updates the given firmware on the server

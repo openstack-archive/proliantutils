@@ -756,6 +756,11 @@ class IloClientTestCase(testtools.TestCase):
         self.client.activate_license('fake-key')
         call_mock.assert_called_once_with('activate_license', 'fake-key')
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_delete_raid_configuration(self, call_mock):
+        self.client.delete_raid_configuration()
+        call_mock.assert_called_once_with('delete_raid_configuration')
+
     @mock.patch.object(ris.RISOperations, 'eject_virtual_media')
     def test_eject_virtual_media_gen9(self, eject_virtual_media_mock):
         self.client.model = 'Gen9'

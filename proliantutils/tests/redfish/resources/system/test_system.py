@@ -25,6 +25,7 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import smart_storage
 from proliantutils.redfish.resources.system.storage import storage
@@ -493,3 +494,18 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIsInstance(self.sys_inst.storages,
                               storage.StorageCollection)
         self.assertFalse(self.sys_inst._storages._is_stale)
+
+    @mock.patch.object(smart_storage_config, 'HPESmartStorageConfig',
+                       autospec=True)
+    def test_get_smart_storage_config(self, mock_ssc):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.load(f)['default']
+        ssc_element = (system_json['Oem']['Hpe']['SmartStorageConfig'][0])
+        ssc_inst = self.sys_inst.get_smart_storage_config(ssc_element)
+        self.assertIsInstance(ssc_inst,
+                              smart_storage_config.HPESmartStorageConfig.
+                              __class__)
+        mock_ssc.assert_called_once_with(
+            self.conn, "/redfish/v1/systems/1/smartstorageconfig/",
+            redfish_version='1.0.2')

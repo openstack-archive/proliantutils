@@ -97,6 +97,11 @@
                     "target": "/redfish/v1/Systems/1/Actions/Oem/Hpe/HpeComputerSystemExt.SystemReset/"
                 }
             },
+            "SmartStorageConfig": [
+                {
+                    "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/"
+                }
+            ],
             "AggregateHealthStatus": {
                 "AgentlessManagementService": "Unavailable",
                 "BiosOrHardwareHealth": {
