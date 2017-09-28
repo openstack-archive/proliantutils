@@ -25,6 +25,7 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import smart_storage
 from proliantutils.redfish.resources.system.storage import storage
@@ -470,3 +471,37 @@ class HPESystemTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.storages,
                               storage.StorageCollection)
+
+    def test_smart_storage_config_controllers(self):
+        self.conn = mock.MagicMock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = (
+            system_json['System_oem_specific_configs'])
+        self.sys_inst = system.HPESystem(
+            self.conn, '/redfish/v1/Systems/1',
+            redfish_version='1.0.2')
+        expected_list = [
+            {
+                "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/"
+            }
+        ]
+        ssc_list = self.sys_inst.smart_storage_config_controllers()
+        self.assertEqual(expected_list, ssc_list)
+
+    @mock.patch.object(smart_storage_config, 'HPESmartStorageConfig',
+                       autospec=True)
+    def test_get_smart_storage_config(self, mock_ssc):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        ssc_element = (system_json['System_oem_specific_configs']['Oem']
+                       ['Hpe']['SmartStorageConfig'][0])
+        ssc_inst = self.sys_inst.get_smart_storage_config(ssc_element)
+        self.assertIsInstance(ssc_inst,
+                              smart_storage_config.HPESmartStorageConfig.
+                              __class__)
+        mock_ssc.assert_called_once_with(
+            self.conn, "/redfish/v1/systems/1/smartstorageconfig/",
+            redfish_version='1.0.2')
