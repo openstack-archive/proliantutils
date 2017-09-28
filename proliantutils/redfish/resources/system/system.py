@@ -1,4 +1,4 @@
-# Copyright 2017 Hewlett Packard Enterprise Development LP
+# Copyright 2018 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -17,6 +17,7 @@ __author__ = 'HPE'
 import sushy
 from sushy.resources import base
 from sushy.resources.system import system
+from sushy import utils as sushy_utils
 
 from proliantutils import exception
 from proliantutils import log
@@ -27,6 +28,7 @@ from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
@@ -71,6 +73,11 @@ class HPESystem(system.System):
         'Boot',
         'UefiTargetBootSourceOverride@Redfish.AllowableValues'],
         adapter=list))
+
+    smart_storage_config_identities = base.Field(
+        ['Oem', 'Hpe', 'SmartStorageConfig'],
+        adapter=sushy_utils.get_members_identities)
+
     supported_boot_mode = base.MappedField(
         ['Oem', 'Hpe', 'Bios', 'UefiClass'], mappings.SUPPORTED_BOOT_MODE,
         default=constants.SUPPORTED_LEGACY_BIOS_ONLY)
@@ -323,3 +330,51 @@ class HPESystem(system.System):
 
         self._memory.refresh(force=False)
         return self._memory
+
+    def get_smart_storage_config(self, smart_storage_config_url):
+        """Returns a SmartStorageConfig Instance for each controller."""
+        return (smart_storage_config.
+                HPESmartStorageConfig(self._conn, smart_storage_config_url,
+                                      redfish_version=self.redfish_version))
+
+    def check_smart_storage_config_ids(self):
+        """Check SmartStorageConfig controllers is there in hardware.
+
+        :raises: IloError, on an error from iLO.
+        """
+        if self.smart_storage_config_identities is None:
+            msg = ('The Redfish controller failed to get the '
+                   'SmartStorageConfig controller configurations.')
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def delete_raid(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO.
+        """
+        self.check_smart_storage_config_ids()
+        any_exceptions = []
+        ld_exc_count = 0
+        for config_id in self.smart_storage_config_identities:
+            try:
+                ssc_obj = self.get_smart_storage_config(config_id)
+                ssc_obj.delete_raid()
+            except exception.IloLogicalDriveNotFoundError as e:
+                ld_exc_count += 1
+            except sushy.exceptions.SushyError as e:
+                any_exceptions.append((config_id, str(e)))
+
+        if any_exceptions:
+            msg = ('The Redfish controller failed to delete the '
+                   'raid configuration in one or more controllers with '
+                   'Error: %(error)s' % {'error': str(any_exceptions)})
+            raise exception.IloError(msg)
+
+        if ld_exc_count == len(self.smart_storage_config_identities):
+            msg = ('No logical drives are found in any controllers. Nothing '
+                   'to delete.')
+            raise exception.IloLogicalDriveNotFoundError(msg)
