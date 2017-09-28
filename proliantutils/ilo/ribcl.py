@@ -1,4 +1,4 @@
-# Copyright 2014 Hewlett-Packard Development Company, L.P.
+# Copyright 2018 Hewlett-Packard Development Company, L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -1208,6 +1208,17 @@ class RIBCLOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, RIBCL do not support it.
         """
         self._raise_command_not_supported("get_host_post_state")
+
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("delete_raid_configuration")
 
 
 # The below block of code is there only for backward-compatibility

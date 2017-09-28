@@ -1,4 +1,4 @@
-# Copyright 2017 Hewlett Packard Enterprise Development LP
+# Copyright 2018 Hewlett Packard Enterprise Development LP
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -1050,3 +1050,8 @@ class RedfishOperations(operations.IloOperations):
         """
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return GET_POST_STATE_MAP.get(sushy_system.post_state)
+
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware."""
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system.delete_raid()

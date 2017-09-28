@@ -80,6 +80,16 @@ class IloCommandNotSupportedInBiosError(IloCommandNotSupportedError):
         super(IloCommandNotSupportedInBiosError, self).__init__(message)
 
 
+class IloLogicalDriveNotFoundError(IloError):
+    """Logical drive not found error.
+
+    This exception is raised when iLO client library unable to find
+    any logical drive on server hard-disk
+    """
+    def __init__(self, message, errorcode=None):
+        super(IloLogicalDriveNotFoundError, self).__init__(message)
+
+
 class IloLoginFailError(IloError):
     """iLO Login Failed.
 
