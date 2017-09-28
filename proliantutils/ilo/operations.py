@@ -360,3 +360,12 @@ class IloOperations(object):
                  not supported on the server
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def delete_raid_configuration(self):
+        """Deletes the logical drives from the system
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
