@@ -1,0 +1,65 @@
+{
+    "@Redfish.Settings": {
+        "@odata.type": "#Settings.v1_0_0.Settings",
+        "ETag": "78F92741",
+        "Messages": [
+            {
+                "MessageId": "SmartStorageMessages.2.0.0.Success"
+            }
+        ],
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        },
+        "Time": "2017-10-31T12:12:35+00:00"
+    },
+    "@odata.context": "/redfish/v1/$metadata#SmartStorageConfig.SmartStorageConfig",
+    "@odata.etag": "W/\"90107B96DAE4060606D29991827C7EF7\"",
+    "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/",
+    "@odata.type": "#SmartStorageConfig.v2_0_0.SmartStorageConfig",
+    "CurrentParallelSurfaceScanCount": null,
+    "DataGuard": "Strict",
+    "DegradedPerformanceOptimization": null,
+    "DriveWriteCache": null,
+    "ElevatorSort": null,
+    "EncryptionConfiguration": "None",
+    "EncryptionEULA": null,
+    "ExpandPriority": null,
+    "FlexibleLatencySchedulerSetting": null,
+    "Id": "smartstorageconfig",
+    "InconsistencyRepairPolicy": null,
+    "Location": "Slot 0",
+    "LocationFormat": "PCISlot",
+    "LogicalDrives": [],
+    "MonitorAndPerformanceAnalysisDelaySeconds": null,
+    "NoBatteryWriteCache": null,
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeBiosExt.v2_0_0.HpeBiosExt",
+            "SettingsObject": {
+                "UnmodifiedETag": "W/\"1BBCED8C1E405050504A92724569294F\""
+            }
+        }
+    },
+    "PhysicalDrives": [
+        {
+            "LegacyBootPriority": "None",
+            "Location": "1I:1:2",
+            "LocationFormat": "ControllerPort:Box:Bay"
+        }
+    ],
+    "Ports": [
+        {
+            "OperatingModeAfterReboot": "Mixed",
+            "PortIndex": 0
+        }
+    ],
+    "PowerModeAfterReboot": "MaxPerformance",
+    "PredictiveSpareRebuild": null,
+    "QueueDepth": null,
+    "ReadCachePercent": null,
+    "RebuildPriority": null,
+    "SurfaceScanAnalysisDelaySeconds": null,
+    "SurfaceScanAnalysisPriority": null,
+    "SurvivalPowerMode": "Enabled",
+    "WriteCacheBypassThresholdKiB": null
+}
