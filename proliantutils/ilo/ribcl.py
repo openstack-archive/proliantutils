@@ -1195,6 +1195,19 @@ class RIBCLOperations(operations.IloOperations):
         msg = ("`inject_nmi` is not supported on %s" % platform)
         raise exception.IloCommandNotSupportedError(msg)
 
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        platform = self.get_product_name()
+        msg = ("`delete raid configuration` is not supported on %s" % platform)
+        raise exception.IloCommandNotSupportedError(msg)
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
