@@ -25,6 +25,7 @@ from proliantutils.redfish import redfish
 SUPPORTED_RIS_METHODS = [
     'activate_license',
     'clear_secure_boot_keys',
+    'delete_raid_configuration',
     'eject_virtual_media',
     'get_current_boot_mode',
     'get_host_power_status',
@@ -63,6 +64,7 @@ SUPPORTED_RIS_METHODS = [
     ]
 
 SUPPORTED_REDFISH_METHODS = [
+    'delete_raid_configuration',
     'get_product_name',
     'get_host_power_status',
     'set_host_power',
@@ -630,6 +632,15 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('activate_license', key)
+
+    def delete_raid_configuration(self):
+        """Deletes the logical drives from the system
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('delete_raid_configuration')
 
     def update_firmware(self, firmware_url, component_type):
         """Updates the given firmware on the server
