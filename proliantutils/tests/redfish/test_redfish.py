@@ -1447,3 +1447,29 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to inject nmi',
             self.rf_client.inject_nmi)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_delete_raid_configuration(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())['default']
+        controllers = system_json['Oem']['Hpe']['SmartStorageConfig']
+        get_system_mock.return_value.smart_storage_config = controllers
+        self.rf_client.delete_raid_configuration()
+        for value in controllers:
+            (get_system_mock.return_value.get_smart_storage_config.
+             assert_called_once_with(value))
+            (get_system_mock.return_value.get_smart_storage_config().
+             delete_raid.assert_called_once_with())
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_delete_raid_configuration_fail(self, get_system_mock):
+        smart_config_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value).smart_storage_config = (
+            smart_config_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller failed to delete the "
+            "raid configuration",
+            self.rf_client.delete_raid_configuration)
