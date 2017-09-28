@@ -481,5 +481,66 @@
   "SKU": "                ",
   "SystemType": "Physical",
   "UUID": "00000000-0000-0000-0000-000000000000"
+  },
+  "System_oem_specific_configs": {
+   "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
+    "@odata.etag": "W/\"0B277036\"",
+    "@odata.id": "/redfish/v1/Systems/1/",
+    "@odata.type": "#ComputerSystem.v1_4_0.ComputerSystem",
+    "Actions": {
+        "#ComputerSystem.Reset": {
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "ForceRestart",
+                "Nmi",
+                "PushPowerButton"
+            ],
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset/"
+        }
+    },
+    "AssetTag": "",
+    "Bios": {
+        "@odata.id": "/redfish/v1/systems/1/bios/"
+    },
+    "BiosVersion": "I41 v1.20 (08/11/2017)",
+    "Boot": {
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideMode": "UEFI",
+        "BootSourceOverrideTarget": "None",
+        "BootSourceOverrideTarget@Redfish.AllowableValues": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb"
+        ]
+    },
+    "Id": "1",
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeComputerSystemExt.v2_3_0.HpeComputerSystemExt",
+            "Actions": {
+                "#HpeComputerSystemExt.PowerButton": {
+                    "PushType@Redfish.AllowableValues": [
+                        "Press",
+                        "PressAndHold"
+                    ],
+                    "target": "/redfish/v1/Systems/1/Actions/Oem/Hpe/HpeComputerSystemExt.PowerButton/"
+                },
+                "#HpeComputerSystemExt.SystemReset": {
+                    "ResetType@Redfish.AllowableValues": [
+                        "ColdBoot",
+                        "AuxCycle"
+                    ],
+                    "target": "/redfish/v1/Systems/1/Actions/Oem/Hpe/HpeComputerSystemExt.SystemReset/"
+                }
+            },
+            "SmartStorageConfig": [
+                {
+                    "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/"
+                }
+            ]
+        }
+    }
   }
 }
