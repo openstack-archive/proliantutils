@@ -27,6 +27,7 @@ from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
     smart_storage as hpe_smart_storage
@@ -67,6 +68,7 @@ class HPESystem(system.System):
     model = base.Field(['Model'])
     rom_version = base.Field(['Oem', 'Hpe', 'Bios', 'Current',
                              'VersionString'])
+    smart_storage_config = base.Field(['Oem', 'Hpe', 'SmartStorageConfig'])
 
     supported_boot_mode = base.MappedField(
         ['Oem', 'Hpe', 'Bios', 'UefiClass'], mappings.SUPPORTED_BOOT_MODE,
@@ -287,3 +289,14 @@ class HPESystem(system.System):
                 redfish_version=self.redfish_version)
 
         return self._memory
+
+    def smart_storage_config_controllers(self):
+        """Returns a the list of SmartStorageControllers"""
+        return self.smart_storage_config
+
+    def get_smart_storage_config(self, ssc_element):
+        """Returns a SmartStorageConfig Instance for each controller."""
+        smart_storage_config_uri = ssc_element['@odata.id']
+        return (smart_storage_config.
+                HPESmartStorageConfig(self._conn, smart_storage_config_uri,
+                                      redfish_version=self.redfish_version))
