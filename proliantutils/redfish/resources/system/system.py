@@ -24,7 +24,6 @@ from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants
 from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import mappings
-from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system.storage import simple_storage
@@ -85,8 +84,6 @@ class HPESystem(system.System):
     _pci_devices = None  # PCIDevice instance
 
     _ethernet_interfaces = None  # EthernetInterface instance
-
-    _memory = None  # Memory instance
 
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
@@ -207,7 +204,6 @@ class HPESystem(system.System):
         self._smart_storage = None
         self._storages = None
         self._simple_storages = None
-        self._memory = None
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -272,18 +268,3 @@ class HPESystem(system.System):
                     self, 'SimpleStorage'),
                 redfish_version=self.redfish_version)
         return self._simple_storages
-
-    @property
-    def memory(self):
-        """Property to provide reference to `MemoryCollection` instance
-
-        It is calculated once when the first time it is queried. On refresh,
-        this property gets reset.
-        """
-        if self._memory is None:
-            self._memory = memory.MemoryCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'Memory'),
-                redfish_version=self.redfish_version)
-
-        return self._memory

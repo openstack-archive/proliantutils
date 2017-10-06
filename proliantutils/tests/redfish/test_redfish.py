@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 import ddt
 import json
 import mock
@@ -32,7 +30,6 @@ from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import iscsi
-from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system.storage \
@@ -720,15 +717,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = [
             mock.MagicMock(array_controller.HPEArrayController)]
-        MemoryData = collections.namedtuple(
-            'MemoryData', ['has_persistent_memory', 'has_nvdimm_n',
-                           'has_logical_nvdimm_n'])
-        mem = MemoryData(has_persistent_memory=True,
-                         has_nvdimm_n=True,
-                         has_logical_nvdimm_n=False)
-        memory_mock = mock.MagicMock(spec=memory.MemoryCollection)
-        memory_mock.details = mock.MagicMock(return_value=mem)
-        get_system_mock.return_value.memory = memory_mock
         ssd_mock.return_value = True
         rotational_mock.return_value = True
         nvme_mock.return_value = True
@@ -747,9 +735,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'boot_mode_bios': 'true',
                     'boot_mode_uefi': 'true', 'iscsi_boot': 'true',
                     'hardware_supports_raid': 'true',
-                    'persistent_memory': 'true',
-                    'nvdimm_n': 'true',
-                    'logical_nvdimm_n': 'false',
                     'has_ssd': 'true',
                     'has_rotational': 'true',
                     'has_nvme_ssd': 'true',
@@ -796,15 +781,6 @@ class RedfishOperationsTestCase(testtools.TestCase):
             iscsi_mock)
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = []
-        MemoryData = collections.namedtuple(
-            'MemoryData', ['has_persistent_memory', 'has_nvdimm_n',
-                           'has_logical_nvdimm_n'])
-        mem = MemoryData(has_persistent_memory=False,
-                         has_nvdimm_n=False,
-                         has_logical_nvdimm_n=False)
-        memory_mock = mock.MagicMock(spec=memory.MemoryCollection)
-        get_system_mock.return_value.memory = memory_mock
-        memory_mock.details = mock.MagicMock(return_value=mem)
         ssd_mock.return_value = False
         rotational_mock.return_value = False
         nvme_mock.return_value = False

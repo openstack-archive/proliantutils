@@ -94,14 +94,3 @@ HEALTH_VALUE_MAP = {
 
 HEALTH_VALUE_MAP_REV = (
     utils.revert_dictionary(HEALTH_VALUE_MAP))
-
-# Memory type related mapppings
-MEMORY_TYPE_MAP = {
-    'NVDIMM_N': constants.MEMORY_TYPE_NVDIMM_N,
-    'DRAM': constants.MEMORY_TYPE_DRAM
-}
-
-MEMORY_DEVICE_TYPE_MAP = {
-    'Logical': constants.MEMORY_DEVICE_TYPE_LOGICAL,
-    'DDR4': constants.MEMORY_DEVICE_TYPE_DDR4
-}
