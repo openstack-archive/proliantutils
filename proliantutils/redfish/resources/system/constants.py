@@ -68,9 +68,3 @@ HEALTH_STATE_DISABLED = 'disabled'
 HEALTH_OK = 'ok'
 HEALTH_WARNING = 'warning'
 HEALTH_CRITICAL = 'critical'
-
-# Memory related constants
-MEMORY_TYPE_NVDIMM_N = "nvdimm_n"
-MEMORY_TYPE_DRAM = "dram"
-MEMORY_DEVICE_TYPE_LOGICAL = "logical"
-MEMORY_DEVICE_TYPE_DDR4 = "ddr4"

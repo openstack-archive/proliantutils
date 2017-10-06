@@ -23,7 +23,6 @@ from proliantutils import exception
 from proliantutils.redfish.resources.system import bios
 from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system import ethernet_interface
-from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import smart_storage
@@ -411,49 +410,6 @@ class HPESystemTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.simple_storages,
                               simple_storage.SimpleStorageCollection)
-
-    def test_memory(self):
-        self.assertIsNone(self.sys_inst._memory)
-        self.conn.get.return_value.json.reset_mock()
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/memory_collection.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
-        actual_memory = self.sys_inst.memory
-        self.assertIsInstance(actual_memory,
-                              memory.MemoryCollection)
-        self.conn.get.return_value.json.assert_called_once_with()
-        # reset mock
-        self.conn.get.return_value.json.reset_mock()
-        self.assertIs(actual_memory,
-                      self.sys_inst.memory)
-        self.conn.get.return_value.json.assert_not_called()
-
-    def test_memory_collection_on_refresh(self):
-        # | GIVEN |
-        with open('proliantutils/tests/redfish/json_samples/'
-                  'memory_collection.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
-        # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.memory,
-                              memory.MemoryCollection)
-
-        # On refreshing the system instance...
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/system.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = (
-                json.loads(f.read())['default'])
-        self.sys_inst.refresh()
-
-        # | WHEN & THEN |
-        self.assertIsNone(self.sys_inst._memory)
-
-        # | GIVEN |
-        with open('proliantutils/tests/redfish/json_samples/'
-                  'memory_collection.json', 'r') as f:
-            self.conn.get.return_value.json.return_value = json.loads(f.read())
-        # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.memory,
-                              memory.MemoryCollection)
 
     def test_storage_on_refresh(self):
         with open('proliantutils/tests/redfish/json_samples/'
