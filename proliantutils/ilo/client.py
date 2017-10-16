@@ -328,9 +328,9 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method('set_host_power', power)
 
-    def set_one_time_boot(self, value):
+    def set_one_time_boot(self, value, mac=None):
         """Configures a single boot from a specific device."""
-        return self._call_method('set_one_time_boot', value)
+        return self._call_method('set_one_time_boot', value, mac)
 
     def insert_virtual_media(self, url, device='FLOPPY'):
         """Notifies iLO of the location of a virtual media diskette image."""
