@@ -407,7 +407,7 @@ class RIBCLOperations(operations.IloOperations):
             raise exception.IloInvalidInputError(
                 "Invalid input. The expected input is ON or OFF.")
 
-    def set_one_time_boot(self, value):
+    def set_one_time_boot(self, value, mac=None):
         """Configures a single boot from a specific device."""
         dic = {'value': value}
         data = self._execute_command(
