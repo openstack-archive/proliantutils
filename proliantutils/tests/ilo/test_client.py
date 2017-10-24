@@ -381,6 +381,12 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('unset_iscsi_boot_info', 'c456')
 
     @mock.patch.object(client.IloClient, '_call_method')
+    def test_set_iscsi_initiator_info(self, call_mock):
+        self.client.set_iscsi_initiator_info('iqn.2011-07.com:example:123')
+        call_mock.assert_called_once_with('set_iscsi_initiator_info',
+                                          'iqn.2011-07.com:example:123')
+
+    @mock.patch.object(client.IloClient, '_call_method')
     def test_get_product_name(self, call_mock):
         self.client.get_product_name()
         call_mock.assert_called_once_with('get_product_name')

@@ -103,6 +103,46 @@ class IloRisTestCase(testtools.TestCase):
                           'http://10.10.1.30:8081/startup.nsh')
         _uefi_boot_mode_mock.assert_called_once_with()
 
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_rest_patch_allowed')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_initiator_info_uefi(self, _uefi_boot_mode_mock,
+                                           check_iscsi_mock, patch_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi/Settings'
+        check_iscsi_mock.return_value = iscsi_uri
+        initiator_iqn = 'iqn.2011-07.com.example.server:test1'
+        initiator_info = {'iSCSIInitiatorName': initiator_iqn}
+        patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.client.set_iscsi_initiator_info(initiator_iqn)
+        patch_mock.assert_called_once_with(iscsi_uri, None, initiator_info)
+
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    @mock.patch.object(ris.RISOperations, '_check_iscsi_rest_patch_allowed')
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_initiator_info_failed(self, _uefi_boot_mode_mock,
+                                             check_iscsi_mock, patch_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi/Settings'
+        check_iscsi_mock.return_value = iscsi_uri
+        initiator_iqn = 'iqn.2011-07.com.example.server:test1'
+        initiator_info = {'iSCSIInitiatorName': initiator_iqn}
+        patch_mock.return_value = (302, ris_outputs.GET_HEADERS,
+                                   ris_outputs.REST_POST_RESPONSE)
+        self.assertRaises(exception.IloError,
+                          self.client.set_iscsi_initiator_info,
+                          initiator_iqn)
+        patch_mock.assert_called_once_with(iscsi_uri, None, initiator_info)
+
+    @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
+    def test_set_iscsi_initiator_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.set_iscsi_initiator_info,
+                          'iqn.2011-07.com.example.server:test1')
+        _uefi_boot_mode_mock.assert_called_once_with()
+
     @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_set_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
