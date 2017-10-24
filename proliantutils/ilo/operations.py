@@ -96,6 +96,16 @@ class IloOperations(object):
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
+    def set_iscsi_initiator_info(self, initiator_iqn):
+        """Set iscsi initiator information in iLO.
+
+        :param initiator_iqn: Initiator iqn for iLO.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
