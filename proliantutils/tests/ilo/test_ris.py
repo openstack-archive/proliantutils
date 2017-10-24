@@ -142,6 +142,47 @@ class IloRisTestCase(testtools.TestCase):
                           self.client.unset_iscsi_boot_info, mac)
         _uefi_boot_mode_mock.assert_called_once_with()
 
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_iscsi_initiator_info(self, check_bios_mock,
+                                      get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        ret = self.client.get_iscsi_initiator_info()
+        self.assertEqual(ret, 'iqn.1986-03.com.hp:uefi-p89-mxq45006w5')
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_iscsi_initiator_info_failed(self, check_bios_mock,
+                                             get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        iscsi_uri = '/rest/v1/systems/1/bios/iScsi'
+        iscsi_settings = json.loads(ris_outputs.GET_ISCSI_SETTINGS)
+        get_mock.return_value = (202, ris_outputs.GET_HEADERS,
+                                 iscsi_settings)
+        self.assertRaises(exception.IloError,
+                          self.client.get_iscsi_initiator_info)
+        check_bios_mock.assert_called_once_with()
+        get_mock.assert_called_once_with(iscsi_uri)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_iscsi_initiator_info_not_found(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BASE_CONFIG)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.get_iscsi_initiator_info)
+        check_bios_mock.assert_called_once_with()
+
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
