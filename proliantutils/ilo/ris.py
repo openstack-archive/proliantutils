@@ -979,6 +979,26 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
                    'does not exist')
             raise exception.IloCommandNotSupportedError(msg)
 
+    def set_iscsi_initiator_info(self, initiator_iqn):
+        """Set iSCSI initiator information in iLO.
+
+        :param initiator_iqn: Initiator iqn for iLO.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the system is
+                 in the bios boot mode.
+        """
+        if(self._is_boot_mode_uefi() is True):
+            iscsi_uri = self._check_iscsi_rest_patch_allowed()
+            initiator_info = {'iSCSIInitiatorName': initiator_iqn}
+            status, headers, response = self._rest_patch(iscsi_uri,
+                                                         None, initiator_info)
+            if status >= 300:
+                msg = self._get_extended_error(response)
+                raise exception.IloError(msg)
+        else:
+            msg = 'iscsi initiator can not set in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedError(msg)
+
     def get_current_boot_mode(self):
         """Retrieves the current boot mode of the server.
 

@@ -53,6 +53,7 @@ SUPPORTED_RIS_METHODS = [
     'set_iscsi_boot_info',
     'unset_iscsi_boot_info',
     'get_iscsi_initiator_info',
+    'set_iscsi_initiator_info',
     'set_vm_status',
     'update_firmware',
     'update_persistent_boot',
@@ -309,6 +310,16 @@ class IloClient(operations.IloOperations):
                  in the bios boot mode.
         """
         return self._call_method('get_iscsi_initiator_info')
+
+    def set_iscsi_initiator_info(self, initiator_iqn):
+        """Set iSCSI initiator information in iLO.
+
+        :param initiator_iqn: Initiator iqn for iLO.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        return self._call_method('set_iscsi_initiator_info', initiator_iqn)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot."""
