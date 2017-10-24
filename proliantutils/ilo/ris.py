@@ -957,6 +957,28 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             msg = 'iscsi boot is not supported in the BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
 
+    def get_iscsi_initiator_info(self):
+        """Give iscsi initiator information of iLO.
+
+        :returns: iscsi initiator information.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        if('links' in bios_settings and 'iScsi' in bios_settings['links']):
+            iscsi_uri = bios_settings['links']['iScsi']['href']
+            status, headers, iscsi_settings = self._rest_get(iscsi_uri)
+
+            if status != 200:
+                msg = self._get_extended_error(iscsi_settings)
+                raise exception.IloError(msg)
+            return iscsi_settings['iSCSIInitiatorName']
+        else:
+            msg = ('"links/iScsi" section in bios'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
     def get_current_boot_mode(self):
         """Retrieves the current boot mode of the server.
 
