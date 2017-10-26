@@ -1693,6 +1693,36 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
 
+    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_for_iscsi_hdd_with_iscsi_bootstring(
+            self, rest_patch_mock, check_bios_mock, boot_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, bios_settings)
+        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT_HDD_WITH_ISCSI)
+        boot_mock.return_value = boot_settings
+        systems_uri = '/rest/v1/Systems/1'
+        new1_boot_settings = {}
+        new1_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                      u'NIC.LOM.1.1.iSCSI'}
+        new2_boot_settings = {}
+        new2_boot_settings['Boot'] = {'BootSourceOverrideEnabled':
+                                      'Continuous', 'BootSourceOverrideTarget':
+                                      'UefiTarget'}
+
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        calls = [mock.call(systems_uri, None, new1_boot_settings),
+                 mock.call(systems_uri, None, new2_boot_settings)]
+        self.client._update_persistent_boot(['ISCSI'], mac='C4346BB7EF30',
+                                            persistent=True)
+        check_bios_mock.assert_called_once_with()
+        boot_mock.assert_called_once_with(bios_settings)
+        rest_patch_mock.assert_has_calls(calls)
+
     def test__update_persistent_boot_for_iscsi_mac_none(self):
         self.assertRaises(exception.IloInvalidInputError,
                           self.client._update_persistent_boot, ['ISCSI'],

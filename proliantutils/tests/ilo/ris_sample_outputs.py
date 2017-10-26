@@ -1541,6 +1541,50 @@ GET_BIOS_BOOT = """
 
 """
 
+GET_BIOS_BOOT_HDD_WITH_ISCSI = """
+
+{
+    "AttributeRegistry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BootSources": [
+        {
+            "BootString": "CentOS Linux",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "Unknown.Unknown.1",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/\
+            MAC(9CB654797870,0x1)/IPv4(172.17.1.32)/iSCSI(iqn.2001-04.\
+            com.paresh.boot:volume.bin,0x1,0x0,None,None,None,TCP)/HD\
+            (2,GPT,602540CD-2846-4DDE-B97A-494C096E5D21,0x800,0x36800)"
+        },
+        {
+            "BootString": "Embedded LOM 1 Port 1 : HP Ethernet 1Gb 2-port\
+                                         361i Adapter - NIC (iSCSI IPv4) ",
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+            "StructuredBootString": "NIC.LOM.1.1.iSCSI",
+            "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)/MAC\
+            (C4346BB7EF30,0x1)/IPv4(0.0.0.0)/iSCSI(iqn.2016-07.org.de\
+            :storage,0x1,0x0,None,None,None,TCP)"
+        }
+         ],
+      "Name": "Boot Order Current Settings",
+      "PersistentBootConfigOrder": [
+          "Unknown.Unknown.1",
+          "NIC.LOM.1.1.iSCSI"
+      ],
+      "links": {
+        "BaseConfigs": {
+            "href": "/rest/v1/systems/1/bios/Boot/BaseConfigs"
+        },
+        "Settings": {
+            "href": "/rest/v1/systems/1/bios/Boot/Settings"
+        },
+        "self": {
+            "href": "/rest/v1/systems/1/bios/Boot"
+        }
+    }
+
+}
+"""
+
 GET_BIOS_MAPPINGS = """
 {
     "Registry": "HpBiosAttributeRegistryP89.1.1.00",
