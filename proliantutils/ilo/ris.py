@@ -1557,7 +1557,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
 
             for boot_setting in boot_settings['BootSources']:
                 if(mac.upper() in boot_setting['UEFIDevicePath'] and
-                   'iSCSI' in boot_setting['UEFIDevicePath']):
+                   'iSCSI' in boot_setting['UEFIDevicePath'] and
+                   'iSCSI' in boot_setting['StructuredBootString']):
                     StructuredBootString = boot_setting['StructuredBootString']
                     break
             if not StructuredBootString:
