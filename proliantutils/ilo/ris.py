@@ -1568,27 +1568,23 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         systems_uri = "/rest/v1/Systems/1"
         # Need to set this option first if device is 'UefiTarget'
         if new_device is 'UefiTarget':
-            if not mac:
-                msg = ('Mac is needed for iscsi uefi boot')
-                raise exception.IloInvalidInputError(msg)
-
-            headers, bios_uri, bios_settings = self._check_bios_resource()
-            # Get the Boot resource and Mappings resource.
-            boot_settings = self._get_bios_boot_resource(bios_settings)
-            StructuredBootString = None
-
-            for boot_setting in boot_settings['BootSources']:
-                if(mac.upper() in boot_setting['UEFIDevicePath'] and
-                   'iSCSI' in boot_setting['UEFIDevicePath']):
-                    StructuredBootString = boot_setting['StructuredBootString']
+            system = self._get_host_details()
+            uefi_devices = (
+                system['Boot']['UefiTargetBootSourceOverrideSupported'])
+            iscsi_device = None
+            for device in uefi_devices:
+                if device is not None and 'iSCSI' in device:
+                    iscsi_device = device
                     break
-            if not StructuredBootString:
-                msg = ('MAC provided is Invalid "%s"' % mac)
-                raise exception.IloInvalidInputError(msg)
+
+            if iscsi_device is None:
+                msg = 'No UEFI iSCSI bootable device found'
+                raise exception.IloError(msg)
 
             new_boot_settings = {}
             new_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
-                                         StructuredBootString}
+                                         iscsi_device}
+
             status, headers, response = self._rest_patch(systems_uri, None,
                                                          new_boot_settings)
             if status >= 300:

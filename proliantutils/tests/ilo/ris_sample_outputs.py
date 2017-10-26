@@ -219,6 +219,36 @@ RESPONSE_BODY_FOR_REST_OP = """
 }
 """
 
+RESPONSE_BODY_FOR_REST_OP_WITH_ISCSI = """
+{
+    "Boot": {
+        "BootSourceOverrideEnabled": "Disabled",
+        "BootSourceOverrideSupported": [
+            "None",
+            "Cd",
+            "Hdd",
+            "Usb",
+            "Utilities",
+            "Diags",
+            "BiosSetup",
+            "Pxe",
+            "UefiShell",
+            "UefiTarget"
+        ],
+        "BootSourceOverrideTarget": "None",
+        "UefiTargetBootSourceOverride": "None",
+        "UefiTargetBootSourceOverrideSupported": [
+            "HD.Emb.1.2",
+            "Generic.USB.1.1",
+            "NIC.FlexLOM.1.1.IPv4",
+            "NIC.FlexLOM.1.1.IPv6",
+            "NIC.LOM.1.1.iSCSI",
+            "CD.Virtual.2.1"
+        ]
+    }
+}
+"""
+
 HEADERS_FOR_REST_OP = [('content-length', '2729'),
                        ('server', 'HP-iLO-Server/1.30'),
                        ('etag', 'W/"B61EB245"'),
