@@ -1726,18 +1726,12 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         rest_patch_mock.assert_called_once_with(systems_uri, None,
                                                 new_boot_settings)
 
-    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
-    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
     @mock.patch.object(ris.RISOperations, '_rest_patch')
-    def test__update_persistent_boot_for_iscsi_mac_valid(self, rest_patch_mock,
-                                                         check_bios_mock,
-                                                         boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
-        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
-        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
-                                        bios_uri, bios_settings)
-        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
-        boot_mock.return_value = boot_settings
+    def test__update_persistent_boot_for_iscsi(self, rest_patch_mock,
+                                               get_host_mock):
+        get_host_mock.return_value = (
+            json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP_WITH_ISCSI))
         systems_uri = '/rest/v1/Systems/1'
         new1_boot_settings = {}
         new1_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
@@ -1753,31 +1747,41 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                  mock.call(systems_uri, None, new2_boot_settings)]
         self.client._update_persistent_boot(['ISCSI'], mac='C4346BB7EF30',
                                             persistent=True)
-        check_bios_mock.assert_called_once_with()
-        boot_mock.assert_called_once_with(bios_settings)
         rest_patch_mock.assert_has_calls(calls)
 
-    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
-    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
-    def test__update_persistent_boot_for_iscsi_mac_invalid(self,
-                                                           check_bios_mock,
-                                                           boot_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
-        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
-        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
-                                        bios_uri, bios_settings)
-        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
-        boot_mock.return_value = boot_settings
-        self.assertRaises(exception.IloInvalidInputError,
-                          self.client._update_persistent_boot, ['ISCSI'],
-                          mac='234343553', persistent=True)
-        check_bios_mock.assert_called_once_with()
-        boot_mock.assert_called_once_with(bios_settings)
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    @mock.patch.object(ris.RISOperations, '_rest_patch')
+    def test__update_persistent_boot_for_iscsi_with_none_device_present(
+            self, rest_patch_mock, get_host_mock):
+        get_host_mock.return_value = (
+            json.loads(
+                ris_outputs.RESPONSE_BODY_FOR_REST_OP_WITH_ISCSI_AND_NONE))
+        systems_uri = '/rest/v1/Systems/1'
+        new1_boot_settings = {}
+        new1_boot_settings['Boot'] = {'UefiTargetBootSourceOverride':
+                                      u'NIC.LOM.1.1.iSCSI'}
+        new2_boot_settings = {}
+        new2_boot_settings['Boot'] = {'BootSourceOverrideEnabled':
+                                      'Continuous', 'BootSourceOverrideTarget':
+                                      'UefiTarget'}
 
-    def test__update_persistent_boot_for_iscsi_mac_none(self):
-        self.assertRaises(exception.IloInvalidInputError,
-                          self.client._update_persistent_boot, ['ISCSI'],
-                          mac=None, persistent=True)
+        rest_patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                        ris_outputs.REST_POST_RESPONSE)
+        calls = [mock.call(systems_uri, None, new1_boot_settings),
+                 mock.call(systems_uri, None, new2_boot_settings)]
+        self.client._update_persistent_boot(['ISCSI'], mac='C4346BB7EF30',
+                                            persistent=True)
+        rest_patch_mock.assert_has_calls(calls)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__update_persistent_boot_for_iscsi_not_found(self,
+                                                         get_host_mock):
+        get_host_mock.return_value = (
+            json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP))
+        self.assertRaisesRegex(exception.IloError, "No UEFI iSCSI bootable "
+                               "device found",
+                               self.client._update_persistent_boot,
+                               ['ISCSI'], mac='234343553', persistent=True)
 
     @mock.patch.object(ris.RISOperations, '_rest_patch')
     def test__update_persistent_boot_fail(self, rest_patch_mock):
