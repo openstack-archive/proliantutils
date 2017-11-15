@@ -15,6 +15,14 @@
 __author__ = 'HPE'
 
 import hashlib
+import json
+
+import requests
+from requests.packages import urllib3
+from requests.packages.urllib3 import exceptions as urllib3_exceptions
+import six
+from six.moves.urllib import parse as urlparse
+import retrying
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -53,6 +61,9 @@ POWER_STATE = {
 
 CLASSCODE_FOR_GPU_DEVICES = [3]
 SUBCLASSCODE_FOR_GPU_DEVICES = [0, 1, 2, 128]
+
+MAX_RETRY_ATTEMPTS = 3  # Maximum number of attempts to be retried
+MAX_TIME_BEFORE_RETRY = 7 * 1000  # wait time in milliseconds before retry
 
 LOG = log.get_logger(__name__)
 
@@ -854,6 +865,28 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         """
         self._press_pwr_btn(pushType="PressAndHold")
 
+    @retrying.retry(
+        stop_max_attempt_number=MAX_RETRY_ATTEMPTS,
+        retry_on_result=lambda state: state != 'ON',
+        wait_fixed=MAX_TIME_BEFORE_RETRY
+    )
+    def _retry_until_powered_on(self, power):
+        """This method retries power on operation.
+
+        :param: power : target power state
+        """
+        # If the system is in the same power state as
+        # requested by the user, it gives the error
+        # InvalidOperationForSystemState. To avoid this error
+        # the power state is checked before power on
+        # operation is performed.
+        status = self.get_host_power_status()
+        if (status != power):
+            self._perform_power_op(POWER_STATE[power])
+            return self.get_host_power_status()
+        else:
+            return status
+
     def set_host_power(self, power):
         """Toggle the power button of server.
 
@@ -874,8 +907,10 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             LOG.debug(self._("Node is already in '%(power)s' power state."),
                       {'power': power})
             return
-
-        self._perform_power_op(POWER_STATE[power])
+        if power == 'ON' and 'Proliant BL' in self.get_product_name():
+            self._retry_until_powered_on(power)
+        else:
+            self._perform_power_op(POWER_STATE[power])
 
     def get_http_boot_url(self):
         """Request the http boot url from system in uefi boot mode.
