@@ -481,7 +481,15 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(client.IloClient, '_call_method')
     def test_update_persistent_boot(self, call_mock):
         self.client.update_persistent_boot(['HDD'])
-        call_mock.assert_called_once_with('update_persistent_boot', ['HDD'])
+        call_mock.assert_called_once_with('update_persistent_boot', ['HDD'],
+                                          None)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_update_persistent_boot_with_mac(self, call_mock):
+        mac = '9CB654797870'
+        self.client.update_persistent_boot(['ISCSI'], mac)
+        call_mock.assert_called_once_with('update_persistent_boot', ['ISCSI'],
+                                          mac)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_get_secure_boot_mode(self, call_mock):
@@ -818,13 +826,13 @@ class IloClientTestCase(testtools.TestCase):
     def test_update_persistent_boot_gen9(self, update_persistent_boot_mock):
         self.client.model = 'Gen9'
         self.client.update_persistent_boot(['cdrom'])
-        update_persistent_boot_mock.assert_called_once_with(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'], None)
 
     @mock.patch.object(ribcl.RIBCLOperations, 'update_persistent_boot')
     def test_update_persistent_boot_gen8(self, update_persistent_boot_mock):
         self.client.model = 'Gen8'
         self.client.update_persistent_boot(['cdrom'])
-        update_persistent_boot_mock.assert_called_once_with(['cdrom'])
+        update_persistent_boot_mock.assert_called_once_with(['cdrom'], None)
 
     @mock.patch.object(ris.RISOperations, 'get_persistent_boot_device')
     def test_get_persistent_boot_device_gen9(self, get_pers_boot_device_mock):
