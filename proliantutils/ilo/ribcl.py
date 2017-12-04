@@ -550,7 +550,7 @@ class RIBCLOperations(operations.IloOperations):
         data = self._parse_output(d)
         return data
 
-    def update_persistent_boot(self, device_type=[]):
+    def update_persistent_boot(self, device_type=[], mac=None):
 
         valid_devices = ['NETWORK',
                          'HDD',

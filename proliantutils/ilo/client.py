@@ -380,9 +380,9 @@ class IloClient(operations.IloOperations):
         """Get the current persistent boot device set for the host."""
         return self._call_method('get_persistent_boot_device')
 
-    def update_persistent_boot(self, device_type=[]):
+    def update_persistent_boot(self, device_type=[], mac=None):
         """Updates persistent boot based on the boot mode."""
-        return self._call_method('update_persistent_boot', device_type)
+        return self._call_method('update_persistent_boot', device_type, mac)
 
     def get_secure_boot_mode(self):
         """Get the status if secure boot is enabled or not."""

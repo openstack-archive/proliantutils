@@ -183,7 +183,7 @@ class IloOperations(object):
         """Configures to boot from a specific device."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
-    def update_persistent_boot(self, device_type=[]):
+    def update_persistent_boot(self, device_type=[], mac=None):
         """Updates persistent boot based on the boot mode."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
