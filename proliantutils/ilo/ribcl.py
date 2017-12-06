@@ -407,8 +407,15 @@ class RIBCLOperations(operations.IloOperations):
             raise exception.IloInvalidInputError(
                 "Invalid input. The expected input is ON or OFF.")
 
-    def set_one_time_boot(self, value):
-        """Configures a single boot from a specific device."""
+    def set_one_time_boot(self, value, mac=None):
+        """Configures a single boot from a specific device.
+
+        :param value: specific device to which the boot option is set
+        :param mac: MAC value of the data NIC in case ISCSI target is
+                    set as boot device. This value may not be used
+                    here since RIBCL does not support setting ISCSI
+                    target. However included here for consistency.
+        """
         dic = {'value': value}
         data = self._execute_command(
             'SET_ONE_TIME_BOOT', 'SERVER_INFO', 'write', dic)

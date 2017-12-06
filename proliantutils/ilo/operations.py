@@ -135,7 +135,7 @@ class IloOperations(object):
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
-    def set_one_time_boot(self, value):
+    def set_one_time_boot(self, value, mac=None):
         """Configures a single boot from a specific device."""
         raise exception.IloCommandNotSupportedError(ERRMSG)
 

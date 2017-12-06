@@ -433,7 +433,13 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_one_time_boot(self, call_mock):
         self.client.set_one_time_boot('CDROM')
-        call_mock.assert_called_once_with('set_one_time_boot', 'CDROM')
+        call_mock.assert_called_once_with('set_one_time_boot', 'CDROM', None)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_set_one_time_boot_with_mac(self, call_mock):
+        mac = '3863bb43683c'
+        self.client.set_one_time_boot('ISCSI', mac)
+        call_mock.assert_called_once_with('set_one_time_boot', 'ISCSI', mac)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_insert_virtual_media(self, call_mock):
@@ -806,13 +812,13 @@ class IloClientTestCase(testtools.TestCase):
     def test_set_one_time_boot_gen9(self, set_one_time_boot_mock):
         self.client.model = 'Gen9'
         self.client.set_one_time_boot('cdrom')
-        set_one_time_boot_mock.assert_called_once_with('cdrom')
+        set_one_time_boot_mock.assert_called_once_with('cdrom', None)
 
     @mock.patch.object(ribcl.RIBCLOperations, 'set_one_time_boot')
     def test_set_one_time_boot_gen8(self, set_one_time_boot_mock):
         self.client.model = 'Gen8'
         self.client.set_one_time_boot('cdrom')
-        set_one_time_boot_mock.assert_called_once_with('cdrom')
+        set_one_time_boot_mock.assert_called_once_with('cdrom', None)
 
     @mock.patch.object(ris.RISOperations, 'update_persistent_boot')
     def test_update_persistent_boot_gen9(self, update_persistent_boot_mock):
