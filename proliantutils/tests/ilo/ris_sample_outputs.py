@@ -1541,6 +1541,33 @@ GET_BIOS_BOOT = """
 
 """
 
+GET_BIOS_MAPPINGS_WITHOUT_NIC = """
+{
+    "Registry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BiosPciSettingsMappings": [
+        {
+            "Associations": [
+                "EmbSata1Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1F,0x2)",
+            "Instance": 1,
+            "Subinstances": []
+        },
+        {
+            "Associations": [
+                "EmbNicEnable",
+                {
+                   "PreBootNetwork": "EmbNic"
+                }
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1C,0x4)/Pci(0x0,0x0)",
+            "Instance": 3,
+            "Subinstances": []
+        }
+    ]
+}
+"""
+
 GET_BIOS_MAPPINGS = """
 {
     "Registry": "HpBiosAttributeRegistryP89.1.1.00",
@@ -1890,6 +1917,33 @@ GET_ISCSI_PATCH = """
             "iSCSIBootAttemptName": "NicBoot1",
             "iSCSIBootLUN": "1",
             "iSCSINicSource": "NicBoot1",
+            "iSCSITargetIpAddress": "10.10.1.30",
+            "iSCSITargetName": "iqn.2011-07.com.example.server:test1",
+            "iSCSITargetTcpPort": 3260
+         },
+         {
+            "iSCSIBootAttemptInstance": 2,
+            "iSCSIBootAttemptName": "NicBoot2",
+            "iSCSIBootLUN": "1",
+            "iSCSINicSource": "NicBoot2",
+            "iSCSITargetIpAddress": "10.10.1.30",
+            "iSCSITargetName": "iqn.2011-07.com.example.server:test1",
+            "iSCSITargetTcpPort": 3260
+         },
+         {
+            "iSCSIBootAttemptInstance": 3,
+            "iSCSIBootAttemptName": "NicBoot3",
+            "iSCSIBootLUN": "1",
+            "iSCSINicSource": "NicBoot3",
+            "iSCSITargetIpAddress": "10.10.1.30",
+            "iSCSITargetName": "iqn.2011-07.com.example.server:test1",
+            "iSCSITargetTcpPort": 3260
+         },
+         {
+            "iSCSIBootAttemptInstance": 4,
+            "iSCSIBootAttemptName": "NicBoot4",
+            "iSCSIBootLUN": "1",
+            "iSCSINicSource": "NicBoot4",
             "iSCSITargetIpAddress": "10.10.1.30",
             "iSCSITargetName": "iqn.2011-07.com.example.server:test1",
             "iSCSITargetTcpPort": 3260
