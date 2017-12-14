@@ -116,12 +116,10 @@ class IloRisTestCase(testtools.TestCase):
             'iSCSITargetIpAddress': '10.10.1.30',
             'iSCSITargetTcpPort': 3260}
         self.client.set_iscsi_boot_info(
-            'C4346BB7EF30',
             'iqn.2011-07.com.example.server:test1',
             '1', '10.10.1.30')
         _uefi_boot_mode_mock.assert_called_once_with()
-        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
-                                                           iscsi_variables)
+        change_iscsi_settings_mock.assert_called_once_with(iscsi_variables)
 
     @mock.patch.object(ris.RISOperations, '_change_iscsi_settings')
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
@@ -129,17 +127,15 @@ class IloRisTestCase(testtools.TestCase):
                                         change_iscsi_settings_mock):
         _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {'iSCSIBootEnable': 'Disabled'}
-        self.client.unset_iscsi_boot_info('C4346BB7EF30')
+        self.client.unset_iscsi_boot_info()
         _uefi_boot_mode_mock.assert_called_once_with()
-        change_iscsi_settings_mock.assert_called_once_with('C4346BB7EF30',
-                                                           iscsi_variables)
+        change_iscsi_settings_mock.assert_called_once_with(iscsi_variables)
 
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_unset_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
-        mac = 'C4346BB7EF30'
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
-                          self.client.unset_iscsi_boot_info, mac)
+                          self.client.unset_iscsi_boot_info)
         _uefi_boot_mode_mock.assert_called_once_with()
 
     @mock.patch.object(ris.RISOperations, '_rest_get')
@@ -186,9 +182,8 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_is_boot_mode_uefi')
     def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
-        mac = 'C4346BB7EF30'
         self.assertRaises(exception.IloCommandNotSupportedInBiosError,
-                          self.client.set_iscsi_boot_info, mac,
+                          self.client.set_iscsi_boot_info,
                           'iqn.2011-07.com.example.server:test1',
                           '1', '10.10.1.30')
         _uefi_boot_mode_mock.assert_called_once_with()
@@ -1316,32 +1311,12 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         check_iscsi_mock.return_value = iscsi_uri
         patch_mock.return_value = (200, ris_outputs.GET_HEADERS,
                                    ris_outputs.REST_POST_RESPONSE)
-        self.client._change_iscsi_settings('C4346BB7EF30', properties)
+        self.client._change_iscsi_settings(properties)
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
         mappings_mock.assert_called_once_with(bios_settings)
         check_iscsi_mock.assert_called_once_with()
         patch_mock.assert_called_once_with(iscsi_uri, None, settings)
-
-    @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
-    @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
-    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
-    def test__change_iscsi_settings_invalid_mac(self, check_bios_mock,
-                                                boot_mock,
-                                                mappings_mock):
-        bios_uri = '/rest/v1/systems/1/bios'
-        bios_settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
-        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
-                                        bios_uri, bios_settings)
-        boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
-        boot_mock.return_value = boot_settings
-        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
-        mappings_mock.return_value = map_settings
-        self.assertRaises(exception.IloInvalidInputError,
-                          self.client._change_iscsi_settings, 'C456', {})
-        check_bios_mock.assert_called_once_with()
-        boot_mock.assert_called_once_with(bios_settings)
-        mappings_mock.assert_called_once_with(bios_settings)
 
     @mock.patch.object(ris.RISOperations, '_get_bios_mappings_resource')
     @mock.patch.object(ris.RISOperations, '_get_bios_boot_resource')
@@ -1355,11 +1330,11 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                         bios_uri, bios_settings)
         boot_settings = json.loads(ris_outputs.GET_BIOS_BOOT)
         boot_mock.return_value = boot_settings
-        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS)
+        map_settings = json.loads(ris_outputs.GET_BIOS_MAPPINGS_INVALID)
         mappings_mock.return_value = map_settings
         self.assertRaises(exception.IloError,
                           self.client._change_iscsi_settings,
-                          'C4346BB7EF31', {})
+                          {})
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
         mappings_mock.assert_called_once_with(bios_settings)
@@ -1392,7 +1367,7 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                    ris_outputs.REST_POST_RESPONSE)
         self.assertRaises(exception.IloError,
                           self.client._change_iscsi_settings,
-                          'C4346BB7EF30', properties)
+                          properties)
         check_bios_mock.assert_called_once_with()
         boot_mock.assert_called_once_with(bios_settings)
         mappings_mock.assert_called_once_with(bios_settings)

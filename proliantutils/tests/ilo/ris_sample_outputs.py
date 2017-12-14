@@ -1541,6 +1541,22 @@ GET_BIOS_BOOT = """
 
 """
 
+GET_BIOS_MAPPINGS_INVALID = """
+{
+    "Registry": "HpBiosAttributeRegistryP89.1.1.00",
+    "BiosPciSettingsMappings": [
+        {
+            "Associations": [
+                "EmbSata1Enable"
+            ],
+            "CorrelatableID": "PciRoot(0x0)/Pci(0x1F,0x2)",
+            "Instance": 1,
+            "Subinstances": []
+        }
+     ]
+}
+"""
+
 GET_BIOS_MAPPINGS = """
 {
     "Registry": "HpBiosAttributeRegistryP89.1.1.00",
