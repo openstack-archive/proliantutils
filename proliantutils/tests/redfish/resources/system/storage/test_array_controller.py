@@ -38,6 +38,9 @@ class HPEArrayControllerTestCase(testtools.TestCase):
     def test__parse_attributes(self):
         self.sys_stor._parse_attributes()
         self.assertEqual('1.0.2', self.sys_stor.redfish_version)
+        self.assertEqual('HPE Smart Array P408i-a SR Gen10',
+                         self.sys_stor.model)
+        self.assertEqual('Slot 0', self.sys_stor.location)
 
     def test_logical_drives(self):
         log_coll = None
@@ -252,3 +255,33 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         expected = set([10000])
         self.assertEqual(expected,
                          self.sys_stor_col.drive_rotational_speed_rpm)
+
+    def test_get_default_controller(self):
+        self.assertIsNone(self.sys_stor_col._get_default_controller)
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller.json', 'r') as f:
+            ac_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = ac_json
+        result_location = self.sys_stor_col.get_default_controller.location
+        self.assertEqual(result_location, 'Slot 0')
+
+    def test_array_controller_by_location(self):
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller.json', 'r') as f:
+            ac_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = ac_json
+        model_result = (
+            self.sys_stor_col.array_controller_by_location('Slot 0').model)
+        self.assertEqual(model_result, 'HPE Smart Array P408i-a SR Gen10')
+
+    def test_array_controller_by_model(self):
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller.json', 'r') as f:
+            ac_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = ac_json
+        model = 'HPE Smart Array P408i-a SR Gen10'
+        result_model = self.sys_stor_col.array_controller_by_model(model).model
+        self.assertEqual(result_model, model)

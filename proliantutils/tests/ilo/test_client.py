@@ -779,6 +779,38 @@ class IloClientTestCase(testtools.TestCase):
                                 'on ProLiant DL380 G8',
                                 self.client.delete_raid_configuration)
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_create_raid_configuration(self, call_mock):
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        self.client.create_raid_configuration(raid_config)
+        call_mock.assert_called_once_with('create_raid_configuration',
+                                          raid_config)
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_create_raid_configuration_gen9(self, get_product_mock):
+        self.client.model = 'Gen9'
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        get_product_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`create_raid_configuration` is not supported '
+                                'on ProLiant BL460c Gen9',
+                                self.client.create_raid_configuration,
+                                raid_config)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_raid_configuration_gen8(self, get_product_mock):
+        self.client.model = 'Gen8'
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        get_product_mock.return_value = 'ProLiant DL380 G8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`create_raid_configuration` is not supported '
+                                'on ProLiant DL380 G8',
+                                self.client.create_raid_configuration,
+                                raid_config)
+
     @mock.patch.object(ris.RISOperations, 'eject_virtual_media')
     def test_eject_virtual_media_gen9(self, eject_virtual_media_mock):
         self.client.model = 'Gen9'
