@@ -19,6 +19,7 @@ import mock
 import testtools
 
 from proliantutils import exception
+from proliantutils.hpssa import manager
 from proliantutils.redfish.resources.system import smart_storage_config
 
 
@@ -38,6 +39,7 @@ class HPESmartStorageConfigTestCase(testtools.TestCase):
 
     def test_attributes(self):
         self.assertEqual('smartstorageconfig', self.ssc_inst.controller_id)
+        self.assertEqual('Slot 0', self.ssc_inst.location)
         self.assertEqual(
             '600508B1001C045A9BAAC9F4F49498AE',
             self.ssc_inst.logical_drives[0].volume_unique_identifier)
@@ -61,3 +63,42 @@ class HPESmartStorageConfigTestCase(testtools.TestCase):
             return_value=[])
         self.assertRaises(exception.IloLogicalDriveNotFoundError,
                           self.ssc_inst.delete_raid)
+
+    @mock.patch.object(manager, 'validate', autospec=True)
+    def test_create_raid(self, validate_mock):
+        settings_uri = "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        ld1 = {'size_gb': 50,
+               'raid_level': '1',
+               'physical_disks': ['5I:1:1', '5I:1:2']}
+        raid_config = {'logical_disks': [ld1]}
+        validate_mock.return_value = True
+        self.ssc_inst.create_raid(raid_config)
+        data = {"DataGuard": "Disabled",
+                "LogicalDrives": [
+                    {"CapacityGiB": 50, "Raid": "Raid1",
+                     "DataDrives": ['5I:1:1', '5I:1:2']}]}
+        validate_mock.assert_called_once_with(raid_config)
+        self.ssc_inst._conn.put.assert_called_once_with(settings_uri,
+                                                        data=data)
+
+    @mock.patch.object(manager, 'validate', autospec=True)
+    def test_create_raid_multiple_logical_drives(self, validate_mock):
+        settings_uri = "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        ld1 = {'size_gb': 50,
+               'raid_level': '0',
+               'physical_disks': ['5I:1:1']}
+        ld2 = {'size_gb': 100,
+               'raid_level': '1',
+               'number_of_physical_disks': 2}
+        raid_config = {'logical_disks': [ld1, ld2]}
+        validate_mock.return_value = True
+        self.ssc_inst.create_raid(raid_config)
+        data = {"DataGuard": "Disabled",
+                "LogicalDrives": [
+                    {"CapacityGiB": 50, "Raid": "Raid0",
+                     "DataDrives": ['5I:1:1']},
+                    {"CapacityGiB": 100, "Raid": "Raid1",
+                     "DataDrives": {"DataDriveCount": 2}}]}
+        validate_mock.assert_called_once_with(raid_config)
+        self.ssc_inst._conn.put.assert_called_once_with(settings_uri,
+                                                        data=data)

@@ -34,6 +34,12 @@ class HPEArrayController(base.ResourceBase):
     description = base.Field('Description')
     """Description"""
 
+    model = base.Field('Model')
+    """Controller model"""
+
+    location = base.Field('Location')
+    """Controller slot location"""
+
     _logical_drives = None
     _physical_drives = None
 
@@ -89,6 +95,8 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
     _has_rotational = None
     _logical_raid_levels = None
     _drive_rotational_speed_rpm = None
+    _get_models = None
+    _get_default_controller = None
 
     @property
     def _resource_type(self):
@@ -166,6 +174,46 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
                     member.physical_drives.drive_rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
+    @property
+    def get_models(self):
+        """Gets model of array controllers
+
+        :returns list of array controllers model
+        """
+        if self._get_models is None:
+            self._get_models = []
+            for member in self.get_members():
+                self._get_models.append(member.model)
+        return self._get_models
+
+    @property
+    def get_default_controller(self):
+        """Gets default array controller
+
+        :returns default array controller
+        """
+        if self._get_default_controller is None:
+            self._get_default_controller = self.get_members()[0]
+        return self._get_default_controller
+
+    def array_controller_by_location(self, location):
+        """Returns array controller instance by location
+
+        :returns Instance of array controller
+        """
+        for member in self.get_members():
+            if member.location == location:
+                return member
+
+    def array_controller_by_model(self, model):
+        """Returns array controller instance by model
+
+        :returns Instance of array controller
+        """
+        for member in self.get_members():
+            if member.model == model:
+                return member
+
     def _do_refresh(self, force):
         """Do custom resource specific refresh activities
 
@@ -179,3 +227,5 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
         self._has_rotational = None
         self._logical_raid_levels = None
         self._drive_rotational_speed_rpm = None
+        self._get_models = None
+        self._get_default_controller = None
