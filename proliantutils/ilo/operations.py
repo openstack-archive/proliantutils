@@ -454,3 +454,17 @@ class IloOperations(object):
                  not supported on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'controller': 'smartstorageconfig'
+                            }, <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
