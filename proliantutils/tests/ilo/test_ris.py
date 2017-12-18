@@ -2558,3 +2558,13 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
         self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
                                 'ProLiant BL460c Gen9',
                                 self.client.delete_raid_configuration)
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_create_raid_configuration(self, product_name_mock):
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        product_name_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant BL460c Gen9',
+                                self.client.create_raid_configuration,
+                                raid_config)
