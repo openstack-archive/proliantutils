@@ -1008,3 +1008,46 @@ class RedfishOperations(operations.IloOperations):
         else:
             msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def delete_raid_configuration(self):
+        """Delete the raid configuration on the hardware.
+
+        Loops through each SmartStorageConfig controller and clears the
+        raid configuration.
+
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            smart_storage_config_controllers = (
+                sushy_system.smart_storage_config_controllers())
+            for controller in smart_storage_config_controllers:
+                smart_storage_config_obj = (
+                    sushy_system.get_smart_storage_config(controller))
+                smart_storage_config_obj.delete_raid()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to delete the '
+                          'raid configuration. Error %(error)s')
+                   % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            smart_storage_config_controllers = (
+                sushy_system.smart_storage_config_controllers())
+            smart_storage_config_obj = (
+                sushy_system.get_smart_storage_config(
+                    smart_storage_config_controllers[0]))
+            smart_storage_config_obj.create_raid(raid_config)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to create the '
+                          'raid configuration. Error %(error)s')
+                   % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
