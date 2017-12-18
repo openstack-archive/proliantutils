@@ -1098,6 +1098,10 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_host_post_state()
         get_host_post_state_mock.assert_called_once_with()
 
+    def test_create_raid_configuration(self, call_mock):
+        self.client.create_raid_configuration()
+        call_mock.assert_called_once_with('create_raid_configuration')
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

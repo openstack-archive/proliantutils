@@ -1991,3 +1991,13 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         :raises: IloCommandNotSupportedError
         """
         self._raise_command_not_supported("delete_raid_configuration")
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        Based on user raid_config input, it will create raid
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("create_raid_configuration")

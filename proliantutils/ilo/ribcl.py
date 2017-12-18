@@ -1220,6 +1220,16 @@ class RIBCLOperations(operations.IloOperations):
         """
         self._raise_command_not_supported("delete_raid_configuration")
 
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        Based on user raid_config input, it will create raid
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("delete_raid_configuration")
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
