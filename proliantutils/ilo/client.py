@@ -86,6 +86,7 @@ SUPPORTED_REDFISH_METHODS = [
     'get_supported_boot_mode',
     'get_essential_properties',
     'delete_raid_configuration',
+    'create_raid_configuration',
 ]
 
 LOG = log.get_logger(__name__)
@@ -569,6 +570,11 @@ class IloClient(operations.IloOperations):
         """Deletes the logical drives from the system"""
 
         return self._call_method('delete_raid_configuration')
+
+    def create_raid_configuration(self, raid_config):
+        """Creates the logical drives from the system"""
+
+        return self._call_method('create_raid_configuration', raid_config)
 
     def update_firmware(self, firmware_url, component_type):
         """Updates the given firmware on the server
