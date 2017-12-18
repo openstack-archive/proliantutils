@@ -18,6 +18,7 @@ import json
 import mock
 import testtools
 
+from proliantutils.hpssa import manager
 from proliantutils.redfish.resources.system import smart_storage_config
 
 
@@ -67,3 +68,36 @@ class HPESmartStorageConfigTestCase(testtools.TestCase):
             redfish_version='1.0.2')
         ssc_inst.delete_raid()
         ssc_inst._conn.put.assert_not_called()
+
+    @mock.patch.object(manager, 'validate', autospec=True)
+    @mock.patch.object(smart_storage_config.HPESmartStorageConfig,
+                       '_get_smart_storage_config_url', autospec=True)
+    def test_create_raid(self, url_mock, validate_mock):
+        ld1 = {'size_gb': 50,
+               'raid_level': '1',
+               'physical_disks': ['5I:1:1',
+                                  '5I:1:2']}
+        raid_config = {'logical_disks': [ld1]}
+        validate_mock.return_value = True
+        self.ssc_inst.create_raid(raid_config)
+        validate_mock.assert_called_once_with(raid_config)
+        self.assertTrue(url_mock.called)
+        self.assertTrue(self.ssc_inst._conn.put.called)
+
+    @mock.patch.object(manager, 'validate', autospec=True)
+    @mock.patch.object(smart_storage_config.HPESmartStorageConfig,
+                       '_get_smart_storage_config_url', autospec=True)
+    def test_create_raid_multiple_logical_drives(self, url_mock,
+                                                 validate_mock):
+        ld1 = {'size_gb': 50,
+               'raid_level': '0',
+               'physical_disks': ['5I:1:1']}
+        ld2 = {'size_gb': 100,
+               'raid_level': '1',
+               'number_of_physical_disks': 2}
+        raid_config = {'logical_disks': [ld1, ld2]}
+        validate_mock.return_value = True
+        self.ssc_inst.create_raid(raid_config)
+        validate_mock.assert_called_once_with(raid_config)
+        self.assertTrue(url_mock.called)
+        self.assertTrue(self.ssc_inst._conn.put.called)
