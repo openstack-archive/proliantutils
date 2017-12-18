@@ -1052,6 +1052,10 @@ class IloClientTestCase(testtools.TestCase):
                                 'not supported',
                                 self.client.inject_nmi)
 
+    def test_create_raid_configuration(self, call_mock):
+        self.client.create_raid_configuration()
+        call_mock.assert_called_once_with('create_raid_configuration')
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 
