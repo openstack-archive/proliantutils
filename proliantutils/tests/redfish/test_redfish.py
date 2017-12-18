@@ -1675,3 +1675,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def test_delete_raid_configuration(self, get_system_mock):
         self.rf_client.delete_raid_configuration()
         get_system_mock.return_value.delete_raid.assert_called_once_with()
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_create_raid_configuration(self, get_system_mock):
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        self.rf_client.create_raid_configuration(raid_config)
+        get_system_mock.return_value.create_raid.assert_called_once_with(
+            raid_config)

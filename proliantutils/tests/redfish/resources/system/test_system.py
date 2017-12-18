@@ -26,6 +26,7 @@ from proliantutils.redfish.resources.system import ethernet_interface
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import secure_boot
 from proliantutils.redfish.resources.system import smart_storage_config
+from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import smart_storage
 from proliantutils.redfish.resources.system.storage import storage
@@ -560,3 +561,157 @@ class HPESystemTestCase(testtools.TestCase):
             "The Redfish controller failed to get the SmartStorageConfig "
             "controller configurations",
             self.sys_inst.check_smart_storage_config_ids)
+
+    @mock.patch.object(system.HPESystem, 'check_smart_storage_config_ids')
+    @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
+    @mock.patch.object(system.HPESystem,
+                       'get_smart_storage_config_by_controller_model')
+    def test_create_raid(self, get_smart_storage_config_model_mock,
+                         parse_raid_config_mock,
+                         check_smart_storage_config_ids_mock):
+        ld1 = {'raid_level': '0', 'is_root_volume': True,
+               'size_gb': 150,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        ld2 = {'raid_level': '1', 'size_gb': 200,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        raid_config = {'logical_disks': [ld1, ld2]}
+        parse_data = {'HPE Smart Array P408i-p SR Gen10': [ld1, ld2]}
+        parse_raid_config_mock.return_value = parse_data
+        check_smart_storage_config_ids_mock.return_value = None
+        self.sys_inst.create_raid(raid_config)
+        get_smart_storage_config_model_mock.assert_called_once_with(
+            'HPE Smart Array P408i-p SR Gen10')
+        (get_smart_storage_config_model_mock.return_value.
+         create_raid.assert_called_once_with(raid_config))
+
+    @mock.patch.object(system.HPESystem, 'check_smart_storage_config_ids')
+    @mock.patch.object(system.HPESystem, 'get_ssc_controllers_models')
+    @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
+    @mock.patch.object(system.HPESystem,
+                       'get_smart_storage_config_by_controller_model')
+    def test_create_raid_controller_not_found(
+            self, get_smart_storage_config_model_mock, parse_raid_config_mock,
+            get_ssc_controllers_models_mock,
+            check_smart_storage_config_ids_mock):
+        ld1 = {'raid_level': '1', 'size_gb': 200,
+               'controller': 'HPE Gen10 Controller'}
+        raid_config = {'logical_disks': [ld1]}
+        parse_data = {'HPE Gen10 Controller': [ld1]}
+        parse_raid_config_mock.return_value = parse_data
+        check_smart_storage_config_ids_mock.return_value = None
+        get_smart_storage_config_model_mock.return_value = None
+        get_ssc_controllers_models_mock.return_value = [
+            'HPE Smart Array P408i-p SR Gen10']
+        self.assertRaisesRegexp(
+            exception.IloError,
+            "The Redfish controller failed to create the raid "
+            "configuration for one or more controllers with",
+            self.sys_inst.create_raid, raid_config)
+
+    @mock.patch.object(system.HPESystem, 'check_smart_storage_config_ids')
+    @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
+    @mock.patch.object(system.HPESystem,
+                       'get_smart_storage_config_by_controller_model')
+    def test_create_raid_failed(self, get_smart_storage_config_model_mock,
+                                parse_raid_config_mock,
+                                check_smart_storage_config_ids_mock):
+        ld1 = {'raid_level': '0', 'is_root_volume': True,
+               'size_gb': 150,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        ld2 = {'raid_level': '1', 'size_gb': 200,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        raid_config = {'logical_disks': [ld1, ld2]}
+        parse_data = {'HPE Smart Array P408i-p SR Gen10': [ld1, ld2]}
+        check_smart_storage_config_ids_mock.return_value = None
+        parse_raid_config_mock.return_value = parse_data
+        (get_smart_storage_config_model_mock.
+         return_value.create_raid.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegexp(
+            exception.IloError,
+            "The Redfish controller failed to create the "
+            "raid configuration for one or more controllers with Error:",
+            self.sys_inst.create_raid, raid_config)
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_members')
+    def test_get_ssc_controllers_models(self, get_members_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        self.conn.get.return_value.json.side_effect = [ss_json, acc_json]
+        member_mock = mock.Mock(model='HPE Smart Array P408i-p SR Gen10')
+        get_members_mock.return_value = [member_mock]
+        expected = ['HPE Smart Array P408i-p SR Gen10']
+        self.assertEqual(expected, self.sys_inst.get_ssc_controllers_models())
+
+    @mock.patch.object(system.HPESystem, 'get_controller_model_by_ssc_id')
+    def test__parse_raid_config_data(self,
+                                     get_controller_model_by_ssc_id_mock):
+        (get_controller_model_by_ssc_id_mock.
+         return_value) = 'HPE Smart Array P408i-p SR Gen10'
+        ld1 = {'raid_level': '0', 'is_root_volume': True,
+               'size_gb': 150,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        ld2 = {'raid_level': '1', 'size_gb': 200,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        raid_config = {'logical_disks': [ld1, ld2]}
+        expected = {'HPE Smart Array P408i-p SR Gen10': [ld1, ld2]}
+        ssc_id = '/redfish/v1/systems/1/smartstorageconfig'
+        self.assertEqual(expected,
+                         self.sys_inst._parse_raid_config_data(raid_config))
+        get_controller_model_by_ssc_id_mock.assert_called_once_with(ssc_id)
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_members')
+    def test_get_controller_model_by_ssc_id(self, get_members_mock):
+        ssc_id = '/redfish/v1/systems/1/smartstorageconfig'
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage_config.json', 'r') as f:
+            ssc_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        (self.conn.get.return_value.
+         json.side_effect) = [ssc_json, ss_json, acc_json]
+        member_mock = mock.Mock(
+            location='Slot 0', model='HPE Smart Array P408i-p SR Gen10')
+        get_members_mock.return_value = [member_mock]
+        expected = 'HPE Smart Array P408i-p SR Gen10'
+        self.assertEqual(
+            expected, self.sys_inst.get_controller_model_by_ssc_id(ssc_id))
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_members')
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    def test_get_smart_storage_config_by_controller_model(
+            self, get_smart_storage_config_mock, get_members_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage_config.json', 'r') as f:
+            ssc_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        (self.conn.get.return_value.
+         json.side_effect) = [ss_json, acc_json, ssc_json]
+        ssc_obj_mock = mock.Mock(location='Slot 0')
+        member_mock = mock.Mock(
+            location='Slot 0', model='HPE Smart Array P408i-p SR Gen10')
+        get_members_mock.return_value = [member_mock]
+        get_smart_storage_config_mock.return_value = ssc_obj_mock
+        expected = ssc_obj_mock
+        self.assertEqual(
+            expected,
+            self.sys_inst.get_smart_storage_config_by_controller_model(
+                'HPE Smart Array P408i-p SR Gen10'))

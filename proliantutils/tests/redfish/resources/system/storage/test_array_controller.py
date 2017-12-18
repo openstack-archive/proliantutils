@@ -38,6 +38,9 @@ class HPEArrayControllerTestCase(testtools.TestCase):
     def test__parse_attributes(self):
         self.sys_stor._parse_attributes()
         self.assertEqual('1.0.2', self.sys_stor.redfish_version)
+        self.assertEqual('HPE Smart Array P408i-a SR Gen10',
+                         self.sys_stor.model)
+        self.assertEqual('Slot 0', self.sys_stor.location)
 
     def test_logical_drives(self):
         log_coll = None

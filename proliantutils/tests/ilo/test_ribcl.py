@@ -1062,6 +1062,15 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
                                 'ProLiant DL380 G7',
                                 self.ilo.delete_raid_configuration)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_raid_configuration(self, product_name_mock):
+        ld1 = {"size_gb": 150, "raid_level": '0', "is_root_volume": True}
+        raid_config = {"logical_disks": [ld1]}
+        product_name_mock.return_value = constants.GET_PRODUCT_NAME
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant DL380 G7',
+                                self.ilo.create_raid_configuration,
+                                raid_config)
 
 if __name__ == '__main__':
     unittest.main()

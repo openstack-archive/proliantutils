@@ -1168,3 +1168,18 @@ class RedfishOperations(operations.IloOperations):
             return common_utils.apply_bios_properties_filter(
                 settings, ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)
         return settings
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        Based on user raid_config input, it will create raid
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system.create_raid(raid_config)

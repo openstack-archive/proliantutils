@@ -1215,10 +1215,24 @@ class RIBCLOperations(operations.IloOperations):
         Loops through each SmartStorageConfig controller and clears the
         raid configuration.
 
-        :raises: IloError, on an error from iLO
         :raises: IloCommandNotSupportedError
         """
         self._raise_command_not_supported("delete_raid_configuration")
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        Based on user raid_config input, it will create raid
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("create_raid_configuration")
 
 
 # The below block of code is there only for backward-compatibility
