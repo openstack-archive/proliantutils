@@ -25,6 +25,7 @@ from proliantutils.redfish import redfish
 SUPPORTED_RIS_METHODS = [
     'activate_license',
     'clear_secure_boot_keys',
+    'create_raid_configuration',
     'delete_raid_configuration',
     'eject_virtual_media',
     'get_current_bios_settings',
@@ -69,6 +70,7 @@ SUPPORTED_RIS_METHODS = [
     ]
 
 SUPPORTED_REDFISH_METHODS = [
+    'create_raid_configuration',
     'delete_raid_configuration',
     'get_product_name',
     'get_host_post_state',
@@ -651,6 +653,21 @@ class IloClient(operations.IloOperations):
                  on the server.
         """
         return self._call_method('delete_raid_configuration')
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server
+        """
+        return self._call_method('create_raid_configuration', raid_config)
 
     def update_firmware(self, firmware_url, component_type):
         """Updates the given firmware on the server

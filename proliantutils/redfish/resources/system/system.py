@@ -337,6 +337,28 @@ class HPESystem(system.System):
                 HPESmartStorageConfig(self._conn, smart_storage_config_url,
                                       redfish_version=self.redfish_version))
 
+    def get_smart_storage_config_by_controller_model(self, controller_model):
+        """Returns a SmartStorageConfig Instance for controller by model.
+
+        :returns: SmartStorageConfig Instance for controller
+        """
+        for ac in self.smart_storage.array_controllers.get_members():
+            if controller_model == ac.model:
+                for ssc_id in self.smart_storage_config_identities:
+                    ssc_obj = self.get_smart_storage_config(ssc_id)
+                    if ac.location == ssc_obj.location:
+                        return ssc_obj
+
+    def _get_controller_model_by_ssc_id(self, ssc_id):
+        """Returns a SmartStorageConfig controller model by identity.
+
+        :returns: SmartStorageConfig controller model
+        """
+        ssc_obj = self.get_smart_storage_config(ssc_id)
+        for ac in self.smart_storage.array_controllers.get_members():
+            if ac.location == ssc_obj.location:
+                return ac.model
+
     def check_smart_storage_config_ids(self):
         """Check SmartStorageConfig controllers is there in hardware.
 
@@ -378,3 +400,75 @@ class HPESystem(system.System):
             msg = ('No logical drives are found in any controllers. Nothing '
                    'to delete.')
             raise exception.IloLogicalDriveNotFoundError(msg)
+
+    def _parse_raid_config_data(self, raid_config):
+        """It will parse raid config data based on raid controllers
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'controller':
+                            'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :returns: A dictionary of controllers, each containing list of
+                  their respected logical drives.
+        """
+        default_controller = self._get_controller_model_by_ssc_id(
+            self.smart_storage_config_identities[0])
+        controllers = {default_controller: []}
+        for ld in raid_config['logical_disks']:
+            if 'controller' not in ld.keys():
+                controllers[default_controller].append(ld)
+            else:
+                ctrl = ld['controller']
+                if ctrl not in controllers:
+                    controllers[ctrl] = []
+                controllers[ctrl].append(ld)
+        return controllers
+
+    def get_ssc_controllers_models(self):
+        """Return list of models of smart storage array controllers
+
+        :returns: List of models of smart storage array controllers
+        """
+        models = []
+        for ac in self.smart_storage.array_controllers.get_members():
+            models.append(ac.model)
+        return models
+
+    def create_raid(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        """
+        self.check_smart_storage_config_ids()
+        any_exceptions = []
+        controllers = self._parse_raid_config_data(raid_config)
+        # Creating raid on rest of the controllers
+        for controller in controllers:
+            try:
+                config = {'logical_disks': controllers[controller]}
+                ssc_obj = (
+                    self.get_smart_storage_config_by_controller_model(
+                        controller))
+                if ssc_obj:
+                    ssc_obj.create_raid(config)
+                else:
+                    models = self.get_ssc_controllers_models()
+                    msg = ('Controller not found. Available controllers are: '
+                           '%(models)s' % {'models': models})
+                    any_exceptions.append((controller, msg))
+            except sushy.exceptions.SushyError as e:
+                any_exceptions.append((controller, str(e)))
+
+        if any_exceptions:
+            msg = ('The Redfish controller failed to create the '
+                   'raid configuration for one or more controllers with '
+                   'Error: %(error)s' % {'error': str(any_exceptions)})
+            raise exception.IloError(msg)

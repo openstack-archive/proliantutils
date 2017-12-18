@@ -34,6 +34,12 @@ class HPEArrayController(base.ResourceBase):
     description = base.Field('Description')
     """Description"""
 
+    model = base.Field('Model')
+    """Controller model"""
+
+    location = base.Field('Location')
+    """Controller slot location"""
+
     _logical_drives = None
     _physical_drives = None
 
