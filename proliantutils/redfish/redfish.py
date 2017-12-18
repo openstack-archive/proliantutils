@@ -1047,3 +1047,50 @@ class RedfishOperations(operations.IloOperations):
                    % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def create_raid_configuration(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+        raid_config = {'logical_disks': [{'raid_level': 1, 'size_gb': 100,
+                                          'controller': 'smartstorageconfig'},
+                                         <info-for-logical-disk-2>
+                                        ]}
+
+        ---------Minimal redfish data required---------
+        {
+            "DataGuard": "Disabled",
+            "LogicalDrives": [
+               {
+                  "CapacityGiB": xxx,
+                  "Raid": "xxxxx",
+                  "PhysicalDrives": [],
+                  "DataDrives": {
+                     "DataDriveCount": x
+                  }
+               }
+            ]
+        }
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            controllers = sushy_system.smart_storage_config
+            for ld in raid_config['logical_disks']:
+                config = {}
+                if 'controller' not in ld.keys():
+                    ssc_obj = sushy_system.get_smart_storage_config(
+                        controllers[0])
+                else:
+                    controller = self._get_controller_name(ld['controller'])
+                    ssc_obj = sushy_system.get_smart_storage_config(controller)
+                config['logical_disk'] = [ld]
+                ssc_obj.create_raid(config)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to create the '
+                          'raid configuration: %(raid_config)s. '
+                          'Error %(error)s')
+                   % {'raid_config': raid_config, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
