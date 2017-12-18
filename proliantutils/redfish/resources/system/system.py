@@ -337,6 +337,16 @@ class HPESystem(system.System):
                 HPESmartStorageConfig(self._conn, smart_storage_config_url,
                                       redfish_version=self.redfish_version))
 
+    def get_smart_storage_config_by_id(self, smart_storage_config_id):
+        """Returns a SmartStorageConfig Instance for controller by id."""
+        for ssc_id in self.smart_storage_config_identities:
+            if smart_storage_config_id.lower() not in ssc_id:
+                continue
+            else:
+                return self.get_smart_storage_config(ssc_id)
+        return self.get_smart_storage_config(
+            self.smart_storage_config_identities[0])
+
     def check_smart_storage_config_ids(self):
         """Check SmartStorageConfig controllers is there in hardware.
 
@@ -378,3 +388,43 @@ class HPESystem(system.System):
             msg = ('No logical drives are found in any controllers. Nothing '
                    'to delete.')
             raise exception.IloLogicalDriveNotFoundError(msg)
+
+    def create_raid(self, raid_config):
+        """Create the raid configuration on the hardware.
+
+        :raises: IloError, on an error from iLO.
+        """
+        self.check_smart_storage_config_ids()
+        any_exceptions = []
+        controllers = {}
+        controllers['default'] = []
+        for ld in raid_config['logical_disks']:
+            if 'controller' not in ld.keys():
+                controllers['default'].append(ld)
+            else:
+                if ld['controller'] not in controllers:
+                    controllers[ld['controller']] = []
+                controllers[ld['controller']].append(ld)
+
+        try:
+            config = {'logical_disks': controllers['default']}
+            ssc_obj = self.get_smart_storage_config(
+                self.smart_storage_config_identities[0])
+            ssc_obj.create_raid(config)
+            controllers.pop('default', None)
+        except sushy.exceptions.SushyError as e:
+            any_exceptions.append((controllers['default'], str(e)))
+
+            for controller in controllers:
+                try:
+                    config = {'logical_disks': controllers[controller]}
+                    ssc_obj = self.get_smart_storage_config_by_id(controller)
+                    ssc_obj.create_raid(config)
+                except sushy.exceptions.SushyError as e:
+                    any_exceptions.append((controllers[controller], str(e)))
+
+        if any_exceptions:
+            msg = ('The Redfish controller failed to create the '
+                   'raid configuration for one or more logical drives with '
+                   'Error: %(error)s' % {'error': str(any_exceptions)})
+            raise exception.IloError(msg)
