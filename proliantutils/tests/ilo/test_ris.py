@@ -904,13 +904,13 @@ class IloRisTestCase(testtools.TestCase):
     def test_set_one_time_boot_cdrom(self, update_persistent_boot_mock):
         self.client.set_one_time_boot('cdrom')
         update_persistent_boot_mock.assert_called_once_with(
-            ['cdrom'], persistent=False, mac=None)
+            ['cdrom'], persistent=False)
 
     @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
     def test_set_one_time_boot_iscsi(self, update_persistent_boot_mock):
-        self.client.set_one_time_boot('ISCSI', '9cb654797870')
+        self.client.set_one_time_boot('ISCSI')
         update_persistent_boot_mock.assert_called_once_with(
-            ['ISCSI'], persistent=False, mac='9cb654797870')
+            ['ISCSI'], persistent=False)
 
     @mock.patch.object(ris.RISOperations, '_get_host_details')
     def test_get_persistent_boot_device_cdrom(self, get_host_details_mock):
@@ -1025,13 +1025,13 @@ class IloRisTestCase(testtools.TestCase):
     def test_update_persistent_boot_cdrom(self, update_persistent_boot_mock):
         self.client.update_persistent_boot(['cdrom'])
         update_persistent_boot_mock.assert_called_once_with(
-            ['cdrom'], mac=None, persistent=True)
+            ['cdrom'], persistent=True)
 
     @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
     def test_update_persistent_boot_iscsi(self, update_persistent_boot_mock):
         self.client.update_persistent_boot(['ISCSI'], '9cb654797870')
         update_persistent_boot_mock.assert_called_once_with(
-            ['ISCSI'], mac='9cb654797870', persistent=True)
+            ['ISCSI'], persistent=True)
 
     @mock.patch.object(ris.RISOperations, '_update_persistent_boot')
     def test_update_persistent_boot_exc(self, update_persistent_boot_mock):

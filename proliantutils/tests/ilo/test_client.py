@@ -433,13 +433,7 @@ class IloClientTestCase(testtools.TestCase):
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_one_time_boot(self, call_mock):
         self.client.set_one_time_boot('CDROM')
-        call_mock.assert_called_once_with('set_one_time_boot', 'CDROM', None)
-
-    @mock.patch.object(client.IloClient, '_call_method')
-    def test_set_one_time_boot_with_mac(self, call_mock):
-        mac = '3863bb43683c'
-        self.client.set_one_time_boot('ISCSI', mac)
-        call_mock.assert_called_once_with('set_one_time_boot', 'ISCSI', mac)
+        call_mock.assert_called_once_with('set_one_time_boot', 'CDROM')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_insert_virtual_media(self, call_mock):
