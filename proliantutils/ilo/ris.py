@@ -1542,8 +1542,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         else:
             return None
 
-    def _update_persistent_boot(self, device_type=[], persistent=False,
-                                mac=None):
+    def _update_persistent_boot(self, device_type=[], persistent=False):
         """Changes the persistent boot device order in BIOS boot mode for host
 
         Note: It uses first boot device from the device_type and ignores rest.
@@ -1551,7 +1550,6 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         :param device_type: ordered list of boot devices
         :param persistent: Boolean flag to indicate if the device to be set as
                            a persistent boot device
-        :param mac: intiator mac address, mandotory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
@@ -1600,11 +1598,10 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             msg = self._get_extended_error(response)
             raise exception.IloError(msg)
 
-    def update_persistent_boot(self, device_type=[], mac=None):
+    def update_persistent_boot(self, device_type=[]):
         """Changes the persistent boot device order for the host
 
         :param device_type: ordered list of boot devices
-        :param mac: intiator mac address, mandatory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
@@ -1616,18 +1613,17 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
                                                      "devices: NETWORK, HDD,"
                                                      " ISCSI or CDROM.")
 
-        self._update_persistent_boot(device_type, persistent=True, mac=mac)
+        self._update_persistent_boot(device_type, persistent=True)
 
-    def set_one_time_boot(self, device, mac=None):
+    def set_one_time_boot(self, device):
         """Configures a single boot from a specific device.
 
         :param device: Device to be set as a one time boot device
-        :param mac: intiator mac address, optional parameter
         :raises: IloError, on an error from iLO.
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        self._update_persistent_boot([device], persistent=False, mac=mac)
+        self._update_persistent_boot([device], persistent=False)
 
     def get_one_time_boot(self):
         """Retrieves the current setting for the one time boot.
