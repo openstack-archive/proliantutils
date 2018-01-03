@@ -87,6 +87,8 @@ SUPPORTED_REDFISH_METHODS = [
     'get_server_capabilities',
     'get_supported_boot_mode',
     'get_essential_properties',
+    'set_iscsi_boot_info',
+    'unset_iscsi_boot_info',
 ]
 
 LOG = log.get_logger(__name__)

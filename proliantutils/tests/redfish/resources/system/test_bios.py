@@ -83,22 +83,40 @@ class BIOSSettingsTestCase(testtools.TestCase):
                       self.bios_inst.boot_settings)
         self.conn.get.return_value.json.assert_not_called()
 
-    def test_iscsi_settings(self):
-        self.assertIsNone(self.bios_inst._iscsi_settings)
+    def test_bios_mappings(self):
+        self.assertIsNone(self.bios_inst._bios_mappings)
 
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
-                  'json_samples/bios_boot.json', 'r') as f:
+                  'json_samples/bios_mappings.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
-        actual_settings = self.bios_inst.iscsi_settings
+        actual_settings = self.bios_inst.bios_mappings
         self.assertIsInstance(actual_settings,
-                              iscsi.ISCSISettings)
+                              bios.BIOSMappings)
         self.conn.get.return_value.json.assert_called_once_with()
         # reset mock
         self.conn.get.return_value.json.reset_mock()
         self.assertIs(actual_settings,
-                      self.bios_inst.iscsi_settings)
+                      self.bios_inst.bios_mappings)
+        self.conn.get.return_value.json.assert_not_called()
+
+    def test_iscsi_resource(self):
+        self.assertIsNone(self.bios_inst._iscsi_resource)
+
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read()))
+        actual_settings = self.bios_inst.iscsi_resource
+        self.assertIsInstance(actual_settings,
+                              iscsi.ISCSIResource)
+        self.conn.get.return_value.json.assert_called_once_with()
+        # reset mock
+        self.conn.get.return_value.json.reset_mock()
+        self.assertIs(actual_settings,
+                      self.bios_inst.iscsi_resource)
         self.conn.get.return_value.json.assert_not_called()
 
     def test__get_base_configs(self):
@@ -159,28 +177,53 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.assertIsInstance(actual_settings,
                               bios.BIOSBootSettings)
 
-    def test_iscsi_settings_on_refresh(self):
+    def test_bios_mappings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
-                  'json_samples/bios_boot.json', 'r') as f:
+                  'json_samples/bios_mappings.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
-        actual_settings = self.bios_inst.iscsi_settings
+        actual_settings = self.bios_inst.bios_mappings
         self.assertIsInstance(actual_settings,
-                              iscsi.ISCSISettings)
+                              bios.BIOSMappings)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+
+        self.bios_inst.refresh()
+        self.assertIsNone(self.bios_inst._bios_mappings)
+
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+
+        self.assertIsInstance(actual_settings,
+                              bios.BIOSMappings)
+
+    def test_iscsi_resource_on_refresh(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read()))
+        actual_settings = self.bios_inst.iscsi_resource
+        self.assertIsInstance(actual_settings,
+                              iscsi.ISCSIResource)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
         self.bios_inst.refresh()
-        self.assertIsNone(self.bios_inst._iscsi_settings)
+        self.assertIsNone(self.bios_inst._iscsi_resource)
 
         with open('proliantutils/tests/redfish/'
-                  'json_samples/bios_boot.json', 'r') as f:
+                  'json_samples/iscsi.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
-                json.loads(f.read())['Default'])
+                json.loads(f.read()))
         self.assertIsInstance(actual_settings,
-                              iscsi.ISCSISettings)
+                              iscsi.ISCSIResource)
 
     def test__get_base_configs_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -388,3 +431,27 @@ class BIOSBootSettingsTestCase(testtools.TestCase):
             exception.IloError,
             'MAC provided "123456" is Invalid',
             self.bios_boot_inst.get_uefi_boot_string, '123456')
+
+
+class BIOSMappingsTestCase(testtools.TestCase):
+
+    def setUp(self):
+        super(BIOSMappingsTestCase, self).setUp()
+        self.conn = mock.MagicMock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            self.conn.get.return_value.json.return_value = (
+                json.loads(f.read())['Default'])
+        self.bios_mappings_inst = bios.BIOSMappings(
+            self.conn, '/redfish/v1/Systems/1/bios/mappings',
+            redfish_version='1.0.2')
+
+    def test_attributes(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            pci_settings_mappings = (
+                json.loads(f.read())['Default']['BiosPciSettingsMappings'])
+
+        self.assertEqual(
+            pci_settings_mappings,
+            self.bios_mappings_inst.pci_settings_mappings)

@@ -45,7 +45,8 @@ class BIOSSettings(base.ResourceBase):
     cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
                               mappings.CPUVT_MAP)
 
-    _iscsi_settings = None
+    _iscsi_resource = None
+    _bios_mappings = None
 
     _pending_settings = None
     _boot_settings = None
@@ -84,20 +85,36 @@ class BIOSSettings(base.ResourceBase):
         return self._boot_settings
 
     @property
-    def iscsi_settings(self):
-        """Property to provide reference to bios iscsi instance
+    def iscsi_resource(self):
+        """Property to provide reference to bios iscsi resource instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._iscsi_settings is None:
-            self._iscsi_settings = iscsi.ISCSISettings(
+        if self._iscsi_resource is None:
+            self._iscsi_resource = iscsi.ISCSIResource(
                 self._conn,
                 utils.get_subresource_path_by(
                     self, ["Oem", "Hpe", "Links", "iScsi"]),
                 redfish_version=self.redfish_version)
 
-        return self._iscsi_settings
+        return self._iscsi_resource
+
+    @property
+    def bios_mappings(self):
+        """Property to provide reference to bios mappings instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._bios_mappings is None:
+            self._bios_mappings = BIOSMappings(
+                self._conn,
+                utils.get_subresource_path_by(
+                    self, ["Oem", "Hpe", "Links", "Mappings"]),
+                redfish_version=self.redfish_version)
+
+        return self._bios_mappings
 
     def _get_base_configs(self):
         """Method that returns object of bios base configs."""
@@ -119,7 +136,8 @@ class BIOSSettings(base.ResourceBase):
         self._pending_settings = None
         self._boot_settings = None
         self._base_configs = None
-        self._iscsi_settings = None
+        self._iscsi_resource = None
+        self._bios_mappings = None
 
 
 class BIOSBaseConfigs(base.ResourceBase):
@@ -228,3 +246,10 @@ class BIOSBootSettings(base.ResourceBase):
         else:
             msg = ('MAC provided "%s" is Invalid' % mac)
             raise exception.IloInvalidInputError(msg)
+
+
+class BIOSMappings(base.ResourceBase):
+    """Class that defines the functionality for BIOS mappings."""
+
+    pci_settings_mappings = base.Field("BiosPciSettingsMappings",
+                                       adapter=list)
