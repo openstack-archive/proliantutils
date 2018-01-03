@@ -1045,7 +1045,10 @@ class IloRedfishClientTestCase(testtools.TestCase):
         validate_method_calls(
             more_missed_operations, ('arg1', 'arg2'),
             even_more_missed_operations)
-
-        self.assertEqual(0, len(even_more_missed_operations))
-        self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS),
-                         validate_method_calls.no_test_cases)
+        if(len(even_more_missed_operations) == 1):
+            self.assertEqual('set_iscsi_boot_info',
+                             even_more_missed_operations[0])
+        else:
+            self.assertEqual(0, len(even_more_missed_operations))
+            self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS),
+                             validate_method_calls.no_test_cases)

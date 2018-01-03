@@ -979,7 +979,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
                 msg = self._get_extended_error(response)
                 raise exception.IloError(msg)
         else:
-            msg = 'iscsi initiator cannot be set in the BIOS boot mode'
+            msg = 'iSCSI initiator cannot be set in the BIOS boot mode'
             raise exception.IloCommandNotSupportedError(msg)
 
     def get_current_boot_mode(self):
