@@ -671,7 +671,7 @@ class RedfishOperations(operations.IloOperations):
                  GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
                      sushy_system.secure_boot.current_boot)),
                 ('iscsi_boot',
-                 (sushy_system.bios_settings.iscsi_settings.
+                 (sushy_system.bios_settings.iscsi_resource.
                   is_iscsi_boot_supported())),
                 ('hardware_supports_raid',
                  len(sushy_system.smart_storage.array_controllers.
@@ -860,3 +860,98 @@ class RedfishOperations(operations.IloOperations):
                    % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def _change_iscsi_target_settings(self, iscsi_info):
+        """Change iSCSI target settings.
+
+        :param iscsi_info: A dictionary that contains information of iSCSI
+                           target like target_name, lun, ip_address, port etc.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            pci_settings_map = (
+                sushy_system.bios_settings.bios_mappings.pci_settings_mappings)
+            nics = []
+            for mapping in pci_settings_map:
+                for subinstance in mapping['Subinstances']:
+                    for association in subinstance['Associations']:
+                        if 'NicBoot' in association:
+                            nics.append(association)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to get the '
+                          'bios mappings. Error %(error)s')
+                   % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+        if not nics:
+            msg = ('No nics found')
+            raise exception.IloError(msg)
+
+        # Set iSCSI info to all nics
+        iscsi_infos = []
+        for nic in nics:
+            data = iscsi_info.copy()
+            data['iSCSIAttemptName'] = nic
+            data['iSCSINicSource'] = nic
+            data['iSCSIAttemptInstance'] = nics.index(nic) + 1
+            iscsi_infos.append(data)
+
+        iscsi_data = {'iSCSISources': iscsi_infos}
+        try:
+            (sushy_system.bios_settings.iscsi_resource.
+             iscsi_settings.update_iscsi_settings_by_patch(iscsi_data))
+        except sushy.exceptions.SushyError as e:
+            msg = (self._("The Redfish controller is unable to update iSCSI "
+                          "settings. Error %(error)s") %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def set_iscsi_boot_info(self, target_name, lun, ip_address,
+                            port='3260', auth_method=None, username=None,
+                            password=None):
+        """Set iSCSI details of the system in UEFI boot mode.
+
+        The initiator system is set with the target details like
+        IQN, LUN, IP, Port etc.
+        :param target_name: Target Name for iSCSI.
+        :param lun: logical unit number.
+        :param ip_address: IP address of the target.
+        :param port: port of the target.
+        :param auth_method : either None or CHAP.
+        :param username: CHAP Username for authentication.
+        :param password: CHAP secret.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the bios boot mode.
+        """
+        if(self._is_boot_mode_uefi()):
+            iscsi_info = {}
+            iscsi_info['iSCSITargetName'] = target_name
+            iscsi_info['iSCSILUN'] = lun
+            iscsi_info['iSCSITargetIpAddress'] = ip_address
+            iscsi_info['iSCSITargetTcpPort'] = int(port)
+            iscsi_info['iSCSITargetInfoViaDHCP'] = False
+            iscsi_info['iSCSIConnection'] = 'Enabled'
+            if (auth_method == 'CHAP'):
+                iscsi_info['iSCSIAuthenticationMethod'] = 'Chap'
+                iscsi_info['iSCSIChapUsername'] = username
+                iscsi_info['iSCSIChapSecret'] = password
+            self._change_iscsi_target_settings(iscsi_info)
+        else:
+            msg = 'iSCSI boot is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def unset_iscsi_boot_info(self):
+        """Disable iSCSI boot option in UEFI boot mode.
+
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the BIOS boot mode.
+        """
+        if(self._is_boot_mode_uefi()):
+            iscsi_info = {'iSCSIConnection': 'Disabled'}
+            self._change_iscsi_target_settings(iscsi_info)
+        else:
+            msg = 'iSCSI boot is not supported in the BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
