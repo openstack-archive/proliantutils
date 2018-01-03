@@ -17,12 +17,13 @@ from sushy.resources import base
 from proliantutils.redfish import utils
 
 
-class ISCSISettings(base.ResourceBase):
-    """Class that represents the iSCSI settings resource.
+class ISCSIResource(base.ResourceBase):
+    """Class that represents the iSCSI resource.
 
     This class extends the functionality of base resource class
     from sushy.
     """
+    _iscsi_settings = None
 
     def is_iscsi_boot_supported(self):
         """Checks whether iscsi boot is supported or not.
@@ -34,3 +35,38 @@ class ISCSISettings(base.ResourceBase):
         return utils.is_operation_allowed(
             'PATCH', self,
             ['@Redfish.Settings', 'SettingsObject'])
+
+    @property
+    def iscsi_settings(self):
+        """Property to provide reference to iSCSI settings instance
+
+        It is calculated once when the first time it is queried. On refresh,
+        this property gets reset.
+        """
+        if self._iscsi_settings is None:
+            self._iscsi_settings = ISCSISettings(
+                self._conn,
+                utils.get_subresource_path_by(
+                    self, ["@Redfish.Settings", "SettingsObject"]),
+                redfish_version=self.redfish_version)
+
+        return self._iscsi_settings
+
+    def refresh(self):
+        super(ISCSIResource, self).refresh()
+        self._iscsi_settings = None
+
+
+class ISCSISettings(base.ResourceBase):
+    """Class that represents the iSCSI settings.
+
+    This class extends the functionality of base resource class
+    from sushy.
+    """
+
+    def update_iscsi_settings(self, iscsi_data):
+        """Update iscsi data
+
+        :param data: default iscsi config data
+        """
+        self._conn.patch(self.path, data=iscsi_data)

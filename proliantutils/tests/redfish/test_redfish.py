@@ -713,9 +713,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
             tpm_mock)
         type(get_system_mock.return_value).supported_boot_mode = (
             sys_cons.SUPPORTED_LEGACY_BIOS_AND_UEFI)
-        iscsi_mock = mock.MagicMock(spec=iscsi.ISCSISettings)
+        iscsi_mock = mock.MagicMock(spec=iscsi.ISCSIResource)
         iscsi_mock.is_iscsi_boot_supported = mock.MagicMock(return_value=True)
-        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+        type(get_system_mock.return_value.bios_settings).iscsi_resource = (
             iscsi_mock)
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = [
@@ -790,9 +790,9 @@ class RedfishOperationsTestCase(testtools.TestCase):
             tpm_mock)
         type(get_system_mock.return_value).supported_boot_mode = (
             sys_cons.SUPPORTED_UEFI_ONLY)
-        iscsi_mock = mock.MagicMock(spec=iscsi.ISCSISettings)
+        iscsi_mock = mock.MagicMock(spec=iscsi.ISCSIResource)
         iscsi_mock.is_iscsi_boot_supported = mock.MagicMock(return_value=False)
-        type(get_system_mock.return_value.bios_settings).iscsi_settings = (
+        type(get_system_mock.return_value.bios_settings).iscsi_resource = (
             iscsi_mock)
         type(get_system_mock.return_value.smart_storage.
              array_controllers).members_identities = []
@@ -1043,3 +1043,229 @@ class RedfishOperationsTestCase(testtools.TestCase):
             "The Redfish controller failed to get the "
             "resource data. Error None",
             self.rf_client.get_essential_properties)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
+                               'iSCSI boot is not supported '
+                               'in the BIOS boot mode',
+                               self.rf_client.set_iscsi_boot_info,
+                               'iqn.2011-07.com.example.server:test1',
+                               '1', '10.10.1.30')
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_change_iscsi_target_settings', autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
+                                      change_iscsi_target_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {
+            'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
+            'iSCSITargetInfoViaDHCP': False,
+            'iSCSILUN': '1',
+            'iSCSIConnection': 'Enabled',
+            'iSCSITargetIpAddress': '10.10.1.30',
+            'iSCSITargetTcpPort': 3260}
+        self.rf_client.set_iscsi_boot_info(
+            'iqn.2011-07.com.example.server:test1',
+            '1', '10.10.1.30')
+        change_iscsi_target_settings_mock.assert_called_once_with(
+            self.rf_client, iscsi_variables)
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_change_iscsi_target_settings', autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_iscsi_boot_info_uefi_with_chap(
+            self, _uefi_boot_mode_mock, change_iscsi_target_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {
+            'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
+            'iSCSITargetInfoViaDHCP': False,
+            'iSCSILUN': '1',
+            'iSCSIConnection': 'Enabled',
+            'iSCSITargetIpAddress': '10.10.1.30',
+            'iSCSITargetTcpPort': 3260,
+            'iSCSIAuthenticationMethod': 'Chap',
+            'iSCSIChapUsername': 'admin',
+            'iSCSIChapSecret': 'password'}
+        self.rf_client.set_iscsi_boot_info(
+            'iqn.2011-07.com.example.server:test1',
+            '1', '10.10.1.30', 3260, 'CHAP', 'admin', 'password')
+        change_iscsi_target_settings_mock.assert_called_once_with(
+            self.rf_client, iscsi_variables)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_unset_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
+                               "iSCSI boot is not supported "
+                               "in the BIOS boot mode",
+                               self.rf_client.unset_iscsi_boot_info)
+
+    @mock.patch.object(redfish.RedfishOperations,
+                       '_change_iscsi_target_settings', autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_unset_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
+                                        change_iscsi_target_settings_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_variables = {
+            'iSCSIConnection': 'Disabled'}
+        self.rf_client.unset_iscsi_boot_info()
+        change_iscsi_target_settings_mock.assert_called_once_with(
+            self.rf_client, iscsi_variables)
+
+    @mock.patch.object(iscsi.ISCSISettings, 'update_iscsi_settings')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__change_iscsi_target_settings(
+            self, get_system_mock, update_iscsi_settings_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            bios_mappings_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi_settings.json', 'r') as f:
+            iscsi_settings_json = json.loads(f.read())
+
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            bios_mappings_json['Default'], iscsi_json,
+            iscsi_settings_json['Default']]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        iscsi_variable = {'iSCSITargetName':
+                          'iqn.2011-07.com.example.server:test1',
+                          'iSCSILUN': '1',
+                          'iSCSITargetIpAddress': '10.10.1.30',
+                          'iSCSITargetTcpPort': 3260,
+                          'iSCSITargetInfoViaDHCP': False,
+                          'iSCSIConnection': 'Enabled'}
+        iscsi_data1 = {'iSCSITargetName':
+                       'iqn.2011-07.com.example.server:test1',
+                       'iSCSILUN': '1',
+                       'iSCSITargetIpAddress': '10.10.1.30',
+                       'iSCSITargetTcpPort': 3260,
+                       'iSCSITargetInfoViaDHCP': False,
+                       'iSCSIConnection': 'Enabled',
+                       'iSCSIAttemptName': 'NicBoot1',
+                       'iSCSINicSource': 'NicBoot1',
+                       'iSCSIAttemptInstance': 1}
+        iscsi_data2 = {'iSCSITargetName':
+                       'iqn.2011-07.com.example.server:test1',
+                       'iSCSILUN': '1',
+                       'iSCSITargetIpAddress': '10.10.1.30',
+                       'iSCSITargetTcpPort': 3260,
+                       'iSCSITargetInfoViaDHCP': False,
+                       'iSCSIConnection': 'Enabled',
+                       'iSCSIAttemptName': 'NicBoot2',
+                       'iSCSINicSource': 'NicBoot2',
+                       'iSCSIAttemptInstance': 2}
+
+        data = {
+            'iSCSISources': [iscsi_data1, iscsi_data2]
+        }
+        self.rf_client._change_iscsi_target_settings(iscsi_variable)
+        update_iscsi_settings_mock.assert_called_once_with(
+            data)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__change_iscsi_target_settings_failed_getting_mappings(
+            self, get_system_mock):
+        mapping_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.bios_settings).bios_mappings = (
+            mapping_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller failed to get the "
+            "bios mappings. Error",
+            self.rf_client._change_iscsi_target_settings,
+            '{}')
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__change_iscsi_target_settings_no_nics(
+            self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            bios_mappings_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            bios_mappings_json['Mappings_without_nic']]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        self.assertRaisesRegex(
+            exception.IloError,
+            "No nics were found on the system",
+            self.rf_client._change_iscsi_target_settings,
+            '{}')
+
+    @mock.patch.object(iscsi.ISCSISettings, 'update_iscsi_settings')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test__change_iscsi_target_settings_update_failed(
+            self, get_system_mock, update_iscsi_settings_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_mappings.json', 'r') as f:
+            bios_mappings_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi_settings.json', 'r') as f:
+            iscsi_settings_json = json.loads(f.read())
+
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            bios_mappings_json['Default'], iscsi_json,
+            iscsi_settings_json['Default']]
+
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        iscsi_variable = {'iSCSITargetName':
+                          'iqn.2011-07.com.example.server:test1',
+                          'iSCSILUN': '1',
+                          'iSCSITargetIpAddress': '10.10.1.30',
+                          'iSCSITargetTcpPort': 3260,
+                          'iSCSITargetInfoViaDHCP': False,
+                          'iSCSIConnection': 'Enabled'}
+        update_iscsi_settings_mock.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller is failed to update iSCSI '
+            'settings.',
+            self.rf_client._change_iscsi_target_settings,
+            iscsi_variable)
