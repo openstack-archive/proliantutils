@@ -1269,3 +1269,138 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'settings.',
             self.rf_client._change_iscsi_target_settings,
             iscsi_variable)
+
+    @mock.patch.object(iscsi.ISCSISettings, 'update_iscsi_settings_by_patch')
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_iscsi_initiator_info(
+            self, get_system_mock, _uefi_boot_mode_mock,
+            update_iscsi_settings_by_patch_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi_settings.json', 'r') as f:
+            iscsi_settings_json = json.loads(f.read())
+
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            iscsi_json, iscsi_settings_json['Default']]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        _uefi_boot_mode_mock.return_value = True
+        initiator = 'iqn.2015-02.com.hpe:uefi-U31'
+        data = {'iSCSIInitiatorName': initiator}
+        self.rf_client.set_iscsi_initiator_info(initiator)
+        update_iscsi_settings_by_patch_mock.assert_called_once_with(
+            data)
+
+    @mock.patch.object(iscsi.ISCSISettings, 'update_iscsi_settings_by_patch')
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_iscsi_initiator_info_update_failed(
+            self, get_system_mock, _uefi_boot_mode_mock,
+            update_iscsi_settings_by_patch_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi_settings.json', 'r') as f:
+            iscsi_settings_json = json.loads(f.read())
+
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            iscsi_json, iscsi_settings_json['Default']]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        _uefi_boot_mode_mock.return_value = True
+        initiator = 'iqn.2015-02.com.hpe:uefi-U31'
+        update_iscsi_settings_by_patch_mock.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller has failed to update iSCSI '
+            'settings.',
+            self.rf_client.set_iscsi_initiator_info,
+            initiator)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_set_iscsi_initiator_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
+                               'iSCSI initiator cannot be set in '
+                               'the BIOS boot mode',
+                               self.rf_client.set_iscsi_initiator_info,
+                               'iqn.2015-02.com.hpe:uefi-U31')
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_iscsi_initiator_info(
+            self, get_system_mock, _uefi_boot_mode_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            bios_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_json = json.loads(f.read())
+        self.conn = mock.Mock()
+        self.conn.get.return_value.json.side_effect = [
+            system_json['default'], bios_json['Default'],
+            iscsi_json]
+        self.sys_inst = pro_sys.HPESystem(self.conn,
+                                          '/redfish/v1/Systems/437XR1138R2',
+                                          redfish_version='1.0.2')
+        get_system_mock.return_value = self.sys_inst
+        _uefi_boot_mode_mock.return_value = True
+        ret = self.rf_client.get_iscsi_initiator_info()
+        self.assertEqual('iqn.2015-02.com.hpe:uefi-U31', ret)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_iscsi_initiator_info_failed(
+            self, get_system_mock, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = True
+        iscsi_resource_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.bios_settings).iscsi_resource = (
+            iscsi_resource_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller has failed to get the '
+            'iSCSI initiator.',
+            self.rf_client.get_iscsi_initiator_info)
+
+    @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
+                       autospec=True)
+    def test_get_iscsi_initiator_info_bios(self, _uefi_boot_mode_mock):
+        _uefi_boot_mode_mock.return_value = False
+        self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
+                               'iSCSI initiator cannot be get in '
+                               'the BIOS boot mode',
+                               self.rf_client.get_iscsi_initiator_info)

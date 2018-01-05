@@ -23,6 +23,8 @@ class ISCSIResource(base.ResourceBase):
     This class extends the functionality of base resource class
     from sushy.
     """
+    iscsi_initiator = base.Field("iSCSIInitiatorName")
+
     _iscsi_settings = None
 
     def is_iscsi_boot_supported(self):
