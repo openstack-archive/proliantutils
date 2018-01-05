@@ -56,6 +56,8 @@ class Storage(base.ResourceBase):
             self._volumes = sys_volumes.VolumeCollection(
                 self._conn, utils.get_subresource_path_by(self, 'Volumes'),
                 redfish_version=self.redfish_version)
+
+        self._volumes.refresh(force=False)
         return self._volumes
 
     def _drives_list(self):
@@ -129,10 +131,17 @@ class Storage(base.ResourceBase):
                         member.rotation_speed_rpm)
         return self._drive_rotational_speed_rpm
 
-    def refresh(self):
-        super(Storage, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        if self._volumes is not None:
+            self._volumes.invalidate(force)
+
         self._drives_maximum_size_bytes = None
-        self._volumes = None
         self._has_ssd = None
         self._has_rotational = None
         self._has_nvme_ssd = None
@@ -224,8 +233,13 @@ class StorageCollection(base.ResourceCollectionBase):
                     member.drive_rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
-    def refresh(self):
-        super(StorageCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._volumes_maximum_size_bytes = None
         self._drives_maximum_size_bytes = None
         self._has_ssd = None

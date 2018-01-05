@@ -59,8 +59,10 @@ class StorageTestCase(testtools.TestCase):
         actual_log_dr = self.sys_stor.volumes
         self.assertIs(actual_log_dr,
                       self.sys_stor.volumes)
-        self.sys_stor.refresh()
-        self.assertIsNone(self.sys_stor._volumes)
+        self.sys_stor.invalidate()
+        self.sys_stor.refresh(force=False)
+        self.assertIsNotNone(self.sys_stor._volumes)
+        self.assertTrue(self.sys_stor._volumes._is_stale)
 
     def test__drives_list(self):
         self.conn.get.return_value.json.reset_mock()

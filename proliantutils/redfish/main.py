@@ -16,7 +16,7 @@ __author__ = 'HPE'
 
 import sushy
 
-from proliantutils.redfish import connector
+from proliantutils.redfish import connector as prutils_connector
 from proliantutils.redfish.resources.account_service import account_service
 from proliantutils.redfish.resources.manager import manager
 from proliantutils.redfish.resources.system import system
@@ -34,7 +34,8 @@ class HPESushy(sushy.Sushy):
     """
 
     def __init__(self, base_url, username=None, password=None,
-                 root_prefix='/redfish/v1/', verify=True):
+                 root_prefix='/redfish/v1/', verify=True,
+                 auth=None, connector=None):
         """Initializes HPE specific sushy object.
 
         :param base_url: The base URL to the Redfish controller. It
@@ -51,11 +52,13 @@ class HPESushy(sushy.Sushy):
             the driver will ignore verifying the SSL certificate; if it's
             a path the driver will use the specified certificate or one of
             the certificates in the directory. Defaults to True.
+        :param auth: An authentication mechanism to utilize.
+        :param connector: A user-defined connector object. Defaults to None.
         """
-        self._root_prefix = root_prefix
-        super(sushy.Sushy, self).__init__(
-            connector.HPEConnector(base_url, username, password, verify),
-            path=self._root_prefix)
+        super(HPESushy, self).__init__(
+            base_url, username, password,
+            root_prefix=root_prefix, verify=verify, auth=auth,
+            connector=prutils_connector.HPEConnector(base_url, verify=verify))
 
     def get_system_collection_path(self):
         return utils.get_subresource_path_by(self, 'Systems')

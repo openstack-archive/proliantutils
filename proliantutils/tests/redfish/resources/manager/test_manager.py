@@ -74,12 +74,16 @@ class HPEManagerTestCase(testtools.TestCase):
                   'json_samples/manager.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
 
-        self.mgr_inst.refresh()
-        self.assertIsNone(self.mgr_inst._virtual_media)
+        self.mgr_inst.invalidate()
+        self.mgr_inst.refresh(force=False)
+
+        self.assertIsNotNone(self.mgr_inst._virtual_media)
+        self.assertTrue(self.mgr_inst._virtual_media._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/vmedia_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
 
-        self.assertIsInstance(actual_vmedia,
+        self.assertIsInstance(self.mgr_inst.virtual_media,
                               virtual_media.VirtualMediaCollection)
+        self.assertFalse(self.mgr_inst._virtual_media._is_stale)

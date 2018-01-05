@@ -57,11 +57,16 @@ class HPEAccountServiceTestCase(testtools.TestCase):
                   'json_samples/account_service.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
 
-        self.acc_inst.refresh()
-        self.assertIsNone(self.acc_inst._accounts)
+        self.acc_inst.invalidate()
+        self.acc_inst.refresh(force=False)
+
+        self.assertIsNotNone(self.acc_inst._accounts)
+        self.assertTrue(self.acc_inst._accounts._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/account_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
 
-        self.assertIsInstance(accounts, account.HPEAccountCollection)
+        self.assertIsInstance(self.acc_inst.accounts,
+                              account.HPEAccountCollection)
+        self.assertFalse(self.acc_inst._accounts._is_stale)

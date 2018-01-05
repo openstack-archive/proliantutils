@@ -48,6 +48,11 @@ class VolumeCollection(base.ResourceCollectionBase):
                                for member in self.get_members()]))
         return self._maximum_size_bytes
 
-    def refresh(self):
-        super(VolumeCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._maximum_size_bytes = None

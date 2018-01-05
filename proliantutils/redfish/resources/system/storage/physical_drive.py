@@ -96,8 +96,13 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
                         member.rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
-    def refresh(self):
-        super(HPEPhysicalDriveCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._maximum_size_mib = None
         self._has_ssd = None
         self._has_rotational = None
