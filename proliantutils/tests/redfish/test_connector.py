@@ -32,8 +32,7 @@ class HPEConnectorTestCase(testtools.TestCase):
                                  "Hello", "World"]
 
         hpe_conn = hpe_connector.HPEConnector(
-            'http://foo.bar:1234', username='user',
-            password='pass', verify=True)
+            'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
         hpe_conn._op('GET', path='fake/path', data=None, headers=headers)
         conn_mock.assert_called_once_with(hpe_conn, 'GET', path='fake/path',
@@ -46,8 +45,7 @@ class HPEConnectorTestCase(testtools.TestCase):
                                  exceptions.ConnectionError, "Hello", "World"]
 
         hpe_conn = hpe_connector.HPEConnector(
-            'http://foo.bar:1234', username='user',
-            password='pass', verify=True)
+            'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
         lval = hpe_conn._op('GET', path='fake/path', data=None,
                             headers=headers)
@@ -62,8 +60,7 @@ class HPEConnectorTestCase(testtools.TestCase):
             ["Hello", "World"])
 
         hpe_conn = hpe_connector.HPEConnector(
-            'http://foo.bar:1234', username='user',
-            password='pass', verify=True)
+            'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
         self.assertRaises(
             exceptions.ConnectionError, hpe_conn._op,

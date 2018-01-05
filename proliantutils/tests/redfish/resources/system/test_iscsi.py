@@ -66,7 +66,7 @@ class ISCSIResourceTestCase(testtools.TestCase):
                       self.iscsi_inst.iscsi_settings)
         self.conn.get.return_value.json.assert_not_called()
 
-    def test_iscsi_resource_on_refresh(self):
+    def test_iscsi_settings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi_settings.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
@@ -79,15 +79,20 @@ class ISCSIResourceTestCase(testtools.TestCase):
                   'json_samples/iscsi.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read()))
+
+        self.iscsi_inst.invalidate()
         self.iscsi_inst.refresh()
-        self.assertIsNone(self.iscsi_inst._iscsi_settings)
+
+        self.assertIsNotNone(self.iscsi_inst._iscsi_settings)
+        self.assertTrue(self.iscsi_inst._iscsi_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi_settings.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
-        self.assertIsInstance(actual_settings,
+        self.assertIsInstance(self.iscsi_inst.iscsi_settings,
                               iscsi.ISCSISettings)
+        self.assertFalse(self.iscsi_inst._iscsi_settings._is_stale)
 
     def test_attributes(self):
         with open('proliantutils/tests/redfish/'

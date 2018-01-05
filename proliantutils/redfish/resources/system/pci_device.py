@@ -34,8 +34,13 @@ class PCIDevice(base.ResourceBase):
 
     _nic_capacity = None
 
-    def refresh(self):
-        super(PCIDevice, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._nic_capacity = None
 
     @property
@@ -71,8 +76,13 @@ class PCIDeviceCollection(base.ResourceCollectionBase):
                         self._gpu_devices.append(member)
         return self._gpu_devices
 
-    def refresh(self):
-        super(PCIDeviceCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._gpu_devices = None
         self._max_nic_capacity = None
 

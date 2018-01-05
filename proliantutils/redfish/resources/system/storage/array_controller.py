@@ -47,6 +47,8 @@ class HPEArrayController(base.ResourceBase):
                     self._conn, utils.get_subresource_path_by(
                         self, ['Links', 'LogicalDrives']),
                     redfish_version=self.redfish_version))
+
+        self._logical_drives.refresh(force=False)
         return self._logical_drives
 
     @property
@@ -59,12 +61,23 @@ class HPEArrayController(base.ResourceBase):
                     self._conn, utils.get_subresource_path_by(
                         self, ['Links', 'PhysicalDrives']),
                     redfish_version=self.redfish_version))
+
+        self._physical_drives.refresh(force=False)
         return self._physical_drives
 
-    def refresh(self):
-        super(HPEArrayController, self).refresh()
-        self._physical_drives = None
-        self._logical_drives = None
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        super(HPEArrayController, self)._do_refresh(force)
+
+        if self._physical_drives is not None:
+            self._physical_drives.invalidate(force)
+        if self._logical_drives is not None:
+            self._logical_drives.invalidate(force)
 
 
 class HPEArrayControllerCollection(base.ResourceCollectionBase):
@@ -153,8 +166,13 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
                     member.physical_drives.drive_rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
-    def refresh(self):
-        super(HPEArrayControllerCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._logical_drives_maximum_size_mib = None
         self._physical_drives_maximum_size_mib = None
         self._has_ssd = None

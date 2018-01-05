@@ -68,7 +68,12 @@ class HPELogicalDriveCollection(base.ResourceCollectionBase):
                     mappings.RAID_LEVEL_MAP_REV.get(member.raid))
         return self._logical_raid_levels
 
-    def refresh(self):
-        super(HPELogicalDriveCollection, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
         self._maximum_size_mib = None
         self._logical_raid_levels = None
