@@ -52,8 +52,17 @@ class HPEManager(manager.Manager):
                 utils.get_subresource_path_by(self, 'VirtualMedia'),
                 redfish_version=self.redfish_version)
 
+        self._virtual_media.refresh(force=False)
         return self._virtual_media
 
-    def refresh(self):
-        super(HPEManager, self).refresh()
-        self._virtual_media = None
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        super(HPEManager, self)._do_refresh(force)
+
+        if self._virtual_media is not None:
+            self._virtual_media.invalidate(force)

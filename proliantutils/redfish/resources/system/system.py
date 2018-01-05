@@ -134,6 +134,7 @@ class HPESystem(system.System):
                 self._conn, utils.get_subresource_path_by(self, 'Bios'),
                 redfish_version=self.redfish_version)
 
+        self._bios_settings.refresh(force=False)
         return self._bios_settings
 
     def update_persistent_boot(self, devices=[], persistent=False):
@@ -188,6 +189,8 @@ class HPESystem(system.System):
             self._pci_devices = pci_device.PCIDeviceCollection(
                 self._conn, utils.get_subresource_path_by(
                     self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
+
+        self._pci_devices.refresh(force=False)
         return self._pci_devices
 
     @property
@@ -202,18 +205,34 @@ class HPESystem(system.System):
                 self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
                 redfish_version=self.redfish_version)
 
+        self._secure_boot.refresh(force=False)
         return self._secure_boot
 
-    def refresh(self):
-        super(HPESystem, self).refresh()
-        self._bios_settings = None
-        self._pci_devices = None
-        self._secure_boot = None
-        self._ethernet_interfaces = None
-        self._smart_storage = None
-        self._storages = None
-        self._simple_storages = None
-        self._memory = None
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        super(HPESystem, self)._do_refresh(force)
+
+        if self._bios_settings is not None:
+            self._bios_settings.invalidate(force)
+        if self._pci_devices is not None:
+            self._pci_devices.invalidate(force)
+        if self._secure_boot is not None:
+            self._secure_boot.invalidate(force)
+        if self._ethernet_interfaces is not None:
+            self._ethernet_interfaces.invalidate(force)
+        if self._smart_storage is not None:
+            self._smart_storage.invalidate(force)
+        if self._storages is not None:
+            self._storages.invalidate(force)
+        if self._simple_storages is not None:
+            self._simple_storages.invalidate(force)
+        if self._memory is not None:
+            self._memory.invalidate(force)
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -235,6 +254,7 @@ class HPESystem(system.System):
                     self._get_hpe_sub_resource_collection_path(sub_res),
                     redfish_version=self.redfish_version))
 
+        self._ethernet_interfaces.refresh(force=False)
         return self._ethernet_interfaces
 
     @property
@@ -250,6 +270,8 @@ class HPESystem(system.System):
                 self._conn, utils.get_subresource_path_by(
                     self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
                 redfish_version=self.redfish_version)
+
+        self._smart_storage.refresh(force=False)
         return self._smart_storage
 
     @property
@@ -263,6 +285,8 @@ class HPESystem(system.System):
             self._storages = storage.StorageCollection(
                 self._conn, utils.get_subresource_path_by(self, 'Storage'),
                 redfish_version=self.redfish_version)
+
+        self._storages.refresh(force=False)
         return self._storages
 
     @property
@@ -271,12 +295,13 @@ class HPESystem(system.System):
 
         :returns: a list of instances of SimpleStorages
         """
-
         if self._simple_storages is None:
             self._simple_storages = simple_storage.SimpleStorageCollection(
                 self._conn, utils.get_subresource_path_by(
                     self, 'SimpleStorage'),
                 redfish_version=self.redfish_version)
+
+        self._simple_storages.refresh(force=False)
         return self._simple_storages
 
     @property
@@ -292,4 +317,5 @@ class HPESystem(system.System):
                     self, 'Memory'),
                 redfish_version=self.redfish_version)
 
+        self._memory.refresh(force=False)
         return self._memory

@@ -51,6 +51,8 @@ class HPESmartStorage(base.ResourceBase):
                     self._conn, utils.get_subresource_path_by(
                         self, ['Links', 'ArrayControllers']),
                     redfish_version=self.redfish_version))
+
+        self._array_controllers.refresh(force=False)
         return self._array_controllers
 
     @property
@@ -112,11 +114,18 @@ class HPESmartStorage(base.ResourceBase):
                 self.array_controllers.drive_rotational_speed_rpm)
         return self._drive_rotational_speed_rpm
 
-    def refresh(self):
-        super(HPESmartStorage, self).refresh()
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        if self._array_controllers is not None:
+            self._array_controllers.invalidate(force)
+
         self._logical_drives_maximum_size_mib = None
         self._physical_drives_maximum_size_mib = None
-        self._array_controllers = None
         self._has_ssd = None
         self._has_rotational = None
         self._logical_raid_levels = None
