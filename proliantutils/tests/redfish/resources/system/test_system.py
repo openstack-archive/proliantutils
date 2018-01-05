@@ -131,10 +131,13 @@ class HPESystemTestCase(testtools.TestCase):
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
+
+        self.sys_inst.invalidate()
         self.sys_inst.refresh()
 
         # | WHEN & THEN |
-        self.assertIsNone(self.sys_inst._bios_settings)
+        self.assertIsNotNone(self.sys_inst._bios_settings)
+        self.assertTrue(self.sys_inst._bios_settings._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/bios.json',
@@ -143,6 +146,7 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.bios_settings,
                               bios.BIOSSettings)
+        self.assertFalse(self.sys_inst._bios_settings._is_stale)
 
     def test_update_persistent_boot_uefi_target(self):
         with open('proliantutils/tests/redfish/'
@@ -257,10 +261,13 @@ class HPESystemTestCase(testtools.TestCase):
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
+
+        self.sys_inst.invalidate()
         self.sys_inst.refresh()
 
         # | WHEN & THEN |
-        self.assertIsNone(self.sys_inst._secure_boot)
+        self.assertIsNotNone(self.sys_inst._secure_boot)
+        self.assertTrue(self.sys_inst._secure_boot._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
@@ -270,6 +277,7 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.secure_boot,
                               secure_boot.SecureBoot)
+        self.assertFalse(self.sys_inst._secure_boot._is_stale)
 
     @mock.patch.object(utils, 'get_subresource_path_by')
     def test_get_hpe_sub_resource_collection_path(self, res_mock):
@@ -404,13 +412,19 @@ class HPESystemTestCase(testtools.TestCase):
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
+
+        self.sys_inst.invalidate()
         self.sys_inst.refresh()
-        self.assertIsNone(self.sys_inst._simple_storages)
+
+        self.assertIsNotNone(self.sys_inst._simple_storages)
+        self.assertTrue(self.sys_inst._simple_storages._is_stale)
+
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.simple_storages,
                               simple_storage.SimpleStorageCollection)
+        self.assertFalse(self.sys_inst._simple_storages._is_stale)
 
     def test_memory(self):
         self.assertIsNone(self.sys_inst._memory)
@@ -442,10 +456,13 @@ class HPESystemTestCase(testtools.TestCase):
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
+
+        self.sys_inst.invalidate()
         self.sys_inst.refresh()
 
         # | WHEN & THEN |
-        self.assertIsNone(self.sys_inst._memory)
+        self.assertIsNotNone(self.sys_inst._memory)
+        self.assertTrue(self.sys_inst._memory._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/'
@@ -454,6 +471,7 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.memory,
                               memory.MemoryCollection)
+        self.assertFalse(self.sys_inst._memory._is_stale)
 
     def test_storage_on_refresh(self):
         with open('proliantutils/tests/redfish/json_samples/'
@@ -467,11 +485,16 @@ class HPESystemTestCase(testtools.TestCase):
                   'json_samples/system.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
+
+        self.sys_inst.invalidate()
         self.sys_inst.refresh()
-        self.assertIsNone(self.sys_inst._storages)
+
+        self.assertIsNotNone(self.sys_inst._storages)
+        self.assertTrue(self.sys_inst._storages._is_stale)
 
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.storages,
                               storage.StorageCollection)
+        self.assertFalse(self.sys_inst._storages._is_stale)

@@ -65,6 +65,7 @@ class BIOSSettings(base.ResourceBase):
                     self, ["@Redfish.Settings", "SettingsObject"]),
                 redfish_version=self.redfish_version)
 
+        self._pending_settings.refresh(force=False)
         return self._pending_settings
 
     @property
@@ -81,6 +82,7 @@ class BIOSSettings(base.ResourceBase):
                     self, ["Oem", "Hpe", "Links", "Boot"]),
                 redfish_version=self.redfish_version)
 
+        self._boot_settings.refresh(force=False)
         return self._boot_settings
 
     @property
@@ -97,6 +99,7 @@ class BIOSSettings(base.ResourceBase):
                     self, ["Oem", "Hpe", "Links", "iScsi"]),
                 redfish_version=self.redfish_version)
 
+        self._iscsi_settings.refresh(force=False)
         return self._iscsi_settings
 
     def _get_base_configs(self):
@@ -107,6 +110,7 @@ class BIOSSettings(base.ResourceBase):
                     self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
                 redfish_version=self.redfish_version)
 
+        self._base_configs.refresh(force=False)
         return self._base_configs
 
     def update_bios_to_default(self):
@@ -114,12 +118,21 @@ class BIOSSettings(base.ResourceBase):
         self.pending_settings.update_bios_data_by_post(
             self._get_base_configs().default_config)
 
-    def refresh(self):
-        super(BIOSSettings, self).refresh()
-        self._pending_settings = None
-        self._boot_settings = None
-        self._base_configs = None
-        self._iscsi_settings = None
+    def _do_refresh(self, force):
+        """Do custom resource specific refresh activities
+
+        On refresh, all sub-resources are marked as stale, i.e.
+        greedy-refresh not done for them unless forced by ``force``
+        argument.
+        """
+        if self._pending_settings is not None:
+            self._pending_settings.invalidate(force)
+        if self._boot_settings is not None:
+            self._boot_settings.invalidate(force)
+        if self._base_configs is not None:
+            self._base_configs.invalidate(force)
+        if self._iscsi_settings is not None:
+            self._iscsi_settings.invalidate(force)
 
 
 class BIOSBaseConfigs(base.ResourceBase):

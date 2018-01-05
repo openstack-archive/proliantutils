@@ -123,16 +123,20 @@ class BIOSSettingsTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
 
+        self.bios_inst.invalidate()
         self.bios_inst.refresh()
-        self.assertIsNone(self.bios_inst._pending_settings)
+
+        self.assertIsNotNone(self.bios_inst._pending_settings)
+        self.assertTrue(self.bios_inst._pending_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['BIOS_pending_settings_default'])
 
-        self.assertIsInstance(actual_settings,
+        self.assertIsInstance(self.bios_inst.pending_settings,
                               bios.BIOSPendingSettings)
+        self.assertFalse(self.bios_inst._pending_settings._is_stale)
 
     def test_boot_settings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -148,16 +152,20 @@ class BIOSSettingsTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
 
+        self.bios_inst.invalidate()
         self.bios_inst.refresh()
-        self.assertIsNone(self.bios_inst._boot_settings)
+
+        self.assertIsNotNone(self.bios_inst._boot_settings)
+        self.assertTrue(self.bios_inst._boot_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_boot.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
 
-        self.assertIsInstance(actual_settings,
+        self.assertIsInstance(self.bios_inst.boot_settings,
                               bios.BIOSBootSettings)
+        self.assertFalse(self.bios_inst._boot_settings._is_stale)
 
     def test_iscsi_settings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -172,15 +180,20 @@ class BIOSSettingsTestCase(testtools.TestCase):
                   'json_samples/bios.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
+
+        self.bios_inst.invalidate()
         self.bios_inst.refresh()
-        self.assertIsNone(self.bios_inst._iscsi_settings)
+
+        self.assertIsNotNone(self.bios_inst._iscsi_settings)
+        self.assertTrue(self.bios_inst._iscsi_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_boot.json', 'r') as f:
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
-        self.assertIsInstance(actual_settings,
+        self.assertIsInstance(self.bios_inst.iscsi_settings,
                               iscsi.ISCSISettings)
+        self.assertFalse(self.bios_inst._iscsi_settings._is_stale)
 
     def test__get_base_configs_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -194,14 +207,19 @@ class BIOSSettingsTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['Default'])
 
+        self.bios_inst.invalidate()
         self.bios_inst.refresh()
-        self.assertIsNone(self.bios_inst._base_configs)
+
+        self.assertIsNotNone(self.bios_inst._base_configs)
+        self.assertTrue(self.bios_inst._base_configs._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_base_configs.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
 
-        self.assertIsInstance(default_settings, bios.BIOSBaseConfigs)
+        self.assertIsInstance(self.bios_inst._get_base_configs(),
+                              bios.BIOSBaseConfigs)
+        self.assertFalse(self.bios_inst._base_configs._is_stale)
 
 
 class BIOSBaseConfigsTestCase(testtools.TestCase):
