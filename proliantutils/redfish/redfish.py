@@ -953,3 +953,51 @@ class RedfishOperations(operations.IloOperations):
         else:
             msg = 'iSCSI boot is not supported in the BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def set_iscsi_initiator_info(self, initiator_iqn):
+        """Set iSCSI initiator information in iLO.
+
+        :param initiator_iqn: Initiator iqn for iLO.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the BIOS boot mode.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if(self._is_boot_mode_uefi()):
+            iscsi_data = {'iSCSIInitiatorName': initiator_iqn}
+            try:
+                (sushy_system.bios_settings.iscsi_resource.
+                 iscsi_settings.update_iscsi_settings(iscsi_data))
+            except sushy.exceptions.SushyError as e:
+                msg = (self._("The Redfish controller has failed to update "
+                              "iSCSI settings. Error %(error)s") %
+                       {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+        else:
+            msg = 'iSCSI initiator cannot be updated in BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def get_iscsi_initiator_info(self):
+        """Give iSCSI initiator information of iLO.
+
+        :returns: iSCSI initiator information.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedInBiosError, if the system is
+                 in the BIOS boot mode.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if(self._is_boot_mode_uefi()):
+            try:
+                iscsi_initiator = (
+                    sushy_system.bios_settings.iscsi_resource.iscsi_initiator)
+            except sushy.exceptions.SushyError as e:
+                msg = (self._('The Redfish controller has failed to get the '
+                              'iSCSI initiator. Error %(error)s')
+                       % {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+            return iscsi_initiator
+        else:
+            msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)

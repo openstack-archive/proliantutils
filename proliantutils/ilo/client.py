@@ -89,6 +89,8 @@ SUPPORTED_REDFISH_METHODS = [
     'get_essential_properties',
     'set_iscsi_boot_info',
     'unset_iscsi_boot_info',
+    'get_iscsi_initiator_info',
+    'set_iscsi_initiator_info',
 ]
 
 LOG = log.get_logger(__name__)

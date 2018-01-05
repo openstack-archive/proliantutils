@@ -89,6 +89,16 @@ class ISCSIResourceTestCase(testtools.TestCase):
         self.assertIsInstance(actual_settings,
                               iscsi.ISCSISettings)
 
+    def test_attributes(self):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/iscsi.json', 'r') as f:
+            iscsi_initiator = (
+                json.loads(f.read())['iSCSIInitiatorName'])
+
+        self.assertEqual(
+            iscsi_initiator,
+            self.iscsi_inst.iscsi_initiator)
+
 
 class ISCSISettingsTestCase(testtools.TestCase):
 
