@@ -67,7 +67,10 @@ class HPESystem(system.System):
     model = base.Field(['Model'])
     rom_version = base.Field(['Oem', 'Hpe', 'Bios', 'Current',
                              'VersionString'])
-
+    uefi_target_override_devices = (base.Field([
+        'Boot',
+        'UefiTargetBootSourceOverride@Redfish.AllowableValues'],
+        adapter=list))
     supported_boot_mode = base.MappedField(
         ['Oem', 'Hpe', 'Bios', 'UefiClass'], mappings.SUPPORTED_BOOT_MODE,
         default=constants.SUPPORTED_LEGACY_BIOS_ONLY)
@@ -133,8 +136,7 @@ class HPESystem(system.System):
 
         return self._bios_settings
 
-    def update_persistent_boot(self, devices=[], persistent=False,
-                               mac=None):
+    def update_persistent_boot(self, devices=[], persistent=False):
         """Changes the persistent boot device order in BIOS boot mode for host
 
         Note: It uses first boot device from the devices and ignores rest.
@@ -142,26 +144,29 @@ class HPESystem(system.System):
         :param devices: ordered list of boot devices
         :param persistent: Boolean flag to indicate if the device to be set as
                            a persistent boot device
-        :param mac: intiator mac address, mandotory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloInvalidInputError, if the given input is not valid.
         """
         device = PERSISTENT_BOOT_DEVICE_MAP.get(devices[0].upper())
-
         if device == sushy.BOOT_SOURCE_TARGET_UEFI_TARGET:
-            if not mac:
-                msg = ('Mac is needed for uefi iscsi boot')
-                raise exception.IloInvalidInputError(msg)
-
             try:
-                uefi_boot_string = (self.bios_settings.boot_settings.
-                                    get_uefi_boot_string(mac))
+                uefi_devices = self.uefi_target_override_devices
+                iscsi_device = None
+                for uefi_device in uefi_devices:
+                    if uefi_device is not None and 'iSCSI' in uefi_device:
+                        iscsi_device = uefi_device
+                        break
+
+                if iscsi_device is None:
+                    msg = 'No UEFI iSCSI bootable device found.'
+                    raise exception.IloError(msg)
+
             except sushy.exceptions.SushyError:
-                msg = ('The BIOS Boot Settings was not found.')
+                msg = ('Unable to get uefi target override devices.')
                 raise exception.IloError(msg)
 
             uefi_boot_settings = {
-                'Boot': {'UefiTargetBootSourceOverride': uefi_boot_string}
+                'Boot': {'UefiTargetBootSourceOverride': iscsi_device}
             }
             self._conn.patch(self.path, data=uefi_boot_settings)
         elif device is None:

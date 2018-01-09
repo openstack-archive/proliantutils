@@ -423,5 +423,63 @@
   "SKU": "                ",
   "SystemType": "Physical",
   "UUID": "00000000-0000-0000-0000-000000000000"
-  } 
+  },
+
+  "System_op_for_update_persistent_boot_uefi_target": {
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/$entity",
+  "@odata.etag": "W/\"0E79655D\"",
+  "@odata.id": "/redfish/v1/Systems/1/",
+  "@odata.type": "#ComputerSystem.v1_2_0.ComputerSystem",
+  "Actions": {
+        "#ComputerSystem.Reset": {
+            "ResetType@Redfish.AllowableValues": [
+                "On",
+                "ForceOff",
+                "ForceRestart",
+                "Nmi",
+                "PushPowerButton"
+            ],
+            "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset/"
+        }
+    },
+  "HostName": "",
+  "Id": "1",
+  "IndicatorLED": "Off",
+  "Manufacturer": "HPE",
+  "Name": "Computer System",
+  "PowerState": "On",
+  "Boot": {
+    "BootSourceOverrideEnabled": "Once",
+    "BootSourceOverrideMode": "UEFI",
+    "BootSourceOverrideTarget": "Cd",
+    "BootSourceOverrideTarget@Redfish.AllowableValues": [
+      "None",
+      "Cd",
+      "Hdd",
+      "Usb",
+      "SDCard",
+      "Utilities",
+      "Diags",
+      "BiosSetup",
+      "Pxe",
+      "UefiShell",
+      "UefiHttp",
+      "UefiTarget"
+    ],
+    "UefiTargetBootSourceOverride": "None",
+    "UefiTargetBootSourceOverride@Redfish.AllowableValues": [
+      "HD(1,GPT,4029CE09-5C2D-464D-9C2D-EC6E607F06A1,0x800,0x100000)/\\EFI\\redhat\\shim.efi",
+      "HD(1,GPT,4029CE09-5C2D-464D-9C2D-EC6E607F06A1,0x800,0x100000)/\\EFI\\ubuntu\\shimx64.efi",
+      "HD(1,GPT,7F14DF43-6600-420A-9950-C028836F6A5D,0x800,0x64000)/\\EFI\\centos\\shim.efi",
+      "PciRoot(0x0)/Pci(0x17,0x0)/Sata(0x3,0x0,0x0)",
+      "PciRoot(0x3)/Pci(0x0,0x0)/Pci(0x0,0x0)/Scsi(0x0,0x0)",
+      "PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(98F2B3EEF886,0x0)/IPv4(172.17.1.32)/iSCSI(iqn.2001-04.com.paresh.boot:volume.bin,0x1,0x0,None,None,None,TCP)"
+    ]
+
+   },
+  "SerialNumber": "                ",
+  "SKU": "                ",
+  "SystemType": "Physical",
+  "UUID": "00000000-0000-0000-0000-000000000000"
+  }
 }
