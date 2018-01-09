@@ -545,7 +545,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def test_update_persistent_boot(self, get_system_mock):
         self.rf_client.update_persistent_boot(['NETWORK'])
         (get_system_mock.return_value.update_persistent_boot.
-         assert_called_once_with(['NETWORK'], mac=None, persistent=True))
+         assert_called_once_with(['NETWORK'], persistent=True))
 
     def test_update_persistent_boot_invalid_input(self):
         self.assertRaisesRegex(
@@ -568,7 +568,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def test_set_one_time_boot(self, get_system_mock):
         self.rf_client.set_one_time_boot('CDROM')
         (get_system_mock.return_value.update_persistent_boot.
-         assert_called_once_with(['CDROM'], mac=None, persistent=False))
+         assert_called_once_with(['CDROM'], persistent=False))
 
     def test_set_one_time_boot_invalid_input(self):
         self.assertRaisesRegex(
