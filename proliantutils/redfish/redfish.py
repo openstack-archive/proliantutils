@@ -538,11 +538,10 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
-    def update_persistent_boot(self, devices=[], mac=None):
+    def update_persistent_boot(self, devices=[]):
         """Changes the persistent boot device order for the host
 
         :param devices: ordered list of boot devices
-        :param mac: intiator mac address, mandatory for iSCSI uefi boot
         :raises: IloError, on an error from iLO.
         :raises: IloInvalidInputError, if the given input is not valid.
         """
@@ -557,7 +556,7 @@ class RedfishOperations(operations.IloOperations):
 
         try:
             sushy_system.update_persistent_boot(
-                devices, persistent=True, mac=mac)
+                devices, persistent=True)
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish controller failed to update '
                           'persistent boot device %(devices)s.'
@@ -566,11 +565,10 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
-    def set_one_time_boot(self, device, mac=None):
+    def set_one_time_boot(self, device):
         """Configures a single boot from a specific device.
 
         :param device: Device to be set as a one time boot device
-        :param mac: intiator mac address, optional parameter
         :raises: IloError, on an error from iLO.
         :raises: IloInvalidInputError, if the given input is not valid.
         """
@@ -584,7 +582,7 @@ class RedfishOperations(operations.IloOperations):
 
         try:
             sushy_system.update_persistent_boot(
-                [device], persistent=False, mac=mac)
+                [device], persistent=False)
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish controller failed to set '
                           'one time boot device %(device)s. '

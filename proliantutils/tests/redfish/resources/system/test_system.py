@@ -146,18 +146,14 @@ class HPESystemTestCase(testtools.TestCase):
 
     def test_update_persistent_boot_uefi_target(self):
         with open('proliantutils/tests/redfish/'
-                  'json_samples/bios.json', 'r') as f:
-            bios_mock = json.loads(f.read())
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/bios_boot.json', 'r') as f:
-            bios_boot_mock = json.loads(f.read())
-        self.conn.get.return_value.json.reset()
-        self.conn.get.return_value.json.side_effect = (
-            [bios_mock['Default'], bios_boot_mock['Default']])
-        self.sys_inst.update_persistent_boot(['ISCSI'], persistent=True,
-                                             mac='C4346BB7EF30')
+                  'json_samples/system.json', 'r') as f:
+            system_json = (json.loads(f.read())[
+                'System_op_for_update_persistent_boot_uefi_target'])
+        self.sys_inst.uefi_target_override_devices = (system_json[
+            'Boot']['UefiTargetBootSourceOverride@Redfish.AllowableValues'])
+        self.sys_inst.update_persistent_boot(['ISCSI'], persistent=True)
         uefi_boot_settings = {
-            'Boot': {'UefiTargetBootSourceOverride': 'NIC.LOM.1.1.iSCSI'}
+            'Boot': {'UefiTargetBootSourceOverride': 'PciRoot(0x0)/Pci(0x1C,0x0)/Pci(0x0,0x0)/MAC(98F2B3EEF886,0x0)/IPv4(172.17.1.32)/iSCSI(iqn.2001-04.com.paresh.boot:volume.bin,0x1,0x0,None,None,None,TCP)'}  # noqa
         }
 
         calls = [mock.call('/redfish/v1/Systems/1', data=uefi_boot_settings),
@@ -167,22 +163,21 @@ class HPESystemTestCase(testtools.TestCase):
                                   'BootSourceOverrideEnabled': 'Continuous'}})]
         self.sys_inst._conn.patch.assert_has_calls(calls)
 
-    def test_update_persistent_boot_uefi_target_without_mac(self):
-        self.assertRaisesRegex(
-            exception.IloInvalidInputError,
-            'Mac is needed for uefi iscsi boot',
-            self.sys_inst.update_persistent_boot, ['ISCSI'], True, None)
-
-    def test_update_persistent_boot_uefi_target_fail(self):
-        with open('proliantutils/tests/redfish/'
-                  'json_samples/bios.json', 'r') as f:
-            bios_mock = json.loads(f.read())
-        self.conn.get.return_value.json.side_effect = (
-            [bios_mock['Default'], sushy.exceptions.SushyError])
+    def test_update_persistent_boot_uefi_no_iscsi_device(self):
         self.assertRaisesRegex(
             exception.IloError,
-            'The BIOS Boot Settings was not found.',
-            self.sys_inst.update_persistent_boot, ['ISCSI'], True, '12345678')
+            'No UEFI iSCSI bootable device found.',
+            self.sys_inst.update_persistent_boot, ['ISCSI'], True)
+
+    def test_update_persistent_boot_uefi_target_fail(self):
+        update_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(self.sys_inst).uefi_target_override_devices = update_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'Unable to get uefi target override devices.',
+            self.sys_inst.update_persistent_boot, ['ISCSI'], True)
+        del type(self.sys_inst).uefi_target_override_devices
 
     def test_pci_devices(self):
         pci_dev_return_value = None
