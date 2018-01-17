@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+3.0.0
+-----
+
+* Adds support to manage ISCSI information on ProLiant hardware
+* Retry power operations on blade servers
+
 2.4.1
 -----
 
