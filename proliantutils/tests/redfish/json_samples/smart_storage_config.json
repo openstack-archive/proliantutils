@@ -1,4 +1,5 @@
 {
+ "default" : {
     "@Redfish.Settings": {
         "@odata.type": "#Settings.v1_0_0.Settings",
         "ETag": "78F92741",
@@ -62,4 +63,94 @@
     "SurfaceScanAnalysisPriority": null,
     "SurvivalPowerMode": "Enabled",
     "WriteCacheBypassThresholdKiB": null
+    },
+
+
+ "create_config": {
+    "@Redfish.Settings": {
+        "@odata.type": "#Settings.v1_0_0.Settings",
+        "ETag": "8EB155AA",
+        "Messages": [
+            {
+                "MessageId": "SmartStorageMessages.2.0.0.Success"
+            }
+        ],
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        },
+        "Time": "2018-01-19T11:39:28+00:00"
+    },
+    "@odata.context": "/redfish/v1/$metadata#SmartStorageConfig.SmartStorageConfig",
+    "@odata.etag": "W/\"478A814EC73FC7C7C7C5E38618E66C95\"",
+    "@odata.id": "/redfish/v1/systems/1/smartstorageconfig/",
+    "@odata.type": "#SmartStorageConfig.v2_0_0.SmartStorageConfig",
+    "CurrentParallelSurfaceScanCount": 1,
+    "DataGuard": "Strict",
+    "DegradedPerformanceOptimization": "Disabled",
+    "DriveWriteCache": "Disabled",
+    "ElevatorSort": "Enabled",
+    "EncryptionConfiguration": "None",
+    "EncryptionEULA": null,
+    "ExpandPriority": "Medium",
+    "FlexibleLatencySchedulerSetting": "Default",
+    "Id": "smartstorageconfig",
+    "InconsistencyRepairPolicy": "Disabled",
+    "Location": "Slot 0",
+    "LocationFormat": "PCISlot",
+    "LogicalDrives": [
+        {
+            "Accelerator": "None",
+            "BlockSizeBytes": 512,
+            "CapacityBlocks": 314568000,
+            "CapacityGiB": 149,
+            "DataDrives": [
+                "1I:1:1"
+            ],
+            "DriveLocationFormat": "ControllerPort:Box:Bay",
+            "LegacyBootPriority": "None",
+            "LogicalDriveName": "0066BA22PEYHF0DLM7908M F8CD",
+            "LogicalDriveNumber": 1,
+            "ParityGroupCount": 0,
+            "Raid": "Raid0",
+            "SpareDrives": [
+            ],
+            "SpareRebuildMode": null,
+            "StripSizeBytes": 262144,
+            "StripeSizeBytes": 262144,
+            "VolumeUniqueIdentifier": "600508B1001C082A836EBED6FBD1BDFE"
+        }
+    ],
+    "MonitorAndPerformanceAnalysisDelaySeconds": 60,
+    "NoBatteryWriteCache": null,
+    "Oem": {
+        "Hpe": {
+            "@odata.type": "#HpeBiosExt.v2_0_0.HpeBiosExt",
+            "SettingsObject": {
+                "UnmodifiedETag": "W/\"1B3EC96E9875ABABABCCC41BF5587AB4\""
+            }
+        }
+    },
+    "PhysicalDrives": [
+        {
+            "LegacyBootPriority": "None",
+            "Location": "1I:1:1",
+            "LocationFormat": "ControllerPort:Box:Bay"
+        }
+    ],
+    "Ports": [
+        {
+            "OperatingModeAfterReboot": "Mixed",
+            "PortIndex": 0
+        }
+    ],
+    "PowerModeAfterReboot": "MaxPerformance",
+    "PredictiveSpareRebuild": "Disabled",
+    "QueueDepth": "Automatic",
+    "ReadCachePercent": 10,
+    "RebuildPriority": "High",
+    "SurfaceScanAnalysisDelaySeconds": 3,
+    "SurfaceScanAnalysisPriority": "Idle",
+    "SurvivalPowerMode": "Disabled",
+    "WriteCacheBypassThresholdKiB": 1040
+ }
 }
