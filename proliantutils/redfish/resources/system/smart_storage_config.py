@@ -33,12 +33,71 @@ class HPESmartStorageConfig(base.ResourceBase):
 
     controller_id = base.Field("Id")
 
+    smart_storage_config_message = base.Field(['@Redfish.Settings',
+                                               'Messages'])
+
     logical_drives = LogicalDriveListField("LogicalDrives", default=[])
 
     location = base.Field("Location")
 
     settings_uri = base.Field(["@Redfish.Settings",
                                "SettingsObject", "@odata.id"])
+
+    def _generic_format(self, raid_config):
+        """Convert redfish data of current raid config to generic format.
+
+        :returns: current raid config.
+        """
+        logical_drives = raid_config["LogicalDrives"]
+        logical_disks = []
+        for ld in logical_drives:
+            prop = {}
+            prop['size_gb'] = ld['CapacityGiB']
+            prop['raid_level'] = ld['Raid'].strip('Raid')
+            prop['root_device_hint'] = {'wwn': '0x' +
+                                        ld['VolumeUniqueIdentifier']}
+            prop['controller'] = ("Smart Storage Controller in " +
+                                  raid_config["Location"])
+            prop['physical_disks'] = ld['DataDrives']
+            prop['volume_name'] = ld['LogicalDriveName']
+            logical_disks.append(prop)
+        return logical_disks
+
+    def _check_smart_storage_message(self):
+        """Check for smart storage message.
+
+        :returns: result, raid_message
+        """
+        ssc_mesg = self.smart_storage_config_message
+        result = True
+        raid_message = ""
+        for element in ssc_mesg:
+            if "Success" not in element['MessageId']:
+                result = False
+                raid_message = element['MessageId']
+        return result, raid_message
+
+    def read_raid(self):
+        """Get the current RAID configuration from the system.
+
+        :returns: current raid config.
+        """
+        if not self.logical_drives:
+            msg = ('No logical drives found on the controller')
+            LOG.debug(msg)
+            raise exception.IloLogicalDriveNotFoundError(msg)
+        result, raid_message = self._check_smart_storage_message()
+        if result:
+            configured_raid_settings = self._conn.get(self.settings_uri)
+            raid_data = {
+                'logical_disks': self._generic_format(
+                    configured_raid_settings.json())}
+            return raid_data
+        else:
+            msg = ('Failed to perform the raid operation successfully.'
+                   'Response from controller Error - %(error)s'
+                   % {'error': str(raid_message)})
+            raise exception.IloError(msg)
 
     def delete_raid(self):
         """Clears the RAID configuration from the system.

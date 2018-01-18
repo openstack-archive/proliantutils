@@ -48,6 +48,7 @@ SUPPORTED_RIS_METHODS = [
     'inject_nmi',
     'insert_virtual_media',
     'press_pwr_btn',
+    'read_raid_configuration',
     'reset_bios_to_default',
     'reset_ilo_credential',
     'reset_secure_boot_keys',
@@ -96,6 +97,7 @@ SUPPORTED_REDFISH_METHODS = [
     'set_one_time_boot',
     'update_persistent_boot',
     'set_pending_boot_mode',
+    'read_raid_configuration',
     'reset_ilo_credential',
     'reset_bios_to_default',
     'get_secure_boot_mode',
@@ -110,7 +112,7 @@ SUPPORTED_REDFISH_METHODS = [
     'unset_iscsi_boot_info',
     'unset_iscsi_info',
     'get_iscsi_initiator_info',
-    'set_iscsi_initiator_info',
+    'set_iscsi_initiator_info'
 ]
 
 LOG = log.get_logger(__name__)
@@ -668,6 +670,25 @@ class IloClient(operations.IloOperations):
                  on the server
         """
         return self._call_method('create_raid_configuration', raid_config)
+
+    def read_raid_configuration(self, raid_config=None):
+        """Read the logical drives from the system.
+
+        :param raid_config: None or a dictionary containing target raid
+                            configuration data. This data stucture should be as
+                            follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        :returns: A list of touple containing all controllers in case of param
+                  'None' or controller given in user input with respective
+                  logical drives
+        """
+        return self._call_method('read_raid_configuration', raid_config)
 
     def update_firmware(self, firmware_url, component_type):
         """Updates the given firmware on the server
