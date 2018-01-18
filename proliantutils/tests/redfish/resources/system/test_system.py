@@ -602,6 +602,93 @@ class HPESystemTestCase(testtools.TestCase):
             "configuration for one or more controllers with",
             self.sys_inst.create_raid, raid_config)
 
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    @mock.patch.object(system.HPESystem,
+                       'get_controller_model_by_ssc_id')
+    def test_read_raid(self, get_controller_model_by_ssc_id_mock,
+                       get_smart_storage_config_mock):
+        config_id = ['/redfish/v1/systems/1/smartstorageconfig/']
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=config_id))
+        (get_controller_model_by_ssc_id_mock.
+         return_value) = 'HPE Smart Array P408i-p SR Gen10'
+        result_ld1 = [{'size_gb': 149,
+                       'physical_disks': [u'2I:1:1'],
+                       'raid_level': u'0',
+                       'root_device_hint': {'wwn': u'0x600508B'},
+                       'controller': u'Smart Storage Controller in Slot 1',
+                       'volume_name': u'01E6E63APFJHD'}]
+        config = {'logical_disks': result_ld1}
+        expected = [('HPE Smart Array P408i-p SR Gen10', config)]
+        (get_smart_storage_config_mock.
+         return_value.read_raid.return_value) = config
+        self.assertEqual(expected, self.sys_inst.read_raid())
+        get_smart_storage_config_mock.assert_called_once_with(config_id[0])
+
+    @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
+    @mock.patch.object(system.HPESystem,
+                       'get_smart_storage_config_by_controller_model')
+    def test_read_raid_with_raid_config(
+            self, get_ssc_by_controller_model_mock,
+            parse_raid_config_data_mock):
+        ld1 = {'raid_level': '0', 'is_root_volume': True,
+               'size_gb': 150,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        raid_config = {'logical_disks': [ld1]}
+        parse_data = {'HPE Smart Array P408i-p SR Gen10': [ld1]}
+        parse_raid_config_data_mock.return_value = parse_data
+        result_ld1 = [{'size_gb': 149,
+                       'physical_disks': [u'2I:1:1'],
+                       'raid_level': u'0',
+                       'root_device_hint': {'wwn': u'0x600508B'},
+                       'controller': u'Smart Storage Controller in Slot 1',
+                       'volume_name': u'01E6E63APFJHD'}]
+        config = {'logical_disks': result_ld1}
+        expected = [('HPE Smart Array P408i-p SR Gen10', config)]
+        (get_ssc_by_controller_model_mock.
+         return_value.read_raid.return_value) = config
+        self.assertEqual(expected, self.sys_inst.read_raid(raid_config))
+        get_ssc_by_controller_model_mock.assert_called_once_with(
+            ld1['controller'])
+
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    @mock.patch.object(system.HPESystem,
+                       'get_controller_model_by_ssc_id')
+    def test_read_raid_logical_drive_not_found(
+            self, get_controller_model_by_ssc_id_mock,
+            get_smart_storage_config_mock):
+        config_id = ['/redfish/v1/systems/1/smartstorageconfig/']
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=config_id))
+        (get_controller_model_by_ssc_id_mock.
+         return_value) = 'HPE Smart Array P408i-p SR Gen10'
+        get_smart_storage_config_mock.return_value.read_raid.side_effect = (
+            exception.IloLogicalDriveNotFoundError('No logical drive found'))
+        self.assertRaisesRegex(
+            exception.IloError,
+            "No logical drives are found in any controllers. "
+            "Nothing to read.",
+            self.sys_inst.read_raid)
+
+    @mock.patch.object(system.HPESystem, 'get_smart_storage_config')
+    @mock.patch.object(system.HPESystem,
+                       'get_controller_model_by_ssc_id')
+    def test_read_raid_failed(
+            self, get_controller_model_by_ssc_id_mock,
+            get_smart_storage_config_mock):
+        config_id = ['/redfish/v1/systems/1/smartstorageconfig/']
+        type(self.sys_inst).smart_storage_config_identities = (
+            mock.PropertyMock(return_value=config_id))
+        (get_controller_model_by_ssc_id_mock.
+         return_value) = 'HPE Smart Array P408i-p SR Gen10'
+        get_smart_storage_config_mock.return_value.read_raid.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegexp(
+            exception.IloError,
+            "The Redfish controller failed to read the "
+            "raid configuration in one or more controllers with Error:",
+            self.sys_inst.read_raid)
+
     @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
     @mock.patch.object(system.HPESystem,
                        'get_smart_storage_config_by_controller_model')
@@ -706,3 +793,23 @@ class HPESystemTestCase(testtools.TestCase):
             expected,
             self.sys_inst.get_smart_storage_config_by_controller_model(
                 'HPE Smart Array P408i-p SR Gen10'))
+
+    @mock.patch.object(system.HPESystem, '_parse_raid_config_data')
+    @mock.patch.object(system.HPESystem,
+                       'get_smart_storage_config_by_controller_model')
+    def test_read_raid_failed_with_raid_config(
+            self, get_ssc_by_controller_model_mock,
+            parse_raid_config_data_mock):
+        ld1 = {'raid_level': '0', 'is_root_volume': True,
+               'size_gb': 150,
+               'controller': 'HPE Smart Array P408i-p SR Gen10'}
+        raid_config = {'logical_disks': [ld1]}
+        parse_data = {'HPE Smart Array P408i-p SR Gen10': [ld1]}
+        parse_raid_config_data_mock.return_value = parse_data
+        (get_ssc_by_controller_model_mock.
+         return_value.read_raid.side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegexp(
+            exception.IloError,
+            "The Redfish controller failed to read the "
+            "raid configuration in one or more controllers with Error:",
+            self.sys_inst.read_raid, raid_config)

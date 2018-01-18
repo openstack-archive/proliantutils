@@ -446,6 +446,22 @@ class IloOperations(object):
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
 
+    def read_raid_configuration(self, raid_config=None):
+        """Read the logical drives from the system
+
+        Read raid configuration of the hardware.
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'controller': 'smartstorageconfig'
+                            }, <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
     def delete_raid_configuration(self):
         """Deletes the logical drives from the system
 
