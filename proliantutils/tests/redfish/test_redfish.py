@@ -1436,3 +1436,28 @@ class RedfishOperationsTestCase(testtools.TestCase):
             "The Redfish controller failed to delete the "
             "raid configuration",
             self.rf_client.delete_raid_configuration)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_read_raid_configuration(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/system.json', 'r') as f:
+            system_json = json.loads(f.read())
+        controllers = (
+            get_system_mock.return_value.smart_storage_config_controllers.
+            return_value) = (system_json['System_oem_specific_configs']['Oem']
+                             ['Hpe']['SmartStorageConfig'])
+        self.rf_client.read_raid_configuration()
+        (get_system_mock.return_value.get_smart_storage_config.
+         assert_called_once_with(controllers[0]))
+        (get_system_mock.return_value.get_smart_storage_config().
+         read_raid.assert_called_once_with())
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_read_raid_configuration_fail(self, get_system_mock):
+        (get_system_mock.return_value.smart_storage_config_controllers.
+         side_effect) = sushy.exceptions.SushyError
+        self.assertRaisesRegex(
+            exception.IloError,
+            "The Redfish controller failed to delete the "
+            "raid configuration",
+            self.rf_client.delete_raid_configuration)

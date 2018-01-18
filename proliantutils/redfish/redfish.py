@@ -1024,3 +1024,23 @@ class RedfishOperations(operations.IloOperations):
                    % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def read_raid_configuration(self):
+        """Reads the raid configuration on the hardware.
+
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            smart_storage_config_controllers = (
+                sushy_system.smart_storage_config_controllers())
+            smart_storage_config_obj = (
+                sushy_system.get_smart_storage_config(
+                    smart_storage_config_controllers[0]))
+            return smart_storage_config_obj.read_raid()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to read the '
+                          'raid configuration. Error %(error)s')
+                   % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
