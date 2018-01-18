@@ -454,3 +454,64 @@ class HPESystem(system.System):
                    'raid configuration for one or more controllers with '
                    'Error: %(error)s' % {'error': str(any_exceptions)})
             raise exception.IloError(msg)
+
+    def read_raid(self, raid_config=None):
+        """Read the logical drives from the system
+
+        :param raid_config: A dictionary containing target raid configuration
+                            data. This data stucture should be as follows:
+                            raid_config = {'logical_disks': [{'raid_level': 1,
+                            'size_gb': 100, 'physical_disks': ['6I:1:5'],
+                            'controller': 'HPE Smart Array P408i-a SR Gen10'},
+                            <info-for-logical-disk-2>]}
+        :raises: IloError, on an error from iLO.
+        :returns: A list of touple containing controller and respective logical
+                  drives
+        """
+        self.check_smart_storage_config_ids()
+        ld_exc_count = 0
+        any_exceptions = []
+        result = []
+        if raid_config is None:
+            # When read called after delete raid, there will be no input
+            # passed by user then
+            ssc_ids = self.smart_storage_config_identities
+            for ssc_id in ssc_ids:
+                try:
+                    ssc_obj = self.get_smart_storage_config(ssc_id)
+                    model = (
+                        self.smart_storage.array_controllers.
+                        array_controller_by_location(ssc_obj.location).model)
+                    result.append((model, ssc_obj.read_raid()))
+                except exception.IloLogicalDriveNotFoundError as e:
+                    ld_exc_count += 1
+                except sushy.exceptions.SushyError as e:
+                    any_exceptions.append((model, str(e)))
+            if ld_exc_count == len(ssc_ids):
+                msg = ('No logical drives are found in any controllers. '
+                       'Nothing to read.')
+                raise exception.IloLogicalDriveNotFoundError(msg)
+        else:
+            # When read called after create raid, user can pass raid config
+            # as a input
+            controllers = self._parse_raid_config_data(raid_config)
+            for controller in controllers:
+                try:
+                    ssc_obj = (
+                        self._get_smart_storage_config_by_controller_model(
+                            controller))
+                    result.append((controller, ssc_obj.read_raid()))
+                except exception.IloLogicalDriveNotFoundError as e:
+                    ld_exc_count += 1
+                except sushy.exceptions.SushyError as e:
+                    any_exceptions.append((controller, str(e)))
+            if ld_exc_count == len(controllers):
+                msg = ('No logical drives are found in any controllers. '
+                       'Nothing to read.')
+                raise exception.IloLogicalDriveNotFoundError(msg)
+        if any_exceptions:
+            msg = ('The Redfish controller failed to read the '
+                   'raid configuration in one or more controllers with '
+                   'Error: %(error)s' % {'error': str(any_exceptions)})
+            raise exception.IloError(msg)
+        return result

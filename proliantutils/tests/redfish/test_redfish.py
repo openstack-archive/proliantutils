@@ -1683,3 +1683,16 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.create_raid_configuration(raid_config)
         get_system_mock.return_value.create_raid.assert_called_once_with(
             raid_config)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_read_raid_configuration(self, get_system_mock):
+        result_ld1 = [{'size_gb': 149,
+                       'physical_disks': [u'2I:1:1'],
+                       'raid_level': u'0',
+                       'root_device_hint': {'wwn': u'0x600508B'},
+                       'controller': u'Smart Storage Controller in Slot 1',
+                       'volume_name': u'01E6E63APFJHD'}]
+        config = {'logical_disks': result_ld1}
+        expected = [('HPE Smart Array P408i-p SR Gen10', config)]
+        get_system_mock.return_value.read_raid.return_value = expected
+        self.assertEqual(expected, self.rf_client.read_raid_configuration())
