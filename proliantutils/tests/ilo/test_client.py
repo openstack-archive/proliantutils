@@ -339,8 +339,8 @@ class IloClientTestCase(testtools.TestCase):
     def test__call_method_with_use_redfish_only_set(self, redfish_mock):
         self.client = client.IloClient("1.2.3.4", "admin", "secret",
                                        use_redfish_only=True)
-        redfish_get_host_power_mock = (redfish.RedfishOperations.return_value.
-                                       get_host_power_status)
+        redfish_get_host_power_mock = (
+            redfish.RedfishOperations.return_value.get_host_power_status)
 
         self.client._call_method('get_host_power_status')
         redfish_get_host_power_mock.assert_called_once_with()
@@ -361,14 +361,24 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('set_http_boot_url', 'fake-url')
 
     @mock.patch.object(client.IloClient, '_call_method')
-    def test_set_iscsi_boot_info(self, call_mock):
-        self.client.set_iscsi_boot_info('iqn.2011-07.com:example:123',
-                                        '1', '10.10.1.23', '3260', 'CHAP',
-                                        'user', 'password')
-        call_mock.assert_called_once_with('set_iscsi_boot_info',
+    def test_set_iscsi_info(self, call_mock):
+        self.client.set_iscsi_info('iqn.2011-07.com:example:123',
+                                   '1', '10.10.1.23', '3260', 'CHAP',
+                                   'user', 'password')
+        call_mock.assert_called_once_with('set_iscsi_info',
                                           'iqn.2011-07.com:example:123',
                                           '1', '10.10.1.23', '3260',
                                           'CHAP', 'user', 'password')
+
+    @mock.patch.object(client.IloClient, 'set_iscsi_info')
+    def test_set_iscsi_boot_info(self, set_iscsi_mock):
+        self.client.set_iscsi_boot_info('aa:bb:cc:dd:ee:ff',
+                                        'iqn.2011-07.com:example:123',
+                                        '1', '10.10.1.23', '3260', 'CHAP',
+                                        'user', 'password')
+        set_iscsi_mock.assert_called_once_with('iqn.2011-07.com:example:123',
+                                               '1', '10.10.1.23', '3260',
+                                               'CHAP', 'user', 'password')
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_get_iscsi_initiator_info(self, call_mock):
@@ -376,9 +386,14 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_iscsi_initiator_info')
 
     @mock.patch.object(client.IloClient, '_call_method')
-    def test_unset_iscsi_boot_info(self, call_mock):
-        self.client.unset_iscsi_boot_info()
-        call_mock.assert_called_once_with('unset_iscsi_boot_info')
+    def test_unset_iscsi_info(self, call_mock):
+        self.client.unset_iscsi_info()
+        call_mock.assert_called_once_with('unset_iscsi_info')
+
+    @mock.patch.object(client.IloClient, 'unset_iscsi_info')
+    def test_unset_iscsi_boot_info(self, unset_iscsi_mock):
+        self.client.unset_iscsi_boot_info("aa:bb:cc:dd:ee:ff")
+        unset_iscsi_mock.assert_called_once_with()
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_set_iscsi_initiator_info(self, call_mock):
@@ -1040,7 +1055,7 @@ class IloRedfishClientTestCase(testtools.TestCase):
             more_missed_operations, ('arg1', 'arg2'),
             even_more_missed_operations)
         if(len(even_more_missed_operations) == 1):
-            self.assertEqual('set_iscsi_boot_info',
+            self.assertEqual('set_iscsi_info',
                              even_more_missed_operations[0])
         else:
             self.assertEqual(0, len(even_more_missed_operations))
