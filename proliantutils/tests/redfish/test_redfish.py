@@ -1046,12 +1046,12 @@ class RedfishOperationsTestCase(testtools.TestCase):
 
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)
-    def test_set_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+    def test_set_iscsi_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
         self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
                                'iSCSI boot is not supported '
                                'in the BIOS boot mode',
-                               self.rf_client.set_iscsi_boot_info,
+                               self.rf_client.set_iscsi_info,
                                'iqn.2011-07.com.example.server:test1',
                                '1', '10.10.1.30')
 
@@ -1059,8 +1059,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
                        '_change_iscsi_target_settings', autospec=True)
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)
-    def test_set_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
-                                      change_iscsi_target_settings_mock):
+    def test_set_iscsi_info_uefi(self, _uefi_boot_mode_mock,
+                                 change_iscsi_target_settings_mock):
         _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {
             'iSCSITargetName': 'iqn.2011-07.com.example.server:test1',
@@ -1069,7 +1069,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'iSCSIConnection': 'Enabled',
             'iSCSITargetIpAddress': '10.10.1.30',
             'iSCSITargetTcpPort': 3260}
-        self.rf_client.set_iscsi_boot_info(
+        self.rf_client.set_iscsi_info(
             'iqn.2011-07.com.example.server:test1',
             '1', '10.10.1.30')
         change_iscsi_target_settings_mock.assert_called_once_with(
@@ -1079,7 +1079,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
                        '_change_iscsi_target_settings', autospec=True)
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)
-    def test_set_iscsi_boot_info_uefi_with_chap(
+    def test_set_iscsi_info_uefi_with_chap(
             self, _uefi_boot_mode_mock, change_iscsi_target_settings_mock):
         _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {
@@ -1092,7 +1092,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'iSCSIAuthenticationMethod': 'Chap',
             'iSCSIChapUsername': 'admin',
             'iSCSIChapSecret': 'password'}
-        self.rf_client.set_iscsi_boot_info(
+        self.rf_client.set_iscsi_info(
             'iqn.2011-07.com.example.server:test1',
             '1', '10.10.1.30', 3260, 'CHAP', 'admin', 'password')
         change_iscsi_target_settings_mock.assert_called_once_with(
@@ -1100,23 +1100,23 @@ class RedfishOperationsTestCase(testtools.TestCase):
 
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)
-    def test_unset_iscsi_boot_info_bios(self, _uefi_boot_mode_mock):
+    def test_unset_iscsi_info_bios(self, _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
         self.assertRaisesRegex(exception.IloCommandNotSupportedInBiosError,
                                "iSCSI boot is not supported "
                                "in the BIOS boot mode",
-                               self.rf_client.unset_iscsi_boot_info)
+                               self.rf_client.unset_iscsi_info)
 
     @mock.patch.object(redfish.RedfishOperations,
                        '_change_iscsi_target_settings', autospec=True)
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)
-    def test_unset_iscsi_boot_info_uefi(self, _uefi_boot_mode_mock,
-                                        change_iscsi_target_settings_mock):
+    def test_unset_iscsi_info_uefi(self, _uefi_boot_mode_mock,
+                                   change_iscsi_target_settings_mock):
         _uefi_boot_mode_mock.return_value = True
         iscsi_variables = {
             'iSCSIConnection': 'Disabled'}
-        self.rf_client.unset_iscsi_boot_info()
+        self.rf_client.unset_iscsi_info()
         change_iscsi_target_settings_mock.assert_called_once_with(
             self.rf_client, iscsi_variables)
 

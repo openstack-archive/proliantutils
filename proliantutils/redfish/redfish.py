@@ -907,9 +907,9 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
-    def set_iscsi_boot_info(self, target_name, lun, ip_address,
-                            port='3260', auth_method=None, username=None,
-                            password=None):
+    def set_iscsi_info(self, target_name, lun, ip_address,
+                       port='3260', auth_method=None, username=None,
+                       password=None):
         """Set iSCSI details of the system in UEFI boot mode.
 
         The initiator system is set with the target details like
@@ -941,7 +941,7 @@ class RedfishOperations(operations.IloOperations):
             msg = 'iSCSI boot is not supported in the BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
 
-    def unset_iscsi_boot_info(self):
+    def unset_iscsi_info(self):
         """Disable iSCSI boot option in UEFI boot mode.
 
         :raises: IloCommandNotSupportedInBiosError, if the system is
