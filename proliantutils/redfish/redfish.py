@@ -665,9 +665,7 @@ class RedfishOperations(operations.IloOperations):
                 ('trusted_boot',
                  (tpm_state == sys_cons.TPM_PRESENT_ENABLED
                   or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
-                ('secure_boot',
-                 GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                     sushy_system.secure_boot.current_boot)),
+                ('secure_boot', True),
                 ('iscsi_boot',
                  (sushy_system.bios_settings.iscsi_resource.
                   is_iscsi_boot_supported())),

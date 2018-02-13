@@ -1264,13 +1264,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             # If an error is raised dont populate the capability
             # iscsi_boot
             pass
-        try:
-            self.get_secure_boot_mode()
-            capabilities['secure_boot'] = 'true'
-        except exception.IloCommandNotSupportedError:
-            # If an error is raised dont populate the capability
-            # secure_boot
-            pass
+        capabilities['secure_boot'] = 'true'
         if self._is_sriov_enabled():
             capabilities['sriov_enabled'] = 'true'
         return capabilities
