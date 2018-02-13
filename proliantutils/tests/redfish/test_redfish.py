@@ -699,8 +699,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             sys_cons.SRIOV_ENABLED)
         type(get_system_mock.return_value.bios_settings).cpu_vt = (
             sys_cons.CPUVT_ENABLED)
-        type(get_system_mock.return_value.secure_boot).current_boot = (
-            sys_cons.SECUREBOOT_CURRENT_BOOT_ENABLED)
+        type(get_system_mock.return_value).secure_boot = (
+            mock.MagicMock(spec='Hey I am secure_boot'))
         type(get_system_mock.return_value).rom_version = (
             'U31 v1.00 (03/11/2017)')
         type(get_manager_mock.return_value).firmware_version = 'iLO 5 v1.15'
@@ -774,8 +774,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             sys_cons.SRIOV_DISABLED)
         type(get_system_mock.return_value.bios_settings).cpu_vt = (
             sys_cons.CPUVT_DISABLED)
-        type(get_system_mock.return_value.secure_boot).current_boot = (
-            sys_cons.SECUREBOOT_CURRENT_BOOT_DISABLED)
+        type(get_system_mock.return_value).secure_boot = (
+            mock.PropertyMock(side_effect=exception.MissingAttributeError))
         type(get_system_mock.return_value).rom_version = (
             'U31 v1.00 (03/11/2017)')
         type(get_manager_mock.return_value).firmware_version = 'iLO 5 v1.15'
@@ -900,6 +900,21 @@ class RedfishOperationsTestCase(testtools.TestCase):
             'The Redfish controller failed to provide '
             'information about secure boot on the server.',
             self.rf_client.get_secure_boot_mode)
+
+    def test__has_secure_boot(self):
+        sushy_system_mock = self.sushy.get_system.return_value
+        type(sushy_system_mock).secure_boot = mock.PropertyMock(
+            return_value='Hey I am secure_boot')
+        self.assertTrue(self.rf_client._has_secure_boot())
+
+    def test__has_secure_boot_on_fail(self):
+        sushy_system_mock = self.sushy.get_system.return_value
+        type(sushy_system_mock).secure_boot = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        self.assertFalse(self.rf_client._has_secure_boot())
+        type(sushy_system_mock).secure_boot = mock.PropertyMock(
+            side_effect=exception.MissingAttributeError)
+        self.assertFalse(self.rf_client._has_secure_boot())
 
     @mock.patch.object(redfish.RedfishOperations, '_is_boot_mode_uefi',
                        autospec=True)

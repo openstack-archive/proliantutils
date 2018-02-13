@@ -665,9 +665,7 @@ class RedfishOperations(operations.IloOperations):
                 ('trusted_boot',
                  (tpm_state == sys_cons.TPM_PRESENT_ENABLED
                   or tpm_state == sys_cons.TPM_PRESENT_DISABLED)),
-                ('secure_boot',
-                 GET_SECUREBOOT_CURRENT_BOOT_MAP.get(
-                     sushy_system.secure_boot.current_boot)),
+                ('secure_boot', self._has_secure_boot()),
                 ('iscsi_boot',
                  (sushy_system.bios_settings.iscsi_resource.
                   is_iscsi_boot_supported())),
@@ -755,6 +753,13 @@ class RedfishOperations(operations.IloOperations):
         else:
             LOG.debug(self._("Secure boot is Disabled"))
         return secure_boot_enabled
+
+    def _has_secure_boot(self):
+        try:
+            self._get_sushy_system(PROLIANT_SYSTEM_ID).secure_boot
+        except (exception.MissingAttributeError, sushy.exceptions.SushyError):
+            return False
+        return True
 
     def set_secure_boot_mode(self, secure_boot_enable):
         """Enable/Disable secure boot on the server.
