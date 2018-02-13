@@ -1265,7 +1265,6 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             # iscsi_boot
             pass
         try:
-            self.get_secure_boot_mode()
             capabilities['secure_boot'] = 'true'
         except exception.IloCommandNotSupportedError:
             # If an error is raised dont populate the capability

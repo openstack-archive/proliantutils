@@ -818,6 +818,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
                     'ilo_firmware_version': 'iLO 5 v1.15',
                     'nic_capacity': '1Gb',
                     'server_model': 'ProLiant DL180 Gen10',
+                    'secure_boot': 'true',
                     'boot_mode_bios': 'false', 'boot_mode_uefi': 'true'}
         self.assertEqual(expected, actual)
 
