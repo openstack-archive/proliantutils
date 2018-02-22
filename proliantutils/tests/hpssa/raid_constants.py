@@ -2486,3 +2486,24 @@ Smart Array P440 in Slot 2
          Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
          Unrestricted Sanitize Supported: False
 '''
+
+SSA_ERASE_IN_PROGRESS_NOT_SUPPORTED = '''
+Smart Array P440 in Slot 2
+   Controller Mode: RAID
+   Pending Controller Mode: RAID
+   Sanitize Erase Supported: True
+   Primary Boot Volume: None
+   Secondary Boot Volume: None
+
+   unassigned
+
+      physicaldrive 1I:2:1
+         Drive Type: Unassigned Drive
+         Interface Type: SAS
+         Size: 300 GB
+         Status: Erase In Progress
+         Drive Type: Unassigned Drive
+         Sanitize Erase Supported: False
+         Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
+         Unrestricted Sanitize Supported: False
+'''
