@@ -14,6 +14,7 @@
 
 import json
 import os
+import time
 
 import jsonschema
 from jsonschema import exceptions as json_schema_exc
@@ -22,7 +23,6 @@ from proliantutils import exception
 from proliantutils.hpssa import constants
 from proliantutils.hpssa import disk_allocator
 from proliantutils.hpssa import objects
-from proliantutils.ilo import common
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAID_CONFIG_SCHEMA = os.path.join(CURRENT_DIR, "raid_config_schema.json")
@@ -378,11 +378,8 @@ def erase_devices():
         if drives:
             controller.erase_devices(drives)
 
-    common.wait_for_operation_to_complete(
-        has_erase_completed,
-        delay_bw_retries=300,
-        failover_msg='Disk erase failed.'
-    )
+    while not has_erase_completed():
+        time.sleep(300)
 
     server.refresh()
 

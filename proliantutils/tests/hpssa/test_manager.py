@@ -14,6 +14,7 @@
 
 import mock
 import testtools
+import time
 
 from proliantutils import exception
 from proliantutils.hpssa import manager
@@ -480,8 +481,10 @@ class ManagerTestCases(testtools.TestCase):
                                        'Raid enabled')
         self.assertEqual(ctrl_expected, server.controllers)
 
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_erase_devices(self, controller_exec_cmd_mock,
+                           sleep_mock,
                            get_all_details_mock):
         erase_drive = raid_constants.SSA_ERASE_DRIVE
         erase_complete = raid_constants.SSA_ERASE_COMPLETE
@@ -503,10 +506,15 @@ class ManagerTestCases(testtools.TestCase):
         self.assertTrue(controller_exec_cmd_mock.called)
         controller_exec_cmd_mock.assert_any_call(*cmd_args)
         self.assertEqual(expt_ret, ret)
+        self.assertFalse(sleep_mock.called)
 
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_erase_devices_in_progress(self, controller_exec_cmd_mock,
+                                       sleep_mock,
                                        get_all_details_mock):
+
+        erase_drive = raid_constants.SSA_ERASE_DRIVE
         erase_progress = raid_constants.SSA_ERASE_IN_PROGRESS
         erase_complete = raid_constants.SSA_ERASE_COMPLETE
 
@@ -515,19 +523,24 @@ class ManagerTestCases(testtools.TestCase):
                 '1I:2:1': 'Erase Complete. Reenable Before Using.',
                 'Summary': ('Sanitize Erase performed on the disks attached to'
                             ' the controller.')}}
-        get_all_details_mock.side_effect = [erase_progress, erase_complete,
-                                            erase_complete]
+        get_all_details_mock.side_effect = [erase_drive, erase_progress,
+                                            erase_complete, erase_complete]
 
         ret = manager.erase_devices()
-        self.assertFalse(controller_exec_cmd_mock.called)
+        self.assertTrue(controller_exec_cmd_mock.called)
         self.assertEqual(expt_ret, ret)
+        self.assertTrue(sleep_mock.called)
 
+    @mock.patch.object(time, 'sleep')
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_erase_devices_not_supported(self, controller_exec_cmd_mock,
+                                         sleep_mock,
                                          get_all_details_mock):
         erase_not_supported = raid_constants.SSA_ERASE_NOT_SUPPORTED
         erase_complete = raid_constants.SSA_ERASE_COMPLETE_NOT_SUPPORTED
+        erase_progress = raid_constants.SSA_ERASE_IN_PROGRESS_NOT_SUPPORTED
         get_all_details_mock.side_effect = [erase_not_supported,
+                                            erase_progress,
                                             erase_complete, erase_complete]
         value = ("Drive 1I:2:1: This operation is not supported in this "
                  "physical drive")
@@ -542,6 +555,8 @@ class ManagerTestCases(testtools.TestCase):
 
         ret = manager.erase_devices()
         self.assertEqual(expt_ret, ret)
+        self.assertTrue(controller_exec_cmd_mock.called)
+        self.assertTrue(sleep_mock.called)
 
 
 class RaidConfigValidationTestCases(testtools.TestCase):
