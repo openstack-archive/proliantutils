@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+2.5.1
+-----
+* Fix #1749076: Inspection of ProLiant Gen10 servers returns incorrect value
+  for 'secure\_boot' capability
+* Fix #1712260: Secure disk erase fails on large size disks with timeout
+  error
+
 2.5.0
 -----
 
