@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+2.5.1
+-----
+* Inspection of ProLiant Gen10 servers sends proper response for 'secure\_boot'
+  capability
+* Remove secure disk erase timeout as it may take longer time for large size
+  disks
+
 2.5.0
 -----
 
