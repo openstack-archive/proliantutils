@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+2.5.1
+-----
+* Fix #1749076: Gen10 server does not return 'secure\_boot' capability even
+  if it supports
+* Fix #1712260: Secure disk erase fails on big size disks
+
 2.5.0
 -----
 
