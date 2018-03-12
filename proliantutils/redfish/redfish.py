@@ -15,7 +15,7 @@
 __author__ = 'HPE'
 
 import json
-
+import re
 from six.moves.urllib import parse
 import sushy
 from sushy.resources.system import mappings as sushy_map
@@ -1005,4 +1005,36 @@ class RedfishOperations(operations.IloOperations):
             return iscsi_initiator
         else:
             msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
+            raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def upload_tls_certificate(self, cert_file):
+        """Upload TLS certificate file to iLO.
+
+        :param cert_file: TLS certificate file
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        import pdb;pdb.set_trace()
+        if(self._is_boot_mode_uefi()):
+            with open(cert_file, 'r') as f:
+                data = json.dumps(f.read())
+            p = re.sub(r"\"", "", data)
+            q = re.sub(r"\\n", "\r\n", p)
+            r = q.rstrip()
+            cert = {}
+            cert['X509Certificate0'] = r
+            cert_list = []
+            cert_list.append(cert)
+            cert_dict = {}
+            cert_dict['NewCertificates'] = cert_list
+            try:
+                (sushy_system.bios_settings.tls_config.
+                 tls_config_settings.upload_tls_certificate(cert_dict))
+            except sushy.exceptions.SushyError as e:
+                msg = (self._("The Redfish controller has failed to upload "
+                              "TLS certificate. Error %(error)s") %
+                       {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+        else:
+            msg = 'TLS certificate cannot be upload in BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
