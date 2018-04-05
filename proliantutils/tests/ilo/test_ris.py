@@ -1239,6 +1239,32 @@ class IloRisTestCase(testtools.TestCase):
         self.client.hold_pwr_btn()
         press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
 
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_current_bios_settings(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        settings.pop("links", None)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        actual_value = self.client.get_current_bios_settings()
+        self.assertEqual(actual_value, settings)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test_get_default_bios_settings(self, check_bios_mock, rest_get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        import pdb;pdb.set_trace()
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        rest_get_mock.return_value = (200, 'HEADERS',
+                                      json.loads(ris_outputs.GET_BASE_CONFIG))
+        actual_value = self.client.get_default_bios_settings()
+        check_bios_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(
+            "/rest/v1/systems/1/bios/BaseConfigs")
+        self.assertEqual(ris_outputs.GET_DEFAULT_CONFIG, actual_value)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 
