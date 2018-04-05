@@ -154,3 +154,10 @@ def validate_href(image_href):
             raise exception.ImageRefValidationFailed(image_href=image_href,
                                                      reason=e)
         return response
+
+
+def apply_bios_properties_filter(settings, filter_to_be_applied):
+    refined_settings = {}
+    for prop in filter_to_be_applied:
+        refined_settings.update({prop: settings.get(prop)})
+    return refined_settings

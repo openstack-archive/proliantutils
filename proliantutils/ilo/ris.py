@@ -19,11 +19,13 @@ import retrying
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import constants
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import mappings
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils import rest
+from proliantutils import utils
 
 """ Currently this class supports only secure boot and firmware settings
 related API's .
@@ -1820,3 +1822,70 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def get_current_bios_settings(self, apply_filter=True):
+        """Get current BIOS settings.
+
+        :return: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        # Remove the "links" section
+        bios_settings.pop("links", None)
+        if apply_filter:
+            return utils.apply_bios_properties_filter(
+                bios_settings, constants.SUPPORTED_BIOS_PROPERTIES)
+        return bios_settings
+
+    def set_bios_settings(self, data=None, apply_filter=True):
+        """Sets current BIOS settings to the provided data.
+
+        :param: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if apply_filter:
+            refined_data = utils.apply_bios_properties_filter(
+                data, constants.SUPPORTED_BIOS_PROPERTIES)
+            self._change_bios_setting(refined_data)
+        else:
+            self._change_bios_setting(data)
+
+    def get_default_bios_settings(self, apply_filter=True):
+        """Get default BIOS settings.
+
+        :return: a dictionary of default BIOS settings(factory settings).
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+        # Get the BaseConfig resource.
+        try:
+            base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        except KeyError:
+            msg = ("BaseConfigs resource not found. Couldn't apply the BIOS "
+                   "Settings.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        status, headers, config = self._rest_get(base_config_uri)
+        if status != 200:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        for cfg in config['BaseConfigs']:
+            default_settings = cfg.get('default', None)
+            if default_settings is not None:
+                break
+        else:
+            msg = ("Default BIOS Settings not found in 'BaseConfigs'"
+                   " resource.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        if apply_filter:
+            return utils.apply_bios_properties_filter(
+                default_settings, constants.SUPPORTED_BIOS_PROPERTIES)
+        return default_settings
