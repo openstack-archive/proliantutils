@@ -14,6 +14,7 @@
 
 __author__ = 'HPE'
 
+import copy
 import hashlib
 import retrying
 
@@ -1820,3 +1821,58 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def get_current_bios_settings(self):
+        """Get current BIOS settings.
+
+        :return: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        # Remove the "links" section
+        bios_settings.pop("links", None)
+        return copy.deepcopy(bios_settings)
+
+    def set_bios_settings(self, data=None):
+        """Sets current BIOS settings to the provided data.
+
+        :param: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        self._change_bios_setting(data)
+
+    def get_default_bios_settings(self):
+        """Get default BIOS settings.
+
+        :return: a dictionary of default BIOS settings(factory settings).
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+        # Get the BaseConfig resource.
+        try:
+            base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        except KeyError:
+            msg = ("BaseConfigs resource not found. Couldn't apply the BIOS "
+                   "Settings.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        status, headers, config = self._rest_get(base_config_uri)
+        if status != 200:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        for cfg in config['BaseConfigs']:
+            default_settings = cfg.get('default', None)
+            if default_settings is not None:
+                break
+        else:
+            msg = ("Default BIOS Settings not found in 'BaseConfigs'"
+                   " resource.")
+            raise exception.IloCommandNotSupportedError(msg)
+        return copy.deepcopy(default_settings)

@@ -360,3 +360,33 @@ class IloOperations(object):
                  not supported on the server
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_current_bios_settings(self):
+        """Get current BIOS settings.
+
+        :return: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def set_bios_settings(self, data=None):
+        """Sets current BIOS settings to the provided data.
+
+        :param: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_default_bios_settings(self):
+        """Get default BIOS settings.
+
+        :return: a dictionary of default BIOS settings(factory settings).
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

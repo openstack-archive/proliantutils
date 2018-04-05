@@ -26,7 +26,9 @@ SUPPORTED_RIS_METHODS = [
     'activate_license',
     'clear_secure_boot_keys',
     'eject_virtual_media',
+    'get_current_bios_settings',
     'get_current_boot_mode',
+    'get_default_bios_settings',
     'get_host_power_status',
     'get_http_boot_url',
     'get_ilo_firmware_version_as_major_minor',
@@ -45,6 +47,7 @@ SUPPORTED_RIS_METHODS = [
     'reset_ilo_credential',
     'reset_secure_boot_keys',
     'reset_server',
+    'set_bios_settings',
     'set_host_power',
     'set_http_boot_url',
     'set_one_time_boot',
@@ -68,6 +71,9 @@ SUPPORTED_REDFISH_METHODS = [
     'reset_server',
     'press_pwr_btn',
     'hold_pwr_btn',
+    'get_current_bios_settings',
+    'get_default_bios_settings',
+    'set_bios_settings',
     'get_one_time_boot',
     'get_pending_boot_mode',
     'get_current_boot_mode',
@@ -641,3 +647,33 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method(
             'update_firmware', firmware_url, component_type)
+
+    def get_current_bios_settings(self):
+        """Get current BIOS settings.
+
+        :return: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('get_current_bios_settings')
+
+    def set_bios_settings(self, data=None):
+        """Sets current BIOS settings to the provided data.
+
+        :param: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('set_bios_settings', data)
+
+    def get_default_bios_settings(self):
+        """Get default BIOS settings.
+
+        :return: a dictionary of default BIOS settings(factory settings).
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        return self._call_method('get_default_bios_settings')

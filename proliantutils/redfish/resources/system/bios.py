@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import sushy
 from sushy.resources import base
 
@@ -68,6 +69,15 @@ class BIOSSettings(base.ResourceBase):
 
         self._pending_settings.refresh(force=False)
         return self._pending_settings
+
+    @property
+    def default_settings(self):
+        """Property to provide default BIOS settings
+
+        It gets the current default settings on the node.
+        """
+        settings_default = self._get_base_configs().default_config
+        return copy.deepcopy(settings_default)
 
     @property
     def boot_settings(self):
