@@ -15,6 +15,7 @@
 __author__ = 'HPE'
 
 import sushy
+from sushy import auth as sushy_auth
 
 from proliantutils.redfish import connector as prutils_connector
 from proliantutils.redfish.resources.account_service import account_service
@@ -33,9 +34,11 @@ class HPESushy(sushy.Sushy):
     the ResourceBase class with customized HPE specific connector subtype.
     """
 
+    session_auth = None
+
     def __init__(self, base_url, username=None, password=None,
                  root_prefix='/redfish/v1/', verify=True,
-                 auth=None, connector=None):
+                 connector=None):
         """Initializes HPE specific sushy object.
 
         :param base_url: The base URL to the Redfish controller. It
@@ -55,9 +58,13 @@ class HPESushy(sushy.Sushy):
         :param auth: An authentication mechanism to utilize.
         :param connector: A user-defined connector object. Defaults to None.
         """
+        if not HPESushy.session_auth:
+            HPESushy.session_auth = sushy_auth.SessionOrBasicAuth(
+                username=username, password=password)
+
         super(HPESushy, self).__init__(
             base_url, username, password,
-            root_prefix=root_prefix, verify=verify, auth=auth,
+            root_prefix=root_prefix, verify=verify, auth=HPESushy.session_auth,
             connector=prutils_connector.HPEConnector(base_url, verify=verify))
 
     def get_system_collection_path(self):
