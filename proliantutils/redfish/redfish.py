@@ -1025,3 +1025,16 @@ class RedfishOperations(operations.IloOperations):
                           'server. Error %(error)s') % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
+
+    def get_host_post_state(self):
+        """Get the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :returns: POST state of the server. The valida states are:-
+                  null, Unknown, Reset, PowerOff, InPost,
+                  InPostDiscoveryComplete and FinishedPost.
+        :raises: IloError, on an error from iLO
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        return sushy_system.post_state
