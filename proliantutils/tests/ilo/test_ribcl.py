@@ -1048,6 +1048,12 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
                                 'ProLiant DL380 G7',
                                 self.ilo.inject_nmi)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_get_host_post_state(self, product_name_mock):
+        product_name_mock.return_value = constants.GET_PRODUCT_NAME
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant DL380 G7',
+                                self.ilo.get_host_post_state)
 
 if __name__ == '__main__':
     unittest.main()

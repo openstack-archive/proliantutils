@@ -1029,6 +1029,23 @@ class IloClientTestCase(testtools.TestCase):
                                 'not supported',
                                 self.client.inject_nmi)
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_host_post_state(self, call_mock):
+        self.client.get_host_post_state()
+        call_mock.assert_called_once_with('get_host_post_state')
+
+    @mock.patch.object(ris.RISOperations, 'get_host_post_state')
+    def test_get_host_post_state_gen9(self, get_host_post_state_mock):
+        self.client.model = 'Gen9'
+        self.client.get_host_post_state()
+        get_host_post_state_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_post_state')
+    def test_get_host_post_state_gen8(self, get_host_post_state_mock):
+        self.client.model = 'Gen8'
+        self.client.get_host_post_state()
+        get_host_post_state_mock.assert_called_once_with()
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

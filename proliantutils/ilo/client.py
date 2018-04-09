@@ -27,6 +27,7 @@ SUPPORTED_RIS_METHODS = [
     'clear_secure_boot_keys',
     'eject_virtual_media',
     'get_current_boot_mode',
+    'get_host_post_state',
     'get_host_power_status',
     'get_http_boot_url',
     'get_ilo_firmware_version_as_major_minor',
@@ -64,6 +65,7 @@ SUPPORTED_RIS_METHODS = [
 
 SUPPORTED_REDFISH_METHODS = [
     'get_product_name',
+    'get_host_post_state',
     'get_host_power_status',
     'set_host_power',
     'reset_server',
@@ -655,3 +657,14 @@ class IloClient(operations.IloOperations):
                  not supported on the server
         """
         return self._call_method('inject_nmi')
+
+    def get_host_post_state(self):
+        """Request the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        return self._call_method('get_host_post_state')
