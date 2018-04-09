@@ -1006,3 +1006,22 @@ class RedfishOperations(operations.IloOperations):
         else:
             msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if sushy_system.power_state != sushy.SYSTEM_POWER_STATE_ON:
+            raise exception.IloError("Server is not in powered on state.")
+
+        try:
+            sushy_system.reset_system(sushy.RESET_NMI)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to inject nmi to '
+                          'server. Error %(error)s') % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

@@ -1239,6 +1239,25 @@ class IloRisTestCase(testtools.TestCase):
         self.client.hold_pwr_btn()
         press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
 
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_inject_nmi(self, get_power_status_mock,
+                        perform_power_op_mock):
+        get_power_status_mock.return_value = 'ON'
+        self.client.inject_nmi()
+        get_power_status_mock.assert_called_once_with()
+        perform_power_op_mock.assert_called_once_with('Nmi')
+
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_inject_nmi_exc(self, get_power_status_mock,
+                            perform_power_op_mock):
+        get_power_status_mock.return_value = 'OFF'
+        self.assertRaises(exception.IloError,
+                          self.client.inject_nmi)
+        get_power_status_mock.assert_called_once_with()
+        self.assertFalse(perform_power_op_mock.called)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 

@@ -1183,6 +1183,18 @@ class RIBCLOperations(operations.IloOperations):
             if location == 'Embedded':
                 nic_dict[port] = mac
 
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        platform = self.get_product_name()
+        msg = ("`inject_nmi` is not supported on %s" % platform)
+        raise exception.IloCommandNotSupportedError(msg)
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).
