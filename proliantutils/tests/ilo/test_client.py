@@ -1011,6 +1011,41 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_inject_nmi(self, call_mock):
+        self.client.inject_nmi()
+        call_mock.assert_called_once_with('inject_nmi')
+
+    @mock.patch.object(ris.RISOperations, 'inject_nmi')
+    def test_inject_nmi_gen9(self, inject_nmi_mock):
+        self.client.model = 'Gen9'
+        self.client.inject_nmi()
+        inject_nmi_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_inject_nmi_gen8(self, product_mock):
+        self.client.model = 'Gen8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.inject_nmi)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_host_post_state(self, call_mock):
+        self.client.get_host_post_state()
+        call_mock.assert_called_once_with('get_host_post_state')
+
+    @mock.patch.object(ris.RISOperations, 'get_host_post_state')
+    def test_get_host_post_state_gen9(self, get_host_post_state_mock):
+        self.client.model = 'Gen9'
+        self.client.get_host_post_state()
+        get_host_post_state_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_post_state')
+    def test_get_host_post_state_gen8(self, get_host_post_state_mock):
+        self.client.model = 'Gen8'
+        self.client.get_host_post_state()
+        get_host_post_state_mock.assert_called_once_with()
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

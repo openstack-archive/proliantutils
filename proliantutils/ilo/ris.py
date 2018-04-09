@@ -1820,3 +1820,32 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        """
+        cur_status = self.get_host_power_status()
+        if cur_status != 'ON':
+            raise exception.IloError("Server is not in powered on state.")
+
+        self._perform_power_op("Nmi")
+
+    def get_host_post_state(self):
+        """Get the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :returns: POST state of the server. The valida states are:-
+                  null, Unknown, Reset, PowerOff, InPost,
+                  InPostDiscoveryComplete and FinishedPost.
+        :raises: IloError, on an error from iLO
+        """
+        system = self._get_host_details()
+        if 'PostState' in system['Oem']['Hp']:
+            return system['Oem']['Hp']['PostState']
+        raise exception.IloError("Attribute 'Oem/Hp/PostState' "
+                                 "not found on system.")

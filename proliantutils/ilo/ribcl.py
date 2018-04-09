@@ -1183,6 +1183,32 @@ class RIBCLOperations(operations.IloOperations):
             if location == 'Embedded':
                 nic_dict[port] = mac
 
+    def _raise_command_not_supported(self, method):
+        platform = self.get_product_name()
+        msg = ("`%(method)s` is not supported on %(platform)s" %
+               {'method': method, 'platform': platform})
+        raise (exception.IloCommandNotSupportedError(msg))
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError
+        """
+        self._raise_command_not_supported("inject_nmi")
+
+    def get_host_post_state(self):
+        """Request the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, RIBCL do not support it.
+        """
+        self._raise_command_not_supported("get_host_post_state")
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

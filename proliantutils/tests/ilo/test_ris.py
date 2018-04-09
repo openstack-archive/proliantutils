@@ -1275,6 +1275,43 @@ class IloRisTestCase(testtools.TestCase):
         self.client.hold_pwr_btn()
         press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
 
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_inject_nmi(self, get_power_status_mock,
+                        perform_power_op_mock):
+        get_power_status_mock.return_value = 'ON'
+        self.client.inject_nmi()
+        get_power_status_mock.assert_called_once_with()
+        perform_power_op_mock.assert_called_once_with('Nmi')
+
+    @mock.patch.object(ris.RISOperations, '_perform_power_op')
+    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
+    def test_inject_nmi_exc(self, get_power_status_mock,
+                            perform_power_op_mock):
+        get_power_status_mock.return_value = 'OFF'
+        self.assertRaises(exception.IloError,
+                          self.client.inject_nmi)
+        get_power_status_mock.assert_called_once_with()
+        self.assertFalse(perform_power_op_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_host_post_state(self, get_details_mock):
+        host_response = ris_outputs.RESPONSE_BODY_FOR_REST_OP
+        expected = 'PowerOff'
+        get_details_mock.return_value = json.loads(host_response)
+        result = self.client.get_host_post_state()
+        self.assertEqual(expected, result)
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test_get_host_post_state_exc(self, get_details_mock):
+        host_response = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_details_mock.return_value = host_response
+        del host_response['Oem']['Hp']['PostState']
+        self.assertRaises(exception.IloError,
+                          self.client.get_host_post_state)
+        get_details_mock.assert_called_once_with()
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 

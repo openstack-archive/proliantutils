@@ -81,6 +81,16 @@ GET_SECUREBOOT_CURRENT_BOOT_MAP = {
     sys_cons.SECUREBOOT_CURRENT_BOOT_DISABLED: False
 }
 
+GET_POST_STATE_MAP = {
+    sys_cons.POST_STATE_NULL: 'NULL',
+    sys_cons.POST_STATE_UNKNOWN: 'UNKNOWN',
+    sys_cons.POST_STATE_RESET: 'RESET',
+    sys_cons.POST_STATE_POWEROFF: 'POWEROFF',
+    sys_cons.POST_STATE_INPOST: 'INPOST',
+    sys_cons.POST_STATE_INPOSTDISCOVERY: 'INPOSTDISCOVERYCOMPLETE',
+    sys_cons.POST_STATE_FINISHEDPOST: 'FINISHEDPOST'
+}
+
 # Assuming only one system and one manager present as part of
 # collection, as we are dealing with iLO's here.
 PROLIANT_MANAGER_ID = '1'
@@ -1008,3 +1018,35 @@ class RedfishOperations(operations.IloOperations):
         else:
             msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if sushy_system.power_state != sushy.SYSTEM_POWER_STATE_ON:
+            raise exception.IloError("Server is not in powered on state.")
+
+        try:
+            sushy_system.reset_system(sushy.RESET_NMI)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish controller failed to inject nmi to '
+                          'server. Error %(error)s') % {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def get_host_post_state(self):
+        """Get the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :returns: POST state of the server. The valida states are:-
+                  null, Unknown, Reset, PowerOff, InPost,
+                  InPostDiscoveryComplete and FinishedPost.
+        :raises: IloError, on an error from iLO
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        return GET_POST_STATE_MAP.get(sushy_system.post_state)
