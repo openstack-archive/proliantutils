@@ -74,3 +74,12 @@ MEMORY_TYPE_NVDIMM_N = "nvdimm_n"
 MEMORY_TYPE_DRAM = "dram"
 MEMORY_DEVICE_TYPE_LOGICAL = "logical"
 MEMORY_DEVICE_TYPE_DDR4 = "ddr4"
+
+# System POST state related constants
+POST_STATE_NULL = "Null"
+POST_STATE_UNKNOWN = "Unknown"
+POST_STATE_RESET = "Reset"
+POST_STATE_POWEROFF = "PowerOff"
+POST_STATE_INPOST = "InPost"
+POST_STATE_INPOSTDISCOVERY = "InPostDiscoveryComplete"
+POST_STATE_FINISHEDPOST = "FinishedPost"

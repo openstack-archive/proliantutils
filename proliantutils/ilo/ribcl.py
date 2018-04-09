@@ -1195,6 +1195,18 @@ class RIBCLOperations(operations.IloOperations):
         msg = ("`inject_nmi` is not supported on %s" % platform)
         raise (exception.IloCommandNotSupportedError(msg))
 
+    def get_host_post_state(self):
+        """Request the current state of system POST.
+
+        Retrieves current state of system POST.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloCommandNotSupportedError, RIBCL do not support it.
+        """
+        platform = self.get_product_name()
+        msg = ("`get_host_post_state` is not supported on %s" % platform)
+        raise (exception.IloCommandNotSupportedError(msg))
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

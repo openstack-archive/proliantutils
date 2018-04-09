@@ -1445,3 +1445,10 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to inject nmi',
             self.rf_client.inject_nmi)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_host_post_state(self, get_system_mock):
+        post_state = mock.PropertyMock(return_value='PowerOff')
+        type(get_system_mock.return_value).postState = post_state
+        result = self.rf_client.get_host_post_state()
+        self.assertEqual('PowerOff', result)

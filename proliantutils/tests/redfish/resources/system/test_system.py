@@ -493,3 +493,7 @@ class HPESystemTestCase(testtools.TestCase):
         self.assertIsInstance(self.sys_inst.storages,
                               storage.StorageCollection)
         self.assertFalse(self.sys_inst._storages._is_stale)
+
+    def test_get_host_post_state(self):
+        expected = 'FinishedPost'
+        self.assertEqual(expected, self.sys_inst.postState)
