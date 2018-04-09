@@ -39,6 +39,7 @@ SUPPORTED_RIS_METHODS = [
     'get_supported_boot_mode',
     'get_vm_status',
     'hold_pwr_btn',
+    'inject_nmi',
     'insert_virtual_media',
     'press_pwr_btn',
     'reset_bios_to_default',
@@ -73,6 +74,7 @@ SUPPORTED_REDFISH_METHODS = [
     'get_current_boot_mode',
     'activate_license',
     'eject_virtual_media',
+    'inject_nmi',
     'insert_virtual_media',
     'set_vm_status',
     'update_firmware',
@@ -641,3 +643,15 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method(
             'update_firmware', firmware_url, component_type)
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        :raises: IloConnectionError, if not able to reach iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server
+        """
+        return self._call_method('inject_nmi')

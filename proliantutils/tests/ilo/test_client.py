@@ -1011,6 +1011,23 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_inject_nmi(self, call_mock):
+        self.client.inject_nmi()
+        call_mock.assert_called_once_with('inject_nmi')
+
+    @mock.patch.object(ris.RISOperations, 'inject_nmi')
+    def test_inject_nmi_gen9(self, inject_nmi_mock):
+        self.client.model = 'Gen9'
+        self.client.inject_nmi()
+        inject_nmi_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'inject_nmi')
+    def test_inject_nmi_gen8(self, inject_nmi_mock):
+        self.client.model = 'Gen8'
+        self.client.inject_nmi()
+        inject_nmi_mock.assert_called_once_with()
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

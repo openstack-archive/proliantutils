@@ -789,7 +789,8 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         """Perform requested power operation.
 
         :param oper: Type of power button press to simulate.
-                     Supported values: 'ON', 'ForceOff' and 'ForceRestart'
+                     Supported values: 'ON', 'ForceOff', 'ForceRestart' and
+                     'Nmi'
         :raises: IloError, on an error from iLO.
         """
 
@@ -1820,3 +1821,16 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def inject_nmi(self):
+        """Inject NMI, Non Maskable Interrupt.
+
+        Inject NMI (Non Maskable Interrupt) for a node immediately.
+
+        :raises: IloError, on an error from iLO
+        """
+        cur_status = self.get_host_power_status()
+        if cur_status != 'ON':
+            raise exception.IloError("Server is not in power on state.")
+
+        self._perform_power_op("Nmi")
