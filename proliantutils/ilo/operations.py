@@ -368,6 +368,15 @@ class IloOperations(object):
 
         :raises: IloError, on an error from iLO
         :raises: IloConnectionError, if not able to reach iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_host_post_state(self):
+        """Request the current state of system POST
+
+        Retrieves current state of system POST.
+
+        :raises: IloError, on an error from iLO
         :raises: IloCommandNotSupportedError, if the command is
                  not supported on the server
         """

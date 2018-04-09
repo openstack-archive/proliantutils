@@ -105,3 +105,13 @@ MEMORY_DEVICE_TYPE_MAP = {
     'Logical': constants.MEMORY_DEVICE_TYPE_LOGICAL,
     'DDR4': constants.MEMORY_DEVICE_TYPE_DDR4
 }
+
+POST_STATE_MAP = {
+    'Null': constants.POST_STATE_NULL,
+    'Unknown': constants.POST_STATE_UNKNOWN,
+    'Reset': constants.POST_STATE_RESET,
+    'PowerOff': constants.POST_STATE_POWEROFF,
+    'InPost': constants.POST_STATE_INPOST,
+    'InPostDiscoveryComplete': constants.POST_STATE_INPOSTDISCOVERY,
+    'FinishedPost': constants.POST_STATE_FINISHEDPOST
+}

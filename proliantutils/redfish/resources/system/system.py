@@ -75,6 +75,10 @@ class HPESystem(system.System):
         ['Oem', 'Hpe', 'Bios', 'UefiClass'], mappings.SUPPORTED_BOOT_MODE,
         default=constants.SUPPORTED_LEGACY_BIOS_ONLY)
     """System supported boot mode."""
+    post_state = base.MappedField(
+        ['Oem', 'Hpe', 'PostState'], mappings.POST_STATE_MAP,
+        default=constants.POST_STATE_NULL)
+    """System POST state"""
 
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     """Oem specific system extensibility actions"""
