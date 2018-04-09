@@ -1419,3 +1419,29 @@ class RedfishOperationsTestCase(testtools.TestCase):
                                'iSCSI initiator cannot be retrieved in '
                                'BIOS boot mode',
                                self.rf_client.get_iscsi_initiator_info)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_inject_nmi(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'ON'
+        self.rf_client.inject_nmi()
+        self.sushy.get_system().reset_system.assert_called_once_with(
+            sushy.RESET_NMI)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_inject_nmi_power_off(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'OFF'
+        self.assertRaisesRegex(
+            exception.IloError,
+            'Server is not in power on state.',
+            self.rf_client.inject_nmi)
+        self.assertFalse(self.sushy.get_system().reset_system.called)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_inject_nmi_sushy_exc(self, get_host_power_status_mock):
+        get_host_power_status_mock.return_value = 'ON'
+        self.sushy.get_system().reset_system.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish controller failed to inject nmi',
+            self.rf_client.inject_nmi)
