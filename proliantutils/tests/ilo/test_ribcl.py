@@ -1041,6 +1041,13 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
         self.ilo.set_vm_status('cdrom', 'boot_once', 'yes')
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_inject_nmi(self, product_name_mock):
+        product_name_mock.return_value = constants.GET_PRODUCT_NAME
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant DL380 G7',
+                                self.ilo.inject_nmi)
+
 
 if __name__ == '__main__':
     unittest.main()
