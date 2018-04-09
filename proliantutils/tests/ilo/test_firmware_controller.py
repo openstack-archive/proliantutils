@@ -550,9 +550,7 @@ class FirmwareImageUploaderTestCase(unittest.TestCase):
         self.assertTrue(ssl_mock.wrap_socket.called)
         self.assertEqual(returned_sock, ssl_mock.wrap_socket())
 
-    @ddt.data(('foo.bar.com', exception.IloConnectionError),
-              ('1.1.1.1', exception.IloConnectionError),
-              ('any_kind_of_address', exception.IloConnectionError),)
+    @ddt.data(('foo.bar.blah.blah', exception.IloConnectionError),)
     @ddt.unpack
     def test__get_socket_throws_exception_in_case_of_failed_connection(
             self, input_hostname, expected_exception_type):
