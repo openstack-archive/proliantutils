@@ -1189,9 +1189,13 @@ class IloRisTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_perform_power_op')
     @mock.patch.object(ris.RISOperations, 'get_host_power_status')
-    def test_set_host_power_change(self, host_power_status_mock,
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
+    def test_set_host_power_change(self, retry_mock, product_mock,
+                                   host_power_status_mock,
                                    perform_power_op_mock):
         host_power_status_mock.return_value = 'ON'
+        product_mock.return_value = 'ProLiant BL460'
         self.client.set_host_power('off')
         host_power_status_mock.assert_called_once_with()
         perform_power_op_mock.assert_called_once_with('ForceOff')
@@ -1199,12 +1203,13 @@ class IloRisTestCase(testtools.TestCase):
     @mock.patch.object(ris.RISOperations, '_perform_power_op')
     @mock.patch.object(ris.RISOperations, 'get_host_power_status')
     @mock.patch.object(ris.RISOperations, 'get_product_name')
-    def test_set_host_power_change_on(self, product_mock,
+    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
+    def test_set_host_power_change_on(self, retry_mock, product_mock,
                                       host_power_status_mock,
                                       perform_power_op_mock):
         host_power_status_mock.return_value = 'OFF'
         self.client.set_host_power('On')
-        product_mock.return_value = 'BL460'
+        product_mock.return_value = 'ProLiant BL460'
         host_power_status_mock.assert_called_once_with()
         perform_power_op_mock.assert_called_once_with('On')
 
