@@ -886,7 +886,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             LOG.debug(self._("Node is already in '%(power)s' power state."),
                       {'power': power})
             return
-        if power == 'ON' and 'Proliant BL' in self.get_product_name():
+        if power == 'ON' and 'PROLIANT BL' in self.get_product_name().upper():
             self._retry_until_powered_on(power)
         else:
             self._perform_power_op(POWER_STATE[power])
