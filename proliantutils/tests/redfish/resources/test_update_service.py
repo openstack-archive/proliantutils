@@ -24,6 +24,7 @@ from proliantutils.ilo import common
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
 from proliantutils.redfish.resources import update_service
+from sushy import auth
 
 
 class HPEUpdateServiceTestCase(testtools.TestCase):
@@ -40,8 +41,12 @@ class HPEUpdateServiceTestCase(testtools.TestCase):
 
         self.rf_client = redfish.RedfishOperations(
             '1.2.3.4', username='foo', password='bar')
-        sushy_mock.assert_called_once_with(
-            'https://1.2.3.4', 'foo', 'bar', '/redfish/v1/', False)
+        basic_auth = auth.BasicAuth(username='foo', password='bar')
+        args, kwargs = sushy_mock.call_args
+        self.assertEqual(('https://1.2.3.4',), args)
+        self.assertFalse(kwargs.get('verify'))
+        self.assertEqual('/redfish/v1/', kwargs.get('root_prefix'))
+        self.assertTrue(isinstance(kwargs.get('auth'), auth.BasicAuth))
         self.us_inst = update_service.HPEUpdateService(
             self.conn, '/redfish/v1/UpdateService/1',
             redfish_version='1.0.2')
