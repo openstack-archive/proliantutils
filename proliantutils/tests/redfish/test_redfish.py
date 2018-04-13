@@ -21,6 +21,9 @@ import mock
 import sushy
 import testtools
 
+from sushy import auth
+from sushy.resources.system import system
+
 from proliantutils import exception
 from proliantutils.ilo import constants as ilo_cons
 from proliantutils.redfish import main
@@ -38,7 +41,6 @@ from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system.storage \
     import common as common_storage
 from proliantutils.redfish.resources.system import system as pro_sys
-from sushy.resources.system import system
 
 
 @ddt.ddt
@@ -59,8 +61,11 @@ class RedfishOperationsTestCase(testtools.TestCase):
 
         self.rf_client = redfish.RedfishOperations(
             '1.2.3.4', username='foo', password='bar')
-        sushy_mock.assert_called_once_with(
-            'https://1.2.3.4', 'foo', 'bar', '/redfish/v1/', False)
+        args, kwargs = sushy_mock.call_args
+        self.assertEqual(('https://1.2.3.4',), args)
+        self.assertFalse(kwargs.get('verify'))
+        self.assertEqual('/redfish/v1/', kwargs.get('root_prefix'))
+        self.assertIsInstance(kwargs.get('auth'), auth.BasicAuth)
 
     @mock.patch.object(main, 'HPESushy', autospec=True)
     def test_sushy_init_fail(self, sushy_mock):

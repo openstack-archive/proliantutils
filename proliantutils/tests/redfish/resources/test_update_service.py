@@ -40,8 +40,7 @@ class HPEUpdateServiceTestCase(testtools.TestCase):
 
         self.rf_client = redfish.RedfishOperations(
             '1.2.3.4', username='foo', password='bar')
-        sushy_mock.assert_called_once_with(
-            'https://1.2.3.4', 'foo', 'bar', '/redfish/v1/', False)
+        args, kwargs = sushy_mock.call_args
         self.us_inst = update_service.HPEUpdateService(
             self.conn, '/redfish/v1/UpdateService/1',
             redfish_version='1.0.2')
