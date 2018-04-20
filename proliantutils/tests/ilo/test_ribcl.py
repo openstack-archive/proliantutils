@@ -258,13 +258,31 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
-    def test_set_host_power(self, request_ilo_mock):
+    def test_set_host_power(self, request_ilo_mock, product_mock):
         request_ilo_mock.return_value = constants.SET_HOST_POWER_XML
+        product_mock.return_value = 'ProLiant DL580 Gen8'
         result = self.ilo.set_host_power('ON')
         self.assertIn('Host power is already ON.', result)
         self.assertRaises(exception.IloInvalidInputError,
                           self.ilo.set_host_power, 'ErrorCase')
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_power_status')
+    def test_retry_until_powered_on_3times(self, host_power_status_mock,
+                                           request_ilo_mock):
+        host_power_status_mock.side_effect = ['OFF', 'OFF', 'ON']
+        self.ilo._retry_until_powered_on('ON')
+        self.assertEqual(3, host_power_status_mock.call_count)
+
+    @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_power_status')
+    def test_retry_until_powered_on(self, host_power_status_mock,
+                                    request_ilo_mock):
+        host_power_status_mock.return_value = 'ON'
+        self.ilo._retry_until_powered_on('ON')
+        self.assertEqual(1, host_power_status_mock.call_count)
 
     @mock.patch.object(ribcl.RIBCLOperations, '_request_ilo')
     def test_set_one_time_boot(self, request_ilo_mock):
@@ -1005,9 +1023,11 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(request_ilo_mock.called)
 
+    @mock.patch.object(ribcl.IloClient, 'get_product_name')
     @mock.patch.object(ribcl.IloClient, '_request_ilo')
-    def test_set_host_power(self, request_ilo_mock):
+    def test_set_host_power(self, request_ilo_mock, product_mock):
         request_ilo_mock.return_value = constants.SET_HOST_POWER_XML
+        product_mock.return_value = 'ProLiant DL580 Gen8'
         result = self.ilo.set_host_power('ON')
         self.assertIn('Host power is already ON.', result)
         self.assertRaises(ribcl.IloInvalidInputError,

@@ -20,6 +20,7 @@ over RIBCL scripting language
 import copy
 import os
 import re
+import retrying
 import xml.etree.ElementTree as etree
 
 from oslo_utils import strutils
@@ -34,6 +35,10 @@ from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import mappings
 from proliantutils.ilo import operations
 from proliantutils import log
+
+
+MAX_RETRY_ATTEMPTS = 3  # Maximum number of attempts to be retried
+MAX_TIME_BEFORE_RETRY = 7 * 1000  # wait time in milliseconds before retry
 
 
 POWER_STATE = {
@@ -393,6 +398,30 @@ class RIBCLOperations(operations.IloOperations):
             'HOLD_PWR_BTN', 'SERVER_INFO', 'write', dic)
         return data
 
+    @retrying.retry(
+        stop_max_attempt_number=MAX_RETRY_ATTEMPTS,
+        retry_on_result=lambda state: state != 'ON',
+        wait_fixed=MAX_TIME_BEFORE_RETRY
+    )
+    def _retry_until_powered_on(self, power):
+        """This method retries power on operation.
+
+        :param: power : target power state
+        """
+        # If the system is in the same power state as
+        # requested by the user, it gives the error
+        # InvalidOperationForSystemState. To avoid this error
+        # the power state is checked before power on
+        # operation is performed.
+        status = self.get_host_power_status()
+        dic = {'HOST_POWER': POWER_STATE[power.upper()]}
+        if (status != power):
+            self._execute_command(
+                'SET_HOST_POWER', 'SERVER_INFO', 'write', dic)
+            return self.get_host_power_status()
+        else:
+            return status
+
     def set_host_power(self, power):
         """Toggle the power button of server.
 
@@ -400,8 +429,13 @@ class RIBCLOperations(operations.IloOperations):
         """
         if power.upper() in POWER_STATE:
             dic = {'HOST_POWER': POWER_STATE[power.upper()]}
-            data = self._execute_command(
-                'SET_HOST_POWER', 'SERVER_INFO', 'write', dic)
+            sub_string = 'ProLiant BL'.upper()
+            model_string = self.get_product_name().upper()
+            if power.upper() == 'ON' and sub_string in model_string:
+                self._retry_until_powered_on(power)
+            else:
+                data = self._execute_command(
+                    'SET_HOST_POWER', 'SERVER_INFO', 'write', dic)
             return data
         else:
             raise exception.IloInvalidInputError(

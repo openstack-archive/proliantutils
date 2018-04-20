@@ -147,6 +147,18 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.sushy.get_system().reset_system.assert_called_once_with(
             sushy.RESET_ON)
 
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_retry_until_powered_on_3times(self, host_power_status_mock):
+        host_power_status_mock.side_effect = ['OFF', 'OFF', 'ON']
+        self.rf_client._retry_until_powered_on('ON')
+        self.assertEqual(3, host_power_status_mock.call_count)
+
+    @mock.patch.object(redfish.RedfishOperations, 'get_host_power_status')
+    def test_retry_until_powered_on(self, host_power_status_mock):
+        host_power_status_mock.return_value = 'ON'
+        self.rf_client._retry_until_powered_on('ON')
+        self.assertEqual(1, host_power_status_mock.call_count)
+
     def test_press_pwr_btn(self):
         self.rf_client.press_pwr_btn()
         self.sushy.get_system().push_power_button.assert_called_once_with(
