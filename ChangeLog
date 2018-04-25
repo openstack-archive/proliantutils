@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.5.2
+-----
+* Fix #1764395: Fixes session issue for Gen10 servers. Using basic
+  authentication instead of session based authentication when communicating
+  with Gen10 servers
+* Add the ability to make case-insensitive search for Blade server model
+  string during power operations
+
 2.5.1
 -----
 * Inspection of ProLiant Gen10 servers sends proper response for 'secure\_boot'
