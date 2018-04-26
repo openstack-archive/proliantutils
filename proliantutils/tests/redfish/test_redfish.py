@@ -491,7 +491,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
                                              _uefi_boot_mode_mock):
         _uefi_boot_mode_mock.return_value = False
         result = self.rf_client.get_persistent_boot_device()
-        self.assertEqual(result, None)
+        self.assertIsNone(result)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_get_persistent_boot_device_cdrom_continuous(self,
