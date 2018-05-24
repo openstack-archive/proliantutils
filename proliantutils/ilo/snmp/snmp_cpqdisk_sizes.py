@@ -26,9 +26,15 @@ from proliantutils import log
 
 LOG = log.get_logger(__name__)
 
+
+class MibBuilder(builder.MibBuilder):
+    # NOTE(etingof): disable searching in `pysnmp_mibs` because it can
+    # cause permission problems when opening files at relative path
+    defaultMiscMibs = ''
+
 cpq_mibs_path = os.path.dirname(os.path.abspath(__file__))
 cpq_mibs_path = os.path.join(cpq_mibs_path, "cpqdisk_mibs")
-mBuilder = builder.MibBuilder()
+mBuilder = MibBuilder()
 mBuilder.addMibSources(builder.DirMibSource(cpq_mibs_path))
 mibBuilder = mBuilder.loadModules('CPQIDA-MIB', 'CPQSCSI-MIB')
 mibViewController = view.MibViewController(mibBuilder)
