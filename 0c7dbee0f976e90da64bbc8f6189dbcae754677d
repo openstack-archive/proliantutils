@@ -1,0 +1,11 @@
+Code-Review+1: Dmitry Tantsur <divius.inside@gmail.com>
+Code-Review+1: Bob Fournier <bfournie@redhat.com>
+Code-Review+2: Debayan Ray <debayan.ray@gmail.com>
+Code-Review+2: vinay kumar muddu <vinay50muddu@yahoo.com>
+Workflow+1: vinay kumar muddu <vinay50muddu@yahoo.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Fri, 22 Jun 2018 05:02:16 +0000
+Reviewed-on: https://review.openstack.org/570400
+Project: openstack/proliantutils
+Branch: refs/heads/master
