@@ -47,3 +47,33 @@ SUPPORTED_BIOS_PROPERTIES = {
     "TpmType",
     "UefiOptimizedBoot"
 }
+SUPPORTED_REDFISH_BIOS_PROPERTIES = {
+    "AdvancedMemProtection",
+    "AutoPowerOn",
+    "BootMode",
+    "BootOrderPolicy",
+    "CollabPowerControl",
+    "DynamicPowerCapping",
+    "DynamicPowerResponse",
+    "IntelligentProvisioning",
+    "IntelPerfMonitoring",
+    "IntelProcVtd",
+    "IntelQpiFreq",
+    "IntelTxt",
+    "PowerProfile",
+    "PowerRegulator",
+    "ProcAes",
+    "ProcCoreDisable",
+    "ProcHyperthreading",
+    "ProcNoExecute",
+    "ProcTurbo",
+    "ProcVirtualization",
+    "SecureBootStatus",
+    "Sriov",
+    "ThermalConfig",
+    "ThermalShutdown",
+    "TpmState",
+    "TpmType",
+    "UefiOptimizedBoot",
+    "WorkloadProfile"
+}

@@ -41,6 +41,7 @@ from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system.storage \
     import common as common_storage
 from proliantutils.redfish.resources.system import system as pro_sys
+from proliantutils import utils
 
 
 @ddt.ddt
@@ -1447,6 +1448,221 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish controller failed to inject nmi',
             self.rf_client.inject_nmi)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_bios_settings_filter_true(self, get_system_mock):
+
+        only_allowed_settings = True
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+        type(
+            get_system_mock.return_value.bios_settings).json = (
+                mock.PropertyMock(return_value=jsonval))
+        settings = jsonval.get('Attributes')
+        expected_value = {k: settings[k] for k in (
+            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES) if k in settings}
+        actual_value = self.rf_client.get_current_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected_value, actual_value)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_bios_settings_filter_false(self, get_system_mock):
+
+        only_allowed_settings = False
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+        type(
+            get_system_mock.return_value.bios_settings).json = (
+                mock.PropertyMock(return_value=jsonval))
+        settings = jsonval.get('Attributes')
+        expected_value = settings
+        actual_value = self.rf_client.get_current_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected_value, actual_value)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_current_bios_settings_raises_exception(self, get_system_mock):
+
+        only_allowed_settings = True
+        bios_mock = mock.PropertyMock()
+        bios_mock.side_effect = sushy.exceptions.SushyError
+        type(get_system_mock.return_value.bios_settings).json = bios_mock
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The current BIOS Settings were not found',
+            self.rf_client.get_current_bios_settings,
+            only_allowed_settings)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_pending_bios_settings_filter_true(self, system_mock):
+
+        only_allowed_settings = True
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("BIOS_pending_settings_default")
+        type(system_mock.return_value.bios_settings.pending_settings).json = (
+            mock.PropertyMock(return_value=jsonval))
+        settings = jsonval.get('Attributes')
+        expected_value = {k: settings[k] for k in (
+            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES) if k in settings}
+        actual_value = self.rf_client.get_pending_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected_value, actual_value)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_pending_bios_settings_filter_false(self, system_mock):
+
+        only_allowed_settings = False
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("BIOS_pending_settings_default")
+        type(system_mock.return_value.bios_settings.pending_settings).json = (
+            mock.PropertyMock(return_value=jsonval))
+        expected = jsonval.get('Attributes')
+        actual = self.rf_client.get_pending_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_pending_bios_settings_raises_exception(self, system_mock):
+
+        only_allowed_settings = True
+        bios_mock = mock.PropertyMock()
+        bios_mock.side_effect = sushy.exceptions.SushyError
+        type(system_mock.return_value.bios_settings.pending_settings).json = (
+            bios_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The pending BIOS Settings were not found',
+            self.rf_client.get_pending_bios_settings,
+            only_allowed_settings)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_default_bios_settings_filter_true(self, get_system_mock):
+
+        only_allowed_settings = True
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+        settings = jsonval.get("Attributes")
+        type(get_system_mock.return_value.bios_settings).default_settings = (
+            mock.PropertyMock(return_value=settings))
+        expected = {k: settings[k] for k in (
+            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES) if k in settings}
+        actual = self.rf_client.get_default_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_default_bios_settings_filter_false(self, get_system_mock):
+
+        only_allowed_settings = False
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+        settings = jsonval.get("Attributes")
+        type(get_system_mock.return_value.bios_settings).default_settings = (
+            mock.PropertyMock(return_value=settings))
+        expected = settings
+        actual = self.rf_client.get_default_bios_settings(
+            only_allowed_settings)
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_default_bios_settings_raises_exception(self, get_system_mock):
+
+        only_allowed_settings = True
+        bios_mock = mock.PropertyMock(side_effect=sushy.exceptions.SushyError)
+        type(get_system_mock.return_value.bios_settings).default_settings = (
+            bios_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The default BIOS Settings were not found',
+            self.rf_client.get_default_bios_settings,
+            only_allowed_settings)
+
+    @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_data_by_patch')
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_no_data(self, system_mock, bios_filter_mock,
+                                       update_data_mock):
+        data = None
+        apply_filter = True
+        pending_settings_mock = mock.PropertyMock()
+        type(system_mock.return_value.bios_settings).pending_settings = (
+            pending_settings_mock)
+        self.rf_client.set_bios_settings(data, apply_filter)
+        bios_filter_mock.assert_not_called()
+        pending_settings_mock.assert_not_called()
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_filter_true(self, system_mock):
+        apply_filter = True
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        expected = {k: data[k] for k in data if k in (
+            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)}
+        bios_ps_mock = mock.MagicMock(spec=bios.BIOSPendingSettings)
+        pending_settings_mock = mock.PropertyMock(return_value=bios_ps_mock)
+        type(system_mock.return_value.bios_settings).pending_settings = (
+            pending_settings_mock)
+
+        self.rf_client.set_bios_settings(data, apply_filter)
+        bios_ps_mock.update_bios_data_by_patch.assert_called_once_with(
+            expected)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_filter_false(self, system_mock):
+        apply_filter = False
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        bios_ps_mock = mock.MagicMock(spec=bios.BIOSPendingSettings)
+        pending_settings_mock = mock.PropertyMock(return_value=bios_ps_mock)
+        type(system_mock.return_value.bios_settings).pending_settings = (
+            pending_settings_mock)
+
+        self.rf_client.set_bios_settings(data, apply_filter)
+        bios_ps_mock.update_bios_data_by_patch.assert_called_once_with(data)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_raises_exception(self, system_mock):
+        apply_filter = True
+        data = {
+            "BootMode": "LEGACY",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "CollabPowerControl": "Enabled",
+        }
+        pending_settings_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(system_mock.return_value.bios_settings).pending_settings = (
+            pending_settings_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The pending BIOS Settings resource not found',
+            self.rf_client.set_bios_settings,
+            data,
+            apply_filter)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_get_host_post_state(self, get_system_mock):
