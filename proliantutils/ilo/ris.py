@@ -19,11 +19,13 @@ import retrying
 
 from proliantutils import exception
 from proliantutils.ilo import common
+from proliantutils.ilo import constants
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import mappings
 from proliantutils.ilo import operations
 from proliantutils import log
 from proliantutils import rest
+from proliantutils import utils
 
 """ Currently this class supports only secure boot and firmware settings
 related API's .
@@ -1820,3 +1822,125 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         except exception.IloCommandNotSupportedError:
             nvn_status = False
         return nvn_status
+
+    def get_current_bios_settings(self, only_allowed_settings=True):
+        """Get current BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of current BIOS settings is returned. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        # Remove the "links" section
+        bios_settings.pop("links", None)
+        if only_allowed_settings:
+            return utils.apply_bios_properties_filter(
+                bios_settings, constants.SUPPORTED_BIOS_PROPERTIES)
+        return bios_settings
+
+    def get_pending_bios_settings(self, only_allowed_settings=True):
+        """Get current BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of pending BIOS settings. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        try:
+            settings_config_uri = bios_settings['links']['Settings']['href']
+        except KeyError:
+            msg = ("Settings resource not found. Couldn't get pending BIOS "
+                   "Settings.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        status, headers, config = self._rest_get(settings_config_uri)
+        if status != 200:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        # Remove the "links" section
+        config.pop("links", None)
+
+        if only_allowed_settings:
+            return utils.apply_bios_properties_filter(
+                config, constants.SUPPORTED_BIOS_PROPERTIES)
+        return config
+
+    def set_bios_settings(self, data=None, only_allowed_settings=True):
+        """Sets current BIOS settings to the provided data.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be set. If False, all the BIOS settings supported by
+                iLO and present in the 'data' are set.
+        :param: data: a dictionary of BIOS settings to be applied. Depending
+                on the 'only_allowed_settings', either only the allowed
+                settings are set or all the supported settings that are in
+                the 'data' are set.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if only_allowed_settings and data:
+            refined_data = utils.apply_bios_properties_filter(
+                data, constants.SUPPORTED_BIOS_PROPERTIES)
+            self._change_bios_setting(refined_data)
+            return
+
+        if data:
+            self._change_bios_setting(data)
+
+    def get_default_bios_settings(self, only_allowed_settings=True):
+        """Get default BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of default BIOS settings(factory settings).
+                 Depending on the 'only_allowed_settings', either only the
+                 allowed settings are returned or all the supported settings
+                 are returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        headers_bios, bios_uri, bios_settings = self._check_bios_resource()
+        # Get the BaseConfig resource.
+        try:
+            base_config_uri = bios_settings['links']['BaseConfigs']['href']
+        except KeyError:
+            msg = ("BaseConfigs resource not found. Couldn't apply the BIOS "
+                   "Settings.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        status, headers, config = self._rest_get(base_config_uri)
+        if status != 200:
+            msg = self._get_extended_error(config)
+            raise exception.IloError(msg)
+
+        for cfg in config['BaseConfigs']:
+            default_settings = cfg.get('default')
+            if default_settings:
+                break
+        else:
+            msg = ("Default BIOS Settings not found in 'BaseConfigs' "
+                   "resource.")
+            raise exception.IloCommandNotSupportedError(msg)
+
+        if only_allowed_settings:
+            return utils.apply_bios_properties_filter(
+                default_settings, constants.SUPPORTED_BIOS_PROPERTIES)
+        return default_settings

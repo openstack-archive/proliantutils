@@ -28,6 +28,7 @@ from proliantutils.ilo import common
 from proliantutils.ilo import constants
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
+from proliantutils import utils
 
 
 class IloRisTestCaseInitTestCase(testtools.TestCase):
@@ -1274,6 +1275,254 @@ class IloRisTestCase(testtools.TestCase):
     def test_press_pwr_btn(self, press_pwr_btn_mock):
         self.client.hold_pwr_btn()
         press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_current_bios_settings_filter_true(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        settings.pop("links", None)
+        expected_value = {}
+        for k in constants.SUPPORTED_BIOS_PROPERTIES:
+            expected_value.update({k: settings[k]})
+        actual_value = self.client.get_current_bios_settings(True)
+        check_bios_mock.assert_called_once_with()
+        self.assertEqual(actual_value, expected_value)
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_current_bios_settings_filter_false(self, check_bios_mock,
+                                                    bios_filter_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        settings.pop("links", None)
+        actual_value = self.client.get_current_bios_settings(False)
+        check_bios_mock.assert_called_once_with()
+        bios_filter_mock.assert_not_called()
+        self.assertEqual(actual_value, settings)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_pending_bios_settings_no_links(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        settings.pop("links", None)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.get_pending_bios_settings, False)
+        check_bios_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_extended_error')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_pending_bios_settings_filter_true(self, check_bios_mock,
+                                                   get_mock, get_ext_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        settings_uri = "/rest/v1/systems/1/bios/Settings"
+        pending_settings = json.loads(ris_outputs.GET_BIOS_PENDING_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 pending_settings)
+        expected_value = {}
+        for k in constants.SUPPORTED_BIOS_PROPERTIES:
+            expected_value.update({k: pending_settings[k]})
+        actual_value = self.client.get_pending_bios_settings(True)
+        self.assertEqual(actual_value, expected_value)
+        get_mock.assert_called_once_with(settings_uri)
+        check_bios_mock.assert_called_once_with()
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_get_extended_error')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_pending_bios_settings_filter_false(self, check_bios_mock,
+                                                    get_mock, get_ext_mock,
+                                                    bios_filter_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        settings_uri = "/rest/v1/systems/1/bios/Settings"
+        pending_settings = json.loads(ris_outputs.GET_BIOS_PENDING_SETTINGS)
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 pending_settings)
+        actual_value = self.client.get_pending_bios_settings(False)
+        self.assertEqual(actual_value, pending_settings)
+        get_mock.assert_called_once_with(settings_uri)
+        check_bios_mock.assert_called_once_with()
+        bios_filter_mock.assert_not_called()
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_default_bios_settings_filter_true(self, check_bios_mock,
+                                                   rest_get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        base_config = json.loads(ris_outputs.GET_BASE_CONFIG)
+        rest_get_mock.return_value = (200, 'HEADERS', base_config)
+        default_settings = None
+        for cfg in base_config['BaseConfigs']:
+            default_settings = cfg.get('default', None)
+            if default_settings is not None:
+                break
+        expected_value = {}
+        for k in constants.SUPPORTED_BIOS_PROPERTIES:
+            expected_value.update({k: default_settings[k]})
+        actual_value = self.client.get_default_bios_settings(True)
+        check_bios_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(
+            "/rest/v1/systems/1/bios/BaseConfigs")
+        self.assertEqual(expected_value, actual_value)
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_default_bios_settings_filter_false(
+            self, check_bios_mock, rest_get_mock, filter_mock):
+
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        base_config = json.loads(ris_outputs.GET_BASE_CONFIG)
+        rest_get_mock.return_value = (200, 'HEADERS', base_config)
+        default_settings = None
+        for cfg in base_config['BaseConfigs']:
+            default_settings = cfg.get('default', None)
+            if default_settings is not None:
+                break
+        expected_value = default_settings
+        actual_value = self.client.get_default_bios_settings(False)
+        check_bios_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(
+            "/rest/v1/systems/1/bios/BaseConfigs")
+        self.assertEqual(expected_value, actual_value)
+        filter_mock.assert_not_called()
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_default_bios_settings_no_links(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        settings.pop("links", None)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.get_default_bios_settings, False)
+        check_bios_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_get_extended_error')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_default_bios_settings_check_extended_error(
+            self, check_bios_mock, rest_get_mock, ext_err_mock):
+
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        base_config = json.loads(ris_outputs.GET_BASE_CONFIG)
+        rest_get_mock.return_value = (201, 'HEADERS', base_config)
+        self.assertRaises(exception.IloError,
+                          self.client.get_default_bios_settings, False)
+        check_bios_mock.assert_called_once_with()
+        ext_err_mock.assert_called_once_with(base_config)
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_get_extended_error')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_default_bios_settings_no_default_settings(
+            self, check_bios_mock, rest_get_mock, ext_err_mock, filter_mock):
+
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        base_config = json.loads(ris_outputs.GET_BASE_CONFIG)
+        default_val = base_config["BaseConfigs"][0].pop("default")
+        base_config["BaseConfigs"][0]["no_default"] = default_val
+        rest_get_mock.return_value = (200, 'HEADERS', base_config)
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client.get_default_bios_settings, False)
+        check_bios_mock.assert_called_once_with()
+        ext_err_mock.assert_not_called()
+        filter_mock.assert_not_called()
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    def test_set_bios_settings_no_data_apply_filter(self, change_bios_mock,
+                                                    filter_mock):
+        apply_filter = True
+        data = None
+        self.client.set_bios_settings(data, apply_filter)
+        change_bios_mock.assert_not_called()
+        filter_mock.assert_not_called()
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    def test_set_bios_settings_no_data_no_filter(self, change_bios_mock,
+                                                 filter_mock):
+        apply_filter = False
+        data = None
+        self.client.set_bios_settings(data, apply_filter)
+        change_bios_mock.assert_not_called()
+        filter_mock.assert_not_called()
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    def test_set_bios_settings_filter_true(self, change_bios_mock,
+                                           filter_mock):
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        expected = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+        }
+        filter_mock.return_value = expected
+        apply_filter = True
+        self.client.set_bios_settings(data, apply_filter)
+        change_bios_mock.assert_called_once_with(expected)
+        filter_mock.assert_called_once_with(
+            data, constants.SUPPORTED_BIOS_PROPERTIES)
+
+    @mock.patch.object(utils, 'apply_bios_properties_filter')
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    def test_set_bios_settings_filter_false(self, change_bios_mock,
+                                            filter_mock):
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        apply_filter = False
+        self.client.set_bios_settings(data, apply_filter)
+        change_bios_mock.assert_called_once_with(data)
+        filter_mock.assert_not_called()
 
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
