@@ -18,7 +18,7 @@
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY = 'legacy bios only'
 SUPPORTED_BOOT_MODE_UEFI_ONLY = 'uefi only'
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI = 'legacy bios and uefi'
-SUPPORTED_BIOS_PROPERTIES = {
+SUPPORTED_BIOS_PROPERTIES = [
     "AdvancedMemProtection",
     "AutoPowerOn",
     "BootMode",
@@ -46,4 +46,7 @@ SUPPORTED_BIOS_PROPERTIES = {
     "TpmState",
     "TpmType",
     "UefiOptimizedBoot"
-}
+]
+SUPPORTED_REDFISH_BIOS_PROPERTIES = SUPPORTED_BIOS_PROPERTIES + [
+    "WorkloadProfile"
+]

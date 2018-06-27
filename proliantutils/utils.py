@@ -160,7 +160,7 @@ def apply_bios_properties_filter(settings, filter_to_be_applied):
     """Applies the filter to return the dict of filtered BIOS properties.
 
     :param settings: dict of BIOS settings on which filter to be applied.
-    :param filter_to_be_applied: set of keys to be applied as filter.
+    :param filter_to_be_applied: list of keys to be applied as filter.
     :returns: A dictionary of filtered BIOS settings.
     """
     if not settings or not filter_to_be_applied:
