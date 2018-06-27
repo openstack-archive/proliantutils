@@ -18,3 +18,32 @@
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY = 'legacy bios only'
 SUPPORTED_BOOT_MODE_UEFI_ONLY = 'uefi only'
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI = 'legacy bios and uefi'
+SUPPORTED_BIOS_PROPERTIES = {
+    "AdvancedMemProtection",
+    "AutoPowerOn",
+    "BootMode",
+    "BootOrderPolicy",
+    "CollabPowerControl",
+    "DynamicPowerCapping",
+    "DynamicPowerResponse",
+    "IntelligentProvisioning",
+    "IntelPerfMonitoring",
+    "IntelProcVtd",
+    "IntelQpiFreq",
+    "IntelTxt",
+    "PowerProfile",
+    "PowerRegulator",
+    "ProcAes",
+    "ProcCoreDisable",
+    "ProcHyperthreading",
+    "ProcNoExecute",
+    "ProcTurbo",
+    "ProcVirtualization",
+    "SecureBootStatus",
+    "Sriov",
+    "ThermalConfig",
+    "ThermalShutdown",
+    "TpmState",
+    "TpmType",
+    "UefiOptimizedBoot"
+}
