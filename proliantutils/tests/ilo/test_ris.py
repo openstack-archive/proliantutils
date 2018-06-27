@@ -1189,60 +1189,24 @@ class IloRisTestCase(testtools.TestCase):
 
     @mock.patch.object(ris.RISOperations, '_perform_power_op')
     @mock.patch.object(ris.RISOperations, 'get_host_power_status')
-    @mock.patch.object(ris.RISOperations, 'get_product_name')
-    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
-    def test_set_host_power_off_for_blade_servers(self, retry_mock,
-                                                  product_mock,
-                                                  host_power_status_mock,
-                                                  perform_power_op_mock):
-        host_power_status_mock.return_value = 'ON'
-        product_mock.return_value = 'ProLiant BL460'
-        self.client.set_host_power('off')
-        host_power_status_mock.assert_called_once_with()
-        perform_power_op_mock.assert_called_once_with('ForceOff')
-        self.assertFalse(retry_mock.called)
-
-    @mock.patch.object(ris.RISOperations, '_perform_power_op')
-    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
-    @mock.patch.object(ris.RISOperations, 'get_product_name')
-    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
-    def test_set_host_power_on_for_blade_servers(self, retry_mock,
-                                                 product_mock,
-                                                 host_power_status_mock,
-                                                 perform_power_op_mock):
-        host_power_status_mock.return_value = 'OFF'
-        product_mock.return_value = 'ProLiant BL460'
-        self.client.set_host_power('On')
-        host_power_status_mock.assert_called_once_with()
-        self.assertTrue(product_mock.called)
-        self.assertFalse(perform_power_op_mock.called)
-        self.assertTrue(retry_mock.called)
-
-    @mock.patch.object(ris.RISOperations, '_perform_power_op')
-    @mock.patch.object(ris.RISOperations, 'get_host_power_status')
-    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
-    def test_set_host_power_off_for_non_blade_servers(
-            self, retry_mock, host_power_status_mock, perform_power_op_mock):
+    def test_set_host_power_change(self, host_power_status_mock,
+                                   perform_power_op_mock):
         host_power_status_mock.return_value = 'ON'
         self.client.set_host_power('off')
         host_power_status_mock.assert_called_once_with()
         perform_power_op_mock.assert_called_once_with('ForceOff')
-        self.assertFalse(retry_mock.called)
 
     @mock.patch.object(ris.RISOperations, '_perform_power_op')
     @mock.patch.object(ris.RISOperations, 'get_host_power_status')
     @mock.patch.object(ris.RISOperations, 'get_product_name')
-    @mock.patch.object(ris.RISOperations, '_retry_until_powered_on')
-    def test_set_host_power_on_for_non_blade_servers(
-            self, retry_mock, product_mock, host_power_status_mock,
-            perform_power_op_mock):
+    def test_set_host_power_change_on(self, product_mock,
+                                      host_power_status_mock,
+                                      perform_power_op_mock):
         host_power_status_mock.return_value = 'OFF'
-        product_mock.return_value = 'ProLiant DL380'
         self.client.set_host_power('On')
+        product_mock.return_value = 'BL460'
         host_power_status_mock.assert_called_once_with()
-        self.assertTrue(product_mock.called)
-        self.assertTrue(perform_power_op_mock.called)
-        self.assertFalse(retry_mock.called)
+        perform_power_op_mock.assert_called_once_with('On')
 
     @mock.patch.object(ris.RISOperations, '_perform_power_op')
     @mock.patch.object(ris.RISOperations, 'get_host_power_status')
@@ -1274,6 +1238,32 @@ class IloRisTestCase(testtools.TestCase):
     def test_press_pwr_btn(self, press_pwr_btn_mock):
         self.client.hold_pwr_btn()
         press_pwr_btn_mock.assert_called_once_with(pushType="PressAndHold")
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_current_bios_settings(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        settings.pop("links", None)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        actual_value = self.client.get_current_bios_settings()
+        self.assertEqual(actual_value, settings)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    def test_get_default_bios_settings(self, check_bios_mock, rest_get_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        import pdb;pdb.set_trace()
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        rest_get_mock.return_value = (200, 'HEADERS',
+                                      json.loads(ris_outputs.GET_BASE_CONFIG))
+        actual_value = self.client.get_default_bios_settings()
+        check_bios_mock.assert_called_once_with()
+        rest_get_mock.assert_called_once_with(
+            "/rest/v1/systems/1/bios/BaseConfigs")
+        self.assertEqual(ris_outputs.GET_DEFAULT_CONFIG, actual_value)
 
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
