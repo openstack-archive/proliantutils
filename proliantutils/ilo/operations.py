@@ -381,3 +381,67 @@ class IloOperations(object):
                  not supported on the server
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_current_bios_settings(self, only_allowed_settings=True):
+        """Get current BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of current BIOS settings is returned. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_pending_bios_settings(self, only_allowed_settings=True):
+        """Get current BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of pending BIOS settings. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def set_bios_settings(self, data=None, only_allowed_settings=True):
+        """Sets current BIOS settings to the provided data.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be set. If False, all the BIOS settings supported by
+                iLO and present in the 'data' are set.
+        :param: data: a dictionary of BIOS settings to be applied. Depending
+                on the 'only_allowed_settings', either only the allowed
+                settings are set or all the supported settings that are in the
+                'data' are set.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_default_bios_settings(self, only_allowed_settings=True):
+        """Get default BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of default BIOS settings(factory settings).
+                 Depending on the 'only_allowed_settings', either only the
+                 allowed settings are returned or all the supported settings
+                 are returned.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
