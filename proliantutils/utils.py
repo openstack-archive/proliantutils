@@ -154,3 +154,22 @@ def validate_href(image_href):
             raise exception.ImageRefValidationFailed(image_href=image_href,
                                                      reason=e)
         return response
+
+
+def apply_bios_properties_filter(settings, filter_to_be_applied):
+    """Applies the filter to return the dict of selected BIOS settings.
+
+    :param settings: BIOS settings on which filter to be applied.
+    :param filter_to_be_applied: Filter intended to be applied.
+    :returns: A dictionary of filtered BIOS settings.
+    """
+    if not settings or not filter_to_be_applied:
+        return settings
+
+    all_settings_set = set(settings.keys())
+    common_set = all_settings_set.intersection(filter_to_be_applied)
+    refined_settings = {}
+
+    for prop in common_set:
+        refined_settings.update({prop: settings.get(prop)})
+    return refined_settings

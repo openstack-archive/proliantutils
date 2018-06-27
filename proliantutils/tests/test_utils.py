@@ -259,3 +259,78 @@ class UtilsTestCase(testtools.TestCase):
         self.assertRaises(exception.ImageRefValidationFailed,
                           utils.validate_href, href)
         head_mock.assert_called_once_with(href)
+
+    def test_apply_bios_properties_filter(self):
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        filter_to_be_applied = {
+            "AdminName",
+            "BootMode",
+            "ServerName",
+            "TimeFormat",
+            "CustomPostMessage"
+        }
+
+        expected = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "CustomPostMessage": ""
+        }
+        actual = utils.apply_bios_properties_filter(
+            data, filter_to_be_applied)
+        self.assertEqual(expected, actual)
+
+    def test_apply_bios_properties_filter_no_filter(self):
+        data = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        filter_to_be_applied = None
+
+        expected = {
+            "AdminName": "Administrator",
+            "BootMode": "LEGACY",
+            "ServerName": "Gen9 server",
+            "TimeFormat": "Ist",
+            "BootOrderPolicy": "RetryIndefinitely",
+            "ChannelInterleaving": "Enabled",
+            "CollabPowerControl": "Enabled",
+            "ConsistentDevNaming": "LomsOnly",
+            "CustomPostMessage": ""
+        }
+        actual = utils.apply_bios_properties_filter(
+            data, filter_to_be_applied)
+        self.assertEqual(expected, actual)
+
+    def test_apply_bios_properties_filter_no_settings(self):
+        data = None
+        filter_to_be_applied = {
+            "AdminName",
+            "BootMode",
+            "ServerName",
+            "TimeFormat",
+            "CustomPostMessage"
+        }
+
+        expected = None
+        actual = utils.apply_bios_properties_filter(
+            data, filter_to_be_applied)
+        self.assertEqual(expected, actual)
