@@ -18,7 +18,6 @@ import json
 
 from six.moves.urllib import parse
 import sushy
-from sushy import auth
 from sushy.resources.system import mappings as sushy_map
 from sushy import utils
 
@@ -33,6 +32,7 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system.storage \
     import common as common_storage
 from proliantutils.redfish import utils as rf_utils
+from proliantutils import utils as common_utils
 
 """
 Class specific for Redfish APIs.
@@ -142,10 +142,9 @@ class RedfishOperations(operations.IloOperations):
         self._username = username
 
         try:
-            basic_auth = auth.BasicAuth(username=username, password=password)
             self._sushy = main.HPESushy(
-                address, root_prefix=root_prefix, verify=verify,
-                auth=basic_auth)
+                address, username=username, password=password,
+                root_prefix=root_prefix, verify=verify)
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish controller at "%(controller)s" has '
                           'thrown error. Error %(error)s') %
@@ -1008,3 +1007,46 @@ class RedfishOperations(operations.IloOperations):
         else:
             msg = 'iSCSI initiator cannot be retrieved in BIOS boot mode'
             raise exception.IloCommandNotSupportedInBiosError(msg)
+
+    def get_current_bios_settings(self, apply_filter=True):
+        """Get current BIOS settings.
+
+        :return: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        current_settings = sushy_system.bios_settings.json
+
+        # Get only the settings and filter off the rest
+        filtered_settings = current_settings.get("Attributes")
+        if apply_filter:
+            return common_utils.apply_bios_properties_filter(
+                filtered_settings, ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        return filtered_settings
+
+    def set_bios_settings(self, data=None, apply_filter=True):
+        """Sets current BIOS settings to the provided data.
+
+        :param: a dictionary of current BIOS settings.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        pass
+
+    def get_default_bios_settings(self, apply_filter=True):
+        """Get default BIOS settings.
+
+        :return: a dictionary of default BIOS settings(factory settings).
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        if apply_filter:
+            return common_utils.apply_bios_properties_filter(
+                sushy_system.bios_settings.default_settings,
+                ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        return sushy_system.bios_settings.default_settings
