@@ -70,6 +70,15 @@ class BIOSSettings(base.ResourceBase):
         return self._pending_settings
 
     @property
+    def default_settings(self):
+        """Property to provide default BIOS settings
+
+        It gets the current default settings on the node.
+        """
+        settings_default = self._get_base_configs().default_config
+        return settings_default
+
+    @property
     def boot_settings(self):
         """Property to provide reference to bios boot instance
 
