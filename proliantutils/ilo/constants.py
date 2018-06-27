@@ -18,3 +18,21 @@
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY = 'legacy bios only'
 SUPPORTED_BOOT_MODE_UEFI_ONLY = 'uefi only'
 SUPPORTED_BOOT_MODE_LEGACY_BIOS_AND_UEFI = 'legacy bios and uefi'
+SUPPORTED_BIOS_PROPERTIES = {
+    "AdminName",
+    "BootMode",
+    "BootOrderPolicy",
+    "AdminPassword",
+    "Description",
+    "EmbNicEnable",
+    "PowerRegulator",
+    "ServerName",
+    "UefiPxeBoot",
+    "Sriov",
+    "ThermalConfig",
+    "ThermalShutdown",
+    "TimeFormat",
+    "TimeZone",
+    "TpmState",
+    "TpmType"
+}

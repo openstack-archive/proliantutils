@@ -920,6 +920,35 @@ class IloClientTestCase(testtools.TestCase):
         self.client.reset_server()
         self.assertTrue(reset_server_mock.called)
 
+    @mock.patch.object(ris.RISOperations, 'get_current_bios_settings')
+    def test_get_current_bios_settings_gen9(self, cur_bios_settings_mock):
+        self.client.model = 'Gen9'
+        apply_filter = True
+        self.client.get_current_bios_settings(apply_filter)
+        cur_bios_settings_mock.assert_called_once_with(True)
+
+    @mock.patch.object(ris.RISOperations, 'get_pending_bios_settings')
+    def test_get_pending_bios_settings_gen9(self, pending_bios_settings_mock):
+        self.client.model = 'Gen9'
+        apply_filter = True
+        self.client.get_pending_bios_settings(apply_filter)
+        pending_bios_settings_mock.assert_called_once_with(True)
+
+    @mock.patch.object(ris.RISOperations, 'get_default_bios_settings')
+    def test_get_default_bios_settings_gen9(self, def_bios_settings_mock):
+        self.client.model = 'Gen9'
+        apply_filter = False
+        self.client.get_default_bios_settings(apply_filter)
+        def_bios_settings_mock.assert_called_once_with(False)
+
+    @mock.patch.object(ris.RISOperations, 'set_bios_settings')
+    def test_set_bios_settings_gen9(self, bios_settings_mock):
+        self.client.model = 'Gen9'
+        apply_filter = False
+        d = {'a': 'blah', 'b': 'blah blah'}
+        self.client.set_bios_settings(d, apply_filter)
+        bios_settings_mock.assert_called_once_with(d, False)
+
     @mock.patch.object(client.IloClient, '_call_method')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     def test_get_essential_prop_no_snmp_ris(self,
