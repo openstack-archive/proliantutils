@@ -33,6 +33,7 @@ from proliantutils.redfish.resources.system import constants as sys_cons
 from proliantutils.redfish.resources.system.storage \
     import common as common_storage
 from proliantutils.redfish import utils as rf_utils
+from proliantutils import utils as common_utils
 
 """
 Class specific for Redfish APIs.
@@ -1050,3 +1051,115 @@ class RedfishOperations(operations.IloOperations):
         """
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         return GET_POST_STATE_MAP.get(sushy_system.post_state)
+
+    def get_current_bios_settings(self, only_allowed_settings=True):
+        """Get current BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of current BIOS settings is returned. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            current_settings = sushy_system.bios_settings.json
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The current BIOS Settings were not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+        attributes = current_settings.get("Attributes")
+        if only_allowed_settings and attributes:
+            return common_utils.apply_bios_properties_filter(
+                attributes, ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        return attributes
+
+    def get_pending_bios_settings(self, only_allowed_settings=True):
+        """Get pending BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings are
+                to be returned. If False, All the BIOS settings supported by
+                iLO are returned.
+        :return: a dictionary of pending BIOS settings is returned. Depending
+                 on the 'only_allowed_settings', either only the allowed
+                 settings are returned or all the supported settings are
+                 returned.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            settings = sushy_system.bios_settings.pending_settings.json
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The pending BIOS Settings were not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+        attributes = settings.get("Attributes")
+        if only_allowed_settings and attributes:
+            return common_utils.apply_bios_properties_filter(
+                attributes, ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        return attributes
+
+    def set_bios_settings(self, data=None, only_allowed_settings=True):
+        """Sets current BIOS settings to the provided data.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be set. If False, all the BIOS settings supported by
+                iLO and present in the 'data' are set.
+        :param: data: a dictionary of BIOS settings to be applied. Depending
+                on the 'only_allowed_settings', either only the allowed
+                settings are set or all the supported settings that are in the
+                'data' are set.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        filtered_data = data
+        if only_allowed_settings and data:
+            filtered_data = common_utils.apply_bios_properties_filter(
+                data, ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        if filtered_data:
+            try:
+                settings_required = sushy_system.bios_settings.pending_settings
+                settings_required.update_bios_data_by_patch(filtered_data)
+            except sushy.exceptions.SushyError as e:
+                msg = (self._('The pending BIOS Settings resource not found.'
+                              ' Error %(error)s') %
+                       {'error': str(e)})
+                LOG.debug(msg)
+                raise exception.IloError(msg)
+
+    def get_default_bios_settings(self, only_allowed_settings=True):
+        """Get default BIOS settings.
+
+        :param: only_allowed_settings: True when only allowed BIOS settings
+                are to be returned. If False, All the BIOS settings supported
+                by iLO are returned.
+        :return: a dictionary of default BIOS settings(factory settings).
+                 Depending on the 'only_allowed_settings', either only the
+                 allowed settings are returned or all the supported settings
+                 are returned.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            settings = sushy_system.bios_settings.default_settings
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The default BIOS Settings were not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        if only_allowed_settings:
+            return common_utils.apply_bios_properties_filter(
+                settings, ilo_cons.SUPPORTED_BIOS_PROPERTIES)
+        return settings
