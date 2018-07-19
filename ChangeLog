@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.6.0
+-----
+* Add support to manage BIOS settings for Gen9 and Gen10 servers
+* Redfish: Add 'delete\_raid\_configuration' API to clear raid
+* Add support for retrieving system POST state
+* Add NMI (Non Maskable Interrupt) support for Gen9 and Gen10 servers
+* Fixes `pysnmp_mibs` location issue from search path
+
 2.5.2
 -----
 * Fix #1764395: Fixes session issue for Gen10 servers. Using basic
