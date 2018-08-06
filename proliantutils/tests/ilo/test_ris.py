@@ -1516,28 +1516,21 @@ class IloRisTestCase(testtools.TestCase):
                                            filter_mock):
         data = {
             "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "ChannelInterleaving": "Enabled",
-            "CollabPowerControl": "Enabled",
-            "ConsistentDevNaming": "LomsOnly",
-            "CustomPostMessage": ""
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
+            "TimeZone": "Utc1"
         }
-        expected = {
-            "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-        }
-        filter_mock.return_value = expected
         apply_filter = True
-        self.client.set_bios_settings(data, apply_filter)
-        change_bios_mock.assert_called_once_with(expected)
-        filter_mock.assert_called_once_with(
-            data, constants.SUPPORTED_BIOS_PROPERTIES)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings.*AdminName.*TimeZone.*",
+            self.client.set_bios_settings,
+            data, apply_filter)
+        change_bios_mock.assert_not_called()
+        filter_mock.assert_not_called()
 
     @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')

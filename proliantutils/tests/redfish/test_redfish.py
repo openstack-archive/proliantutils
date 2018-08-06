@@ -1602,25 +1602,18 @@ class RedfishOperationsTestCase(testtools.TestCase):
         apply_filter = True
         data = {
             "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "ChannelInterleaving": "Enabled",
-            "CollabPowerControl": "Enabled",
-            "ConsistentDevNaming": "LomsOnly",
-            "CustomPostMessage": ""
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
+            "TimeZone": "Utc1"
         }
-        expected = {k: data[k] for k in data if k in (
-            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)}
-        bios_ps_mock = mock.MagicMock(spec=bios.BIOSPendingSettings)
-        pending_settings_mock = mock.PropertyMock(return_value=bios_ps_mock)
-        type(system_mock.return_value.bios_settings).pending_settings = (
-            pending_settings_mock)
-
-        self.rf_client.set_bios_settings(data, apply_filter)
-        bios_ps_mock.update_bios_data_by_patch.assert_called_once_with(
-            expected)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings.*AdminName.*TimeZone.*",
+            self.rf_client.set_bios_settings,
+            data, apply_filter)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_set_bios_settings_filter_false(self, system_mock):
@@ -1648,11 +1641,13 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def test_set_bios_settings_raises_exception(self, system_mock):
         apply_filter = True
         data = {
-            "BootMode": "LEGACY",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "CollabPowerControl": "Enabled",
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf"
         }
+
         pending_settings_mock = mock.PropertyMock(
             side_effect=sushy.exceptions.SushyError)
         type(system_mock.return_value.bios_settings).pending_settings = (

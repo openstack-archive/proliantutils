@@ -1130,6 +1130,12 @@ class RedfishOperations(operations.IloOperations):
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         filtered_data = data
         if only_allowed_settings and data:
+            unsupported_settings = [key for key in data if key not in (
+                ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)]
+            if unsupported_settings:
+                msg = ("Could not apply settings as one or more settings are"
+                       " not supported.%s" % (unsupported_settings))
+                raise exception.IloError(msg)
             filtered_data = common_utils.apply_bios_properties_filter(
                 data, ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)
         if filtered_data:
