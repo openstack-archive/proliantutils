@@ -1924,14 +1924,20 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
-        if only_allowed_settings and data:
-            refined_data = utils.apply_bios_properties_filter(
-                data, constants.SUPPORTED_BIOS_PROPERTIES)
-            self._change_bios_setting(refined_data)
-            return
+        if not data:
+            raise exception.IloError("Could not apply settings with"
+                                     " empty data")
 
-        if data:
-            self._change_bios_setting(data)
+        if only_allowed_settings:
+            unsupported_settings = [key for key in data if key not in (
+                constants.SUPPORTED_BIOS_PROPERTIES)]
+            if unsupported_settings:
+                msg = ("Could not apply settings as one or more settings are"
+                       " not supported. Unsupported settings are %s" % (
+                           unsupported_settings))
+                raise exception.IloError(msg)
+
+        self._change_bios_setting(data)
 
     def get_default_bios_settings(self, only_allowed_settings=True):
         """Get default BIOS settings.
