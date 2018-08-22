@@ -37,7 +37,7 @@ def _get_key_value(string):
     key = ''
     value = ''
     try:
-        key, value = string.split(':')
+        key, value = string.split(': ')
     except ValueError:
         # This handles the case when the property of a logical drive
         # returned is as follows. Here we cannot split by ':' because
@@ -47,16 +47,18 @@ def _get_key_value(string):
         string = string.lstrip(' ')
         if string.startswith('physicaldrive'):
             fields = string.split(' ')
-            key = fields[0]
+            # Include fields[1] to key to avoid duplicate pairs
+            # with the same 'physicaldrive' key
+            key = fields[0] + " " + fields[1]
             value = fields[1]
         else:
             # TODO(rameshg87): Check if this ever occurs.
-            return None, None
+            return string.strip(' '), None
 
-    return key.lstrip(' ').rstrip(' '), value.lstrip(' ').rstrip(' ')
+    return key.strip(' '), value.strip(' ')
 
 
-def _get_dict(lines, start_index, indentation):
+def _get_dict(lines, start_index, indentation, deep):
     """Recursive function for parsing hpssacli/ssacli output."""
 
     info = {}
@@ -67,6 +69,10 @@ def _get_dict(lines, start_index, indentation):
 
         current_line = lines[i]
         current_line_indentation = _get_indentation(current_line)
+
+        # Check for multi-level recursion returns
+        if current_line_indentation < indentation:
+            return info, i-1
 
         if current_line_indentation == indentation:
             current_item = current_line.lstrip(' ')
@@ -89,16 +95,21 @@ def _get_dict(lines, start_index, indentation):
             key, value = _get_key_value(current_line)
             if key:
                 info[current_item][key] = value
-            i = i + 1
         elif next_line_indentation > current_line_indentation:
-            ret_dict, j = _get_dict(lines, i, current_line_indentation)
-            info[current_item].update(ret_dict)
-            i = j + 1
+            ret_dict, i = _get_dict(lines, i, current_line_indentation, deep+1)
+            for key in ret_dict.keys():
+                if key in info[current_item]:
+                    info[current_item][key].update(ret_dict[key])
+                else:
+                    info[current_item][key] = ret_dict[key]
         elif next_line_indentation < current_line_indentation:
             key, value = _get_key_value(current_line)
             if key:
                 info[current_item][key] = value
-            return info, i
+            # Do not return if it's the top level of recursion
+            if deep > 0:
+                return info, i
+        i = i + 1
 
     return info, i
 
@@ -113,7 +124,7 @@ def _convert_to_dict(stdout):
 
     lines = stdout.split("\n")
     lines = list(filter(None, lines))
-    info_dict, j = _get_dict(lines, 0, 0)
+    info_dict, j = _get_dict(lines, 0, 0, 0)
     return info_dict
 
 
@@ -556,14 +567,22 @@ class LogicalDrive(object):
         # 'string_to_bytes' takes care of converting any returned
         # (like 500MB, 25GB) unit of storage space to bytes (Integer value).
         # It requires space to be stripped.
-        size = self.properties['Size'].replace(' ', '')
         try:
+            size = self.properties['Size'].replace(' ', '')
             # TODO(rameshg87): Reduce the disk size by 1 to make sure Ironic
             # has enough space to write a config drive. Remove this when
             # Ironic doesn't need it.
             self.size_gb = int(strutils.string_to_bytes(size,
                                                         return_int=True) /
                                (1024*1024*1024)) - 1
+        except KeyError:
+            msg = ("Can't get 'Size' parameter from ssacli output for logical "
+                   "disk '%(logical_disk)s' of RAID array '%(array)s' in "
+                   "controller '%(controller)s'." %
+                   {'logical_disk': self.id,
+                    'array': self.parent.id,
+                    'controller': self.parent.parent.id})
+            raise exception.HPSSAOperationError(reason=msg)
         except ValueError:
             msg = ("ssacli returned unknown size '%(size)s' for logical "
                    "disk '%(logical_disk)s' of RAID array '%(array)s' in "
@@ -617,14 +636,20 @@ class PhysicalDrive(object):
         # Strip off physicaldrive before storing it in id
         self.id = id[14:]
 
-        size = self.properties['Size'].replace(' ', '')
         # 'string_to_bytes' takes care of converting any returned
         # (like 500MB, 25GB) unit of storage space to bytes (Integer value).
         # It requires space to be stripped.
         try:
+            size = self.properties['Size'].replace(' ', '')
             self.size_gb = int(strutils.string_to_bytes(size,
                                                         return_int=True) /
                                (1024*1024*1024))
+        except KeyError:
+            msg = ("Can't get 'Size' parameter from ssacli output for physical "
+                   "disk '%(physical_disk)s' of controller '%(controller)s'." %
+                   {'physical_disk': self.id,
+                    'controller': self.parent.parent.id})
+            raise exception.HPSSAOperationError(reason=msg)
         except ValueError:
             msg = ("ssacli returned unknown size '%(size)s' for physical "
                    "disk '%(physical_disk)s' of controller "
@@ -633,7 +658,16 @@ class PhysicalDrive(object):
                     'controller': self.parent.id})
             raise exception.HPSSAOperationError(reason=msg)
 
-        ssa_interface = self.properties['Interface Type']
+        try:
+            ssa_interface = self.properties['Interface Type']
+        except KeyError:
+            msg = ("Can't get 'Interface Type' parameter from ssacli output "
+                   "for physical disk '%(physical_disk)s' of controller "
+                   "'%(controller)s'." %
+                   {'physical_disk': self.id,
+                    'controller': self.parent.parent.id})
+            raise exception.HPSSAOperationError(reason=msg)
+
         self.interface_type = constants.get_interface_type(ssa_interface)
         self.disk_type = constants.get_disk_type(ssa_interface)
         self.model = self.properties.get('Model')

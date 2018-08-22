@@ -2507,3 +2507,62 @@ Smart Array P440 in Slot 2
          Sanitize Estimated Max Erase Time: 0 hour(s)36 minute(s)
          Unrestricted Sanitize Supported: False
 '''
+
+SSACLI_PARSING_TESTS = '''
+Smart HBA H240 in Slot 1 (RAID Mode)
+   Slot: 1
+   Controller Mode: RAID Mode
+
+   Internal Drive Cage at Port 1I, Box 1, OK
+      Drive Bays: 4
+      Port: 1I
+      Box: 1
+
+   Physical Drives
+      physicaldrive 1I:1:4 (port 1I:box 1:bay 4, SAS HDD, 900 GB, OK)
+      physicaldrive 1I:1:3 (port 1I:box 1:bay 3, SAS HDD, 900 GB, OK)
+
+   Internal Drive Cage at Port 2I, Box 1, OK
+      Drive Bays: 4
+      Port: 2I
+      Box: 1
+
+   Physical Drives
+      physicaldrive 2I:1:5 (port 2I:box 1:bay 5, SAS HDD, 900 GB, OK)
+      physicaldrive 2I:1:6 (port 2I:box 1:bay 6, SAS HDD, 900 GB, OK)
+
+   Unassigned
+      physicaldrive 1I:1:4
+         Port: 1I
+         Box: 1
+         Bay: 4
+         Size: 900 GB
+         Interface Type: SAS
+
+Smart HBA H240 in Slot 2 (RAID Mode)
+   Slot: 2
+   Controller Mode: RAID Mode
+   PCI Address (Domain:Bus:Device.Function): 0000:0B:00.0
+
+   Array: H
+      Interface Type: SAS
+
+      Logical Drive: 8
+         Size: 838.3 GB
+         Status: OK
+
+      physicaldrive 2I:2:8
+         Port: 2I
+         Box: 2
+         Bay: 8
+         Size: 900 GB
+         Interface Type: SAS
+
+Smart HBA H240 in Slot 3 (RAID Mode)
+   Slot: 3
+   Controller Mode: RAID Mode
+
+Smart HBA H240ar in Slot 0 (Embedded) (RAID Mode)
+   Bus Interface: PCI
+   Slot: 0
+'''
