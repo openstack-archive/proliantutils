@@ -4,9 +4,34 @@
     "@odata.type": "#Settings.v1_0_0.Settings",
     "ETag": "C4690603",
     "Messages": [
-      {
-        "MessageId": "Base.1.0.Success"
-      }
+           {
+               "MessageArgs": [
+               "MinProcIdlePkgState"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "MinProcIdlePower"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "EnergyPerfBias"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "PowerRegulator"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [],
+               "MessageID": "Base.1.0:Success"
+           }
     ],
     "SettingsObject": {
       "@odata.id": "/redfish/v1/systems/1/bios/settings/"

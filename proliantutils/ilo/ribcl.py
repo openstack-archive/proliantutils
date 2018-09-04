@@ -1252,6 +1252,15 @@ class RIBCLOperations(operations.IloOperations):
         """
         self._raise_command_not_supported("create_raid_configuration")
 
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        self._raise_command_not_supported("get_bios_settings_result")
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

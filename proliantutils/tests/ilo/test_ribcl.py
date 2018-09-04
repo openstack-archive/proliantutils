@@ -1082,5 +1082,12 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
                                 self.ilo.create_raid_configuration,
                                 raid_config)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_get_bios_settings_result(self, product_name_mock):
+        product_name_mock.return_value = constants.GET_PRODUCT_NAME
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'ProLiant DL380 G7',
+                                self.ilo.get_bios_settings_result)
+
 if __name__ == '__main__':
     unittest.main()
