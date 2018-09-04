@@ -1683,3 +1683,25 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.create_raid_configuration(raid_config)
         get_system_mock.return_value.create_raid.assert_called_once_with(
             raid_config)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_bios_settings_result(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+
+        type(get_system_mock.return_value.bios_settings).messages = (
+            jsonval['@Redfish.Settings']['Messages'])
+
+        expected = [
+            {
+                "MessageId": "Base.1.0.Success"
+            },
+            {
+                "MessageArgs": ["NumaGroupSizeOpt"],
+                "MessageId": "Base.1.0.PropertyNotWritable",
+                "RelatedProperties": ["#/NumaGroupSizeOpt"]
+            }
+        ]
+        actual = self.rf_client.get_bios_settings_result()
+        self.assertEqual(expected, actual)

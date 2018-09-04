@@ -1559,6 +1559,34 @@ class IloRisTestCase(testtools.TestCase):
         change_bios_mock.assert_called_once_with(data)
         filter_mock.assert_not_called()
 
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_bios_settings_result(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        actual = [
+            {
+                'MessageArgs': ['SecureBootStatus'],
+                'MessageID': 'Base.1.0:PropertyNotWritable'
+            },
+            {
+                'MessageArgs': ['Enbled', 'Sriov'],
+                'MessageID': 'Base.1.0:PropertyValueNotInList'
+            },
+            {
+                "MessageArgs": ["Disable", "TpmOperation"],
+                "MessageID": "Base.1.0:PropertyValueTypeError"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ]
+        expected = self.client.get_bios_settings_result()
+        check_bios_mock.assert_called_once_with()
+        self.assertEqual(expected, actual)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 

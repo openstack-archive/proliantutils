@@ -2005,3 +2005,13 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         :raises: IloCommandNotSupportedError
         """
         self._raise_command_not_supported("create_raid_configuration")
+
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        headers, bios_uri, bios_settings = self._check_bios_resource()
+        return bios_settings.get("SettingsResult").get("Messages")
