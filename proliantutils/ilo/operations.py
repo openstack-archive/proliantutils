@@ -488,3 +488,12 @@ class IloOperations(object):
                  not supported on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

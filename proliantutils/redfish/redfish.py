@@ -1201,3 +1201,22 @@ class RedfishOperations(operations.IloOperations):
         """
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         sushy_system.create_raid(raid_config)
+
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            settings_result = sushy_system.bios_settings.messages
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Settings results were not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        status = "failed" if len(settings_result) > 1 else "success"
+        return {"status": status, "results": settings_result}
