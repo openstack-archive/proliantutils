@@ -41,7 +41,6 @@ from proliantutils.redfish.resources.system.storage import array_controller
 from proliantutils.redfish.resources.system.storage \
     import common as common_storage
 from proliantutils.redfish.resources.system import system as pro_sys
-from proliantutils import utils
 
 
 @ddt.ddt
@@ -1584,49 +1583,76 @@ class RedfishOperationsTestCase(testtools.TestCase):
             only_allowed_settings)
 
     @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_data_by_patch')
-    @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    def test_set_bios_settings_no_data(self, system_mock, bios_filter_mock,
-                                       update_data_mock):
+    def test_set_bios_settings_no_data(self, system_mock, update_data_mock):
         data = None
         apply_filter = True
-        pending_settings_mock = mock.PropertyMock()
-        type(system_mock.return_value.bios_settings).pending_settings = (
-            pending_settings_mock)
-        self.rf_client.set_bios_settings(data, apply_filter)
-        bios_filter_mock.assert_not_called()
-        pending_settings_mock.assert_not_called()
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings with empty data",
+            self.rf_client.set_bios_settings,
+            data, apply_filter)
+        update_data_mock.assert_not_called()
+        system_mock.assert_not_called()
+
+    @mock.patch.object(bios.BIOSPendingSettings, 'update_bios_data_by_patch')
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_no_data_no_filter(self, system_mock,
+                                                 update_data_mock):
+
+        data = None
+        apply_filter = False
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings with empty data",
+            self.rf_client.set_bios_settings,
+            data, apply_filter)
+        update_data_mock.assert_not_called()
+        system_mock.assert_not_called()
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
-    def test_set_bios_settings_filter_true(self, system_mock):
+    def test_set_bios_settings_filter_true_valid_data(self, system_mock):
         apply_filter = True
         data = {
-            "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "ChannelInterleaving": "Enabled",
-            "CollabPowerControl": "Enabled",
-            "ConsistentDevNaming": "LomsOnly",
-            "CustomPostMessage": ""
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
         }
-        expected = {k: data[k] for k in data if k in (
-            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)}
         bios_ps_mock = mock.MagicMock(spec=bios.BIOSPendingSettings)
         pending_settings_mock = mock.PropertyMock(return_value=bios_ps_mock)
         type(system_mock.return_value.bios_settings).pending_settings = (
             pending_settings_mock)
 
         self.rf_client.set_bios_settings(data, apply_filter)
-        bios_ps_mock.update_bios_data_by_patch.assert_called_once_with(
-            expected)
+        bios_ps_mock.update_bios_data_by_patch.assert_called_once_with(data)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_set_bios_settings_filter_true_invalid_data(self, system_mock):
+        apply_filter = True
+        data = {
+            "AdminName": "Administrator",
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
+            "TimeZone": "Utc1"
+        }
+
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings as one or more settings"
+            " are not supported",
+            self.rf_client.set_bios_settings,
+            data, apply_filter)
+        system_mock.assert_called_once_with(redfish.PROLIANT_SYSTEM_ID)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_set_bios_settings_filter_false(self, system_mock):
         apply_filter = False
         data = {
-            "AdminName": "Administrator",
             "BootMode": "LEGACY",
             "ServerName": "Gen9 server",
             "TimeFormat": "Ist",
@@ -1636,6 +1662,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
             "ConsistentDevNaming": "LomsOnly",
             "CustomPostMessage": ""
         }
+
         bios_ps_mock = mock.MagicMock(spec=bios.BIOSPendingSettings)
         pending_settings_mock = mock.PropertyMock(return_value=bios_ps_mock)
         type(system_mock.return_value.bios_settings).pending_settings = (
@@ -1648,11 +1675,13 @@ class RedfishOperationsTestCase(testtools.TestCase):
     def test_set_bios_settings_raises_exception(self, system_mock):
         apply_filter = True
         data = {
-            "BootMode": "LEGACY",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "CollabPowerControl": "Enabled",
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf"
         }
+
         pending_settings_mock = mock.PropertyMock(
             side_effect=sushy.exceptions.SushyError)
         type(system_mock.return_value.bios_settings).pending_settings = (
@@ -1683,3 +1712,25 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.rf_client.create_raid_configuration(raid_config)
         get_system_mock.return_value.create_raid.assert_called_once_with(
             raid_config)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_bios_settings_result(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+
+        type(get_system_mock.return_value.bios_settings).messages = (
+            jsonval['@Redfish.Settings']['Messages'])
+
+        expected = [
+            {
+                "MessageId": "Base.1.0.Success"
+            },
+            {
+                "MessageArgs": ["NumaGroupSizeOpt"],
+                "MessageId": "Base.1.0.PropertyNotWritable",
+                "RelatedProperties": ["#/NumaGroupSizeOpt"]
+            }
+        ]
+        actual = self.rf_client.get_bios_settings_result()
+        self.assertEqual(expected, actual)

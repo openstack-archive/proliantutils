@@ -28,6 +28,7 @@ SUPPORTED_RIS_METHODS = [
     'create_raid_configuration',
     'delete_raid_configuration',
     'eject_virtual_media',
+    'get_bios_settings_result',
     'get_current_bios_settings',
     'get_current_boot_mode',
     'get_host_post_state',
@@ -79,6 +80,7 @@ SUPPORTED_REDFISH_METHODS = [
     'reset_server',
     'press_pwr_btn',
     'hold_pwr_btn',
+    'get_bios_settings_result',
     'get_current_bios_settings',
     'get_default_bios_settings',
     'get_pending_bios_settings',
@@ -772,3 +774,12 @@ class IloClient(operations.IloOperations):
         """
         return self._call_method('get_default_bios_settings',
                                  only_allowed_settings)
+
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        return self._call_method('get_bios_settings_result')

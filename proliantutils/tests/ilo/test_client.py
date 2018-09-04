@@ -1130,6 +1130,24 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_host_post_state()
         get_host_post_state_mock.assert_called_once_with()
 
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_bios_settings_result(self, call_mock):
+        self.client.get_bios_settings_result()
+        call_mock.assert_called_once_with('get_bios_settings_result')
+
+    @mock.patch.object(ris.RISOperations, 'get_bios_settings_result')
+    def test_get_bios_settings_result_gen9(self, get_bios_settings_mock):
+        self.client.model = 'Gen9'
+        self.client.get_bios_settings_result()
+        get_bios_settings_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_get_bios_settings_result_gen8(self, product_mock):
+        self.client.model = 'Gen8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.get_bios_settings_result)
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

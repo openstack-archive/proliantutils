@@ -1127,21 +1127,28 @@ class RedfishOperations(operations.IloOperations):
         :raises: IloCommandNotSupportedError, if the command is not supported
                  on the server.
         """
+        if not data:
+            raise exception.IloError("Could not apply settings with"
+                                     " empty data")
+
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
-        filtered_data = data
-        if only_allowed_settings and data:
-            filtered_data = common_utils.apply_bios_properties_filter(
-                data, ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)
-        if filtered_data:
-            try:
-                settings_required = sushy_system.bios_settings.pending_settings
-                settings_required.update_bios_data_by_patch(filtered_data)
-            except sushy.exceptions.SushyError as e:
-                msg = (self._('The pending BIOS Settings resource not found.'
-                              ' Error %(error)s') %
-                       {'error': str(e)})
-                LOG.debug(msg)
+        if only_allowed_settings:
+            unsupported_settings = [key for key in data if key not in (
+                ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES)]
+            if unsupported_settings:
+                msg = ("Could not apply settings as one or more settings are"
+                       " not supported. Unsupported settings are %s" % (
+                           unsupported_settings))
                 raise exception.IloError(msg)
+        try:
+            settings_required = sushy_system.bios_settings.pending_settings
+            settings_required.update_bios_data_by_patch(data)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The pending BIOS Settings resource not found.'
+                          ' Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
 
     def get_default_bios_settings(self, only_allowed_settings=True):
         """Get default BIOS settings.
@@ -1184,3 +1191,21 @@ class RedfishOperations(operations.IloOperations):
         """
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         sushy_system.create_raid(raid_config)
+
+    def get_bios_settings_result(self):
+        """Gets the result of the bios settings applied
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            messages_list = sushy_system.bios_settings.messages
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The BIOS Settings results were not found. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        return messages_list

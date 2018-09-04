@@ -1404,6 +1404,21 @@ GET_BIOS_SETTINGS = """
                {
                    "MessageArgs":
                    [
+                       "SecureBootStatus"
+                   ],
+                   "MessageID": "Base.1.0:PropertyNotWritable"
+               },
+               {
+                   "MessageArgs":
+                   [
+                       "Enbled",
+                       "Sriov"
+                   ],
+                   "MessageID": "Base.1.0:PropertyValueNotInList"
+               },
+               {
+                   "MessageArgs":
+                   [
                        "Disable",
                        "TpmOperation"
                    ],
