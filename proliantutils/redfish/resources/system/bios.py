@@ -35,6 +35,7 @@ BOOT_SOURCE_TARGET_TO_PARTIAL_STRING_MAP = {
 class BIOSSettings(base.ResourceBase):
     """Class that defines the functionality for BIOS Resources."""
 
+    messages = base.Field(['@Redfish.Settings', 'Messages'])
     boot_mode = base.MappedField(["Attributes", "BootMode"],
                                  mappings.GET_BIOS_BOOT_MODE_MAP)
 

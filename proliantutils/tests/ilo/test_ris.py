@@ -1565,6 +1565,64 @@ class IloRisTestCase(testtools.TestCase):
         self.client.set_bios_settings(data, apply_filter)
         change_bios_mock.assert_called_once_with(data)
 
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_bios_settings_result_failed(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS_FAILED)
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        actual_results = [
+            {
+                "MessageArgs": [
+                    "MinProcIdlePkgState"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "MinProcIdlePower"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "EnergyPerfBias"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "PowerRegulator"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ]
+        actual = {"status": "failed", "results": actual_results}
+        expected = self.client.get_bios_settings_result()
+        check_bios_mock.assert_called_once_with()
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(ris.RISOperations, '_check_bios_resource')
+    def test_get_bios_settings_result_success(self, check_bios_mock):
+        bios_uri = '/rest/v1/systems/1/bios'
+        settings = json.loads(ris_outputs.GET_BIOS_SETTINGS)
+        actual_results = [
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ]
+        settings["SettingsResult"].update({"Messages": actual_results})
+        actual = {"status": "success", "results": actual_results}
+        check_bios_mock.return_value = (ris_outputs.GET_HEADERS,
+                                        bios_uri, settings)
+        expected = self.client.get_bios_settings_result()
+        self.assertEqual(expected, actual)
+
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
 

@@ -1404,17 +1404,227 @@ GET_BIOS_SETTINGS = """
                {
                    "MessageArgs":
                    [
-                       "Disable",
-                       "TpmOperation"
-                   ],
-                   "MessageID": "Base.1.0:PropertyValueTypeError"
-               },
-               {
-                   "MessageArgs":
-                   [
                    ],
                    "MessageID": "Base.1.0:Success"
                }
+           ],
+           "Time": "2015-03-09T17:50:09+00:00"
+       },
+       "Sriov": "Enabled",
+       "ThermalConfig": "OptimalCooling",
+       "ThermalShutdown": "Enabled",
+       "TimeFormat": "Utc",
+       "TimeZone": "Unspecified",
+       "Tpm2Operation": "NoAction",
+       "Tpm2Visibility": "Visible",
+       "TpmBinding": "Disabled",
+       "TpmState": "NotPresent",
+       "TpmType": "NoTpm",
+       "TpmUefiOpromMeasuring": "Enabled",
+       "TpmVisibility": "Visible",
+       "Type": "HpBios.1.1.0",
+       "UefiPxeBoot": "Auto",
+       "UefiShellBootOrder": "Disabled",
+       "UefiShellStartup": "Disabled",
+       "UefiShellStartupLocation": "Auto",
+       "UefiShellStartupUrl": "",
+       "UrlBootFile": "",
+       "Usb3Mode": "Auto",
+       "UsbBoot": "Enabled",
+       "UsbControl": "UsbEnabled",
+       "UtilityLang": "English",
+       "VideoOptions": "BothVideoEnabled",
+       "VirtualInstallDisk": "Disabled",
+       "VirtualSerialPort": "Com1Irq4",
+       "WakeOnLan": "Disabled",
+       "links":
+       {
+           "BaseConfigs":
+           {
+               "href": "/rest/v1/systems/1/bios/BaseConfigs"
+           },
+           "Boot":
+           {
+               "href": "/rest/v1/systems/1/bios/Boot"
+           },
+           "Mappings":
+           {
+               "href": "/rest/v1/systems/1/bios/Mappings"
+           },
+           "Settings":
+           {
+               "href": "/rest/v1/systems/1/bios/Settings"
+           },
+           "iScsi":
+           {
+               "href": "/rest/v1/systems/1/bios/iScsi"
+           },
+           "self":
+           {
+               "href": "/rest/v1/systems/1/bios"
+           }
+       }
+    }
+
+"""
+
+GET_BIOS_SETTINGS_FAILED = """
+    {
+       "AcpiRootBridgePxm": "Enabled",
+       "AcpiSlit": "Enabled",
+       "AdjSecPrefetch": "Enabled",
+       "AdminEmail": "",
+       "AdminName": "",
+       "AdminOtherInfo": "",
+       "AdminPassword": null,
+       "AdminPhone": "",
+       "AdvancedMemProtection": "AdvancedEcc",
+       "AsrStatus": "Enabled",
+       "AsrTimeoutMinutes": "10",
+       "AssetTagProtection": "Unlocked",
+       "AttributeRegistry": "HpBiosAttributeRegistryI36.1.0.40",
+       "BootMode": "Uefi",
+       "BootOrderPolicy": "RetryIndefinitely",
+       "ChannelInterleaving": "Enabled",
+       "CollabPowerControl": "Enabled",
+       "ConsistentDevNaming": "LomsOnly",
+       "CustomPostMessage": "",
+       "DcuIpPrefetcher": "Enabled",
+       "DcuStreamPrefetcher": "Enabled",
+       "Description": "This is the Platform/BIOS Configuration (RBSU)\
+                       Current Settings",
+       "Dhcpv4": "Enabled",
+       "DynamicPowerCapping": "Auto",
+       "DynamicPowerResponse": "Fast",
+       "EmbNicEnable": "Enabled",
+       "EmbSasEnable": "Enabled",
+       "EmbSata1Enable": "Enabled",
+       "EmbSata2Enable": "Enabled",
+       "EmbVideoConnection": "Auto",
+       "EmbeddedDiagnostics": "Enabled",
+       "EmbeddedDiagsMode": "Auto",
+       "EmbeddedSata": "Ahci",
+       "EmbeddedSerialPort": "Com2Irq3",
+       "EmbeddedUefiShell": "Enabled",
+       "EmbeddedUserPartition": "Disabled",
+       "EmsConsole": "Com1Irq4",
+       "EnergyPerfBias": "BalancedPerf",
+       "EraseUserDefaults": "No",
+       "ExtendedAmbientTemp": "Disabled",
+       "ExtendedMemTest": "Disabled",
+       "F11BootMenu": "Enabled",
+       "FCScanPolicy": "AllTargets",
+       "FanFailPolicy": "Shutdown",
+       "FanInstallReq": "EnableMessaging",
+       "FlexLom1Enable": "Enabled",
+       "HwPrefetcher": "Enabled",
+       "IntelDmiLinkFreq": "Auto",
+       "IntelNicDmaChannels": "Enabled",
+       "IntelPerfMonitoring": "Disabled",
+       "IntelProcVtd": "Enabled",
+       "IntelQpiFreq": "Auto",
+       "IntelQpiLinkEn": "Auto",
+       "IntelQpiPowerManagement": "Enabled",
+       "IntelTxt": "Disabled",
+       "IntelligentProvisioning": "Enabled",
+       "InternalSDCardSlot": "Enabled",
+       "IoNonPostedPrefetching": "Enabled",
+       "Ipv4Address": "0.0.0.0",
+       "Ipv4Gateway": "0.0.0.0",
+       "Ipv4PrimaryDNS": "0.0.0.0",
+       "Ipv4SecondaryDNS": "0.0.0.0",
+       "Ipv4SubnetMask": "0.0.0.0",
+       "MaxMemBusFreqMHz": "Auto",
+       "MaxPcieSpeed": "MaxSupported",
+       "MemFastTraining": "Enabled",
+       "MinProcIdlePkgState": "C6Retention",
+       "MinProcIdlePower": "C6",
+       "MixedPowerSupplyReporting": "Enabled",
+       "Modified": "2015-03-13T21:50:42+00:00",
+       "Name": "BIOS Current Settings",
+       "NetworkBootRetry": "Enabled",
+       "NicBoot1": "NetworkBoot",
+       "NicBoot2": "Disabled",
+       "NicBoot3": "Disabled",
+       "NicBoot4": "Disabled",
+       "NicBoot5": "Disabled",
+       "NicBoot6": "Disabled",
+       "NicBoot7": "Disabled",
+       "NicBoot8": "Disabled",
+       "NmiDebugButton": "Enabled",
+       "NodeInterleaving": "Disabled",
+       "NumaGroupSizeOpt": "Clustered",
+       "NvDimmNMemFunctionality": "Enabled",
+       "OldAdminPassword": null,
+       "OldPowerOnPassword": null,
+       "PciBusPadding": "Enabled",
+       "PostF1Prompt": "Delayed20Sec",
+       "PowerButton": "Enabled",
+       "PowerOnDelay": "None",
+       "PowerOnLogo": "Enabled",
+       "PowerOnPassword": null,
+       "PowerProfile": "BalancedPowerPerf",
+       "PowerRegulator": "DynamicPowerSavings",
+       "PreBootNetwork": "Auto",
+       "ProcAes": "Enabled",
+       "ProcCoreDisable": 0,
+       "ProcNoExecute": "Enabled",
+       "ProcVirtualization": "Enabled",
+       "ProcX2Apic": "Enabled",
+       "ProductId": "727021-B21",
+       "QpiBandwidthOpt": "Balanced",
+       "QpiSnoopConfig": "Standard",
+       "RemovableFlashBootSeq": "ExternalKeysFirst",
+       "RestoreDefaults": "No",
+       "RestoreManufacturingDefaults": "No",
+       "RomSelection": "CurrentRom",
+       "SataSecureErase": "Disabled",
+       "SaveUserDefaults": "No",
+       "SecureBootStatus": "Disabled",
+       "SerialConsoleBaudRate": "115200",
+       "SerialConsoleEmulation": "Vt100Plus",
+       "SerialConsolePort": "Auto",
+       "SerialNumber": "SGH449WNL3",
+       "ServerAssetTag": "",
+       "ServerName": "",
+       "ServerOtherInfo": "",
+       "ServerPrimaryOs": "",
+       "ServiceEmail": "",
+       "ServiceName": "",
+       "ServiceOtherInfo": "",
+       "ServicePhone": "",
+       "SettingsResult":
+       {
+           "ETag": "5E0136E3",
+           "Messages": [
+           {
+               "MessageArgs": [
+               "MinProcIdlePkgState"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "MinProcIdlePower"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "EnergyPerfBias"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [
+               "PowerRegulator"
+               ],
+               "MessageID": "Base.1.0:PropertyNotWritable"
+           },
+           {
+               "MessageArgs": [],
+               "MessageID": "Base.1.0:Success"
+           }
            ],
            "Time": "2015-03-09T17:50:09+00:00"
        },
