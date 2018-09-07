@@ -1490,59 +1490,66 @@ class IloRisTestCase(testtools.TestCase):
         ext_err_mock.assert_not_called()
         filter_mock.assert_not_called()
 
-    @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    def test_set_bios_settings_no_data_apply_filter(self, change_bios_mock,
-                                                    filter_mock):
+    def test_set_bios_settings_no_data(self, change_bios_mock):
         apply_filter = True
         data = None
-        self.client.set_bios_settings(data, apply_filter)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings with empty data",
+            self.client.set_bios_settings,
+            data, apply_filter)
         change_bios_mock.assert_not_called()
-        filter_mock.assert_not_called()
 
-    @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    def test_set_bios_settings_no_data_no_filter(self, change_bios_mock,
-                                                 filter_mock):
+    def test_set_bios_settings_no_data_no_filter(self, change_bios_mock):
         apply_filter = False
         data = None
-        self.client.set_bios_settings(data, apply_filter)
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings with empty data",
+            self.client.set_bios_settings,
+            data, apply_filter)
         change_bios_mock.assert_not_called()
-        filter_mock.assert_not_called()
 
-    @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    def test_set_bios_settings_filter_true(self, change_bios_mock,
-                                           filter_mock):
+    def test_set_bios_settings_filter_true_valid_data(self, change_bios_mock):
+
         data = {
-            "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-            "ChannelInterleaving": "Enabled",
-            "CollabPowerControl": "Enabled",
-            "ConsistentDevNaming": "LomsOnly",
-            "CustomPostMessage": ""
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
         }
-        expected = {
-            "AdminName": "Administrator",
-            "BootMode": "LEGACY",
-            "ServerName": "Gen9 server",
-            "TimeFormat": "Ist",
-            "BootOrderPolicy": "RetryIndefinitely",
-        }
-        filter_mock.return_value = expected
         apply_filter = True
         self.client.set_bios_settings(data, apply_filter)
-        change_bios_mock.assert_called_once_with(expected)
-        filter_mock.assert_called_once_with(
-            data, constants.SUPPORTED_BIOS_PROPERTIES)
+        change_bios_mock.assert_called_once_with(data)
 
-    @mock.patch.object(utils, 'apply_bios_properties_filter')
     @mock.patch.object(ris.RISOperations, '_change_bios_setting')
-    def test_set_bios_settings_filter_false(self, change_bios_mock,
-                                            filter_mock):
+    def test_set_bios_settings_filter_true_invalid_data(self,
+                                                        change_bios_mock):
+
+        data = {
+            "AdminName": "Administrator",
+            "BootOrderPolicy": "AttemptOnce",
+            "IntelPerfMonitoring": "Enabled",
+            "IntelProcVtd": "Disabled",
+            "UefiOptimizedBoot": "Disabled",
+            "PowerProfile": "MaxPerf",
+            "TimeZone": "Utc1"
+        }
+        apply_filter = True
+        self.assertRaisesRegex(
+            exception.IloError,
+            "Could not apply settings as one or more settings"
+            " are not supported",
+            self.client.set_bios_settings,
+            data, apply_filter)
+        change_bios_mock.assert_not_called()
+
+    @mock.patch.object(ris.RISOperations, '_change_bios_setting')
+    def test_set_bios_settings_filter_false(self, change_bios_mock):
         data = {
             "AdminName": "Administrator",
             "BootMode": "LEGACY",
@@ -1557,7 +1564,6 @@ class IloRisTestCase(testtools.TestCase):
         apply_filter = False
         self.client.set_bios_settings(data, apply_filter)
         change_bios_mock.assert_called_once_with(data)
-        filter_mock.assert_not_called()
 
 
 class TestRISOperationsPrivateMethods(testtools.TestCase):
