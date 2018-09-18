@@ -1155,7 +1155,7 @@ class RedfishOperations(operations.IloOperations):
             if unsupported_settings:
                 msg = ("Could not apply settings as one or more settings are"
                        " not supported. Unsupported settings are %s."
-                       "Supported settings are %s." % (
+                       " Supported settings are %s." % (
                            unsupported_settings,
                            ilo_cons.SUPPORTED_REDFISH_BIOS_PROPERTIES))
                 raise exception.IloError(msg)

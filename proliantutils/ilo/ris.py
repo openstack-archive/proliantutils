@@ -1934,7 +1934,7 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             if unsupported_settings:
                 msg = ("Could not apply settings as one or more settings are"
                        " not supported. Unsupported settings are %s."
-                       "Supported settings are %s." % (
+                       " Supported settings are %s." % (
                            unsupported_settings,
                            constants.SUPPORTED_BIOS_PROPERTIES))
                 raise exception.IloError(msg)
