@@ -28,29 +28,33 @@ class HPEConnectorTestCase(testtools.TestCase):
 
     @mock.patch.object(connector.Connector, '_op', autospec=True)
     def test__op_no_exception(self, conn_mock):
-        conn_mock.side_effect = ["Hello", exceptions.ConnectionError,
-                                 "Hello", "World"]
-
+        response = mock.MagicMock()
+        type(response).status_code = mock.PropertyMock(return_value=200)
+        conn_mock.side_effect = [response, exceptions.ConnectionError,
+                                 response, response]
         hpe_conn = hpe_connector.HPEConnector(
             'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
         hpe_conn._op('GET', path='fake/path', data=None, headers=headers)
         conn_mock.assert_called_once_with(hpe_conn, 'GET', path='fake/path',
-                                          data=None, headers=headers)
+                                          data=None, headers=headers,
+                                          allow_redirects=False)
         self.assertEqual(1, conn_mock.call_count)
 
     @mock.patch.object(connector.Connector, '_op', autospec=True)
     def test__op_with_exception(self, conn_mock):
+        response = mock.MagicMock()
+        type(response).status_code = mock.PropertyMock(return_value=501)
         conn_mock.side_effect = [exceptions.ConnectionError,
-                                 exceptions.ConnectionError, "Hello", "World"]
-
+                                 exceptions.ConnectionError,
+                                 response, response]
         hpe_conn = hpe_connector.HPEConnector(
             'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
         lval = hpe_conn._op('GET', path='fake/path', data=None,
                             headers=headers)
         self.assertEqual(3, conn_mock.call_count)
-        self.assertEqual(lval, "Hello")
+        self.assertEqual(lval.status_code, 501)
 
     @mock.patch.object(connector.Connector, '_op', autospec=True)
     def test__op_all_exception(self, conn_mock):
@@ -58,7 +62,6 @@ class HPEConnectorTestCase(testtools.TestCase):
             exceptions.ConnectionError] * (
                 hpe_connector.HPEConnector.MAX_RETRY_ATTEMPTS) + (
             ["Hello", "World"])
-
         hpe_conn = hpe_connector.HPEConnector(
             'http://foo.bar:1234', verify=True)
         headers = {'X-Fake': 'header'}
@@ -67,3 +70,25 @@ class HPEConnectorTestCase(testtools.TestCase):
             'GET', path='fake/path', data=None, headers=headers)
         self.assertEqual(hpe_connector.HPEConnector.MAX_RETRY_ATTEMPTS,
                          conn_mock.call_count)
+
+    @mock.patch.object(connector.Connector, '_op', autospec=True)
+    def test__op_with_redirection_false_status_308(self, conn_mock):
+        response = mock.MagicMock()
+        type(response).status_code = mock.PropertyMock(return_value=308)
+        headers = {'X-Fake': 'header', 'Location': 'http://foo.bar:1234/new_path'}
+        type(response).headers = headers
+        response_redirect = mock.MagicMock()
+        type(response_redirect).status_code = (
+            mock.PropertyMock(return_value=200))
+        conn_mock.side_effect = [response, response_redirect]
+        hpe_conn = hpe_connector.HPEConnector(
+            'http://foo.bar:1234', verify=True)
+        headers = {'X-Fake': 'header'}
+        res = hpe_conn._op('GET', path='fake/path',
+                           data=None, headers=headers)
+        calls = [mock.call(hpe_conn, 'GET', path='fake/path', data=None,
+                           headers=headers, allow_redirects=False),
+                 mock.call(hpe_conn, 'GET', path='/new_path', data=None,
+                           headers=headers, allow_redirects=False)]
+        conn_mock.assert_has_calls(calls)
+        self.assertEqual(res.status_code, 200)
