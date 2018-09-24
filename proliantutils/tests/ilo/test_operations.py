@@ -33,3 +33,8 @@ class IloOperationsTestCase(unittest.TestCase):
     def test__no_host(self):
         self.assertEqual('[iLO <unknown>] foo',
                          self.operations_object._('foo'))
+
+    def test__ipv6_host(self):
+        self.operations_object.host = 'FE80::9EB6:54FF:FEB1:ACEE%ens37'
+        self.assertEqual('[iLO FE80::9EB6:54FF:FEB1:ACEE%%ens37] foo',
+                         self.operations_object._('foo'))

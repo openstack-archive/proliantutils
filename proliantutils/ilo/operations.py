@@ -28,7 +28,7 @@ class IloOperations(object):
     def _(self, msg):
         """Prepends host information if available to msg and returns it."""
         try:
-            return "[iLO %s] %s" % (self.host, msg)
+            return "[iLO %s] %s" % (self.host.replace('%', '%%'), msg)
         except AttributeError:
             return "[iLO <unknown>] %s" % msg
 
