@@ -15,6 +15,7 @@
 __author__ = 'HPE'
 
 import retrying
+from six.moves.urllib.parse import urlparse
 from sushy import connector
 from sushy import exceptions
 
@@ -44,4 +45,12 @@ class HPEConnector(connector.Connector):
         :param headers: Optional dictionary of headers.
         :returns: The response from the connector.Connector's _op method.
         """
-        return super(HPEConnector, self)._op(method, path, data, headers)
+        resp = super(HPEConnector, self)._op(method, path, data,
+                                             headers, allow_redirects=False)
+        # With IPv6 Gen10 server gives redirection response with new path with
+        # a prefix of '/' so this check is required
+        if resp.status_code == 308:
+            path = urlparse(resp.headers['Location']).path
+            resp = super(HPEConnector, self)._op(method, path, data, headers,
+                                                 allow_redirects=False)
+        return resp
