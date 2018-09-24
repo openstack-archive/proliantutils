@@ -17,6 +17,7 @@ __author__ = 'HPE'
 import retrying
 from sushy import connector
 from sushy import exceptions
+from urlparse import urlparse
 
 
 class HPEConnector(connector.Connector):
@@ -34,7 +35,7 @@ class HPEConnector(connector.Connector):
             lambda e: isinstance(e, exceptions.ConnectionError)),
         stop_max_attempt_number=MAX_RETRY_ATTEMPTS,
         wait_fixed=MAX_TIME_BEFORE_RETRY)
-    def _op(self, method, path='', data=None, headers=None):
+    def _op(self, method, path='', data=None, headers=None, allow_redirects=False):
         """Overrides the base method to support retrying the operation.
 
         :param method: The HTTP method to be used, e.g: GET, POST,
@@ -42,6 +43,11 @@ class HPEConnector(connector.Connector):
         :param path: The sub-URI path to the resource.
         :param data: Optional JSON data.
         :param headers: Optional dictionary of headers.
+        :param allow_redirects: Optional param for url redirection
         :returns: The response from the connector.Connector's _op method.
         """
-        return super(HPEConnector, self)._op(method, path, data, headers)
+        resp = super(HPEConnector, self)._op(method, path, data=data, headers=headers, allow_redirects=allow_redirects)
+        if resp.status_code == 308:
+            path = urlparse(resp.headers['Location']).path
+            resp = super(HPEConnector, self)._op(method, path, data=data, headers=headers, allow_redirects=allow_redirects)
+        return resp

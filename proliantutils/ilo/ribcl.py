@@ -813,6 +813,7 @@ class RIBCLOperations(operations.IloOperations):
                   versions, server model.
         :raises: IloError, if iLO returns an error in command execution.
         """
+        import pdb;pdb.set_trace()
         capabilities = {}
         data = self.get_host_health_data()
         ilo_firmware = self._get_ilo_firmware_version(data)
