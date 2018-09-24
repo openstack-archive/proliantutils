@@ -51,6 +51,56 @@ class IloClientInitTestCase(testtools.TestCase):
         self.assertEqual('product', c.model)
 
     @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_for_ipv6_link_address(self, ris_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+
+        c = client.IloClient("FE80::9AF2:B3FF:FEEE:F884%eth0", "admin",
+                             "Admin", timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ris_mock.assert_called_once_with(
+            "[FE80::9AF2:B3FF:FEEE:F884%eth0]",
+            "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "[FE80::9AF2:B3FF:FEEE:F884%eth0]",
+            "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "[FE80::9AF2:B3FF:FEEE:F884%eth0]",
+             'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertEqual('product', c.model)
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_for_ipv6_global_address(self, ris_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+
+        c = client.IloClient("2001:0db8:85a3::8a2e:0370:7334", "admin",
+                             "Admin", timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ris_mock.assert_called_once_with(
+            "[2001:0db8:85a3::8a2e:0370:7334]",
+            "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "[2001:0db8:85a3::8a2e:0370:7334]",
+            "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "[2001:0db8:85a3::8a2e:0370:7334]",
+             'username': "admin", 'password': "Admin"},
+            c.info)
+        self.assertEqual('product', c.model)
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
     @mock.patch.object(redfish, 'RedfishOperations')
     def test_init_for_redfish_with_ribcl_enabled(
             self, redfish_mock, ribcl_mock):

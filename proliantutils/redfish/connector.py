@@ -17,6 +17,11 @@ __author__ = 'HPE'
 import retrying
 from sushy import connector
 from sushy import exceptions
+import sys
+if sys.version_info[0] < 3:
+    from urlparse import urlparse
+else:
+    from urllib.parse import urlparse
 
 
 class HPEConnector(connector.Connector):
@@ -44,4 +49,10 @@ class HPEConnector(connector.Connector):
         :param headers: Optional dictionary of headers.
         :returns: The response from the connector.Connector's _op method.
         """
-        return super(HPEConnector, self)._op(method, path, data, headers)
+        resp = super(HPEConnector, self)._op(method, path, data,
+                                             headers, allow_redirects=False)
+        if resp.status_code == 308:
+            path = urlparse(resp.headers['Location']).path
+            resp = super(HPEConnector, self)._op(method, path, data, headers,
+                                                 allow_redirects=False)
+        return resp
