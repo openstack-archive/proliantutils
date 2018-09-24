@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+import netaddr
 from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
@@ -125,9 +126,17 @@ class IloClient(operations.IloOperations):
     def __init__(self, host, login, password, timeout=60, port=443,
                  bios_password=None, cacert=None, snmp_credentials=None,
                  use_redfish_only=False):
+
+        # IPv6 Check
+        # TODO(paresh) Need to test with Global IPv6 address
+        # IPMI supports IPv6 without square brackets
+        self.info = {'address': host, 'username': login, 'password': password}
+
+        if netaddr.valid_ipv6(host.split('%')[0]):
+            host = '[' + host + ']'
+
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
-        self.info = {'address': host, 'username': login, 'password': password}
         self.host = host
         self.use_redfish_only = use_redfish_only
 
