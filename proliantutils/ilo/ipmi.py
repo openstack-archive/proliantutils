@@ -38,6 +38,10 @@ def _exec_ipmitool(driver_info, command):
     :param command: the ipmitool command to be executed.
 
     """
+    # For IPV6 support
+    if ':' in driver_info['address']:
+        driver_info['address'] = driver_info['address'].replace('[', '').replace(']', '')
+
     ipmi_cmd = ("ipmitool -H %(address)s"
                 " -I lanplus -U %(user)s -P %(passwd)s %(cmd)s"
                 % {'address': driver_info['address'],

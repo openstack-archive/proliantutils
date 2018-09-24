@@ -67,3 +67,17 @@ class HPEConnectorTestCase(testtools.TestCase):
             'GET', path='fake/path', data=None, headers=headers)
         self.assertEqual(hpe_connector.HPEConnector.MAX_RETRY_ATTEMPTS,
                          conn_mock.call_count)
+
+    @mock.patch.object(connector.Connector, '_op', autospec=True)
+    def test__op_with_url_redirection_false(self, conn_mock):
+        conn_mock.side_effect = ["Hello", exceptions.ConnectionError,
+                                 "Hello", "World"]
+
+        hpe_conn = hpe_connector.HPEConnector(
+            'http://foo.bar:1234', verify=True)
+        headers = {'X-Fake': 'header'}
+        hpe_conn._op('GET', path='fake/path', data=None, headers=headers, allow_redirects=False)
+        conn_mock.assert_called_once_with(hpe_conn, 'GET', path='fake/path',
+                                          data=None, headers=headers)
+        self.assertEqual(1, conn_mock.call_count)
+
