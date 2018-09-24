@@ -13,6 +13,7 @@
 # under the License.
 """IloClient module"""
 
+import netaddr
 from proliantutils import exception
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
@@ -125,9 +126,18 @@ class IloClient(operations.IloOperations):
     def __init__(self, host, login, password, timeout=60, port=443,
                  bios_password=None, cacert=None, snmp_credentials=None,
                  use_redfish_only=False):
+
+        # IPv6 Check
+        # TODO(paresh) Need to test with Global IPv6 address
+        # IPMI supports IPv6 without square brackets
+        self.ipmi_host_info = {'address': host, 'username': login,
+                               'password': password}
+
+        if netaddr.valid_ipv6(host.split('%')[0]):
+            host = '[' + host + ']'
+
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
-        self.info = {'address': host, 'username': login, 'password': password}
         self.host = host
         self.use_redfish_only = use_redfish_only
 
@@ -640,7 +650,8 @@ class IloClient(operations.IloOperations):
             # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
             # as we still want to try getting nic capacity through ipmitool
             # irrespective of what firmware we are using.
-            nic_capacity = ipmi.get_nic_capacity(self.info, major_minor)
+            nic_capacity = ipmi.get_nic_capacity(self.ipmi_host_info,
+                                                 major_minor)
             if nic_capacity:
                 capabilities.update({'nic_capacity': nic_capacity})
 

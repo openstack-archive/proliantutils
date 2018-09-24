@@ -47,7 +47,57 @@ class IloClientInitTestCase(testtools.TestCase):
             "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
         self.assertEqual(
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
-            c.info)
+            c.ipmi_host_info)
+        self.assertEqual('product', c.model)
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_for_ipv6_link_address(self, ris_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+
+        c = client.IloClient("FE80::9AF2:B3FF:FEEE:F884%eth0", "admin",
+                             "Admin", timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ris_mock.assert_called_once_with(
+            "[FE80::9AF2:B3FF:FEEE:F884%eth0]",
+            "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "[FE80::9AF2:B3FF:FEEE:F884%eth0]",
+            "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "FE80::9AF2:B3FF:FEEE:F884%eth0",
+             'username': "admin", 'password': "Admin"},
+            c.ipmi_host_info)
+        self.assertEqual('product', c.model)
+
+    @mock.patch.object(ribcl, 'RIBCLOperations')
+    @mock.patch.object(ris, 'RISOperations')
+    def test_init_for_ipv6_global_address(self, ris_mock, ribcl_mock):
+        ribcl_obj_mock = mock.MagicMock()
+        ribcl_mock.return_value = ribcl_obj_mock
+        ribcl_obj_mock.get_product_name.return_value = 'product'
+
+        c = client.IloClient("2001:0db8:85a3::8a2e:0370:7334", "admin",
+                             "Admin", timeout=120,  port=4430,
+                             bios_password='foo',
+                             cacert='/somewhere')
+
+        ris_mock.assert_called_once_with(
+            "[2001:0db8:85a3::8a2e:0370:7334]",
+            "admin", "Admin", bios_password='foo',
+            cacert='/somewhere')
+        ribcl_mock.assert_called_once_with(
+            "[2001:0db8:85a3::8a2e:0370:7334]",
+            "admin", "Admin", 120, 4430, cacert='/somewhere')
+        self.assertEqual(
+            {'address': "2001:0db8:85a3::8a2e:0370:7334",
+             'username': "admin", 'password': "Admin"},
+            c.ipmi_host_info)
         self.assertEqual('product', c.model)
 
     @mock.patch.object(ribcl, 'RIBCLOperations')
@@ -70,7 +120,7 @@ class IloClientInitTestCase(testtools.TestCase):
             cacert='/somewhere')
         self.assertEqual(
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
-            c.info)
+            c.ipmi_host_info)
         self.assertEqual('ProLiant DL180 Gen10', c.model)
         self.assertIsNotNone(c.redfish)
         self.assertTrue(c.is_ribcl_enabled)
@@ -97,7 +147,7 @@ class IloClientInitTestCase(testtools.TestCase):
             cacert='/somewhere')
         self.assertEqual(
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
-            c.info)
+            c.ipmi_host_info)
         self.assertIsNotNone(c.model)
         self.assertIsNotNone(c.redfish)
         self.assertFalse(c.is_ribcl_enabled)
@@ -119,7 +169,7 @@ class IloClientInitTestCase(testtools.TestCase):
             cacert='/somewhere')
         self.assertEqual(
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
-            c.info)
+            c.ipmi_host_info)
         self.assertIsNotNone(c.model)
         self.assertIsNotNone(c.redfish)
         self.assertIsNone(c.is_ribcl_enabled)
@@ -152,7 +202,7 @@ class IloClientInitTestCase(testtools.TestCase):
             "1.2.3.4", "admin", "Admin", 120, 4430, cacert='/somewhere')
         self.assertEqual(
             {'address': "1.2.3.4", 'username': "admin", 'password': "Admin"},
-            c.info)
+            c.ipmi_host_info)
         self.assertEqual('product', c.model)
         self.assertTrue(snmp_mock.called)
 
@@ -599,9 +649,9 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2',
                                  'nic_capacity': '10Gb'}
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, str_val)
         self.assertEqual(expected_capabilities, capabilities)
-        self.assertEqual(info, self.client.info)
+        self.assertEqual(info, self.client.ipmi_host_info)
 
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ribcl.RIBCLOperations,
@@ -622,9 +672,9 @@ class IloClientTestCase(testtools.TestCase):
                                  'server_model': 'Gen8',
                                  'pci_gpu_devices': '2'}
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, str_val)
         self.assertEqual(expected_capabilities, capabilities)
-        self.assertEqual(info, self.client.info)
+        self.assertEqual(info, self.client.ipmi_host_info)
 
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ribcl.RIBCLOperations,
@@ -642,7 +692,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_capabilities, capabilities)
-        nic_mock.assert_called_once_with(self.client.info, None)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, None)
 
     @mock.patch.object(ipmi, 'get_nic_capacity')
     @mock.patch.object(ribcl.RIBCLOperations,
@@ -660,7 +710,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'pci_gpu_devices': '2'}
         capabilities = self.client.get_server_capabilities()
         self.assertEqual(expected_capabilities, capabilities)
-        nic_mock.assert_called_once_with(self.client.info, None)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, None)
 
     @mock.patch.object(ris.RISOperations,
                        'get_ilo_firmware_version_as_major_minor')
@@ -679,7 +729,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, str_val)
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -702,7 +752,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, str_val)
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -744,7 +794,7 @@ class IloClientTestCase(testtools.TestCase):
                                  'secure_boot': 'true'}
         capabilities = self.client.get_server_capabilities()
         cap_mock.assert_called_once_with()
-        nic_mock.assert_called_once_with(self.client.info, str_val)
+        nic_mock.assert_called_once_with(self.client.ipmi_host_info, str_val)
         expected_capabilities = {'ilo_firmware_version': '2.10',
                                  'rom_firmware_version': 'x',
                                  'server_model': 'Gen9',
@@ -1087,8 +1137,8 @@ class IloClientTestCase(testtools.TestCase):
         snmp_mock.return_value = 250
         self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
-        snmp_mock.assert_called_once_with(self.client.info['address'],
-                                          snmp_credentials)
+        snmp_mock.assert_called_once_with(
+            self.client.ipmi_host_info['address'], snmp_credentials)
         self.assertTrue(mac_mock.called)
 
     @mock.patch.object(ris.RISOperations, 'get_active_macs')
@@ -1112,8 +1162,8 @@ class IloClientTestCase(testtools.TestCase):
         snmp_mock.return_value = 0
         self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
-        snmp_mock.assert_called_once_with(self.client.info['address'],
-                                          snmp_credentials)
+        snmp_mock.assert_called_once_with(
+            self.client.ipmi_host_info['address'], snmp_credentials)
         self.assertTrue(mac_mock.called)
 
     @mock.patch.object(ris.RISOperations, 'get_active_macs')
