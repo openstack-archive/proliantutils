@@ -166,6 +166,15 @@ class IloIpmiTestCase(unittest.TestCase):
         self.assertEqual(expected_output, actual_out)
 
     @mock.patch.object(subprocess, 'check_output')
+    def test__exec_ipmitool_with_ipv6(self, check_mock):
+        check_mock.return_value = constants.NIC_FRU_OUT
+        self.info['address'] = '[FE80::9AF2:B3FF:FEEE:F884%ens37]'
+        expected_output = constants.NIC_FRU_OUT
+        cmd = "fru print 0x64"
+        actual_out = ipmi._exec_ipmitool(self.info, cmd)
+        self.assertEqual(expected_output, actual_out)
+
+    @mock.patch.object(subprocess, 'check_output')
     def test__exec_ipmitool_none(self, check_mock):
         check_mock.side_effect = Exception
         cmd = "fru print 0x2"

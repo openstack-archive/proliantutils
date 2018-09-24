@@ -125,6 +125,12 @@ class IloClient(operations.IloOperations):
     def __init__(self, host, login, password, timeout=60, port=443,
                  bios_password=None, cacert=None, snmp_credentials=None,
                  use_redfish_only=False):
+
+        # IPv6 Check
+        # TODO(paresh) Need to test with Global IPv6 address
+        if ':' in host:
+            host = '[' + host + ']'
+
         self.ribcl = ribcl.RIBCLOperations(host, login, password, timeout,
                                            port, cacert=cacert)
         self.info = {'address': host, 'username': login, 'password': password}
