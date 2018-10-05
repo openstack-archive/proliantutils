@@ -1725,3 +1725,62 @@ class RedfishOperationsTestCase(testtools.TestCase):
         expected = [('HPE Smart Array P408i-p SR Gen10', config)]
         get_system_mock.return_value.read_raid.return_value = expected
         self.assertEqual(expected, self.rf_client.read_raid_configuration())
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_bios_settings_result_failed(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios_failed.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+
+        type(get_system_mock.return_value.bios_settings).messages = (
+            jsonval['@Redfish.Settings']['Messages'])
+
+        expected_settings = [
+            {
+                "MessageArgs": [
+                    "MinProcIdlePkgState"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "MinProcIdlePower"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "EnergyPerfBias"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [
+                    "PowerRegulator"
+                ],
+                "MessageID": "Base.1.0:PropertyNotWritable"
+            },
+            {
+                "MessageArgs": [],
+                "MessageID": "Base.1.0:Success"
+            }
+        ]
+        expected = {"status": "failed", "results": expected_settings}
+        actual = self.rf_client.get_bios_settings_result()
+        self.assertEqual(expected, actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
+    def test_get_bios_settings_result_success(self, get_system_mock):
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/bios.json', 'r') as f:
+            jsonval = json.loads(f.read()).get("Default")
+        actual_settings = [
+            {
+                "MessageId": "Base.1.0.Success"
+            }
+        ]
+        type(get_system_mock.return_value.bios_settings).messages = (
+            jsonval['@Redfish.Settings']['Messages'])
+        actual = self.rf_client.get_bios_settings_result()
+        expected = {"status": "success", "results": actual_settings}
+        self.assertEqual(expected, actual)
