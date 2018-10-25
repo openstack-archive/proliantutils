@@ -606,6 +606,25 @@ class PhysicalDriveTest(testtools.TestCase):
         self.assertEqual('ready', ret['status'])
         self.assertEqual('OK', ret['erase_status'])
 
+    def test_ssacli_output_parsing(self, get_all_details_mock):
+
+        get_all_details_mock.return_value = raid_constants.SSACLI_PARSING_TESTS
+        server = objects.Server()
+        self.assertEqual(4, len(server.controllers))
+        id = 'Smart HBA H240ar in Slot 0 (Embedded) (RAID Mode)'
+        self.assertIsNotNone(server.get_controller_by_id(id))
+
+        id = 'Smart HBA H240 in Slot 2 (RAID Mode)'
+        controller = server.get_controller_by_id(id)
+        self.assertIsInstance(controller.properties, dict)
+        self.assertIn("PCI Address (Domain:Bus:Device.Function)",
+                      controller.properties)
+
+        id = 'Smart HBA H240 in Slot 1 (RAID Mode)'
+        controller = server.get_controller_by_id(id)
+        self.assertIsInstance(controller.properties, dict)
+        self.assertEqual(4, len(controller.properties['Physical Drives']))
+
 
 class PrivateMethodsTestCase(testtools.TestCase):
 
