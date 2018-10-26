@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.6.1
+-----
+* Fix ssacli output parsing
+* Adds API to get the results of the BIOS settings
+* Validates the BIOS settings before applying
+* Redfish: Adds 'read_raid_configuration' API to get current raid config
+* Redfish: Adds `create_raid_configuration` API to create raid
+
 2.6.0
 -----
 * Add support to manage BIOS settings for Gen9 and Gen10 servers
