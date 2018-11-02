@@ -1,7 +1,7 @@
 CHANGES
 =======
 
-2.6.1
+2.7.0
 -----
 * Fix ssacli output parsing
 * Adds API to get the results of the BIOS settings
