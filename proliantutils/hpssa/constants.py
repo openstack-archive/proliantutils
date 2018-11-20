@@ -26,6 +26,9 @@ RAID_5 = '5'
 RAID_6 = '6'
 RAID_50 = '5+0'
 RAID_60 = '6+0'
+RAID_1_0 = '10'
+RAID_5_0 = '50'
+RAID_6_0 = '60'
 # Below are not supported in Ironic now.
 RAID_1_ADM = '1ADM'
 RAID_10_ADM = '10ADM'
@@ -56,8 +59,11 @@ RAID_LEVEL_MIN_DISKS = {RAID_0: 1,
                         RAID_5: 3,
                         RAID_6: 4,
                         RAID_10: 4,
+                        RAID_1_0: 4,
                         RAID_50: 6,
-                        RAID_60: 8}
+                        RAID_5_0: 6,
+                        RAID_60: 8,
+                        RAID_6_0: 8}
 
 
 MINIMUM_DISK_SIZE = 1
