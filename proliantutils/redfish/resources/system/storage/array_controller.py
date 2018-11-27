@@ -14,6 +14,8 @@
 
 import logging
 
+from sushy import utils as sushy_utils
+
 from proliantutils.redfish.resources.system.storage import logical_drive
 from proliantutils.redfish.resources.system.storage import physical_drive
 from proliantutils.redfish import utils
@@ -40,149 +42,102 @@ class HPEArrayController(base.ResourceBase):
     location = base.Field('Location')
     """Controller slot location"""
 
-    _logical_drives = None
-    _physical_drives = None
-
     @property
+    @sushy_utils.cache_it
     def logical_drives(self):
         """Gets the resource HPELogicalDriveCollection of ArrayControllers"""
 
-        if self._logical_drives is None:
-            self._logical_drives = (
-                logical_drive.HPELogicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'LogicalDrives']),
-                    redfish_version=self.redfish_version))
-
-        self._logical_drives.refresh(force=False)
-        return self._logical_drives
+        return logical_drive.HPELogicalDriveCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Links', 'LogicalDrives']),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def physical_drives(self):
         """Gets the resource HPEPhysicalDriveCollection of ArrayControllers"""
-
-        if self._physical_drives is None:
-            self._physical_drives = (
-                physical_drive.HPEPhysicalDriveCollection(
-                    self._conn, utils.get_subresource_path_by(
-                        self, ['Links', 'PhysicalDrives']),
-                    redfish_version=self.redfish_version))
-
-        self._physical_drives.refresh(force=False)
-        return self._physical_drives
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        super(HPEArrayController, self)._do_refresh(force)
-
-        if self._physical_drives is not None:
-            self._physical_drives.invalidate(force)
-        if self._logical_drives is not None:
-            self._logical_drives.invalidate(force)
+        return physical_drive.HPEPhysicalDriveCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Links', 'PhysicalDrives']),
+            redfish_version=self.redfish_version)
 
 
 class HPEArrayControllerCollection(base.ResourceCollectionBase):
     """This class represents the collection of HPEArrayControllers"""
-
-    _logical_drives_maximum_size_mib = None
-    _physical_drives_maximum_size_mib = None
-    _has_ssd = None
-    _has_rotational = None
-    _logical_raid_levels = None
-    _drive_rotational_speed_rpm = None
-    _get_models = None
-    _get_default_controller = None
 
     @property
     def _resource_type(self):
         return HPEArrayController
 
     @property
+    @sushy_utils.cache_it
     def logical_drives_maximum_size_mib(self):
         """Gets the biggest logical drive
 
         :returns the size in MiB.
         """
-        if self._logical_drives_maximum_size_mib is None:
-            self._logical_drives_maximum_size_mib = (
-                utils.max_safe([member.logical_drives.maximum_size_mib
-                               for member in self.get_members()]))
-        return self._logical_drives_maximum_size_mib
+        return utils.max_safe([member.logical_drives.maximum_size_mib
+                               for member in self.get_members()])
 
     @property
+    @sushy_utils.cache_it
     def physical_drives_maximum_size_mib(self):
         """Gets the biggest disk
 
         :returns the size in MiB.
         """
-        if self._physical_drives_maximum_size_mib is None:
-            self._physical_drives_maximum_size_mib = (
-                utils.max_safe([member.physical_drives.maximum_size_mib
-                               for member in self.get_members()]))
-        return self._physical_drives_maximum_size_mib
+        return utils.max_safe([member.physical_drives.maximum_size_mib
+                               for member in self.get_members()])
 
     @property
+    @sushy_utils.cache_it
     def has_ssd(self):
         """Return true if any of the drive under ArrayControllers is ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.get_members():
-                if member.physical_drives.has_ssd:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        for member in self.get_members():
+            if member.physical_drives.has_ssd:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def has_rotational(self):
         """Return true if any of the drive under ArrayControllers is ssd"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.get_members():
-                if member.physical_drives.has_rotational:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        for member in self.get_members():
+            if member.physical_drives.has_rotational:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def logical_raid_levels(self):
         """Gets the raid level for each logical volume
 
         :returns the set of list of raid levels configured
         """
-        if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.get_members():
-                self._logical_raid_levels.update(
-                    member.logical_drives.logical_raid_levels)
-        return self._logical_raid_levels
+        lg_raid_lvls = set()
+        for member in self.get_members():
+            lg_raid_lvls.update(member.logical_drives.logical_raid_levels)
+        return lg_raid_lvls
 
     @property
+    @sushy_utils.cache_it
     def drive_rotational_speed_rpm(self):
         """Gets the set of rotational speed of the HDD drives"""
 
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.get_members():
-                self._drive_rotational_speed_rpm.update(
-                    member.physical_drives.drive_rotational_speed_rpm)
-        return self._drive_rotational_speed_rpm
+        drv_rot_speed_rpm = set()
+        for member in self.get_members():
+            drv_rot_speed_rpm.update(
+                member.physical_drives.drive_rotational_speed_rpm)
+        return drv_rot_speed_rpm
 
     @property
+    @sushy_utils.cache_it
     def get_default_controller(self):
         """Gets default array controller
 
         :returns default array controller
         """
-        if self._get_default_controller is None:
-            self._get_default_controller = self.get_members()[0]
-        return self._get_default_controller
+        return self.get_members()[0]
 
     def array_controller_by_location(self, location):
         """Returns array controller instance by location
@@ -201,19 +156,3 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
         for member in self.get_members():
             if member.model == model:
                 return member
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._logical_drives_maximum_size_mib = None
-        self._physical_drives_maximum_size_mib = None
-        self._has_ssd = None
-        self._has_rotational = None
-        self._logical_raid_levels = None
-        self._drive_rotational_speed_rpm = None
-        self._get_models = None
-        self._get_default_controller = None

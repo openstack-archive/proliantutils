@@ -90,18 +90,6 @@ class HPESystem(system.System):
     _hpe_actions = HpeActionsField(['Oem', 'Hpe', 'Actions'], required=True)
     """Oem specific system extensibility actions"""
 
-    _bios_settings = None  # ref to BIOSSettings instance
-    _secure_boot = None  # ref to SecureBoot instance
-
-    _smart_storage = None  # SmartStorage instance
-    _simple_storages = None  # SimpleStorage instance
-    _storages = None  # Storage instance
-    _pci_devices = None  # PCIDevice instance
-
-    _ethernet_interfaces = None  # EthernetInterface instance
-
-    _memory = None  # Memory instance
-
     def _get_hpe_push_power_button_action_element(self):
         push_action = self._hpe_actions.computer_system_ext_powerbutton
         if not push_action:
@@ -134,19 +122,16 @@ class HPESystem(system.System):
         self._conn.post(target_uri, data={'PushType': value})
 
     @property
+    @sushy_utils.cache_it
     def bios_settings(self):
         """Property to provide reference to `BIOSSettings` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._bios_settings is None:
-            self._bios_settings = bios.BIOSSettings(
-                self._conn, utils.get_subresource_path_by(self, 'Bios'),
-                redfish_version=self.redfish_version)
-
-        self._bios_settings.refresh(force=False)
-        return self._bios_settings
+        return bios.BIOSSettings(
+            self._conn, utils.get_subresource_path_by(self, 'Bios'),
+            redfish_version=self.redfish_version)
 
     def update_persistent_boot(self, devices=[], persistent=False):
         """Changes the persistent boot device order in BIOS boot mode for host
@@ -190,60 +175,28 @@ class HPESystem(system.System):
         self.set_system_boot_source(device, enabled=tenure)
 
     @property
+    @sushy_utils.cache_it
     def pci_devices(self):
         """Provides the collection of PCI devices
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._pci_devices is None:
-            self._pci_devices = pci_device.PCIDeviceCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
-
-        self._pci_devices.refresh(force=False)
-        return self._pci_devices
+        return pci_device.PCIDeviceCollection(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Oem', 'Hpe', 'Links', 'PCIDevices']))
 
     @property
+    @sushy_utils.cache_it
     def secure_boot(self):
         """Property to provide reference to `SecureBoot` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._secure_boot is None:
-            self._secure_boot = secure_boot.SecureBoot(
-                self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
-                redfish_version=self.redfish_version)
-
-        self._secure_boot.refresh(force=False)
-        return self._secure_boot
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        super(HPESystem, self)._do_refresh(force)
-
-        if self._bios_settings is not None:
-            self._bios_settings.invalidate(force)
-        if self._pci_devices is not None:
-            self._pci_devices.invalidate(force)
-        if self._secure_boot is not None:
-            self._secure_boot.invalidate(force)
-        if self._ethernet_interfaces is not None:
-            self._ethernet_interfaces.invalidate(force)
-        if self._smart_storage is not None:
-            self._smart_storage.invalidate(force)
-        if self._storages is not None:
-            self._storages.invalidate(force)
-        if self._simple_storages is not None:
-            self._simple_storages.invalidate(force)
-        if self._memory is not None:
-            self._memory.invalidate(force)
+        return secure_boot.SecureBoot(
+            self._conn, utils.get_subresource_path_by(self, 'SecureBoot'),
+            redfish_version=self.redfish_version)
 
     def _get_hpe_sub_resource_collection_path(self, sub_res):
         path = None
@@ -255,20 +208,16 @@ class HPESystem(system.System):
         return path
 
     @property
+    @sushy_utils.cache_it
     def ethernet_interfaces(self):
         """Provide reference to EthernetInterfacesCollection instance"""
-        if self._ethernet_interfaces is None:
-            sub_res = 'EthernetInterfaces'
-            self._ethernet_interfaces = (
-                ethernet_interface.EthernetInterfaceCollection(
-                    self._conn,
-                    self._get_hpe_sub_resource_collection_path(sub_res),
-                    redfish_version=self.redfish_version))
-
-        self._ethernet_interfaces.refresh(force=False)
-        return self._ethernet_interfaces
+        return ethernet_interface.EthernetInterfaceCollection(
+            self._conn,
+            self._get_hpe_sub_resource_collection_path('EthernetInterfaces'),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def smart_storage(self):
         """This property gets the object for smart storage.
 
@@ -276,60 +225,45 @@ class HPESystem(system.System):
         There is no collection for smart storages.
         :returns: an instance of smart storage
         """
-        if self._smart_storage is None:
-            self._smart_storage = hpe_smart_storage.HPESmartStorage(
-                self._conn, utils.get_subresource_path_by(
-                    self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
-                redfish_version=self.redfish_version)
-
-        self._smart_storage.refresh(force=False)
-        return self._smart_storage
+        return hpe_smart_storage.HPESmartStorage(
+            self._conn, utils.get_subresource_path_by(
+                self, ['Oem', 'Hpe', 'Links', 'SmartStorage']),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def storages(self):
         """This property gets the list of instances for Storages
 
         This property gets the list of instances for Storages
         :returns: a list of instances of Storages
         """
-        if self._storages is None:
-            self._storages = storage.StorageCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Storage'),
-                redfish_version=self.redfish_version)
-
-        self._storages.refresh(force=False)
-        return self._storages
+        return storage.StorageCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Storage'),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def simple_storages(self):
         """This property gets the list of instances for SimpleStorages
 
         :returns: a list of instances of SimpleStorages
         """
-        if self._simple_storages is None:
-            self._simple_storages = simple_storage.SimpleStorageCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'SimpleStorage'),
-                redfish_version=self.redfish_version)
-
-        self._simple_storages.refresh(force=False)
-        return self._simple_storages
+        return simple_storage.SimpleStorageCollection(
+            self._conn, utils.get_subresource_path_by(self, 'SimpleStorage'),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def memory(self):
         """Property to provide reference to `MemoryCollection` instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._memory is None:
-            self._memory = memory.MemoryCollection(
-                self._conn, utils.get_subresource_path_by(
-                    self, 'Memory'),
-                redfish_version=self.redfish_version)
-
-        self._memory.refresh(force=False)
-        return self._memory
+        return memory.MemoryCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Memory'),
+            redfish_version=self.redfish_version)
 
     def get_smart_storage_config(self, smart_storage_config_url):
         """Returns a SmartStorageConfig Instance for each controller."""

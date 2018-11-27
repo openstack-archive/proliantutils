@@ -98,7 +98,6 @@ class EthernetInterfaceCollectionTestCase(testtools.TestCase):
         self.assertEqual(1, len(members))
 
     def test_summary(self):
-        self.assertIsNone(self.sys_eth_col._summary)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'ethernet_interface.json')

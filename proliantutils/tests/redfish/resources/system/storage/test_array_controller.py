@@ -45,7 +45,6 @@ class HPEArrayControllerTestCase(testtools.TestCase):
     def test_logical_drives(self):
         log_coll = None
         log_dr = None
-        self.assertIsNone(self.sys_stor._logical_drives)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/logical_drive_collection.json') as f:
@@ -65,7 +64,6 @@ class HPEArrayControllerTestCase(testtools.TestCase):
     def test_physical_drives(self):
         disk_coll = None
         disk_dr = None
-        self.assertIsNone(self.sys_stor._physical_drives)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/disk_drive_collection.json') as f:
@@ -123,7 +121,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertEqual(1, len(members))
 
     def test_logical_drives_maximum_size_mib(self):
-        self.assertIsNone(self.sys_stor_col._logical_drives_maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -146,7 +143,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_logical_raid_levels(self):
-        self.assertIsNone(self.sys_stor_col._logical_raid_levels)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -169,7 +165,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_physical_drives_maximum_size_mib(self):
-        self.assertIsNone(self.sys_stor_col._physical_drives_maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -192,7 +187,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_has_ssd(self):
-        self.assertIsNone(self.sys_stor_col._has_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -213,7 +207,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_ssd)
 
     def test_has_rotational(self):
-        self.assertIsNone(self.sys_stor_col._has_rotational)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -234,7 +227,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_rotational)
 
     def test_drive_rotational_speed_rpm(self):
-        self.assertIsNone(self.sys_stor_col._drive_rotational_speed_rpm)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -257,7 +249,6 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
                          self.sys_stor_col.drive_rotational_speed_rpm)
 
     def test_get_default_controller(self):
-        self.assertIsNone(self.sys_stor_col._get_default_controller)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/array_controller.json', 'r') as f:

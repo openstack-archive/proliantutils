@@ -41,8 +41,6 @@ class HPEManagerTestCase(testtools.TestCase):
             data={'LicenseKey': 'testkey'})
 
     def test_virtual_media(self):
-        self.assertIsNone(self.mgr_inst._virtual_media)
-
         self.conn.get.return_value.json.reset_mock()
 
         with open('proliantutils/tests/redfish/'
@@ -77,8 +75,7 @@ class HPEManagerTestCase(testtools.TestCase):
         self.mgr_inst.invalidate()
         self.mgr_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.mgr_inst._virtual_media)
-        self.assertTrue(self.mgr_inst._virtual_media._is_stale)
+        self.assertTrue(actual_vmedia._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/vmedia_collection.json', 'r') as f:
@@ -86,4 +83,4 @@ class HPEManagerTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.mgr_inst.virtual_media,
                               virtual_media.VirtualMediaCollection)
-        self.assertFalse(self.mgr_inst._virtual_media._is_stale)
+        self.assertFalse(actual_vmedia._is_stale)

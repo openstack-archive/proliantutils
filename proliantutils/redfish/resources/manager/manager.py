@@ -15,6 +15,7 @@
 __author__ = 'HPE'
 
 from sushy.resources.manager import manager
+from sushy import utils as sushy_utils
 
 from proliantutils.redfish.resources.manager import virtual_media
 from proliantutils.redfish import utils
@@ -27,8 +28,6 @@ class HPEManager(manager.Manager):
     from sushy
     """
 
-    _virtual_media = None
-
     def set_license(self, key):
         """Set the license on a redfish system
 
@@ -40,29 +39,13 @@ class HPEManager(manager.Manager):
         self._conn.post(license_service_uri, data=data)
 
     @property
+    @sushy_utils.cache_it
     def virtual_media(self):
         """Property to provide reference to `VirtualMediaCollection` instance.
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._virtual_media is None:
-            self._virtual_media = virtual_media.VirtualMediaCollection(
-                self._conn,
-                utils.get_subresource_path_by(self, 'VirtualMedia'),
-                redfish_version=self.redfish_version)
-
-        self._virtual_media.refresh(force=False)
-        return self._virtual_media
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        super(HPEManager, self)._do_refresh(force)
-
-        if self._virtual_media is not None:
-            self._virtual_media.invalidate(force)
+        return virtual_media.VirtualMediaCollection(
+            self._conn, utils.get_subresource_path_by(self, 'VirtualMedia'),
+            redfish_version=self.redfish_version)
