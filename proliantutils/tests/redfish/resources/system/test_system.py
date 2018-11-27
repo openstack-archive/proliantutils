@@ -80,7 +80,6 @@ class HPESystemTestCase(testtools.TestCase):
                           self.sys_inst.push_power_button, 'invalid-value')
 
     def test_bios_settings(self):
-        self.assertIsNone(self.sys_inst._bios_settings)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
@@ -125,7 +124,8 @@ class HPESystemTestCase(testtools.TestCase):
                   'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.bios_settings,
+        actual_bios_settings = self.sys_inst.bios_settings
+        self.assertIsInstance(actual_bios_settings,
                               bios.BIOSSettings)
 
         # On refreshing the system instance...
@@ -138,8 +138,7 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst.refresh(force=False)
 
         # | WHEN & THEN |
-        self.assertIsNotNone(self.sys_inst._bios_settings)
-        self.assertTrue(self.sys_inst._bios_settings._is_stale)
+        self.assertTrue(actual_bios_settings._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/bios.json',
@@ -148,7 +147,7 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.bios_settings,
                               bios.BIOSSettings)
-        self.assertFalse(self.sys_inst._bios_settings._is_stale)
+        self.assertFalse(actual_bios_settings._is_stale)
 
     def test_update_persistent_boot_uefi_target(self):
         with open('proliantutils/tests/redfish/'
@@ -189,7 +188,6 @@ class HPESystemTestCase(testtools.TestCase):
         pci_dev_return_value = None
         pci_dev1_return_value = None
         pci_coll_return_value = None
-        self.assertIsNone(self.sys_inst._pci_devices)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/pci_device_collection.json') as f:
@@ -220,8 +218,6 @@ class HPESystemTestCase(testtools.TestCase):
             _get_secure_boot)
 
     def test_secure_boot(self):
-        # check for the underneath variable value
-        self.assertIsNone(self.sys_inst._secure_boot)
         # | GIVEN |
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
@@ -250,8 +246,8 @@ class HPESystemTestCase(testtools.TestCase):
             self.conn.get.return_value.json.return_value = (
                 json.loads(f.read())['default'])
         # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.secure_boot,
-                              secure_boot.SecureBoot)
+        actual_secure_boot = self.sys_inst.secure_boot
+        self.assertIsInstance(actual_secure_boot, secure_boot.SecureBoot)
 
         # On refreshing the system instance...
         with open('proliantutils/tests/redfish/'
@@ -263,8 +259,7 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst.refresh(force=False)
 
         # | WHEN & THEN |
-        self.assertIsNotNone(self.sys_inst._secure_boot)
-        self.assertTrue(self.sys_inst._secure_boot._is_stale)
+        self.assertTrue(actual_secure_boot._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/secure_boot.json',
@@ -274,7 +269,7 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.secure_boot,
                               secure_boot.SecureBoot)
-        self.assertFalse(self.sys_inst._secure_boot._is_stale)
+        self.assertFalse(actual_secure_boot._is_stale)
 
     @mock.patch.object(utils, 'get_subresource_path_by')
     def test_get_hpe_sub_resource_collection_path(self, res_mock):
@@ -317,11 +312,10 @@ class HPESystemTestCase(testtools.TestCase):
             eth_value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [eth_coll,
                                                        eth_value]
-        self.assertIsNone(self.sys_inst._ethernet_interfaces)
         actual_macs = self.sys_inst.ethernet_interfaces.summary
         self.assertEqual({'Port 1': '12:44:6A:3B:04:11'},
                          actual_macs)
-        self.assertIsInstance(self.sys_inst._ethernet_interfaces,
+        self.assertIsInstance(self.sys_inst.ethernet_interfaces,
                               ethernet_interface.EthernetInterfaceCollection)
 
     def test_ethernet_interfaces_oem(self):
@@ -348,11 +342,10 @@ class HPESystemTestCase(testtools.TestCase):
             eth_value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [eth_coll,
                                                        eth_value]
-        self.assertIsNone(self.sys_inst._ethernet_interfaces)
         actual_macs = self.sys_inst.ethernet_interfaces.summary
         self.assertEqual({'Port 1': '12:44:6A:3B:04:11'},
                          actual_macs)
-        self.assertIsInstance(self.sys_inst._ethernet_interfaces,
+        self.assertIsInstance(self.sys_inst.ethernet_interfaces,
                               ethernet_interface.EthernetInterfaceCollection)
 
     def test_smart_storage(self):
@@ -362,7 +355,6 @@ class HPESystemTestCase(testtools.TestCase):
                   'smart_storage.json', 'r') as f:
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.return_value = value
-        self.assertIsNone(self.sys_inst._smart_storage)
         value = self.sys_inst.smart_storage
         self.assertIsInstance(value, smart_storage.HPESmartStorage)
 
@@ -378,9 +370,8 @@ class HPESystemTestCase(testtools.TestCase):
                   'storage.json', 'r') as f:
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [coll, value]
-        self.assertIsNone(self.sys_inst._storages)
-        value = self.sys_inst.storages
-        self.assertIsInstance(value, storage.StorageCollection)
+        self.assertIsInstance(self.sys_inst.storages,
+                              storage.StorageCollection)
 
     def test_simple_storages(self):
         self.conn.get.return_value.json.reset_mock()
@@ -394,16 +385,16 @@ class HPESystemTestCase(testtools.TestCase):
                   'simple_storage.json', 'r') as f:
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [coll, value]
-        self.assertIsNone(self.sys_inst._simple_storages)
-        value = self.sys_inst.simple_storages
-        self.assertIsInstance(value, simple_storage.SimpleStorageCollection)
+        self.assertIsInstance(self.sys_inst.simple_storages,
+                              simple_storage.SimpleStorageCollection)
 
     def test_simple_storage_on_refresh(self):
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json',
                   'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
-        self.assertIsInstance(self.sys_inst.simple_storages,
+        actual_simple_storages = self.sys_inst.simple_storages
+        self.assertIsInstance(actual_simple_storages,
                               simple_storage.SimpleStorageCollection)
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
@@ -413,18 +404,16 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst.invalidate()
         self.sys_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.sys_inst._simple_storages)
-        self.assertTrue(self.sys_inst._simple_storages._is_stale)
+        self.assertTrue(actual_simple_storages._is_stale)
 
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.simple_storages,
                               simple_storage.SimpleStorageCollection)
-        self.assertFalse(self.sys_inst._simple_storages._is_stale)
+        self.assertFalse(actual_simple_storages._is_stale)
 
     def test_memory(self):
-        self.assertIsNone(self.sys_inst._memory)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/memory_collection.json', 'r') as f:
@@ -445,8 +434,8 @@ class HPESystemTestCase(testtools.TestCase):
                   'memory_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         # | WHEN & THEN |
-        self.assertIsInstance(self.sys_inst.memory,
-                              memory.MemoryCollection)
+        actual_memory = self.sys_inst.memory
+        self.assertIsInstance(actual_memory, memory.MemoryCollection)
 
         # On refreshing the system instance...
         with open('proliantutils/tests/redfish/'
@@ -458,8 +447,7 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst.refresh(force=False)
 
         # | WHEN & THEN |
-        self.assertIsNotNone(self.sys_inst._memory)
-        self.assertTrue(self.sys_inst._memory._is_stale)
+        self.assertTrue(actual_memory._is_stale)
 
         # | GIVEN |
         with open('proliantutils/tests/redfish/json_samples/'
@@ -468,15 +456,15 @@ class HPESystemTestCase(testtools.TestCase):
         # | WHEN & THEN |
         self.assertIsInstance(self.sys_inst.memory,
                               memory.MemoryCollection)
-        self.assertFalse(self.sys_inst._memory._is_stale)
+        self.assertFalse(actual_memory._is_stale)
 
     def test_storage_on_refresh(self):
         with open('proliantutils/tests/redfish/json_samples/'
                   'storage_collection.json',
                   'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
-        self.assertIsInstance(self.sys_inst.storages,
-                              storage.StorageCollection)
+        actual_storages = self.sys_inst.storages
+        self.assertIsInstance(actual_storages, storage.StorageCollection)
         # On refreshing the system instance...
         with open('proliantutils/tests/redfish/'
                   'json_samples/system.json', 'r') as f:
@@ -486,15 +474,14 @@ class HPESystemTestCase(testtools.TestCase):
         self.sys_inst.invalidate()
         self.sys_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.sys_inst._storages)
-        self.assertTrue(self.sys_inst._storages._is_stale)
+        self.assertTrue(actual_storages._is_stale)
 
         with open('proliantutils/tests/redfish/json_samples/'
                   'simple_storage_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
         self.assertIsInstance(self.sys_inst.storages,
                               storage.StorageCollection)
-        self.assertFalse(self.sys_inst._storages._is_stale)
+        self.assertFalse(actual_storages._is_stale)
 
     def test_get_host_post_state(self):
         expected = sys_cons.POST_STATE_FINISHEDPOST

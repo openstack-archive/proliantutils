@@ -48,8 +48,6 @@ class BIOSSettingsTestCase(testtools.TestCase):
                          self.bios_inst.cpu_vt)
 
     def test_pending_settings(self):
-        self.assertIsNone(self.bios_inst._pending_settings)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
@@ -66,8 +64,6 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.conn.get.return_value.json.assert_not_called()
 
     def test_boot_settings(self):
-        self.assertIsNone(self.bios_inst._boot_settings)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_boot.json', 'r') as f:
@@ -84,8 +80,6 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.conn.get.return_value.json.assert_not_called()
 
     def test_bios_mappings(self):
-        self.assertIsNone(self.bios_inst._bios_mappings)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_mappings.json', 'r') as f:
@@ -102,8 +96,6 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.conn.get.return_value.json.assert_not_called()
 
     def test_iscsi_resource(self):
-        self.assertIsNone(self.bios_inst._iscsi_resource)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi.json', 'r') as f:
@@ -120,7 +112,6 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.conn.get.return_value.json.assert_not_called()
 
     def test__get_base_configs(self):
-        self.assertIsNone(self.bios_inst._base_configs)
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_base_configs.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
@@ -144,8 +135,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.bios_inst.invalidate()
         self.bios_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.bios_inst._pending_settings)
-        self.assertTrue(self.bios_inst._pending_settings._is_stale)
+        self.assertTrue(actual_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios.json', 'r') as f:
@@ -154,7 +144,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.bios_inst.pending_settings,
                               bios.BIOSPendingSettings)
-        self.assertFalse(self.bios_inst._pending_settings._is_stale)
+        self.assertFalse(actual_settings._is_stale)
 
     def test_boot_settings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -173,8 +163,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.bios_inst.invalidate()
         self.bios_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.bios_inst._boot_settings)
-        self.assertTrue(self.bios_inst._boot_settings._is_stale)
+        self.assertTrue(actual_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_boot.json', 'r') as f:
@@ -183,7 +172,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.bios_inst.boot_settings,
                               bios.BIOSBootSettings)
-        self.assertFalse(self.bios_inst._boot_settings._is_stale)
+        self.assertFalse(actual_settings._is_stale)
 
     def test_bios_mappings_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -202,8 +191,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.bios_inst.invalidate()
         self.bios_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.bios_inst._bios_mappings)
-        self.assertTrue(self.bios_inst._bios_mappings._is_stale)
+        self.assertTrue(actual_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_mappings.json', 'r') as f:
@@ -212,7 +200,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.bios_inst.bios_mappings,
                               bios.BIOSMappings)
-        self.assertFalse(self.bios_inst._bios_mappings._is_stale)
+        self.assertFalse(actual_settings._is_stale)
 
     def test_iscsi_resource_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -231,8 +219,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.bios_inst.invalidate()
         self.bios_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.bios_inst._iscsi_resource)
-        self.assertTrue(self.bios_inst._iscsi_resource._is_stale)
+        self.assertTrue(actual_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi.json', 'r') as f:
@@ -241,7 +228,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.bios_inst.iscsi_resource,
                               iscsi.ISCSIResource)
-        self.assertFalse(self.bios_inst._iscsi_resource._is_stale)
+        self.assertFalse(actual_settings._is_stale)
 
     def test__get_base_configs_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -258,8 +245,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
         self.bios_inst.invalidate()
         self.bios_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.bios_inst._base_configs)
-        self.assertTrue(self.bios_inst._base_configs._is_stale)
+        self.assertTrue(default_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/bios_base_configs.json', 'r') as f:
@@ -267,7 +253,7 @@ class BIOSSettingsTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.bios_inst._get_base_configs(),
                               bios.BIOSBaseConfigs)
-        self.assertFalse(self.bios_inst._base_configs._is_stale)
+        self.assertFalse(default_settings._is_stale)
 
 
 class BIOSBaseConfigsTestCase(testtools.TestCase):

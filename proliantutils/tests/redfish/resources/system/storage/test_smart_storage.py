@@ -51,13 +51,10 @@ class HPESmartStorageTestCase(testtools.TestCase):
                   'array_controller.json', 'r') as f:
             value = (json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = [coll, value]
-        self.assertIsNone(self.sys_stor._array_controllers)
-        self.sys_stor.array_controllers
-        self.assertIsInstance(self.sys_stor._array_controllers,
+        self.assertIsInstance(self.sys_stor.array_controllers,
                               array_controller.HPEArrayControllerCollection)
 
     def test_logical_drives_maximum_size_mib(self):
-        self.assertIsNone(self.sys_stor._logical_drives_maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -84,7 +81,6 @@ class HPESmartStorageTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_logical_raid_levels(self):
-        self.assertIsNone(self.sys_stor._logical_raid_levels)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -111,7 +107,6 @@ class HPESmartStorageTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_physical_drives_maximum_size_mib(self):
-        self.assertIsNone(self.sys_stor._physical_drives_maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -138,7 +133,6 @@ class HPESmartStorageTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_has_ssd(self):
-        self.assertIsNone(self.sys_stor._has_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -163,7 +157,6 @@ class HPESmartStorageTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor.has_ssd)
 
     def test_has_rotaional(self):
-        self.assertIsNone(self.sys_stor._has_rotational)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -188,7 +181,6 @@ class HPESmartStorageTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor.has_rotational)
 
     def test_drive_rotational_speed_rpm(self):
-        self.assertIsNone(self.sys_stor._drive_rotational_speed_rpm)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'

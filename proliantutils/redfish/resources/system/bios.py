@@ -14,6 +14,7 @@
 
 import sushy
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 from proliantutils import exception
 from proliantutils import log
@@ -46,29 +47,18 @@ class BIOSSettings(base.ResourceBase):
     cpu_vt = base.MappedField(["Attributes", "ProcVirtualization"],
                               mappings.CPUVT_MAP)
 
-    _iscsi_resource = None
-    _bios_mappings = None
-
-    _pending_settings = None
-    _boot_settings = None
-    _base_configs = None
-
     @property
+    @sushy_utils.cache_it
     def pending_settings(self):
         """Property to provide reference to bios_pending_settings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._pending_settings is None:
-            self._pending_settings = BIOSPendingSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["@Redfish.Settings", "SettingsObject"]),
-                redfish_version=self.redfish_version)
-
-        self._pending_settings.refresh(force=False)
-        return self._pending_settings
+        return BIOSPendingSettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["@Redfish.Settings", "SettingsObject"]),
+            redfish_version=self.redfish_version)
 
     @property
     def default_settings(self):
@@ -79,89 +69,56 @@ class BIOSSettings(base.ResourceBase):
         return self._get_base_configs().default_config
 
     @property
+    @sushy_utils.cache_it
     def boot_settings(self):
         """Property to provide reference to bios boot instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._boot_settings is None:
-            self._boot_settings = BIOSBootSettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "Boot"]),
-                redfish_version=self.redfish_version)
-
-        self._boot_settings.refresh(force=False)
-        return self._boot_settings
+        return BIOSBootSettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "Boot"]),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def iscsi_resource(self):
         """Property to provide reference to bios iscsi resource instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._iscsi_resource is None:
-            self._iscsi_resource = iscsi.ISCSIResource(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "iScsi"]),
-                redfish_version=self.redfish_version)
-
-        self._iscsi_resource.refresh(force=False)
-        return self._iscsi_resource
+        return iscsi.ISCSIResource(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "iScsi"]),
+            redfish_version=self.redfish_version)
 
     @property
+    @sushy_utils.cache_it
     def bios_mappings(self):
         """Property to provide reference to bios mappings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._bios_mappings is None:
-            self._bios_mappings = BIOSMappings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "Mappings"]),
-                redfish_version=self.redfish_version)
+        return BIOSMappings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "Mappings"]),
+            redfish_version=self.redfish_version)
 
-        self._bios_mappings.refresh(force=False)
-        return self._bios_mappings
-
+    @sushy_utils.cache_it
     def _get_base_configs(self):
         """Method that returns object of bios base configs."""
-        if self._base_configs is None:
-            self._base_configs = BIOSBaseConfigs(
-                self._conn, utils.get_subresource_path_by(
-                    self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
-                redfish_version=self.redfish_version)
-
-        self._base_configs.refresh(force=False)
-        return self._base_configs
+        return BIOSBaseConfigs(
+            self._conn, utils.get_subresource_path_by(
+                self, ["Oem", "Hpe", "Links", "BaseConfigs"]),
+            redfish_version=self.redfish_version)
 
     def update_bios_to_default(self):
         """Updates bios default settings"""
         self.pending_settings.update_bios_data_by_post(
             self._get_base_configs().default_config)
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        if self._pending_settings is not None:
-            self._pending_settings.invalidate(force)
-        if self._boot_settings is not None:
-            self._boot_settings.invalidate(force)
-        if self._base_configs is not None:
-            self._base_configs.invalidate(force)
-        if self._iscsi_resource is not None:
-            self._iscsi_resource.invalidate(force)
-        if self._bios_mappings is not None:
-            self._bios_mappings.invalidate(force)
 
 
 class BIOSBaseConfigs(base.ResourceBase):

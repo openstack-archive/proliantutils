@@ -37,14 +37,12 @@ class HPEAccountServiceTestCase(testtools.TestCase):
             redfish_version='1.0.2')
 
     def test_accounts(self):
-        self.assertIsNone(self.acc_inst._accounts)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/account_collection.json', 'r') as f:
             self.conn.get.return_value.json.return_value = json.loads(f.read())
-        accounts = self.acc_inst.accounts
-        self.assertIsInstance(accounts, account.HPEAccountCollection)
+        self.assertIsInstance(self.acc_inst.accounts,
+                              account.HPEAccountCollection)
 
     def test_accounts_on_refresh(self):
         with open('proliantutils/tests/redfish/'
@@ -60,8 +58,7 @@ class HPEAccountServiceTestCase(testtools.TestCase):
         self.acc_inst.invalidate()
         self.acc_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.acc_inst._accounts)
-        self.assertTrue(self.acc_inst._accounts._is_stale)
+        self.assertTrue(accounts._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/account_collection.json', 'r') as f:
@@ -69,4 +66,4 @@ class HPEAccountServiceTestCase(testtools.TestCase):
 
         self.assertIsInstance(self.acc_inst.accounts,
                               account.HPEAccountCollection)
-        self.assertFalse(self.acc_inst._accounts._is_stale)
+        self.assertFalse(accounts._is_stale)

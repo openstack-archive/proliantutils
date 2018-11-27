@@ -49,8 +49,6 @@ class ISCSIResourceTestCase(testtools.TestCase):
         self.assertEqual(ret_val, expected)
 
     def test_iscsi_settings(self):
-        self.assertIsNone(self.iscsi_inst._iscsi_settings)
-
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi_settings.json', 'r') as f:
@@ -83,8 +81,7 @@ class ISCSIResourceTestCase(testtools.TestCase):
         self.iscsi_inst.invalidate()
         self.iscsi_inst.refresh(force=False)
 
-        self.assertIsNotNone(self.iscsi_inst._iscsi_settings)
-        self.assertTrue(self.iscsi_inst._iscsi_settings._is_stale)
+        self.assertTrue(actual_settings._is_stale)
 
         with open('proliantutils/tests/redfish/'
                   'json_samples/iscsi_settings.json', 'r') as f:
@@ -92,7 +89,7 @@ class ISCSIResourceTestCase(testtools.TestCase):
                 json.loads(f.read())['Default'])
         self.assertIsInstance(self.iscsi_inst.iscsi_settings,
                               iscsi.ISCSISettings)
-        self.assertFalse(self.iscsi_inst._iscsi_settings._is_stale)
+        self.assertFalse(actual_settings._is_stale)
 
     def test_attributes(self):
         with open('proliantutils/tests/redfish/'

@@ -45,7 +45,6 @@ class SimpleStorageTestCase(testtools.TestCase):
                          self.sys_simple.devices)
 
     def test_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_simple._maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         expected = 8000000000000
         actual = self.sys_simple.maximum_size_bytes
@@ -53,7 +52,6 @@ class SimpleStorageTestCase(testtools.TestCase):
 
     def test_maximum_size_bytes_on_refresh(self):
         self.sys_simple.refresh()
-        self.assertIsNone(self.sys_simple._maximum_size_bytes)
 
 
 class SimpleStorageCollectionTestCase(testtools.TestCase):
@@ -98,7 +96,6 @@ class SimpleStorageCollectionTestCase(testtools.TestCase):
         self.assertEqual(1, len(members))
 
     def test_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_simple_col._maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'simple_storage.json')

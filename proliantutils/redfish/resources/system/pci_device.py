@@ -15,6 +15,7 @@
 import logging
 
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -32,64 +33,34 @@ class PCIDevice(base.ResourceBase):
 
     sub_class_code = base.Field('SubclassCode')
 
-    _nic_capacity = None
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._nic_capacity = None
-
     @property
+    @sushy_utils.cache_it
     def nic_capacity(self):
-        if self._nic_capacity is None:
-            for item in self.name.split():
-                if 'Gb' in item:
-                    capacity = item.strip('Gb')
-                    self._nic_capacity = (
-                        int(capacity) if capacity.isdigit() else 0)
-                    break
-            else:
-                self._nic_capacity = 0
-        return self._nic_capacity
+        for item in self.name.split():
+            if 'Gb' in item:
+                capacity = item.strip('Gb')
+                return int(capacity) if capacity.isdigit() else 0
+        return 0
 
 
 class PCIDeviceCollection(base.ResourceCollectionBase):
-
-    _gpu_devices = None
-    _max_nic_capacity = None
 
     @property
     def _resource_type(self):
         return PCIDevice
 
     @property
+    @sushy_utils.cache_it
     def gpu_devices(self):
-        if self._gpu_devices is None:
-            self._gpu_devices = []
-            for member in self.get_members():
-                if member.class_code in CLASSCODE_FOR_GPU_DEVICES:
-                    if member.sub_class_code in SUBCLASSCODE_FOR_GPU_DEVICES:
-                        self._gpu_devices.append(member)
-        return self._gpu_devices
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._gpu_devices = None
-        self._max_nic_capacity = None
+        gpu_devices = []
+        for member in self.get_members():
+            if member.class_code in CLASSCODE_FOR_GPU_DEVICES:
+                if member.sub_class_code in SUBCLASSCODE_FOR_GPU_DEVICES:
+                    gpu_devices.append(member)
+        return gpu_devices
 
     @property
+    @sushy_utils.cache_it
     def max_nic_capacity(self):
         """Gets the maximum NIC capacity"""
-        if self._max_nic_capacity is None:
-            self._max_nic_capacity = (
-                str(max([m.nic_capacity for m in self.get_members()])) + 'Gb')
-        return self._max_nic_capacity
+        return str(max([m.nic_capacity for m in self.get_members()])) + 'Gb'

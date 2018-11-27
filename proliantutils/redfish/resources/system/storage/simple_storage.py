@@ -14,6 +14,7 @@
 
 
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 from proliantutils.redfish import utils
 
@@ -33,29 +34,16 @@ class SimpleStorage(base.ResourceBase):
     devices = base.Field('Devices')
     """The storage devices associated with this resource"""
 
-    _maximum_size_bytes = None
-
     @property
+    @sushy_utils.cache_it
     def maximum_size_bytes(self):
         """Gets the biggest disk drive
 
         :returns size in bytes.
         """
-        if self._maximum_size_bytes is None:
-            self._maximum_size_bytes = (
-                utils.max_safe([device.get('CapacityBytes')
-                               for device in self.devices
-                               if device.get('CapacityBytes') is not None]))
-        return self._maximum_size_bytes
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._maximum_size_bytes = None
+        return utils.max_safe(
+            [device.get('CapacityBytes') for device in self.devices
+             if device.get('CapacityBytes') is not None])
 
 
 class SimpleStorageCollection(base.ResourceCollectionBase):
@@ -64,25 +52,12 @@ class SimpleStorageCollection(base.ResourceCollectionBase):
     def _resource_type(self):
         return SimpleStorage
 
-    _maximum_size_bytes = None
-
     @property
+    @sushy_utils.cache_it
     def maximum_size_bytes(self):
         """Gets the biggest disk drive
 
         :returns size in bytes.
         """
-        if self._maximum_size_bytes is None:
-            self._maximum_size_bytes = (
-                utils.max_safe([member.maximum_size_bytes
-                               for member in self.get_members()]))
-        return self._maximum_size_bytes
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._maximum_size_bytes = None
+        return utils.max_safe([member.maximum_size_bytes
+                               for member in self.get_members()])
