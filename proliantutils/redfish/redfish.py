@@ -27,6 +27,7 @@ from proliantutils.ilo import constants as ilo_cons
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
 from proliantutils import log
+from proliantutils.redfish import auth as proliantutils_auth
 from proliantutils.redfish import main
 from proliantutils.redfish.resources.manager import constants as mgr_cons
 from proliantutils.redfish.resources.system import constants as sys_cons
@@ -125,8 +126,9 @@ class RedfishOperations(operations.IloOperations):
     *proliantutils.ilo.client.SUPPORTED_REDFISH_METHODS*
     """
 
-    def __init__(self, redfish_controller_ip, username, password,
-                 bios_password=None, cacert=None, root_prefix='/redfish/v1/'):
+    def __init__(self, redfish_controller_ip, username=None, password=None,
+                 bios_password=None, cacert=None, root_prefix='/redfish/v1/',
+                 auth_token=None):
         """A class representing supported RedfishOperations
 
         :param redfish_controller_ip: The ip address of the Redfish controller.
@@ -153,10 +155,19 @@ class RedfishOperations(operations.IloOperations):
         self._username = username
 
         try:
-            basic_auth = auth.BasicAuth(username=username, password=password)
-            self._sushy = main.HPESushy(
-                address, root_prefix=root_prefix, verify=verify,
-                auth=basic_auth)
+            if not auth_token:
+                basic_auth = auth.BasicAuth(username=username,
+                                            password=password)
+                self._sushy = main.HPESushy(
+                    address, root_prefix=root_prefix, verify=verify,
+                    auth=basic_auth)
+            else:
+                token_auth = proliantutils_auth.TokenOnlyAuth(
+                    session_key=auth_token)
+                self._sushy = main.HPESushy(
+                    address, root_prefix=root_prefix, verify=verify,
+                    auth=token_auth)
+
         except sushy.exceptions.SushyError as e:
             msg = (self._('The Redfish controller at "%(controller)s" has '
                           'thrown error. Error %(error)s') %

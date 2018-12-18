@@ -68,6 +68,28 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.assertIsInstance(kwargs.get('auth'), auth.BasicAuth)
 
     @mock.patch.object(main, 'HPESushy', autospec=True)
+    def redfish_operation_with_auth_token(self, sushy_mock):
+        (super(RedfishOperationsTestCase, self).
+         redfish_operation_with_auth_token())
+        self.sushy = mock.MagicMock()
+        self.sushy.get_system_collection_path.return_value = (
+            '/redfish/v1/Systems')
+        self.sushy.get_manager_collection_path.return_value = (
+            '/redfish/v1/Managers')
+        sushy_mock.return_value = self.sushy
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/root.json', 'r') as f:
+            self.sushy.json = json.loads(f.read())
+
+        self.rf_client = redfish.RedfishOperations(
+            '1.2.3.4', auth_token="Testingkey")
+        args, kwargs = sushy_mock.call_args
+        self.assertEqual(('https://1.2.3.4',), args)
+        self.assertFalse(kwargs.get('verify'))
+        self.assertEqual('/redfish/v1/', kwargs.get('root_prefix'))
+        self.assertIsInstance(kwargs.get('auth'), auth.TokenOnlyAuth)
+
+    @mock.patch.object(main, 'HPESushy', autospec=True)
     def test_sushy_init_fail(self, sushy_mock):
         sushy_mock.side_effect = sushy.exceptions.SushyError
         self.assertRaisesRegex(
