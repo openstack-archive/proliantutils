@@ -13,6 +13,7 @@
 # under the License.
 
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 from proliantutils.redfish import utils
 
@@ -24,8 +25,6 @@ class ISCSIResource(base.ResourceBase):
     from sushy.
     """
     iscsi_initiator = base.Field("iSCSIInitiatorName")
-
-    _iscsi_settings = None
 
     def is_iscsi_boot_supported(self):
         """Checks whether iscsi boot is supported or not.
@@ -39,31 +38,17 @@ class ISCSIResource(base.ResourceBase):
             ['@Redfish.Settings', 'SettingsObject'])
 
     @property
+    @sushy_utils.cache_it
     def iscsi_settings(self):
         """Property to provide reference to iSCSI settings instance
 
         It is calculated once when the first time it is queried. On refresh,
         this property gets reset.
         """
-        if self._iscsi_settings is None:
-            self._iscsi_settings = ISCSISettings(
-                self._conn,
-                utils.get_subresource_path_by(
-                    self, ["@Redfish.Settings", "SettingsObject"]),
-                redfish_version=self.redfish_version)
-
-        self._iscsi_settings.refresh(force=False)
-        return self._iscsi_settings
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        if self._iscsi_settings is not None:
-            self._iscsi_settings.invalidate(force)
+        return ISCSISettings(
+            self._conn, utils.get_subresource_path_by(
+                self, ["@Redfish.Settings", "SettingsObject"]),
+            redfish_version=self.redfish_version)
 
 
 class ISCSISettings(base.ResourceBase):

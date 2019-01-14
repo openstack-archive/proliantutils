@@ -94,7 +94,6 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         self.assertEqual(2, len(members))
 
     def test_maximum_size_mib(self):
-        self.assertIsNone(self.sys_stor_col._maximum_size_mib)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')
@@ -107,7 +106,6 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_has_ssd(self):
-        self.assertIsNone(self.sys_stor_col._has_ssd)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')
@@ -119,7 +117,6 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         self.assertTrue(actual)
 
     def test_has_rotational(self):
-        self.assertIsNone(self.sys_stor_col._has_rotational)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')
@@ -130,7 +127,6 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_rotational)
 
     def test_drive_rotational_speed_rpm(self):
-        self.assertIsNone(self.sys_stor_col._drive_rotational_speed_rpm)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'disk_drive.json')

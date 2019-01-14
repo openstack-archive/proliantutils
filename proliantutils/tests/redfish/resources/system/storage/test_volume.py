@@ -82,7 +82,6 @@ class VolumeCollectionTestCase(testtools.TestCase):
         self.assertEqual(1, len(members))
 
     def test_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_vol_col._maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
                 'volume.json')

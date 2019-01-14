@@ -13,6 +13,7 @@
 # under the License.
 
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 from proliantutils.redfish.resources.account_service import account
 from proliantutils.redfish import utils
@@ -25,29 +26,10 @@ class HPEAccountService(base.ResourceBase):
     from sushy
     """
 
-    _accounts = None
-
     @property
+    @sushy_utils.cache_it
     def accounts(self):
-        """Property to provide instance of HPEAccountCollection
-
-        """
-        if self._accounts is None:
-            self._accounts = account.HPEAccountCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Accounts'),
-                redfish_version=self.redfish_version)
-
-        self._accounts.refresh(force=False)
-        return self._accounts
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        super(HPEAccountService, self)._do_refresh(force)
-
-        if self._accounts is not None:
-            self._accounts.invalidate(force)
+        """Property to provide instance of HPEAccountCollection"""
+        return account.HPEAccountCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Accounts'),
+            redfish_version=self.redfish_version)

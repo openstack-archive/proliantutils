@@ -14,12 +14,14 @@
 
 import logging
 
+from sushy.resources import base
+from sushy import utils as sushy_utils
+
 from proliantutils.redfish.resources.system.storage import constants
 from proliantutils.redfish.resources.system.storage import drive as sys_drives
 from proliantutils.redfish.resources.system.storage \
     import volume as sys_volumes
 from proliantutils.redfish import utils
-from sushy.resources import base
 
 LOG = logging.getLogger(__name__)
 
@@ -39,26 +41,16 @@ class Storage(base.ResourceBase):
     drives = base.Field('Drives')
     """The set of drives attached to the storage controllers"""
 
-    _volumes = None
-    _drives_maximum_size_bytes = None
-    _has_ssd = None
-    _has_rotational = None
-    _has_nvme_ssd = None
-    _drive_rotational_speed_rpm = None
-
     @property
+    @sushy_utils.cache_it
     def volumes(self):
         """This property prepares the list of volumes
 
         :return a list of volumes.
         """
-        if self._volumes is None:
-            self._volumes = sys_volumes.VolumeCollection(
-                self._conn, utils.get_subresource_path_by(self, 'Volumes'),
-                redfish_version=self.redfish_version)
-
-        self._volumes.refresh(force=False)
-        return self._volumes
+        return sys_volumes.VolumeCollection(
+            self._conn, utils.get_subresource_path_by(self, 'Volumes'),
+            redfish_version=self.redfish_version)
 
     def _drives_list(self):
         """Gets the list of drives
@@ -72,177 +64,114 @@ class Storage(base.ResourceBase):
         return drives_list
 
     @property
+    @sushy_utils.cache_it
     def drives_maximum_size_bytes(self):
         """Gets the biggest disk
 
         :returns the size in MiB.
         """
-        if self._drives_maximum_size_bytes is None:
-            self._drives_maximum_size_bytes = (
-                utils.max_safe([member.capacity_bytes
-                               for member in self._drives_list()]))
-        return self._drives_maximum_size_bytes
+        return utils.max_safe([member.capacity_bytes
+                               for member in self._drives_list()])
 
     @property
+    @sushy_utils.cache_it
     def has_ssd(self):
         """Return true if any of the drive is ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self._drives_list():
-                if member.media_type == constants.MEDIA_TYPE_SSD:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        for member in self._drives_list():
+            if member.media_type == constants.MEDIA_TYPE_SSD:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def has_rotational(self):
         """Return true if any of the drive is HDD"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self._drives_list():
-                if member.media_type == constants.MEDIA_TYPE_HDD:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        for member in self._drives_list():
+            if member.media_type == constants.MEDIA_TYPE_HDD:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def has_nvme_ssd(self):
         """Return True if the drive is SSD and protocol is NVMe"""
-
-        if self._has_nvme_ssd is None:
-            self._has_nvme_ssd = False
-            for member in self._drives_list():
-                if (member.media_type == constants.MEDIA_TYPE_SSD and
-                        member.protocol == constants.PROTOCOL_NVMe):
-                    self._has_nvme_ssd = True
-        return self._has_nvme_ssd
+        for member in self._drives_list():
+            if (member.media_type == constants.MEDIA_TYPE_SSD and
+                    member.protocol == constants.PROTOCOL_NVMe):
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def drive_rotational_speed_rpm(self):
         """Gets set of rotational speed of the disks"""
 
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self._drives_list():
-                if member.rotation_speed_rpm is not None:
-                    self._drive_rotational_speed_rpm.add(
-                        member.rotation_speed_rpm)
-        return self._drive_rotational_speed_rpm
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        if self._volumes is not None:
-            self._volumes.invalidate(force)
-
-        self._drives_maximum_size_bytes = None
-        self._has_ssd = None
-        self._has_rotational = None
-        self._has_nvme_ssd = None
-        self._drive_rotational_speed_rpm = None
+        drv_rot_speed_rpm = set()
+        for member in self._drives_list():
+            if member.rotation_speed_rpm is not None:
+                drv_rot_speed_rpm.add(member.rotation_speed_rpm)
+        return drv_rot_speed_rpm
 
 
 class StorageCollection(base.ResourceCollectionBase):
     """This class represents the collection of Storage resource"""
-
-    _volumes_maximum_size_bytes = None
-    _drives_maximum_size_bytes = None
-    _has_ssd = None
-    _has_rotational = None
-    _has_nvme_ssd = None
-    _drive_rotational_speed_rpm = None
 
     @property
     def _resource_type(self):
         return Storage
 
     @property
+    @sushy_utils.cache_it
     def volumes_maximum_size_bytes(self):
         """Gets the biggest logical drive
 
         :returns the size in MiB.
         """
-        if self._volumes_maximum_size_bytes is None:
-            self._volumes_maximum_size_bytes = (
-                utils.max_safe([member.volumes.maximum_size_bytes
-                               for member in self.get_members()]))
-        return self._volumes_maximum_size_bytes
+        return utils.max_safe([member.volumes.maximum_size_bytes
+                               for member in self.get_members()])
 
     @property
+    @sushy_utils.cache_it
     def drives_maximum_size_bytes(self):
         """Gets the biggest disk
 
         :returns the size in MiB.
         """
-        if self._drives_maximum_size_bytes is None:
-            self._drives_maximum_size_bytes = (
-                utils.max_safe([member.drives_maximum_size_bytes
-                               for member in self.get_members()]))
-        return self._drives_maximum_size_bytes
+        return utils.max_safe([member.drives_maximum_size_bytes
+                               for member in self.get_members()])
 
     @property
+    @sushy_utils.cache_it
     def has_ssd(self):
         """Return true if Storage has any drive as ssd"""
-
-        if self._has_ssd is None:
-            self._has_ssd = False
-            for member in self.get_members():
-                if member.has_ssd:
-                    self._has_ssd = True
-                    break
-        return self._has_ssd
+        for member in self.get_members():
+            if member.has_ssd:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def has_rotational(self):
         """Return true if Storage has any drive as HDD"""
-
-        if self._has_rotational is None:
-            self._has_rotational = False
-            for member in self.get_members():
-                if member.has_rotational:
-                    self._has_rotational = True
-                    break
-        return self._has_rotational
+        for member in self.get_members():
+            if member.has_rotational:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def has_nvme_ssd(self):
         """Return True if Storage has SSD drive and protocol is NVMe"""
-
-        if self._has_nvme_ssd is None:
-            self._has_nvme_ssd = False
-            for member in self.get_members():
-                if member.has_nvme_ssd:
-                    self._has_nvme_ssd = True
-                    break
-        return self._has_nvme_ssd
+        for member in self.get_members():
+            if member.has_nvme_ssd:
+                return True
+        return False
 
     @property
+    @sushy_utils.cache_it
     def drive_rotational_speed_rpm(self):
         """Gets set of rotational speed of the disks"""
-
-        if self._drive_rotational_speed_rpm is None:
-            self._drive_rotational_speed_rpm = set()
-            for member in self.get_members():
-                self._drive_rotational_speed_rpm.update(
-                    member.drive_rotational_speed_rpm)
-        return self._drive_rotational_speed_rpm
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._volumes_maximum_size_bytes = None
-        self._drives_maximum_size_bytes = None
-        self._has_ssd = None
-        self._has_rotational = None
-        self._has_nvme_ssd = None
-        self._drive_rotational_speed_rpm = None
+        drv_rot_speed_rpm = set()
+        for member in self.get_members():
+            drv_rot_speed_rpm.update(member.drive_rotational_speed_rpm)
+        return drv_rot_speed_rpm

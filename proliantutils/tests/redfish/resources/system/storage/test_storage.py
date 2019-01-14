@@ -47,7 +47,6 @@ class StorageTestCase(testtools.TestCase):
     def test_volumes(self):
         log_coll = None
         log_dr = None
-        self.assertIsNone(self.sys_stor._volumes)
         self.conn.get.return_value.json.reset_mock()
         with open('proliantutils/tests/redfish/'
                   'json_samples/volume_collection.json') as f:
@@ -56,13 +55,12 @@ class StorageTestCase(testtools.TestCase):
                   'json_samples/volume.json') as f:
             log_dr = json.loads(f.read())
         self.conn.get.return_value.json.side_effect = [log_coll, log_dr]
-        actual_log_dr = self.sys_stor.volumes
-        self.assertIs(actual_log_dr,
+        actual_volumes = self.sys_stor.volumes
+        self.assertIs(actual_volumes,
                       self.sys_stor.volumes)
         self.sys_stor.invalidate()
         self.sys_stor.refresh(force=False)
-        self.assertIsNotNone(self.sys_stor._volumes)
-        self.assertTrue(self.sys_stor._volumes._is_stale)
+        self.assertTrue(actual_volumes._is_stale)
 
     def test__drives_list(self):
         self.conn.get.return_value.json.reset_mock()
@@ -76,7 +74,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertIsInstance(actual_dr, list)
 
     def test_drives_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_stor._drives_maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -92,7 +89,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_has_ssd_true(self):
-        self.assertIsNone(self.sys_stor._has_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -106,7 +102,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor.has_ssd)
 
     def test_has_rotational(self):
-        self.assertIsNone(self.sys_stor._has_rotational)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -120,7 +115,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor.has_rotational)
 
     def test_has_nvme_ssd(self):
-        self.assertIsNone(self.sys_stor._has_nvme_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -134,7 +128,6 @@ class StorageTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor.has_nvme_ssd)
 
     def test_drive_rotational_speed_rpm(self):
-        self.assertIsNone(self.sys_stor._drive_rotational_speed_rpm)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -192,7 +185,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertEqual(1, len(members))
 
     def test_volumes_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_stor_col._volumes_maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -213,7 +205,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_drives_maximum_size_bytes(self):
-        self.assertIsNone(self.sys_stor_col._drives_maximum_size_bytes)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -233,7 +224,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertEqual(expected, actual)
 
     def test_has_ssd_true(self):
-        self.assertIsNone(self.sys_stor_col._has_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -251,7 +241,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_ssd)
 
     def test_has_rotational(self):
-        self.assertIsNone(self.sys_stor_col._has_rotational)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -269,7 +258,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_rotational)
 
     def test_has_nvme_ssd(self):
-        self.assertIsNone(self.sys_stor_col._has_nvme_ssd)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -287,7 +275,6 @@ class StorageCollectionTestCase(testtools.TestCase):
         self.assertTrue(self.sys_stor_col.has_nvme_ssd)
 
     def test_drive_rotational_speed_rpm(self):
-        self.assertIsNone(self.sys_stor_col._drive_rotational_speed_rpm)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'

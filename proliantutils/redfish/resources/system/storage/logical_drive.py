@@ -13,6 +13,7 @@
 #    under the License.
 
 from sushy.resources import base
+from sushy import utils as sushy_utils
 
 from proliantutils.redfish import utils
 
@@ -36,44 +37,28 @@ class HPELogicalDrive(base.ResourceBase):
 class HPELogicalDriveCollection(base.ResourceCollectionBase):
     """This class represents the collection of LogicalDrives resource"""
 
-    _maximum_size_mib = None
-    _logical_raid_levels = None
-
     @property
     def _resource_type(self):
         return HPELogicalDrive
 
     @property
+    @sushy_utils.cache_it
     def maximum_size_mib(self):
         """Gets the biggest logical drive
 
         :returns size in MiB.
         """
-        if self._maximum_size_mib is None:
-            self._maximum_size_mib = (
-                utils.max_safe([member.capacity_mib
-                               for member in self.get_members()]))
-        return self._maximum_size_mib
+        return utils.max_safe([member.capacity_mib
+                               for member in self.get_members()])
 
     @property
+    @sushy_utils.cache_it
     def logical_raid_levels(self):
         """Gets the raid level for each logical volume
 
         :returns the set of list of raid levels configured.
         """
-        if self._logical_raid_levels is None:
-            self._logical_raid_levels = set()
-            for member in self.get_members():
-                self._logical_raid_levels.add(
-                    mappings.RAID_LEVEL_MAP_REV.get(member.raid))
-        return self._logical_raid_levels
-
-    def _do_refresh(self, force):
-        """Do custom resource specific refresh activities
-
-        On refresh, all sub-resources are marked as stale, i.e.
-        greedy-refresh not done for them unless forced by ``force``
-        argument.
-        """
-        self._maximum_size_mib = None
-        self._logical_raid_levels = None
+        lg_raid_lvls = set()
+        for member in self.get_members():
+            lg_raid_lvls.add(mappings.RAID_LEVEL_MAP_REV.get(member.raid))
+        return lg_raid_lvls

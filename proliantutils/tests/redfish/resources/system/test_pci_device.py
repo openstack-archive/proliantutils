@@ -87,7 +87,6 @@ class PCIDeviceCollectionTestCase(testtools.TestCase):
         self.assertEqual(2, len(members))
 
     def test_gpu_devices(self):
-        self.assertIsNone(self.sys_pci_col._gpu_devices)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
@@ -99,11 +98,9 @@ class PCIDeviceCollectionTestCase(testtools.TestCase):
         with open(path, 'r') as f:
             val.append(json.loads(f.read()))
         self.conn.get.return_value.json.side_effect = val
-        self.sys_pci_col.gpu_devices
-        self.assertEqual(1, len(self.sys_pci_col._gpu_devices))
+        self.assertEqual(1, len(self.sys_pci_col.gpu_devices))
 
     def test_max_nic_capacity(self):
-        self.assertIsNone(self.sys_pci_col._max_nic_capacity)
         self.conn.get.return_value.json.reset_mock()
         val = []
         path = ('proliantutils/tests/redfish/json_samples/'
