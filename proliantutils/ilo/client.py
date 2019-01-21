@@ -608,6 +608,14 @@ class IloClient(operations.IloOperations):
                              "RIBCL/Redfish failed to get the disk size. "
                              "Returning local_gb as 0.")
                 LOG.debug(msg)
+        # TODO(nisha): The get_essential_properties() is not implemented
+        # in ris.py so far. Since the active MACs cannot be retreived using
+        # RIBCL, the logic is implemented in ris.py for Gen9s.Eventually
+        # the whole get_essential_properties() need to be implemented
+        # in ris.py.
+        if ('Gen9' in self.model):
+            macs = self.ris.get_active_macs()
+            data['macs'] = macs
         return data
 
     def get_server_capabilities(self):

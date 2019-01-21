@@ -2043,3 +2043,70 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
         settings_result = bios_settings.get("SettingsResult").get("Messages")
         status = "failed" if len(settings_result) > 1 else "success"
         return {"status": status, "results": settings_result}
+
+    def _get_network_adapters(self):
+        """Gets the network adapters list.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :returns: the list of Network Adapters attached to the system.
+        """
+        system = self._get_host_details()
+        if ('links' in system['Oem']['Hp'] and
+                'NetworkAdapters' in system['Oem']['Hp']['links']):
+            # Get the NetworkAdapters URI and list
+            uri = system['Oem']['Hp']['links']['NetworkAdapters']['href']
+            status, headers, net_details = self._rest_get(uri)
+
+            if status >= 300:
+                msg = self._get_extended_error(net_details)
+                raise exception.IloError(msg)
+            return net_details
+
+        else:
+            msg = ('"links/NetworkAdapters" section in ComputerSystem/Oem/Hp'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+    def get_active_macs(self):
+        """Gets the MACs which are physically connected.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :returns: the dictionary of active MAC addresses like
+            {'NIC.LOM.1.1': '50:65:F3:6C:47:F8'}
+        """
+        net_details = self._get_network_adapters()
+        active_macs = {}
+        if ('links' in net_details and
+                'Member' in net_details['links']):
+            for member in net_details['links']['Member']:
+                net_uri = member['href']
+                status, headers, mac_details = self._rest_get(net_uri)
+                if status >= 300:
+                    msg = self._get_extended_error(mac_details)
+                    raise exception.IloError(msg)
+
+                # In RIBCL and Redfish we are able to get the port
+                # numbers from the data received but it is not available
+                # as part of RIS output. Hence choosing the nearest
+                # and unique key as "StructuredName" from RIS output
+                # which returns value as 'NIC.LOM.1.1', 'NIC.LOM.1.2', etc.
+                # The last digit is actually the port number.
+                for macs in mac_details['PhysicalPorts']:
+                    if (macs['Status']['Health'] == 'OK' and
+                            macs['Status']['State'] == 'Enabled'):
+                        mac_dict = {macs['Oem']['Hp']['StructuredName']:
+                                    macs['MacAddress']}
+                        active_macs.update(mac_dict)
+        else:
+            msg = ('"links" or "links/Member" section in NetworkAdapters'
+                   ' does not exist')
+            raise exception.IloCommandNotSupportedError(msg)
+
+        if (len(active_macs) == 0):
+            LOG.warning(self._("Node doesn't has any NIC physically "
+                               "connected."))
+        return active_macs

@@ -1036,11 +1036,12 @@ class IloClientTestCase(testtools.TestCase):
         self.client.set_bios_settings(d, apply_filter)
         bios_settings_mock.assert_called_once_with(d, False)
 
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
     @mock.patch.object(client.IloClient, '_call_method')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     def test_get_essential_prop_no_snmp_ris(self,
                                             snmp_mock,
-                                            call_mock):
+                                            call_mock, mac_mock):
         self.client.model = 'Gen9'
         properties = {'local_gb': 250}
         data = {'properties': properties}
@@ -1048,12 +1049,15 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
+        self.assertTrue(mac_mock.called)
 
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
     @mock.patch.object(client.IloClient, '_call_method')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     def test_get_essential_prop_no_snmp_local_gb_0(self,
                                                    snmp_mock,
-                                                   call_mock):
+                                                   call_mock,
+                                                   mac_mock):
         self.client.model = 'Gen9'
         properties = {'local_gb': 0}
         data = {'properties': properties}
@@ -1061,12 +1065,14 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
+        self.assertTrue(mac_mock.called)
 
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
     @mock.patch.object(client.IloClient, '_call_method')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     def test_get_essential_prop_snmp_true(self,
                                           snmp_mock,
-                                          call_mock):
+                                          call_mock, mac_mock):
         self.client.model = 'Gen9'
         snmp_credentials = {'auth_user': 'user',
                             'auth_prot_pp': '1234',
@@ -1083,12 +1089,15 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_essential_properties')
         snmp_mock.assert_called_once_with(self.client.info['address'],
                                           snmp_credentials)
+        self.assertTrue(mac_mock.called)
 
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
     @mock.patch.object(client.IloClient, '_call_method')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     def test_get_essential_prop_snmp_true_local_gb_0(self,
                                                      snmp_mock,
-                                                     call_mock):
+                                                     call_mock,
+                                                     mac_mock):
         self.client.model = 'Gen9'
         snmp_credentials = {'auth_user': 'user',
                             'auth_prot_pp': '1234',
@@ -1105,11 +1114,14 @@ class IloClientTestCase(testtools.TestCase):
         call_mock.assert_called_once_with('get_essential_properties')
         snmp_mock.assert_called_once_with(self.client.info['address'],
                                           snmp_credentials)
+        self.assertTrue(mac_mock.called)
 
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
     @mock.patch.object(snmp_cpqdisk_sizes, 'get_local_gb')
     @mock.patch.object(client.IloClient, '_call_method')
     def test_get_essential_prop_snmp_false_local_gb_0(self, call_mock,
-                                                      snmp_mock):
+                                                      snmp_mock,
+                                                      mac_mock):
 
         self.client.model = 'Gen9'
         snmp_credentials = {'auth_user': 'user',
@@ -1126,6 +1138,44 @@ class IloClientTestCase(testtools.TestCase):
         self.client.get_essential_properties()
         call_mock.assert_called_once_with('get_essential_properties')
         self.assertFalse(snmp_mock.called)
+        self.assertTrue(mac_mock.called)
+
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_essential_prop_macs_gen9(self, call_mock,
+                                          mac_mock):
+
+        self.client.model = 'Gen9'
+        properties = {'local_gb': 123456789}
+        mac_mock.return_value = {'NIC.LOM.1.1': '50:65:F3:6C:47:F8'}
+        mac_dict = {'Port 1': '50:65:F3:6C:47:F8',
+                    'Port 2': '50:65:F3:6C:47:F9'}
+        data = {'properties': properties, 'macs': mac_dict}
+        expected_data = {'properties': properties,
+                         'macs': {'NIC.LOM.1.1': '50:65:F3:6C:47:F8'}}
+        call_mock.return_value = data
+        actual_data = self.client.get_essential_properties()
+        self.assertEqual(actual_data, expected_data)
+        call_mock.assert_called_once_with('get_essential_properties')
+        self.assertTrue(mac_mock.called)
+
+    @mock.patch.object(ris.RISOperations, 'get_active_macs')
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_essential_prop_macs_gen8(self, call_mock,
+                                          mac_mock):
+
+        self.client.model = 'Gen8'
+        properties = {'local_gb': 123456789}
+        mac_dict = {'Port 1': '50:65:F3:6C:47:F8',
+                    'Port 2': '50:65:F3:6C:47:F9'}
+        data = {'properties': properties, 'macs': mac_dict}
+        expected_data = {'properties': properties,
+                         'macs': mac_dict}
+        call_mock.return_value = data
+        actual_data = self.client.get_essential_properties()
+        self.assertEqual(actual_data, expected_data)
+        call_mock.assert_called_once_with('get_essential_properties')
+        self.assertFalse(mac_mock.called)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_inject_nmi(self, call_mock):

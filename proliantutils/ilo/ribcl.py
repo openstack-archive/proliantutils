@@ -802,7 +802,11 @@ class RIBCLOperations(operations.IloOperations):
         properties['cpus'] = cpus
         properties['cpu_arch'] = cpu_arch
         properties['local_gb'] = self._parse_storage_embedded_health(data)
-        macs = self._parse_nics_embedded_health(data)
+        # TODO(nisha): Remove this check once get_essential_properties() is
+        # completely implemented in ris.py for Gen9's.
+        macs = {}
+        if 'Gen8' in self.get_product_name():
+            macs = self._parse_nics_embedded_health(data)
         return_value = {'properties': properties, 'macs': macs}
         return return_value
 
