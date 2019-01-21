@@ -169,6 +169,9 @@ RESPONSE_BODY_FOR_REST_OP = """
                 "MEMORY": {
                     "href": "/rest/v1/Systems/1/Memory"
                 },
+                "NetworkAdapters": {
+                    "href": "/rest/v1/Systems/1/NetworkAdapters"
+                },
                 "PCIDevices": {
                     "href": "/rest/v1/Systems/1/PCIDevices"
                 },
@@ -4841,5 +4844,179 @@ ARRAY_SETTING_NO_CONTROLLER = """
 ArrayControllers"
                 }
         }
+}
+"""
+
+NO_MACS_CONNECTED = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/\
+NetworkAdapters/Members/$entity",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkAdapters/1/",
+    "@odata.type": "#BaseNetworkAdapter.1.1.0.BaseNetworkAdapter",
+    "Firmware": {
+        "Current": {
+            "VersionString": null
+        }
+    },
+    "Id": "1",
+    "Name": "HP Ethernet 1Gb 2-port 361i Adapter - NIC",
+    "PartNumber": null,
+    "PhysicalPorts": [{
+        "FullDuplex": false,
+        "IPv4Addresses": [{
+            "Address": null
+        }],
+        "IPv6Addresses": [{
+            "Address": null
+        }],
+        "MacAddress": "50:65:F3:6C:47:F8",
+        "Name": null,
+        "Oem": {
+            "Hp": {
+                "@odata.type": "#HpBaseNetworkAdapterExt.1.0.0.\
+HpBaseNetworkAdapterExt",
+                "BadReceives": null,
+                "BadTransmits": null,
+                "GoodReceives": null,
+                "GoodTransmits": null,
+                "StructuredName": "NIC.LOM.1.1",
+                "Team": null,
+                "Type": "HpBaseNetworkAdapterExt.1.0.0"
+            }
+        },
+        "SpeedMbps": 0,
+        "Status": {
+            "Health": "Warning",
+            "State": "Disabled"
+        },
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)"
+    }],
+    "SerialNumber": null,
+    "Status": {
+        "Health": "Warning",
+        "State": "Disabled"
+    },
+    "StructuredName": "NIC.LOM.1.1",
+    "Type": "BaseNetworkAdapter.1.1.0",
+    "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Systems/1/NetworkAdapters/1"
+        }
+    }
+}
+"""
+
+ONE_MAC_CONNECTED = """
+{
+    "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/\
+NetworkAdapters/Members/$entity",
+    "@odata.id": "/redfish/v1/Systems/1/NetworkAdapters/1/",
+    "@odata.type": "#BaseNetworkAdapter.1.1.0.BaseNetworkAdapter",
+    "Firmware": {
+        "Current": {
+            "VersionString": null
+        }
+    },
+    "Id": "1",
+    "Name": "HP Ethernet 1Gb 2-port 361i Adapter - NIC",
+    "PartNumber": null,
+    "PhysicalPorts": [{
+        "FullDuplex": false,
+        "IPv4Addresses": [{
+            "Address": null
+        }],
+        "IPv6Addresses": [{
+            "Address": null
+        }],
+        "MacAddress": "50:65:F3:6C:47:F8",
+        "Name": null,
+        "Oem": {
+            "Hp": {
+                "@odata.type": "#HpBaseNetworkAdapterExt.1.0.0.\
+HpBaseNetworkAdapterExt",
+                "BadReceives": null,
+                "BadTransmits": null,
+                "GoodReceives": null,
+                "GoodTransmits": null,
+                "StructuredName": "NIC.LOM.1.1",
+                "Team": null,
+                "Type": "HpBaseNetworkAdapterExt.1.0.0"
+            }
+        },
+        "SpeedMbps": 0,
+        "Status": {
+            "Health": "OK",
+            "State": "Enabled"
+        },
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)"
+    }, {
+        "FullDuplex": false,
+        "IPv4Addresses": [{
+            "Address": null
+        }],
+        "IPv6Addresses": [{
+            "Address": null
+        }],
+        "MacAddress": "50:65:F3:6C:47:F9",
+        "Name": null,
+        "Oem": {
+            "Hp": {
+                "@odata.type": "#HpBaseNetworkAdapterExt.1.0.0.\
+HpBaseNetworkAdapterExt",
+                "BadReceives": null,
+                "BadTransmits": null,
+                "GoodReceives": null,
+                "GoodTransmits": null,
+                "StructuredName": "NIC.LOM.1.2",
+                "Team": null,
+                "Type": "HpBaseNetworkAdapterExt.1.0.0"
+            }
+        },
+        "SpeedMbps": 0,
+        "Status": {
+            "Health": "Warning",
+            "State": "Disabled"
+        },
+        "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x1)"
+    }],
+    "SerialNumber": null,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "StructuredName": "NIC.LOM.1.1",
+    "Type": "BaseNetworkAdapter.1.1.0",
+    "UEFIDevicePath": "PciRoot(0x0)/Pci(0x2,0x3)/Pci(0x0,0x0)",
+    "links": {
+        "self": {
+            "href": "/rest/v1/Systems/1/NetworkAdapters/1"
+        }
+    }
+}
+"""
+
+NETWORK_ADAPTER_LIST = """
+{
+  "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/NetworkAdapters",
+  "@odata.id": "/redfish/v1/Systems/1/NetworkAdapters/",
+  "@odata.type": "#BaseNetworkAdapterCollection.BaseNetworkAdapterCollection",
+  "Description": "NetworkAdapters view",
+  "MemberType": "BaseNetworkAdapter.1",
+  "Members": [{
+    "@odata.id": "/redfish/v1/Systems/1/NetworkAdapters/1/"
+  }],
+  "Members@odata.count": 1,
+  "Name": "NetworkAdapters Collection",
+  "Total": 1,
+  "Type": "Collection.1.0.0",
+  "links": {
+    "Member": [{
+      "href": "/rest/v1/Systems/1/NetworkAdapters/1"
+    }],
+    "self": {
+      "href": "/rest/v1/Systems/1/NetworkAdapters"
+    }
+  }
 }
 """
