@@ -2641,3 +2641,94 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                                 'ProLiant BL460c Gen9',
                                 self.client.create_raid_configuration,
                                 raid_config)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_network_adapters(self, get_host_details_mock, get_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        net_uri = '/rest/v1/Systems/1/NetworkAdapters'
+        net_list = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+
+        get_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                 net_list)
+        self.client._get_network_adapters()
+        get_mock.assert_called_once_with(net_uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_network_adapters_fail(self, get_host_details_mock,
+                                        get_mock):
+        system_data = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        get_host_details_mock.return_value = system_data
+        net_uri = '/rest/v1/Systems/1/NetworkAdapters'
+        net_list = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+        get_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                 net_list)
+        self.assertRaises(exception.IloError,
+                          self.client._get_network_adapters)
+        get_mock.assert_called_once_with(net_uri)
+
+    @mock.patch.object(ris.RISOperations, '_get_host_details')
+    def test__get_network_adapters_not_supported(self, get_details_mock):
+        host_response = json.loads(ris_outputs.RESPONSE_BODY_FOR_REST_OP)
+        del host_response['Oem']['Hp']['links']['NetworkAdapters']
+        get_details_mock.return_value = host_response
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.client._get_network_adapters)
+        get_details_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_network_adapters')
+    def test_get_active_macs_one_mac(self, network_mock, rest_mock):
+        net_details = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+        mac_details = json.loads(ris_outputs.ONE_MAC_CONNECTED)
+        network_mock.return_value = net_details
+        uri = '/rest/v1/Systems/1/NetworkAdapters/1'
+        rest_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                  mac_details)
+        expected_macs = {'NIC.LOM.1.1': '50:65:F3:6C:47:F8'}
+        actual_macs = self.client.get_active_macs()
+        self.assertEqual(expected_macs, actual_macs)
+        network_mock.assert_called_once_with()
+        rest_mock.assert_called_once_with(uri)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_network_adapters')
+    def test_get_active_macs_no_connected_mac(self, network_mock, rest_mock):
+        net_details = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+        mac_details = json.loads(ris_outputs.NO_MACS_CONNECTED)
+        network_mock.return_value = net_details
+        rest_mock.return_value = (200, ris_outputs.GET_HEADERS,
+                                  mac_details)
+        expected_macs = {}
+        actual_macs = self.client.get_active_macs()
+        self.assertEqual(expected_macs, actual_macs)
+        network_mock.assert_called_once_with()
+        self.assertTrue(rest_mock.called)
+
+    @mock.patch.object(ris.RISOperations, '_rest_get')
+    @mock.patch.object(ris.RISOperations, '_get_network_adapters')
+    def test_get_active_macs_error(self, network_mock, rest_mock):
+        net_details = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+        network_mock.return_value = net_details
+        uri = "/rest/v1/Systems/1/NetworkAdapters/1"
+        rest_mock.return_value = (301, ris_outputs.GET_HEADERS,
+                                  ris_outputs.REST_FAILURE_OUTPUT)
+        exc = self.assertRaises(exception.IloError,
+                                self.client.get_active_macs)
+        network_mock.assert_called_once_with()
+        rest_mock.assert_called_once_with(uri)
+        self.assertIn('FakeFailureMessage', str(exc))
+
+    @mock.patch.object(ris.RISOperations, '_get_network_adapters')
+    def test_get_active_macs_not_supported(self, network_mock):
+        net_details = json.loads(ris_outputs.NETWORK_ADAPTER_LIST)
+        network_mock.return_value = net_details
+        del net_details['links']['Member']
+        exc = self.assertRaises(exception.IloCommandNotSupportedError,
+                                self.client.get_active_macs)
+        msg = ('"links" or "links/Member" section in NetworkAdapters'
+               ' does not exist')
+        network_mock.assert_called_once_with()
+        self.assertIn(msg, str(exc))
