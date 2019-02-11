@@ -21,6 +21,10 @@ from oslo_utils import strutils
 
 from proliantutils import exception
 from proliantutils.hpssa import constants
+from proliantutils import log
+
+
+LOG = log.get_logger(__name__)
 
 
 def _get_indentation(string):
@@ -447,26 +451,36 @@ class Controller(object):
     def erase_devices(self, drives):
         """Perform Erase on all the drives in the controller.
 
-        This method erases all the drives in the controller by overwriting
-        the drives with the pattern. The drives will be unavailable until
-        after successful completion or failure. The possible erase pattern
-        available for sanitize erase are 'overwrite' and 'block' to perform
-        erase on HDD and SSD respectively.
+        This method erases all the hdd and ssd drives in the controller
+        by overwriting the drives with patterns for hdd and erasing storage
+        blocks for ssd drives. The drives would be unavailable until after
+        successful completion or failure.
 
-        If the sanitize erase is not supported on the controller it performs
-        the disk erase by overwritting with zeros.
+        If the sanitize erase is not supported on any disk it will try to
+        populate zeros on disk drives.
 
         :param drives: A list of drive objects in the controller.
+        :raises: HPSSAOperationError, if sanitize erase is not supported.
         """
-        # TODO(aparnav): Add Sanitize erase support for SSD
-        drive = ','.join([x.id for x in drives])
-        cmd_args = self._get_erase_command(drive, 'erasepattern=overwrite')
+        for drive in drives:
+            if drive.disk_type == "hdd":
+                LOG.debug("Disk erase running with erasepattern=overwrite on "
+                          "disk: %s" % drive.id)
+                cmd_args = self._get_erase_command(drive.id,
+                                                   'erasepattern=overwrite')
+            else:
+                LOG.debug("Disk erase running with erasepattern=block on "
+                          "disk: %s" % drive.id)
+                cmd_args = self._get_erase_command(drive.id,
+                                                   'erasepattern=block')
+            stdout = self.execute_cmd(*cmd_args)
 
-        stdout = self.execute_cmd(*cmd_args)
-        if "not supported" in str(stdout):
-            cmd_args = self._get_erase_command(drive,
-                                               'erasepattern=zero')
-            self.execute_cmd(*cmd_args)
+            if "not supported" in str(stdout):
+                LOG.debug("Disk erase running with erasepattern=zero on "
+                          "disk: %s" % drive.id)
+                cmd_args = self._get_erase_command(drive.id,
+                                                   'erasepattern=zero')
+                self.execute_cmd(*cmd_args)
 
 
 class RaidArray(object):
