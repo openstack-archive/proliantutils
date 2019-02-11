@@ -458,14 +458,13 @@ class Controller(object):
 
         :param drives: A list of drive objects in the controller.
         """
-        # TODO(aparnav): Add Sanitize erase support for SSD
-        drive = ','.join([x.id for x in drives])
-        cmd_args = self._get_erase_command(drive, 'erasepattern=overwrite')
-
-        stdout = self.execute_cmd(*cmd_args)
-        if "not supported" in str(stdout):
-            cmd_args = self._get_erase_command(drive,
-                                               'erasepattern=zero')
+        for drive in drives:
+            if drive.disk_type == "hdd":
+                cmd_args = self._get_erase_command(drive.id,
+                                                  'erasepattern=overwrite')
+            else:
+                cmd_args = self._get_erase_command(drive.id,
+                                                   'erasepattern=zero')
             self.execute_cmd(*cmd_args)
 
 
