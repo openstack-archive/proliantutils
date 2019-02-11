@@ -344,13 +344,16 @@ class ControllerTest(testtools.TestCase):
                            get_all_details_mock):
         get_all_details_mock.return_value = raid_constants.SSA_ERASE_DRIVE
         server = objects.Server()
-        d = [x for x in server.controllers[0].unassigned_physical_drives]
+        drives = [x for x in server.controllers[0].unassigned_physical_drives]
         controller = server.controllers[0]
-        controller.erase_devices(d)
-        execute_mock.assert_called_once_with('pd 1I:2:1', 'modify', 'erase',
-                                             'erasepattern=overwrite',
-                                             'unrestricted=off',
-                                             'forced')
+        execute_mock.return_value = ""
+        controller.erase_devices(drives)
+        calls = [mock.call('pd 6I:1:7', 'modify', 'erase',
+                           'erasepattern=block', 'unrestricted=off', 'forced'),
+                 mock.call('pd 1I:2:1', 'modify', 'erase',
+                           'erasepattern=overwrite', 'unrestricted=off',
+                           'forced')]
+        execute_mock.assert_has_calls(calls, any_order=True)
 
     @mock.patch.object(objects.Controller, 'execute_cmd')
     def test_erase_devices_sanitize_not_supported(self, execute_mock,
