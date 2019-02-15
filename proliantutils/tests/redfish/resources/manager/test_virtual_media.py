@@ -17,8 +17,9 @@ __author__ = 'HPE'
 import json
 
 import mock
-from sushy import exceptions
 import testtools
+
+from sushy import exceptions
 
 from proliantutils import exception
 from proliantutils.redfish.resources.manager import constants
@@ -85,7 +86,7 @@ class VirtualMediaTestCase(testtools.TestCase):
                          value.target_uri)
 
     def test__get_action_element_missing_insert_action(self):
-        self.vmedia_inst._actions.insert_vmedia = None
+        self.vmedia_inst._hpe_actions.insert_vmedia = None
         self.assertRaisesRegex(
             exception.MissingAttributeError,
             'attribute #HpeiLOVirtualMedia.InsertVirtualMedia',
@@ -98,22 +99,40 @@ class VirtualMediaTestCase(testtools.TestCase):
                          value.target_uri)
 
     def test__get__action_element_missing_eject_action(self):
-        self.vmedia_inst._actions.eject_vmedia = None
+        self.vmedia_inst._hpe_actions.eject_vmedia = None
         self.assertRaisesRegex(
             exception.MissingAttributeError,
             'attribute #HpeiLOVirtualMedia.EjectVirtualMedia',
             self.vmedia_inst._get_action_element, 'eject')
 
-    def test_insert_vmedia(self):
+    @mock.patch.object(virtual_media.VirtualMedia, 'insert_media')
+    def test_insert_media_sushy(self, insert_mock):
+        insert_mock.return_value = None
         url = "http://1.2.3.4:5678/xyz.iso"
-        self.vmedia_inst.insert_vmedia(url)
+        self.vmedia_inst.insert_vmedia_device(url)
+        self.vmedia_inst.insert_media.assert_called_once_with(
+            url, write_protected=True)
+
+    @mock.patch.object(virtual_media.VirtualMedia, 'insert_media')
+    def test_insert_vmedia(self, insert_mock):
+        url = "http://1.2.3.4:5678/xyz.iso"
+        insert_mock.side_effect = exceptions.SushyError
+        self.vmedia_inst.insert_vmedia_device(url)
         self.vmedia_inst._conn.post.assert_called_once_with(
             "/redfish/v1/Managers/1/VirtualMedia/2/Actions/Oem/Hpe/"
             "HpeiLOVirtualMedia.InsertVirtualMedia/",
             data={'Image': url})
 
-    def test_eject_vmedia(self):
-        self.vmedia_inst.eject_vmedia()
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_media')
+    def test_eject_media_sushy(self, eject_mock):
+        eject_mock.return_value = None
+        self.vmedia_inst.eject_vmedia_device()
+        self.vmedia_inst.eject_media.assert_called_once()
+
+    @mock.patch.object(virtual_media.VirtualMedia, 'eject_media')
+    def test_eject_vmedia(self, eject_mock):
+        eject_mock.side_effect = exceptions.SushyError
+        self.vmedia_inst.eject_vmedia_device()
         self.vmedia_inst._conn.post.assert_called_once_with(
             "/redfish/v1/Managers/1/VirtualMedia/2/Actions/Oem/Hpe/"
             "HpeiLOVirtualMedia.EjectVirtualMedia/",
