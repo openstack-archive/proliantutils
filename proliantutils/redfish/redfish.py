@@ -393,8 +393,8 @@ class RedfishOperations(operations.IloOperations):
 
             LOG.debug(self._("Ejecting the media image '%(url)s' from the "
                              "device %(device)s.") %
-                      {'url': vmedia_device.image_url, 'device': device})
-            vmedia_device.eject_vmedia()
+                      {'url': vmedia_device.image, 'device': device})
+            vmedia_device.eject_media()
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller failed to eject the virtual"
                           " media device '%(device)s'. Error %(error)s.") %
@@ -417,12 +417,12 @@ class RedfishOperations(operations.IloOperations):
                 manager.virtual_media.get_member_device(
                     VIRTUAL_MEDIA_MAP[device]))
             if vmedia_device.inserted:
-                vmedia_device.eject_vmedia()
+                vmedia_device.eject_media()
 
             LOG.debug(self._("Inserting the image url '%(url)s' to the "
                              "device %(device)s.") %
                       {'url': url, 'device': device})
-            vmedia_device.insert_vmedia(url)
+            vmedia_device.insert_media(url)
         except sushy.exceptions.SushyError as e:
             msg = (self._("The Redfish controller failed to insert the media "
                           "url %(url)s in the virtual media device "
