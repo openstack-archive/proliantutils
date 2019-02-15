@@ -14,8 +14,10 @@
 
 __author__ = 'HPE'
 
+from sushy import exceptions as sushy_exceptions
 from sushy.resources import base
 from sushy.resources import common
+from sushy.resources.manager import virtual_media
 
 from proliantutils import exception
 from proliantutils import log
@@ -40,23 +42,17 @@ class ActionsField(base.CompositeField):
         '#HpeiLOVirtualMedia.EjectVirtualMedia')
 
 
-class VirtualMedia(base.ResourceBase):
+class VirtualMedia(virtual_media.VirtualMedia):
 
     media_types = base.Field('MediaTypes', adapter=_get_media,
                              required=True)
     """A list of allowed media types for the instance."""
 
-    inserted = base.Field('Inserted', required=True)
-    """A boolean value which represents vmedia is inserted or not."""
-
-    image_url = base.Field('Image')
-    """A string which represents the virtual media image url."""
-
-    _actions = ActionsField(['Oem', 'Hpe', 'Actions'], required=True)
+    _hpe_actions = ActionsField(['Oem', 'Hpe', 'Actions'], required=True)
 
     def _get_action_element(self, action_type):
         """Helper method to return the action object."""
-        action = eval("self._actions." + action_type + "_vmedia")
+        action = eval("self._hpe_actions." + action_type + "_vmedia")
 
         if not action:
             if action_type == "insert":
@@ -70,24 +66,29 @@ class VirtualMedia(base.ResourceBase):
 
         return action
 
-    def insert_vmedia(self, url):
+    def insert_vmedia_device(self, url):
         """Inserts Virtual Media to the device
 
         :param url: URL to image.
         :raises: SushyError, on an error from iLO.
         """
-        target_uri = self._get_action_element('insert').target_uri
-        data = {'Image': url}
-        self._conn.post(target_uri, data=data)
+        try:
+            self.insert_media(url, write_protected=True)
+        except sushy_exceptions.SushyError:
+            target_uri = self._get_action_element('insert').target_uri
+            data = {'Image': url}
+            self._conn.post(target_uri, data=data)
 
-    def eject_vmedia(self):
+    def eject_vmedia_device(self):
         """Ejects Virtual Media.
 
         :raises: SushyError, on an error from iLO.
         """
-        target_uri = self._get_action_element('eject').target_uri
-        data = {}
-        self._conn.post(target_uri, data=data)
+        try:
+            self.eject_media()
+        except sushy_exceptions.SushyError:
+            target_uri = self._get_action_element('eject').target_uri
+            self._conn.post(target_uri, data={})
 
     def set_vm_status(self, boot_on_next_reset):
         """Set the Virtual Media drive status.
