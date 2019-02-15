@@ -264,7 +264,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         return manager_mock, vmedia_collection_json, vmedia_json
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
     def test_eject_virtual_media(self, eject_mock, manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
             self._setup_virtual_media())
@@ -276,7 +276,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         eject_mock.assert_called_once_with()
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
     def test_eject_virtual_media_invalid_device(self, eject_mock,
                                                 manager_mock):
         self.assertRaisesRegex(
@@ -289,7 +289,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.assertFalse(manager_mock.called)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
     def test_eject_virtual_media_not_inserted(self, eject_mock, manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
             self._setup_virtual_media())
@@ -301,7 +301,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.assertFalse(eject_mock.called)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
     def test_eject_virtual_media_floppy(self, eject_mock, manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
             self._setup_virtual_media())
@@ -313,7 +313,7 @@ class RedfishOperationsTestCase(testtools.TestCase):
         self.assertFalse(eject_mock.called)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
     def test_eject_virtual_media_fail(self, eject_mock, manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
             self._setup_virtual_media())
@@ -328,8 +328,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
                                'CDROM')
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
-    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_insert_vmedia')
     def test_insert_virtual_media(self, insert_mock, eject_mock, manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
             self._setup_virtual_media())
@@ -343,8 +343,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         insert_mock.assert_called_once_with(url)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
-    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_insert_vmedia')
     def test_insert_virtual_media_floppy(self, insert_mock, eject_mock,
                                          manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
@@ -359,8 +359,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         insert_mock.assert_called_once_with(url)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
-    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_insert_vmedia')
     def test_insert_virtual_media_inserted(self, insert_mock, eject_mock,
                                            manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
@@ -375,8 +375,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
         insert_mock.assert_called_once_with(url)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_manager')
-    @mock.patch.object(virtual_media.VirtualMedia, 'eject_vmedia')
-    @mock.patch.object(virtual_media.VirtualMedia, 'insert_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_eject_vmedia')
+    @mock.patch.object(virtual_media.VirtualMedia, '_insert_vmedia')
     def test_insert_virtual_media_fail(self, insert_mock, eject_mock,
                                        manager_mock):
         manager_mock.return_value, vmedia_collection_json, vmedia_json = (
