@@ -72,6 +72,8 @@ SUPPORTED_RIS_METHODS = [
     'set_vm_status',
     'update_firmware',
     'update_persistent_boot',
+    'create_session',
+    'close_session'
     ]
 
 SUPPORTED_REDFISH_METHODS = [
@@ -117,7 +119,9 @@ SUPPORTED_REDFISH_METHODS = [
     'unset_iscsi_boot_info',
     'unset_iscsi_info',
     'get_iscsi_initiator_info',
-    'set_iscsi_initiator_info'
+    'set_iscsi_initiator_info',
+    'create_session',
+    'close_session'
 ]
 
 LOG = log.get_logger(__name__)
@@ -841,3 +845,53 @@ class IloClient(operations.IloOperations):
         else:
             filename = jar_constants.ilo4_mapping(ilo_fw)
         return filename
+
+    def create_session(self):
+        """Creates a new session.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :returns: session auth token and session uri.
+        """
+        # Gen8 servers supports RIS interface from iLO version 2.30
+        # and supports SessionService. RIBCL doesn't expose any call
+        # to the end user for creating and deleting a session.
+        # Hence we default to RIS even for Gen8 for creating a session.
+        if 'Gen8' in self.model:
+            fw = self._call_method('get_ilo_firmware_version_as_major_minor')
+            ilo_fw = common.get_ilo_version(fw)
+            if ilo_fw < 2.3:
+                msg = ('The iLO firmware should be minimum 2.30. '
+                       'SessionService is not supported on this iLO '
+                       'firmware %(ilo_fw)s ', {'ilo_fw': ilo_fw})
+                raise exception.IloCommandNotSupportedError(msg)
+            session_key, session_uri = self.ris.create_session()
+        else:
+            (session_key, session_uri) = self._call_method('create_session')
+        return session_key, session_uri
+
+    def close_session(self, session_uri):
+        """Deletes a session.
+
+        :param: session_uri: The session uri which can be deleted
+            to close a session.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        # Gen8 servers supports RIS interface from iLO version 2.30
+        # and supports SessionService. RIBCL doesn't expose any call
+        # to the end user for creating and deleting a session.
+        # Hence we default to RIS even for Gen8 for deleting a session.
+        if 'Gen8' in self.model:
+            fw = self._call_method('get_ilo_firmware_version_as_major_minor')
+            ilo_fw = common.get_ilo_version(fw)
+            if ilo_fw < 2.3:
+                msg = ('The iLO firmware should be minimum 2.30. '
+                       'SessionService is not supported on this iLO '
+                       'firmware %(ilo_fw)s ', {'ilo_fw': ilo_fw})
+                raise exception.IloCommandNotSupportedError(msg)
+            return self.ris.close_session(session_uri)
+        else:
+            return self._call_method('close_session', session_uri)
