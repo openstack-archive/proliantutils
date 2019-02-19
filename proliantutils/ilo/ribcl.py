@@ -1265,6 +1265,26 @@ class RIBCLOperations(operations.IloOperations):
         """
         self._raise_command_not_supported("get_bios_settings_result")
 
+    def create_session(self):
+        """Creates a session.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        self._raise_command_not_supported("create_session")
+
+    def close_session(self, session_uri):
+        """Closes a session.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :param: session_uri: The session URI which has to be
+            closed.
+        """
+        self._raise_command_not_supported("close_session")
+
 
 # The below block of code is there only for backward-compatibility
 # reasons (before commit 47608b6 for ris-support).

@@ -1299,6 +1299,73 @@ class IloClientTestCase(testtools.TestCase):
         self.assertIsNone(actual_file)
         major_minor_mock.assert_called_once_with()
 
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8_fails(self, product_mock, fw_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.03'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.create_session)
+
+    @mock.patch.object(ris.RISOperations, 'create_session')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8(self, product_mock, fw_mock,
+                                 session_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.30'
+        session_mock.return_value = ('session_key', 'session_uri')
+        key, uri = self.client.create_session()
+        session_mock.assert_called_once_with()
+        fw_mock.assert_called_once_with()
+        self.assertEqual(key, 'session_key')
+        self.assertEqual(uri, 'session_uri')
+
+    @mock.patch.object(ris.RISOperations, 'create_session')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen9(self, product_mock, session_mock):
+        self.client.model = 'Gen9'
+        session_mock.return_value = ('session_key', 'session_uri')
+        key, uri = self.client.create_session()
+        session_mock.assert_called_once_with()
+        self.assertEqual(key, 'session_key')
+        self.assertEqual(uri, 'session_uri')
+
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_close_session_gen8_fails(self, product_mock, fw_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.03'
+        uri = 'https://ip/'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.close_session, uri)
+
+    @mock.patch.object(ris.RISOperations, 'close_session')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_close_session_gen8(self, product_mock, fw_mock,
+                                session_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.30'
+        uri = 'https://1.2.3.4/rest/v1/SessionService/Sessions/s1'
+        self.client.close_session(uri)
+        session_mock.assert_called_once_with(uri)
+        fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'close_session')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_close_session_gen9(self, product_mock, session_mock):
+        self.client.model = 'Gen9'
+        uri = 'https//1.2.3.4/rest/v1/SessionService/Sessions/session1'
+        self.client.close_session(uri)
+        session_mock.assert_called_once_with(uri)
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 
@@ -1320,6 +1387,9 @@ class IloRedfishClientTestCase(testtools.TestCase):
                     if method_args:
                         eval('self.client.' + redfish_method_name)(
                             *method_args)
+                    elif redfish_method_name in ['create_session']:
+                        eval(('key', 'uri'),
+                             'self.client.' + redfish_method_name)()
                     else:
                         eval('self.client.' + redfish_method_name)()
                     if redfish_method_name not in ('unset_iscsi_boot_info',
@@ -1348,6 +1418,6 @@ class IloRedfishClientTestCase(testtools.TestCase):
             self.assertEqual('set_iscsi_info',
                              even_more_missed_operations[0])
         else:
-            self.assertEqual(2, len(even_more_missed_operations))
-            self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS) - 2,
+            self.assertEqual(3, len(even_more_missed_operations))
+            self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS) - 3,
                              validate_method_calls.no_test_cases)
