@@ -4843,3 +4843,72 @@ ArrayControllers"
         }
 }
 """
+
+HDRS_FOR_SESSION_POST = """
+{
+    "content-length": "239",
+    "server": "HP-iLO-Server/1.30",
+    "etag": "W/'78E0DBAE'",
+    "allow": "GET, HEAD, POST, PATCH",
+    "cache-control": "no-cache",
+    "date":"Thu, 19 Mar 2015 06:55:59 GMT",
+    "x_hp-chrp-service-version": "1.0.3",
+    "content-type": "application/json",
+    "X-Auth-Token": "7f69b26946839f456a85b67775a91c5b",
+    "Location":
+     "https://172.17.1.81/rest/v1/SessionService/\
+Sessions/administrator5c6e04bf73f7ced9",
+    "Link": "</rest/v1/SessionService/Sessions/\
+administrator5c6e04bf73f7ced9>; rel=self"
+}
+"""
+
+HDRS_FOR_SESSION_NO_AUTH_TOKEN = """
+{
+    "content-length": "239",
+    "server": "HP-iLO-Server/1.30",
+    "etag": "W/'78E0DBAE'",
+    "allow": "GET, HEAD, POST, PATCH",
+    "cache-control": "no-cache",
+    "date":"Thu, 19 Mar 2015 06:55:59 GMT",
+    "x_hp-chrp-service-version": "1.0.3",
+    "content-type": "application/json",
+    "Location":
+     "https://172.17.1.81/rest/v1/SessionService/\
+Sessions/administrator5c6e04bf73f7ced9",
+    "Link": "</rest/v1/SessionService/Sessions/\
+administrator5c6e04bf73f7ced9>; rel=self"
+}
+"""
+
+HDRS_FOR_SESSION_NO_URI = """
+{
+    "content-length": "239",
+    "server": "HP-iLO-Server/1.30",
+    "etag": "W/'78E0DBAE'",
+    "allow": "GET, HEAD, POST, PATCH",
+    "cache-control": "no-cache",
+    "date":"Thu, 19 Mar 2015 06:55:59 GMT",
+    "x_hp-chrp-service-version": "1.0.3",
+    "content-type": "application/json",
+    "X-Auth-Token": "7f69b26946839f456a85b67775a91c5b",
+    "Link": "</rest/v1/SessionService/Sessions/\
+administrator5c6e04bf73f7ced9>; rel=self"
+}
+"""
+
+SESSION_RESP = """
+{
+  "Messages": [{
+    "MessageID": "Base.0.10.Created"
+  }],
+  "Type": "ExtendedError.1.0.0",
+  "error": {
+    "@Message.ExtendedInfo": [{
+      "MessageID": "Base.0.10.Created"
+    }],
+    "code": "iLO.0.10.ExtendedInfo",
+    "message": "See @Message.ExtendedInfo for more information."
+  }
+}
+"""
