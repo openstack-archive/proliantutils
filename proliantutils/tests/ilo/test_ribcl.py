@@ -1111,5 +1111,18 @@ class IloRibclTestCaseBeforeRisSupport(unittest.TestCase):
                                 'ProLiant DL380 G7',
                                 self.ilo.get_bios_settings_result)
 
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session(self, product_mock):
+        product_mock.return_value = 'Gen8'
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.ilo.create_session)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_close_session(self, product_mock):
+        product_mock.return_value = 'Gen8'
+        uri = "https://1.2.3.4/rest/v1/SessionService/Sessions/1"
+        self.assertRaises(exception.IloCommandNotSupportedError,
+                          self.ilo.close_session, uri)
+
 if __name__ == '__main__':
     unittest.main()
