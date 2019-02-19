@@ -227,3 +227,14 @@ class RedfishError(ProliantUtilsException):
 class MissingAttributeError(RedfishError):
     message = ('The attribute %(attribute)s is missing from the '
                'resource %(resource)s')
+
+
+class MissingXAuthToken(ProliantUtilsException):
+    message = ('The X-Auth-token is missing from the response '
+               'headers. The created session url is %(session_uri)')
+
+    def __init__(self, message=None, **kwargs):
+        if not message:
+            message = self.message % kwargs
+
+        super(MissingXAuthToken, self).__init__(message)

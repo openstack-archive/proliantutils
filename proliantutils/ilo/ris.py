@@ -16,6 +16,7 @@ __author__ = 'HPE'
 
 import hashlib
 import retrying
+import urlparse
 
 from proliantutils import exception
 from proliantutils.ilo import common
@@ -2110,3 +2111,46 @@ class RISOperations(rest.RestConnectorBase, operations.IloOperations):
             LOG.warning(self._("Node doesn't have any NIC physically "
                                "connected."))
         return active_macs
+
+    def create_session(self):
+        """Creates the session and returns the session key and uri.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :returns: the session auth_token and session URI
+        """
+
+        target_uri = '/rest/v1/SessionService/Sessions'
+        data = {'UserName': self.login, 'Password': self.password}
+        status, headers, rsp = self._rest_post(target_uri, None,
+                                               data)
+        if status >= 300:
+            msg = self._get_extended_error(rsp)
+            raise exception.IloError(msg)
+        session_key = headers.get('X-Auth-Token')
+        if session_key is None:
+            raise exception.MissingXAuthToken(target_uri)
+        session_uri = headers.get('Location')
+        if session_uri is None:
+            LOG.warning("Received X-Auth-Token but NO session uri.")
+        return session_key, session_uri
+
+    def close_session(self, session_uri):
+        """closes the session based on its session uri
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :param: session_uri: The session URI using which a session
+            could be deleted or closed.
+        """
+
+        # The session url needs to be splitted and pass only the
+        # relative path of the URL to the _rest_delete()
+        url_components = urlparse.urlparse(session_uri)
+        suburi = url_components.path
+        status, hdrs, rsp = self._rest_delete(suburi, None)
+        if status >= 300:
+            msg = self._get_extended_error(rsp)
+            raise exception.IloError(msg)
