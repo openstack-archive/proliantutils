@@ -70,6 +70,8 @@ SUPPORTED_RIS_METHODS = [
     'set_vm_status',
     'update_firmware',
     'update_persistent_boot',
+    'create_session',
+    'close_session'
     ]
 
 SUPPORTED_REDFISH_METHODS = [
@@ -115,7 +117,9 @@ SUPPORTED_REDFISH_METHODS = [
     'unset_iscsi_boot_info',
     'unset_iscsi_info',
     'get_iscsi_initiator_info',
-    'set_iscsi_initiator_info'
+    'set_iscsi_initiator_info',
+    'create_session',
+    'close_session'
 ]
 
 LOG = log.get_logger(__name__)
@@ -646,12 +650,11 @@ class IloClient(operations.IloOperations):
         if ('Gen10' not in self.model):
             major_minor = (
                 self._call_method('get_ilo_firmware_version_as_major_minor'))
-
+            ilo_fw = _get_ilo_version(major_minor)
             # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
             # as we still want to try getting nic capacity through ipmitool
             # irrespective of what firmware we are using.
-            nic_capacity = ipmi.get_nic_capacity(self.ipmi_host_info,
-                                                 major_minor)
+            nic_capacity = ipmi.get_nic_capacity(self.ipmi_host_info, ilo_fw)
             if nic_capacity:
                 capabilities.update({'nic_capacity': nic_capacity})
 
@@ -822,3 +825,68 @@ class IloClient(operations.IloOperations):
                  not supported on the server.
         """
         return self._call_method('get_bios_settings_result')
+
+    def _get_ilo_version(ilo_fw_str):
+        """Gets the float value of the firmware version
+
+        Converts a string with major and minor numbers to a float value.
+
+        :param ilo_fw_str: String containing the major and minor versions
+                           of the form <major>.<minor>
+        :returns: float value constructed from major and minor numbers.
+        """
+
+        if not ilo_fw_str:
+            return None
+
+        try:
+            major_minor_val = float(ilo_fw_str)
+        except Exception:
+            return None
+        return major_minor_val
+
+    def create_session(self):
+        """Creates a new session.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        :returns: session auth token and session uri.
+        """
+        # Gen8 servers supports RIS interface from iLO version 2.30
+        # and supports SessionService. RIBCL doesn't expose any call
+        # to the end user for creating and deleting a session.
+        # Hence we default to RIS even for Gen8 for creating a session.
+        if 'Gen8' in self.model():
+            ilo_fw_str = self._call_method('get_ilo_firmware_version_as_major_minor')
+            ilo_fw = _get_ilo_version(ilo_fw_str)
+            if ilo_fw < 2.3:
+                msg = "The iLO firmware should be minimum 2.3 for SessionService"
+                raise exception.IloCommandNotSupportedError(msg)
+            session_key, session_uri = self.ris.create_session()
+        else:
+            session_key, session_uri = self._call_method('create_session')
+        return session_key, session_uri
+
+    def close_session(self, session_uri):
+        """Deletes a session.
+
+        :param: session_uri: The session uri which can be deleted
+            to close a session.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        # Gen8 servers supports RIS interface from iLO version 2.30
+        # and supports SessionService. RIBCL doesn't expose any call
+        # to the end user for creating and deleting a session.
+        # Hence we default to RIS even for Gen8 for deleting a session.
+        if 'Gen8' in self.model():
+            ilo_fw_str = self._call_method('get_ilo_firmware_version_as_major_minor')
+            ilo_fw = _get_ilo_version(ilo_fw_str)
+            if ilo_fw < 2.3:
+                msg = "The iLO firmware should be minimum 2.3 for SessionService"
+                raise exception.IloCommandNotSupportedError(msg)
+            return self.ris.close_session(session_uri)
+        else:
+            return self._call_method('close_session', session_uri)

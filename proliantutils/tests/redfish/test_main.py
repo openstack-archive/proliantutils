@@ -98,3 +98,16 @@ class HPESushyTestCase(testtools.TestCase):
         mock_account_service.assert_called_once_with(
             self.hpe_sushy._conn, "/redfish/v1/AccountService/",
             self.hpe_sushy.redfish_version)
+
+    def test_get_session_service(self):
+        self.assertEqual('/redfish/v1/SessionService/Sessions',
+                         self.hpe_sushy.get_session_service())
+
+    @mock.patch.object(sessionservice, 'SessionService', autospec=True)
+    def test_get_session_service(self, mock_session_service):
+        session_inst = self.hpe_sushy.get_session_service()
+        self.assertIsInstance(session_inst,
+                              sessionservice.SessionService.__class__)
+        mock_session_service.assert_called_once_with(
+            self.hpe_sushy._conn, "/redfish/v1/SessionService/Sessions/",
+            self.hpe_sushy.redfish_version)

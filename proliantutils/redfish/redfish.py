@@ -200,6 +200,23 @@ class RedfishOperations(operations.IloOperations):
             LOG.debug(msg)
             raise exception.IloError(msg)
 
+    def _get_sushy_session(self):
+        """Get the sushy Manager for manager_id
+
+        :param manager_id: The identity of the Manager resource
+        :returns: the Sushy Manager instance
+        :raises: IloError
+        """
+        session_url = self._sushy.get_session_collection_path()
+        try:
+            return self._sushy.get_session(session_url)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish Manager "%(manager)s" was not found. '
+                          'Error %(error)s') %
+                   {'manager': manager_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
     def get_product_name(self):
         """Gets the product name of the server.
 
@@ -1229,3 +1246,26 @@ class RedfishOperations(operations.IloOperations):
             raise exception.IloError(msg)
         status = "failed" if len(settings_result) > 1 else "success"
         return {"status": status, "results": settings_result}
+
+    def create_session(self):
+        sushy_session = self._get_sushy_session()
+        try:
+            session_key, session_uri = sushy_session.create_session()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Session creation failed. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        return (session_key, session_uri)
+
+    def close_session(self, session_uri):
+        sushy_session = self._get_sushy_session()
+        try:
+            sushy_session.close_session(session_uri)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Session could not be closed. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

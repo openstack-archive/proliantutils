@@ -23,6 +23,7 @@ from proliantutils.redfish.resources.system import system
 from proliantutils.redfish.resources import update_service
 from proliantutils.redfish import utils
 
+from sushy.resources.sessionservice import sessionservice
 
 class HPESushy(sushy.Sushy):
     """Class that extends base Sushy class
@@ -103,3 +104,8 @@ class HPESushy(sushy.Sushy):
         return (account_service.
                 HPEAccountService(self._conn, account_service_url,
                                   redfish_version=self.redfish_version))
+
+    def get_session_service(self):
+        url = utils.get_subresource_path_by(self, 'SessionService/Sessions')
+        return sessionservice.SessionService(self._conn, url,
+                                             redfish_version=self.redfish_version)

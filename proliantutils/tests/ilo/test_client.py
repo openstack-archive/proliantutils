@@ -1280,6 +1280,97 @@ class IloClientTestCase(testtools.TestCase):
                                 'not supported',
                                 self.client.get_bios_settings_result)
 
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8_fails(self, product_mock, fw_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.03'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.create_session)
+
+    @mock.patch.object(ris.RISOperations, 'create_session')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8(self, product_mock, fw_mock,
+                                 session_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.30'
+        self.client.create_session()
+        session_mock.assert_called_once_with()
+        fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'create_session')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen9(self, product_mock, session_mock):
+        self.client.model = 'Gen9'
+        self.client.create_session()
+        session_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8_fails(self, product_mock, fw_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.03'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                'not supported',
+                                self.client.close_session)
+
+    @mock.patch.object(ris.RISOperations, 'close_session')
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_create_session_gen8(self, product_mock, fw_mock,
+                                 session_mock):
+        self.client.model = 'Gen8'
+        fw_mock.return_value = '2.30'
+        session_uri = '/rest/v1/SessionService/Sessions/session1'
+        self.client.close_session(session_uri)
+        session_mock.assert_called_once_with(session_uri)
+        fw_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, 'close_session')
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_close_session_gen9(self, product_mock, session_mock):
+        self.client.model = 'Gen9'
+        session_uri = '/rest/v1/SessionService/Sessions/session1'
+        self.client.close_session(session_uri)
+        session_mock.assert_called_once_with(session_uri)
+
+    def test_get_ilo_version_valid_1(self):
+        in_vals = '2.03'
+        expected = 2.03
+        actual = self.client._get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_valid_2(self):
+        in_vals = '2.3'
+        expected = 2.30
+        actual = self.client._get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_invalid(self):
+        in_vals = 'x.y'
+        expected = None
+        actual = self.client._get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_appended_spaces(self):
+        in_vals = ' 2.50 '
+        expected = 2.5
+        actual = self.client._get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_none(self):
+        in_vals = None
+        expected = None
+        actual = self.client._get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

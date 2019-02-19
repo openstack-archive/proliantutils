@@ -24,12 +24,14 @@ from requests.packages.urllib3 import exceptions as urllib3_exceptions
 import testtools
 
 from proliantutils import exception
+from proliantutils import log
 from proliantutils.ilo import common
 from proliantutils.ilo import constants
 from proliantutils.ilo import ris
 from proliantutils.tests.ilo import ris_sample_outputs as ris_outputs
 from proliantutils import utils
 
+LOG = log.get_logger(__name__)
 
 class IloRisTestCaseInitTestCase(testtools.TestCase):
 
@@ -2732,3 +2734,80 @@ class TestRISOperationsPrivateMethods(testtools.TestCase):
                ' does not exist')
         network_mock.assert_called_once_with()
         self.assertIn(msg, str(exc))
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_create_session(self, rest_mock):
+        self.login = 'admin'
+        self.password = 'admin'
+        rest_mock.return_value = (201,
+                                  ris_outputs.HDRS_FOR_SESSION_POST,
+                                  ris_outputs.SESSION_RESP)
+        session_key, session_uri = self.client.create_session()
+        target_uri = '/rest/v1/SessionService/Sessions'
+        data = {'UserName': 'admin', 'Password': 'admin'}
+        expected_key = '7f69b26946839f456a85b67775a91c5b'
+        expected_uri = 'https://172.17.1.81/rest/v1/SessionService/\
+Sessions/administrator5c6e04bf73f7ced9'
+        self.assertEqual(expected_key, session_key)
+        self.assertEqual(expected_uri, session_uri)
+        rest_mock.assert_called_once_with(target_uri, None, data)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_create_session_post_fail(self, rest_mock):
+        self.login = 'admin'
+        self.password = 'admin'
+        rest_mock.return_value = (301,
+                                  ris_outputs.HDRS_FOR_SESSION_POST,
+                                  ris_outputs.SESSION_RESP)
+        exc = self.assertRaises(exception.IloError,
+                                self.client.create_session)
+        target_uri = '/rest/v1/SessionService/Sessions'
+        data = {'UserName': 'admin', 'Password': 'admin'}
+        rest_mock.assert_called_once_with(target_uri, None, data)
+
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_create_session_no_token(self, rest_mock):
+        self.login = 'admin'
+        self.password = 'admin'
+        rest_mock.return_value = (201,
+                                  ris_outputs.HDRS_FOR_SESSION_NO_AUTH_TOKEN,
+                                  ris_outputs.SESSION_RESP)
+        exc = self.assertRaises(exception.MissingXAuthToken,
+                                self.client.create_session)
+        target_uri = '/rest/v1/SessionService/Sessions'
+        data = {'UserName': 'admin', 'Password': 'admin'}
+        rest_mock.assert_called_once_with(target_uri, None, data)
+
+    @mock.patch.object(LOG, 'warning')
+    @mock.patch.object(ris.RISOperations, '_rest_post')
+    def test_create_session_no_token(self, rest_mock, log_mock):
+        self.login = 'admin'
+        self.password = 'admin'
+        rest_mock.return_value = (201,
+                                  ris_outputs.HDRS_FOR_SESSION_NO_URI,
+                                  ris_outputs.SESSION_RESP)
+        expected_key = '7f69b26946839f456a85b67775a91c5b'
+        target_uri = '/rest/v1/SessionService/Sessions'
+        data = {'UserName': 'admin', 'Password': 'admin'}
+        self.client.create_session()
+        self.assertEqual(expected_key, session_key)
+        self.assertNone(session_uri)
+        rest_mock.assert_called_once_with(target_uri, None, data)
+        log_mock.assert_called_once_with()
+
+    @mock.patch.object(ris.RISOperations, '_rest_delete')
+    def test_close_session(self, rest_mock):
+        session_uri = 'https://1.2.3.4/rest/v1/SessionService/Sessions/s1'
+        rest_mock.return_value = (200, ris_outputs.GET_HEARDERS,
+                                  None)
+        self.client.close_session(session_uri)
+        rest_mock.assert_called_once_with(session_uri)
+
+        @mock.patch.object(ris.RISOperations, '_rest_delete')
+    def test_close_session(self, rest_mock):
+        session_uri = 'https://1.2.3.4/rest/v1/SessionService/Sessions/s1'
+        rest_mock.return_value = (300, ris_outputs.GET_HEARDERS,
+                                  None)
+        self.assertRaises(exception.IloError,
+                          self.client.close_session, session_uri)
+        rest_mock.assert_called_once_with(session_uri)
