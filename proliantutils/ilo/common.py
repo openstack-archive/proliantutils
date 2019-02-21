@@ -226,6 +226,26 @@ def get_major_minor(ilo_ver_str):
         return None
 
 
+def get_ilo_version(ilo_fw_str):
+    """Gets the float value of the firmware version
+
+    Converts a string with major and minor numbers to a float value.
+
+    :param ilo_fw_tup: String containing the major and minor versions
+                       of the form <major>.<minor>
+    :returns: float value constructed from major and minor numbers.
+    """
+
+    if not ilo_fw_str:
+        return None
+
+    try:
+        major_minor_val = float(ilo_fw_str)
+    except Exception:
+        return None
+    return major_minor_val
+
+
 def get_supported_boot_modes(supported_boot_mode_constant):
     """Retrieves the server supported boot modes
 

@@ -32,36 +32,6 @@ class IloIpmiTestCase(unittest.TestCase):
                      'username': "admin",
                      'password': "Admin"}
 
-    def test_get_ilo_version_valid_1(self):
-        in_vals = '2.03'
-        expected = 2.03
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_valid_2(self):
-        in_vals = '2.3'
-        expected = 2.30
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_invalid(self):
-        in_vals = 'x.y'
-        expected = None
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_appended_spaces(self):
-        in_vals = ' 2.50 '
-        expected = 2.5
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
-    def test_get_ilo_version_none(self):
-        in_vals = None
-        expected = None
-        actual = ipmi.get_ilo_version(in_vals)
-        self.assertEqual(actual, expected)
-
     @mock.patch.object(ipmi, '_parse_ipmi_nic_capacity')
     @mock.patch.object(ipmi, '_exec_ipmitool')
     def test_get_nic_capacity_fw_lt_suggested(self, ipmi_mock, parse_mock):

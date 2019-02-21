@@ -229,6 +229,36 @@ class IloCommonModuleTestCase(unittest.TestCase):
         expected = common.get_major_minor(ver_str)
         self.assertEqual(actual, expected)
 
+    def test_get_ilo_version_valid_1(self):
+        in_vals = '2.03'
+        expected = 2.03
+        actual = common.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_valid_2(self):
+        in_vals = '2.3'
+        expected = 2.30
+        actual = common.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_invalid(self):
+        in_vals = 'x.y'
+        expected = None
+        actual = common.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_appended_spaces(self):
+        in_vals = ' 2.50 '
+        expected = 2.5
+        actual = common.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
+    def test_get_ilo_version_none(self):
+        in_vals = None
+        expected = None
+        actual = common.get_ilo_version(in_vals)
+        self.assertEqual(actual, expected)
+
     @ddt.data((constants.SUPPORTED_BOOT_MODE_LEGACY_BIOS_ONLY,
                ('true', 'false')),
               (constants.SUPPORTED_BOOT_MODE_UEFI_ONLY,

@@ -53,26 +53,6 @@ def _exec_ipmitool(driver_info, command):
     return out
 
 
-def get_ilo_version(ilo_fw_str):
-    """Gets the float value of the firmware version
-
-    Converts a string with major and minor numbers to a float value.
-
-    :param ilo_fw_tup: String containing the major and minor versions
-                       of the form <major>.<minor>
-    :returns: float value constructed from major and minor numbers.
-    """
-
-    if not ilo_fw_str:
-        return None
-
-    try:
-        major_minor_val = float(ilo_fw_str)
-    except Exception:
-        return None
-    return major_minor_val
-
-
 def get_nic_capacity(driver_info, ilo_fw):
     """Gets the FRU data to see if it is NIC data
 
@@ -88,7 +68,7 @@ def get_nic_capacity(driver_info, ilo_fw):
     """
     i = 0x0
     value = None
-    ilo_fw_rev = get_ilo_version(ilo_fw) or DEFAULT_FW_REV
+    ilo_fw_rev = ilo_fw or DEFAULT_FW_REV
 
     # Note(vmud213): iLO firmware versions >= 2.3 support reading the FRU
     # information in a single call instead of iterating over each FRU id.
