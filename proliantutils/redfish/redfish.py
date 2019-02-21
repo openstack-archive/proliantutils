@@ -23,6 +23,7 @@ from sushy.resources.system import mappings as sushy_map
 from sushy import utils
 
 from proliantutils import exception
+from proliantutils.ilo import common as common
 from proliantutils.ilo import constants as ilo_cons
 from proliantutils.ilo import firmware_controller
 from proliantutils.ilo import operations
@@ -1229,3 +1230,14 @@ class RedfishOperations(operations.IloOperations):
             raise exception.IloError(msg)
         status = "failed" if len(settings_result) > 1 else "success"
         return {"status": status, "results": settings_result}
+
+    def get_ilo_firmware_version_as_major_minor(self):
+        """Gets iLO firmware version string in major minor release combination.
+
+        :raises: IloError, on an error from iLO.
+        :returns iLO firmware major minor release combination as a string.
+        """
+        sushy_manager = self._get_sushy_manager(PROLIANT_MANAGER_ID)
+        ilo_fw_str = sushy_manager.firmware_version
+        major_minor = common.get_major_minor(ilo_fw_str)
+        return major_minor
