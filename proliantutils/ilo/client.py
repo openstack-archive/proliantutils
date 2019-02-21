@@ -15,6 +15,7 @@
 
 import netaddr
 from proliantutils import exception
+from proliantutils.ilo import common
 from proliantutils.ilo import ipmi
 from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
@@ -638,12 +639,13 @@ class IloClient(operations.IloOperations):
         if ('Gen10' not in self.model):
             major_minor = (
                 self._call_method('get_ilo_firmware_version_as_major_minor'))
+            ilo_fw_str = common.get_ilo_version(major_minor)
 
             # NOTE(vmud213): Even if it is None, pass it on to get_nic_capacity
             # as we still want to try getting nic capacity through ipmitool
             # irrespective of what firmware we are using.
             nic_capacity = ipmi.get_nic_capacity(self.ipmi_host_info,
-                                                 major_minor)
+                                                 ilo_fw_str)
             if nic_capacity:
                 capabilities.update({'nic_capacity': nic_capacity})
 

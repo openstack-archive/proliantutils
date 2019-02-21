@@ -25,6 +25,7 @@ from sushy import auth
 from sushy.resources.system import system
 
 from proliantutils import exception
+from proliantutils.ilo import common as common
 from proliantutils.ilo import constants as ilo_cons
 from proliantutils.redfish import main
 from proliantutils.redfish import redfish
@@ -1784,3 +1785,19 @@ class RedfishOperationsTestCase(testtools.TestCase):
         actual = self.rf_client.get_bios_settings_result()
         expected = {"status": "success", "results": actual_settings}
         self.assertEqual(expected, actual)
+
+    @mock.patch.object(common, 'get_major_minor')
+    def test_get_ilo_firmware_version_as_major_minor(self, major_mock):
+        self.sushy.get_manager().firmware_version = "iLO 5 v1.30"
+        major_mock.return_value = '1.30'
+        actual = self.rf_client.get_ilo_firmware_version_as_major_minor()
+        expected = '1.30'
+        self.assertEqual(expected, actual)
+        major_mock.assert_called_once_with("iLO 5 v1.30")
+
+    @mock.patch.object(common, 'get_major_minor')
+    def test_get_ilo_firmware_version_as_major_minor_none(self, major_mock):
+        self.sushy.get_manager().firmware_version = "iLO 5"
+        major_mock.return_value = None
+        actual = self.rf_client.get_ilo_firmware_version_as_major_minor()
+        self.assertIsNone(actual)
