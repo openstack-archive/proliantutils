@@ -497,3 +497,37 @@ class IloOperations(object):
                  not supported on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_smart_storage_controllers(self):
+        """Give dictionary of smart storage controllers with media type of disk
+
+        It will give the controller model with each controller disks media
+        type.
+        Ex. return data = {'HPE Smart Array P408i-a SR Gen10':
+                            {'hdd': True, 'ssd': False},
+                           'HPE Smart Array S100i SR Gen10':
+                            {'hdd': False, 'ssd': True}
+                          }
+        :returns: Dictionary of smart storage controllers.
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def has_disk_erase_completed(self):
+        """Get out of band sanitize disk erase status.
+
+        :returns: True if disk erase completed on all controllers
+                  otherwise False
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def do_disk_erase(self, controller, disk_type, pattern):
+        """Perform the out of band sanitize disk erase on the hardware.
+
+        :param controller: Smart storage controller model
+        :param disk_type: Media type of disk drives
+        :param pattern: Erase pattern 'zero', if nothing passed will use
+                        standard ones
+        :raises: IloError, on an error from iLO.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)

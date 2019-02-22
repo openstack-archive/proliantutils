@@ -1,4 +1,64 @@
 {
+  "disk-erase-progress": {
+    "@odata.context": "/redfish/v1/$metadata#HpeSmartStorageDiskDrive.HpeSmartStorageDiskDrive",
+    "@odata.etag": "W/\"E852783E\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/DiskDrives/1/",
+    "@odata.type": "#HpeSmartStorageDiskDrive.v2_0_0.HpeSmartStorageDiskDrive",
+    "Id": "1",
+    "BlockSizeBytes": 512,
+    "CapacityGB": 1200,
+    "CapacityLogicalBlocks": 2344225968,
+    "CapacityMiB": 1144641,
+    "CarrierApplicationVersion": "11",
+    "CarrierAuthenticationStatus": "OK",
+    "CurrentTemperatureCelsius": 0,
+    "Description": "HPE Smart Storage Disk Drive View",
+    "DiskDriveStatusReasons": [
+        "EraseInProgress"
+    ],
+    "DiskDriveUse": "Raw",
+    "EncryptedDrive": false,
+    "FirmwareVersion": {
+        "Current": {
+            "VersionString": "HPD6"
+        }
+    },
+    "InterfaceSpeedMbps": 12000,
+    "InterfaceType": "SAS",
+    "LegacyBootPriority": "Primary",
+    "Location": "1I:2:3",
+    "LocationFormat": "ControllerPort:Box:Bay"
+  },
+  "disk-erase-completed": {
+    "@odata.context": "/redfish/v1/$metadata#HpeSmartStorageDiskDrive.HpeSmartStorageDiskDrive",
+    "@odata.etag": "W/\"E852783E\"",
+    "@odata.id": "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/DiskDrives/1/",
+    "@odata.type": "#HpeSmartStorageDiskDrive.v2_0_0.HpeSmartStorageDiskDrive",
+    "Id": "1",
+    "BlockSizeBytes": 512,
+    "CapacityGB": 1200,
+    "CapacityLogicalBlocks": 2344225968,
+    "CapacityMiB": 1144641,
+    "CarrierApplicationVersion": "11",
+    "CarrierAuthenticationStatus": "OK",
+    "CurrentTemperatureCelsius": 0,
+    "Description": "HPE Smart Storage Disk Drive View",
+    "DiskDriveStatusReasons": [
+        "EraseCompleted"
+    ],
+    "DiskDriveUse": "Raw",
+    "EncryptedDrive": false,
+    "FirmwareVersion": {
+        "Current": {
+            "VersionString": "HPD6"
+        }
+    },
+    "InterfaceSpeedMbps": 12000,
+    "InterfaceType": "SAS",
+    "LegacyBootPriority": "Primary",
+    "Location": "1I:2:3",
+    "LocationFormat": "ControllerPort:Box:Bay"
+  },
   "drive1": {
     "@odata.context": "/redfish/v1/$metadata#Systems/Members/1/SmartStorage/ArrayControllers/Members/0/DiskDrives/Members/$entity",
     "@odata.etag": "W/\"559F84DD\"",
