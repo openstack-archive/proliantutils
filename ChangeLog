@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.8.0
+-----
+* Adds support for IPv6 network
+* Changes erasepattern to 'block' for SSD drives for inband disk erase
+* Adds support to filter active NICs during Gen9 inspection
+* Redfish: Uses Sushy caching decorators
+* Fixes an issue with nested raid levels for Gen10
+
 2.7.0
 -----
 * Fix ssacli output parsing
