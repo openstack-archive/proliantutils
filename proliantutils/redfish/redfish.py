@@ -1074,6 +1074,44 @@ class RedfishOperations(operations.IloOperations):
         sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
         sushy_system.delete_raid()
 
+    def get_smart_storage_controllers(self):
+        """Returns dictionary of storage controllers with media type of disk
+
+        It will give the controller model with each controller disks media
+        type.
+        Ex. return data = {'HPE Smart Array P408i-a SR Gen10': {
+                              'HDD': True, 'SSD': False
+                              },
+                           'HPE Smart Array S100i SR Gen10': {
+                               'HDD': False, 'SSD': True}
+                          }
+        :returns: Dictionary of smart storage controllers.
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        return sushy_system.get_smart_storage_controllers()
+
+    def do_disk_erase(self, controller, disk_type, pattern=None):
+        """Perform the out of band sanitize disk erase on the hardware.
+
+        :param controller: Smart storage controller model
+        :param disk_type: Media type of disk drives either 'HDD' or 'SSD'
+        :param pattern: Erase pattern 'zero', if nothing passed will use
+                        standard ones
+        :raises: IloError, on an error from iLO.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        sushy_system.do_disk_erase(controller, disk_type, pattern)
+
+    def has_disk_erase_completed(self):
+        """Get out of band sanitize disk erase status.
+
+        :returns: True if disk erase completed on all controllers
+                  otherwise False
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        return sushy_system.has_disk_erase_completed()
+
     def get_current_bios_settings(self, only_allowed_settings=True):
         """Get current BIOS settings.
 

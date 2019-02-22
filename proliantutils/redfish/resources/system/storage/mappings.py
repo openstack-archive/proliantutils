@@ -46,6 +46,9 @@ MEDIA_TYPE_MAP = {
     'HDD': constants.MEDIA_TYPE_HDD
 }
 
+MEDIA_TYPE_MAP_REV = (
+    utils.revert_dictionary(MEDIA_TYPE_MAP))
+
 RAID_LEVEL_MAP = {
     '0': constants.RAID_0,
     '1': constants.RAID_1,

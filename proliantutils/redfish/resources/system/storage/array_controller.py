@@ -156,3 +156,13 @@ class HPEArrayControllerCollection(base.ResourceCollectionBase):
         for member in self.get_members():
             if member.model == model:
                 return member
+
+    def get_all_controllers_model(self):
+        """Returns list of model of all array controllers
+
+        :returns List of model of array controllers
+        """
+        models = []
+        for member in self.get_members():
+            models.append(member.model)
+        return models
