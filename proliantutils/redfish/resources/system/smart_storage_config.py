@@ -18,6 +18,7 @@ from sushy.resources import base
 
 from proliantutils.hpssa import constants
 from proliantutils.hpssa import manager
+from proliantutils.redfish.resources.system.storage import constants
 
 
 LOG = log.get_logger(__name__)
@@ -178,3 +179,33 @@ class HPESmartStorageConfig(base.ResourceBase):
             "LogicalDrives": redfish_logical_disk
         }
         self._conn.put(self.settings_uri, data=data)
+
+    def disk_erase(self, disks, disk_type):
+        """Perform the out of band sanitize disk erase on the hardware.
+
+        :param disks: List of id of disk drives
+        :param disk_type: Media type of disk drives
+        """
+        if disktype == constants.MEDIA_TYPE_HDD:
+            data = {
+                "Actions": [
+                    {
+                        "Action": "PhysicalDriveErase",
+                        "ErasePattern": "SanitizeUnrestrictedOverwrite",
+                        "PhysicalDriveList": hdds
+                    }
+                ],
+                "DataGuard": "Disabled"
+            }
+        else:
+            data = {
+                "Actions": [
+                    {
+                        "Action": "PhysicalDriveErase",
+                        "ErasePattern": "SanitizeUnrestrictedBlock",
+                        "PhysicalDriveList": ssds
+                    }
+                ],
+                "DataGuard": "Disabled"
+            }
+        self._conn.patch(self.settings_uri, data=data)
