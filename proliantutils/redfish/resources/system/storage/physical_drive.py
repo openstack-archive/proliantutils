@@ -36,6 +36,8 @@ class HPEPhysicalDrive(base.ResourceBase):
 
     rotational_speed_rpm = base.Field('RotationalSpeedRpm', adapter=int)
 
+    disk_erase_reason = base.Field('DiskDriveStatusReasons', adapter=list)
+
 
 class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
     """This class represents the collection of HPEPhysicalDrives resource"""
@@ -65,6 +67,25 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
 
     @property
     @sushy_utils.cache_it
+    def has_hdd(self):
+        """Return true if the drive is hdd"""
+        for member in self.get_members():
+            if member.media_type == constants.MEDIA_TYPE_HDD:
+                return True
+        return False
+
+    @property
+    def has_disk_erase_completed(self):
+        """Return true if disk erase completed in all drives"""
+        for member in self.get_members():
+            if member.disk_erase_reason == 'Erase Completed':
+                continue
+            else:
+                return False
+        return True
+
+    @property
+    @sushy_utils.cache_it
     def has_rotational(self):
         """Return true if the drive is HDD"""
         for member in self.get_members():
@@ -81,3 +102,25 @@ class HPEPhysicalDriveCollection(base.ResourceCollectionBase):
             if member.rotational_speed_rpm is not None:
                 drv_rot_speed_rpm.add(member.rotational_speed_rpm)
         return drv_rot_speed_rpm
+
+    def get_all_hdd_drives(self):
+        """Returns a list of ids of all HDD drives
+
+        :returns: List of HDD drives
+        """
+        hdds = []
+        for member in self.get_members():
+            if member.media_type == constants.MEDIA_TYPE_HDD:
+                hdds.append(member.identity)
+        return hdds
+    
+    def get_all_ssd_drives(self):
+        """Returns a list of ids of all SSD drives
+
+        :returns: List of SSD drives
+        """
+        ssds = []
+        for member in self.get_members():
+            if member.media_type == constants.MEDIA_TYPE_SSD:
+                hdds.append(member.identity)
+        return ssds
