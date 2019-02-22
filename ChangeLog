@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+2.8.0
+-----
+* Add support for IPv6 network
+* Add inband disk erase support for SSD disk drives
+* Add NIC inspection for Gen9
+* Redfish: Use Sushy caching decorators
+* Add changes in hpssa validator to support '10','50,'60' raid levels
+
 2.7.0
 -----
 * Fix ssacli output parsing
