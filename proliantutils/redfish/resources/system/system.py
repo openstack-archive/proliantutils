@@ -28,6 +28,8 @@ from proliantutils.redfish.resources.system import mappings
 from proliantutils.redfish.resources.system import memory
 from proliantutils.redfish.resources.system import pci_device
 from proliantutils.redfish.resources.system import secure_boot
+from proliantutils.redfish.resources.system.storage import constants as storage_constants
+from proliantutils.redfish.resources.system.storage import mappings as storage_mappings
 from proliantutils.redfish.resources.system import smart_storage_config
 from proliantutils.redfish.resources.system.storage import simple_storage
 from proliantutils.redfish.resources.system.storage import \
@@ -326,6 +328,82 @@ class HPESystem(system.System):
                    'to delete.')
             raise exception.IloLogicalDriveNotFoundError(msg)
 
+    def get_smart_storage_controllers(self):
+        """Give dictionary of smart storage controllers with media type of disk
+
+        It will give the controller model with each controller disks media
+        type.
+        Ex. return data = {'HPE Smart Array P408i-a SR Gen10': 
+                            {'HDD': True, 'SSD': False},
+                           'HPE Smart Array S100i SR Gen10':
+                            {'HDD': False, 'SSD': True}
+                          }
+        :returns: Dictionary of smart storage controllers.
+        :raises: IloError, on an error from iLO.
+        """
+        controllers = {}
+        try:
+            models = self.smart_storage.array_controllers.get_all_controllers_model()
+            for model in models:
+                controller_obj = self.smart_storage.array_controllers.array_controller_by_model(model)
+                disk_status = {
+                    storage_mappings.MEDIA_TYPE_MAP_REV[storage_constant.MEDIA_TYPE_HDD]: controller_obj.physical_drives.has_hdd,
+                    storage_mappings.MEDIA_TYPE_MAP_REV[storage_constant.MEDIA_TYPE_SSD]: controller_obj.physical_drives.has_ssd
+                    }
+                controllers[model] = disk_status
+            return controllers
+        except sushy.exceptions.SushyError as e:
+            msg = ('The Redfish controller failed to get smart storage controller '
+                   'information. Error: %(error)s' % {'Error': str(e)})
+            raise exception.IloError(msg)
+
+    def do_disk_erase(self, controller, disk_type):
+        """Perform the out of band sanitize disk erase on the hardware.
+
+        :param controller: Smart storage controller model
+        :param disk_type: Media type of disk drives either 'HDD' or 'SSD'
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            if controller.split('Array ')[1][0] != 'S':
+                controller_obj = self.smart_storage.array_controllers.array_controller_by_model(controller)
+                ssc_obj = self._get_smart_storage_config_by_controller_model(controller)
+                disks = controller_obj.physical_drives.get_all_hdd_drives() if (
+                disk_type == storage_mappings.MEDIA_TYPE_MAP_REV[storage_constants.MEDIA_TYPE_HDD]) else controller_obj.physical_drives.get_all_ssd_drives()
+                ssc_obj.disk_erase(disks, disk_type)
+            else:
+                LOG.warn("S-Series smart array controller doesn't support sanitize "
+                         "disk erase")
+        except sushy.exceptions.SushyError as e:
+            msg = ('The Redfish controller failed to perform the sanitize '
+                   'disk erase on controller: %(controller)s, on disk-type: '
+                   '%(disk-type)s with error: %(error)s' 
+                   % {'controller': controller, 'disk-type': disk_type,
+                      'error': str(e)})
+            raise exception.IloError(msg)
+
+    def has_disk_erase_completed(self):
+        """Get out of band sanitize disk erase status.
+        
+        :returns: True if disk erase completed on all controllers
+                  otherwise False
+        :raises: IloError, on an error from iLO.
+        """
+        try:
+            controllers = self.smart_storage.array_controllers.get_all_controllers_model()
+            for controller in controllers:
+                controller_obj = self.smart_storage.array_controllers.array_controller_by_model(controller)
+                if controller_obj.physical_drives.has_disk_erase_completed:
+                    continue
+                else:
+                    return False
+            return True
+        except sushy.exceptions.SushyError as e:
+            msg = ('The Redfish controller failed to get the status of '
+                   'sanitize disk erase. Error: %(error)s'  
+                   % {'error': str(e)})
+            raise exception.IloError(msg)
+    
     def _parse_raid_config_data(self, raid_config):
         """It will parse raid config data based on raid controllers
 

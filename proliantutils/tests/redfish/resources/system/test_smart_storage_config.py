@@ -198,3 +198,35 @@ class HPESmartStorageConfigTestCase(testtools.TestCase):
         self.ssc_inst.read_raid()
         self.assertTrue(message_mock.called)
         self.assertFalse(format_mock.called)
+
+    def test_disk_erase_hdd(self):
+        settings_uri = "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        self.ssc_inst.disk_erase(['1I:0:1'], 'HDD')
+        data = {
+                "Actions": [
+                    {
+                        "Action": "PhysicalDriveErase",
+                        "ErasePattern": "SanitizeUnrestrictedOverwrite",
+                        "PhysicalDriveList": ['1I:0:1']
+                    }
+                ],
+                "DataGuard": "Disabled"
+        }
+        self.ssc_inst._conn.put.assert_called_once_with(settings_uri,
+                                                        data=data)
+
+    def test_disk_erase_ssd(self):
+        settings_uri = "/redfish/v1/systems/1/smartstorageconfig/settings/"
+        self.ssc_inst.disk_erase(['1I:0:1', '1I:0:2'], 'SSD')
+        data = {
+                "Actions": [
+                    {
+                        "Action": "PhysicalDriveErase",
+                        "ErasePattern": "SanitizeRestrictedBlockErase",
+                        "PhysicalDriveList": ['1I:0:1', '1I:0:2']
+                    }
+                ],
+                "DataGuard": "Disabled"
+        }
+        self.ssc_inst._conn.put.assert_called_once_with(settings_uri,
+                                                        data=data)

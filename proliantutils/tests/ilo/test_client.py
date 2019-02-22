@@ -778,6 +778,80 @@ class IloClientTestCase(testtools.TestCase):
                                 '`delete_raid_configuration` is not supported '
                                 'on ProLiant DL380 G8',
                                 self.client.delete_raid_configuration)
+    
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_do_disk_erase(self, call_mock):
+        self.client.do_disk_erase('HPE Smart Array P408i-a SR Gen10', 'SSD')
+        call_mock.assert_called_once_with(
+            'do_disk_erase', 'HPE Smart Array P408i-a SR Gen10', 'SSD')
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_do_disk_erase_gen9(self, get_product_mock):
+        self.client.model = 'Gen9'
+        get_product_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`do_disk_erase` is not supported '
+                                'on ProLiant BL460c Gen9',
+                                self.client.do_disk_erase,
+                                'HPE Smart Array P408i-a SR Gen10',
+                                'SSD')
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_do_disk_erase_gen8(self, get_product_mock):
+        self.client.model = 'Gen8'
+        get_product_mock.return_value = 'ProLiant DL380 G8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`do_disk_erase` is not supported '
+                                'on ProLiant DL380 G8',
+                                self.client.do_disk_erase,
+                                'HPE Smart Array P408i-a SR Gen10',
+                                'SSD')
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_has_disk_erase_completed(self, call_mock):
+        self.client.has_disk_erase_completed()
+        call_mock.assert_called_once_with('has_disk_erase_completed')
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_has_disk_erase_completed_gen9(self, get_product_mock):
+        self.client.model = 'Gen9'
+        get_product_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`has_disk_erase_completed` is not supported '
+                                'on ProLiant BL460c Gen9',
+                                self.client.has_disk_erase_completed)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_has_disk_erase_completed_gen8(self, get_product_mock):
+        self.client.model = 'Gen8'
+        get_product_mock.return_value = 'ProLiant DL380 G8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`has_disk_erase_completed` is not supported '
+                                'on ProLiant DL380 G8',
+                                self.client.has_disk_erase_completed)
+
+    @mock.patch.object(client.IloClient, '_call_method')
+    def test_get_smart_storage_controllers(self, call_mock):
+        self.client.get_smart_storage_controllers()
+        call_mock.assert_called_once_with('get_smart_storage_controllers')
+
+    @mock.patch.object(ris.RISOperations, 'get_product_name')
+    def test_get_smart_storage_controllers_gen9(self, get_product_mock):
+        self.client.model = 'Gen9'
+        get_product_mock.return_value = 'ProLiant BL460c Gen9'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`get_smart_storage_controllers` is not supported '
+                                'on ProLiant BL460c Gen9',
+                                self.client.get_smart_storage_controllers)
+
+    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
+    def test_get_smart_storage_controllers_gen8(self, get_product_mock):
+        self.client.model = 'Gen8'
+        get_product_mock.return_value = 'ProLiant DL380 G8'
+        self.assertRaisesRegexp(exception.IloCommandNotSupportedError,
+                                '`get_smart_storage_controllers` is not supported '
+                                'on ProLiant DL380 G8',
+                                self.client.get_smart_storage_controllers)
 
     @mock.patch.object(client.IloClient, '_call_method')
     def test_create_raid_configuration(self, call_mock):

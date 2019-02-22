@@ -821,3 +821,71 @@ class HPESystemTestCase(testtools.TestCase):
         post_delete_read_raid_mock.return_value = result
         self.assertEqual(
             result, self.sys_inst.read_raid())
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_all_controllers_model')
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'array_controller_by_model')
+    def test_get_smart_storage_controllers(
+            self, array_controller_by_model_mock,
+            get_all_controllers_model_mock):
+        get_all_controllers_model_mock.return_value = ['HPE Smart Array P408i-p SR Gen10']
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        self.conn.get.return_value.json.side_effect = [ss_json, acc_json]
+        type(array_controller_by_model_mock.return_value.physical_drives).has_hdd = True
+        type(array_controller_by_model_mock.return_value.physical_drives).has_ssd = False
+        expected = {'HPE Smart Array P408i-p SR Gen10': {'HDD': True, 'SDD': False}}
+        self.assertEqual(
+            expected,
+            self.sys_inst.get_smart_storage_controllers())
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_all_controllers_model')
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'array_controller_by_model')
+    def test_get_smart_storage_controllers_failed(
+            self, array_controller_by_model_mock,
+            get_all_controllers_model_mock):
+        get_all_controllers_model_mock.return_value = ['HPE Smart Array P408i-p SR Gen10']
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        self.conn.get.return_value.json.side_effect = [ss_json, sushy.exceptions.SushyError]
+        self.assertRaisesRegexp(
+            exception.IloError,
+            "The Redfish controller failed to get smart storage controller "
+            "information. Error:",
+            self.sys_inst.get_smart_storage_controllers)
+
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'get_all_controllers_model')
+    @mock.patch.object(array_controller.HPEArrayControllerCollection,
+                       'array_controller_by_model')
+    def test_has_disk_erase_completed_true(
+            self, array_controller_by_model_mock,
+            get_all_controllers_model_mock):
+        get_all_controllers_model_mock.return_value = ['HPE Smart Array P408i-p SR Gen10']
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/smart_storage.json', 'r') as f:
+            ss_json = json.loads(f.read())
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller_collection.json', 'r') as f:
+            acc_json = json.loads(f.read())
+        self.conn.get.return_value.json.reset_mock()
+        self.conn.get.return_value.json.side_effect = [ss_json, acc_json]
+        type(array_controller_by_model_mock.return_value.physical_drives).has_hdd = True
+        type(array_controller_by_model_mock.return_value.physical_drives).has_ssd = False
+        expected = {'HPE Smart Array P408i-p SR Gen10': {'HDD': True, 'SDD': False}}
+        self.assertEqual(
+            expected,
+            self.sys_inst.has_disk_erase_completed())

@@ -276,3 +276,13 @@ class HPEArrayControllerCollectionTestCase(testtools.TestCase):
         model = 'HPE Smart Array P408i-a SR Gen10'
         result_model = self.sys_stor_col.array_controller_by_model(model).model
         self.assertEqual(result_model, model)
+
+    def test_get_all_controllers_model(self):
+        self.conn.get.return_value.json.reset_mock()
+        with open('proliantutils/tests/redfish/'
+                  'json_samples/array_controller.json', 'r') as f:
+            ac_json = json.loads(f.read())
+        self.conn.get.return_value.json.return_value = ac_json
+        model = ['HPE Smart Array P408i-a SR Gen10']
+        result_model = self.sys_stor_col.get_all_controllers_model()
+        self.assertEqual(result_model, model)

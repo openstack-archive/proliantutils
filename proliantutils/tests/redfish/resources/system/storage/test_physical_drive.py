@@ -116,6 +116,54 @@ class HPEPhysicalDriveCollectionTestCase(testtools.TestCase):
         actual = self.sys_stor_col.has_ssd
         self.assertTrue(actual)
 
+    def test_has_hdd(self):
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
+        self.assertTrue(self.sys_stor_col.has_hdd)
+
+    def test_get_all_hdd_drives(self):
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
+        self.assertEqual(self.sys_stor_col.get_all_hdd_drives, ['1I:0:1'])
+
+    def test_get_all_ssd_drives(self):
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            val = [dr_json['drive1'], dr_json['drive2']]
+            self.conn.get.return_value.json.side_effect = val
+        self.assertEqual(self.sys_stor_col.get_all_ssd_drives, ['1I:0:1'])
+
+    def test_has_disk_erase_completed_true(self):
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            self.conn.get.return_value.json.side_effect = dr_json['disk-erase-completed']
+        self.assertTrue(self.sys_stor_col.has_disk_erase_completed)
+
+    def test_has_disk_erase_completed_false(self):
+        self.conn.get.return_value.json.reset_mock()
+        path = ('proliantutils/tests/redfish/json_samples/'
+                'disk_drive.json')
+        with open(path, 'r') as f:
+            dr_json = json.loads(f.read())
+            self.conn.get.return_value.json.return_value = dr_json['disk-erase-progress']
+        self.assertFalse(self.sys_stor_col.has_disk_erase_completed)
+
     def test_has_rotational(self):
         self.conn.get.return_value.json.reset_mock()
         path = ('proliantutils/tests/redfish/json_samples/'
