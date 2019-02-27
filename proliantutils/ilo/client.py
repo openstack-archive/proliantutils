@@ -21,6 +21,7 @@ from proliantutils.ilo import operations
 from proliantutils.ilo import ribcl
 from proliantutils.ilo import ris
 from proliantutils.ilo.snmp import snmp_cpqdisk_sizes as snmp
+from proliantutils import jar_constants
 from proliantutils import log
 from proliantutils.redfish import redfish
 
@@ -816,3 +817,19 @@ class IloClient(operations.IloOperations):
                  not supported on the server.
         """
         return self._call_method('get_bios_settings_result')
+
+    def get_jar_file(self):
+        """Gets the corresponding jar file as per ilo firmware version.
+
+        :raises: IloError, on an error from iLO.
+        :returns : iLO corresponding Remote console Jar file name or None.
+        """
+
+        fw_str = self._call_method('get_ilo_firmware_version_as_major_minor')
+        ilo_fw = common.get_ilo_version(fw_str)
+        filename = None
+        if 'Gen10' in self.model:
+            filename = jar_constants.ilo5_mapping(ilo_fw)
+        else:
+            filename = jar_constants.ilo4_mapping(ilo_fw)
+        return filename

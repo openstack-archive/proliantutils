@@ -1230,6 +1230,25 @@ class IloClientTestCase(testtools.TestCase):
                                 'not supported',
                                 self.client.get_bios_settings_result)
 
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    def test_get_jar_file(self, major_minor_mock):
+        major_minor_mock.return_value = '2.30'
+        self.client.model = 'Gen8'
+        expected_file = 'intgapp_225.jar'
+        actual_file = self.client.get_jar_file()
+        self.assertEqual(expected_file, actual_file)
+        major_minor_mock.assert_called_once_with()
+
+    @mock.patch.object(ribcl.RIBCLOperations,
+                       'get_ilo_firmware_version_as_major_minor')
+    def test_get_jar_file_none(self, major_minor_mock):
+        major_minor_mock.return_value = '2.29'
+        self.client.model = 'Gen8'
+        actual_file = self.client.get_jar_file()
+        self.assertIsNone(actual_file)
+        major_minor_mock.assert_called_once_with()
+
 
 class IloRedfishClientTestCase(testtools.TestCase):
 

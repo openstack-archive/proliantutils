@@ -497,3 +497,12 @@ class IloOperations(object):
                  not supported on the server.
         """
         raise exception.IloCommandNotSupportedError(ERRMSG)
+
+    def get_jar_file(self):
+        """Gets the corresponding jar file as per ilo firmware version.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        raise exception.IloCommandNotSupportedError(ERRMSG)
