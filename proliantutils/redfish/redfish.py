@@ -152,6 +152,7 @@ class RedfishOperations(operations.IloOperations):
         self.host = redfish_controller_ip
         self._root_prefix = root_prefix
         self._username = username
+        self._password = password
 
         try:
             basic_auth = auth.BasicAuth(username=username, password=password)
@@ -198,6 +199,21 @@ class RedfishOperations(operations.IloOperations):
             msg = (self._('The Redfish Manager "%(manager)s" was not found. '
                           'Error %(error)s') %
                    {'manager': manager_id, 'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def _get_sushy_session(self):
+        """Get the sushy Manager for manager_id
+
+        :param manager_id: The identity of the Manager resource
+        :returns: the Sushy Manager instance
+        :raises: IloError
+        """
+        try:
+            return self._sushy.get_session_service()
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The Redfish SessionService was not found. '
+                          'Error %(error)s') % {'error': str(e)})
             LOG.debug(msg)
             raise exception.IloError(msg)
 
@@ -1241,3 +1257,40 @@ class RedfishOperations(operations.IloOperations):
         ilo_fw_str = sushy_manager.firmware_version
         major_minor = common.get_major_minor(ilo_fw_str)
         return major_minor
+
+    def create_session(self):
+        """Create a session.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        sushy_session = self._get_sushy_session()
+        try:
+            (key, uri) = sushy_session.create_session(
+                self._username, self._password)
+            return (key, uri)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Session creation failed. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+
+    def close_session(self, session_uri):
+        """Closes/Deletes a session.
+
+        :param: session_uri: Tsession URI which is to be deleted.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is
+                 not supported on the server.
+        """
+        sushy_session = self._get_sushy_session()
+        try:
+            sushy_session.close_session(session_uri)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Session could not be closed. Error '
+                          '%(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)

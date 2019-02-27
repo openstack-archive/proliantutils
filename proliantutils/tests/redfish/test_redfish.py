@@ -55,6 +55,8 @@ class RedfishOperationsTestCase(testtools.TestCase):
             '/redfish/v1/Systems')
         self.sushy.get_manager_collection_path.return_value = (
             '/redfish/v1/Managers')
+        self.sushy.get_sesion_collection_path.return_value = (
+            '/redfish/v1/SessionService/Sessions')
         sushy_mock.return_value = self.sushy
         with open('proliantutils/tests/redfish/'
                   'json_samples/root.json', 'r') as f:
@@ -92,6 +94,14 @@ class RedfishOperationsTestCase(testtools.TestCase):
             exception.IloError,
             'The Redfish Manager "banana" was not found.',
             self.rf_client._get_sushy_manager, 'banana')
+
+    def test__get_sushy_session_fail(self):
+        self.rf_client._sushy.get_session_service.side_effect = (
+            sushy.exceptions.SushyError)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'The Redfish SessionService was not found.',
+            self.rf_client._get_sushy_session)
 
     @mock.patch.object(redfish.RedfishOperations, '_get_sushy_system')
     def test_get_product_name(self, get_system_mock):
@@ -1801,3 +1811,29 @@ class RedfishOperationsTestCase(testtools.TestCase):
         major_mock.return_value = None
         actual = self.rf_client.get_ilo_firmware_version_as_major_minor()
         self.assertIsNone(actual)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_session')
+    def test_create_session(self, session_mock):
+        self._username = 'admin'
+        self._password = 'admin'
+        with open('proliantutils/tests/redfish/json_samples/'
+                  'session_creation_headers.json', 'r') as f:
+            val = json.loads(f.read())
+        session_key = val['X-Auth-Token']
+        session_uri = val['Location']
+        value = mock.PropertyMock(return_value=(session_key, session_uri))
+        type((session_mock.return_value).create_session).return_value = value
+        actual_key, actual_uri = self.rf_client.create_session()
+        self.assertEqual(session_key, actual_key)
+        self.assertEqual(session_uri, actual_uri)
+
+    @mock.patch.object(redfish.RedfishOperations, '_get_sushy_session')
+    def test_create_session_fail(self, session_mock):
+        create_session_mock = mock.PropertyMock(
+            side_effect=sushy.exceptions.SushyError)
+        type(session_mock.return_value.create_session).return_value = (
+            create_session_mock)
+        self.assertRaisesRegex(
+            exception.IloError,
+            'Session creation failed',
+            self.rf_client.create_session)
