@@ -120,6 +120,8 @@ SUPPORTED_REDFISH_METHODS = [
     'unset_iscsi_info',
     'get_iscsi_initiator_info',
     'set_iscsi_initiator_info',
+    'create_session',
+    'close_session'
 ]
 
 LOG = log.get_logger(__name__)

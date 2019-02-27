@@ -1387,6 +1387,9 @@ class IloRedfishClientTestCase(testtools.TestCase):
                     if method_args:
                         eval('self.client.' + redfish_method_name)(
                             *method_args)
+                    elif redfish_method_name in ['create_session']:
+                        eval(('key', 'uri'),
+                             'self.client.' + redfish_method_name)()
                     else:
                         eval('self.client.' + redfish_method_name)()
                     if redfish_method_name not in ('unset_iscsi_boot_info',
@@ -1415,6 +1418,6 @@ class IloRedfishClientTestCase(testtools.TestCase):
             self.assertEqual('set_iscsi_info',
                              even_more_missed_operations[0])
         else:
-            self.assertEqual(2, len(even_more_missed_operations))
-            self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS) - 2,
+            self.assertEqual(3, len(even_more_missed_operations))
+            self.assertEqual(len(client.SUPPORTED_REDFISH_METHODS) - 3,
                              validate_method_calls.no_test_cases)
