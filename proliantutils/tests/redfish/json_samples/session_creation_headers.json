@@ -1,0 +1,14 @@
+{
+"Cache-Control": "no-cache",
+"Connection": "keep-alive",
+"Content-Type": "application/json; charset=utf-8",
+"Date": "Thu, 21 Feb 2019 15:43:16 GMT",
+"Etag": "W/'02C2D1BB'",
+"Link": "</redfish/v1/SessionService/Sessions/administrator000000005c6ec714ba5e3540/>; rel=self",
+"Location": "https://172.17.1.90/redfish/v1/SessionService/Sessions/administrator000000005c6ec714ba5e3540/",
+"OData-Version": "4.0",
+"Transfer-Encoding": "chunked",
+"X-Auth-Token": "d3250f0a41feb0535cba296dc1e018d1",
+"X-Frame-Options": "sameorigin",
+"X_HP-CHRP-Service-Version": "1.0.3"
+}
