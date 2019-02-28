@@ -712,39 +712,17 @@ class IloRibclTestCase(unittest.TestCase):
         self.assertIsInstance(gpu_cnt, dict)
         self.assertIn('pci_gpu_devices', gpu_cnt)
 
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
     @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    def test_get_essential_properties(self, health_data_mock, prod_mock):
+    def test_get_essential_properties(self, health_data_mock):
         data = constants.GET_EMBEDDED_HEALTH_OUTPUT
         json_data = json.loads(data)
         health_data_mock.return_value = json_data
-        prod_mock.return_value = "Gen8"
         expected_properties = {'macs': {
                                u'Port 4': u'40:a8:f0:1e:86:77',
                                u'Port 3': u'40:a8:f0:1e:86:76',
                                u'Port 2': u'40:a8:f0:1e:86:75',
                                u'Port 1': u'40:a8:f0:1e:86:74'
                                },
-                               'properties': {
-                               'memory_mb': 32768,
-                               'cpu_arch': 'x86_64',
-                               'local_gb': 98,
-                               'cpus': 32}
-                               }
-        properties = self.ilo.get_essential_properties()
-        self.assertIsInstance(properties, dict)
-        self.assertIn('macs', properties)
-        self.assertIn('properties', properties)
-        self.assertEqual(expected_properties, properties)
-
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_product_name')
-    @mock.patch.object(ribcl.RIBCLOperations, 'get_host_health_data')
-    def test_get_essential_properties_Gen9(self, health_data_mock, prod_mock):
-        data = constants.GET_EMBEDDED_HEALTH_OUTPUT
-        json_data = json.loads(data)
-        health_data_mock.return_value = json_data
-        prod_mock.return_value = "Gen9"
-        expected_properties = {'macs': {},
                                'properties': {
                                'memory_mb': 32768,
                                'cpu_arch': 'x86_64',
