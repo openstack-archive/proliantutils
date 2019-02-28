@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+2.8.1
+-----
+* Reverts the changes made for Gen9 NIC inspection
+
 2.8.0
 -----
 * Adds support for IPv6 network
