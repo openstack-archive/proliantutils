@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+2.8.2
+-----
+* Adds changes to support sushy virtual media
+
 2.8.1
 -----
 * Reverts the changes made for Gen9 NIC inspection
