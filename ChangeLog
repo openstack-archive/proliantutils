@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+2.8.2
+-----
+* Redfish: Adds changes to support Sushy virtual media
+
 2.8.1
 -----
 * Reverts the changes made for Gen9 NIC inspection
