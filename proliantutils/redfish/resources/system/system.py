@@ -43,7 +43,8 @@ PERSISTENT_BOOT_DEVICE_MAP = {
     'CDROM': sushy.BOOT_SOURCE_TARGET_CD,
     'NETWORK': sushy.BOOT_SOURCE_TARGET_PXE,
     'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
-    'HDD': sushy.BOOT_SOURCE_TARGET_HDD
+    'HDD': sushy.BOOT_SOURCE_TARGET_HDD,
+    'UEFIHTTP': sushy.BOOT_SOURCE_TARGET_UEFI_HTTP
 }
 
 
@@ -144,18 +145,27 @@ class HPESystem(system.System):
         :raises: IloError, on an error from iLO.
         :raises: IloInvalidInputError, if the given input is not valid.
         """
+
+        def is_mapped(device, target):
+            if device == sushy.BOOT_SOURCE_TARGET_UEFI_TARGET:
+                return 'iSCSI' in target
+            if device == sushy.BOOT_SOURCE_TARGET_UEFI_HTTP:
+                return 'Uri' in target and target.startswith('IPv4')
+
         device = PERSISTENT_BOOT_DEVICE_MAP.get(devices[0].upper())
-        if device == sushy.BOOT_SOURCE_TARGET_UEFI_TARGET:
+
+        if device in (sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
+                      sushy.BOOT_SOURCE_TARGET_UEFI_HTTP):
             try:
                 uefi_devices = self.uefi_target_override_devices
-                iscsi_device = None
+                boot_target = None
                 for uefi_device in uefi_devices:
-                    if uefi_device is not None and 'iSCSI' in uefi_device:
-                        iscsi_device = uefi_device
+                    if uefi_device and is_mapped(device, uefi_device):
+                        boot_target = uefi_device
                         break
-
-                if iscsi_device is None:
-                    msg = 'No UEFI iSCSI bootable device found on system.'
+                if boot_target is None:
+                    msg = ('No valid target found for the specified'
+                           'bootable device.')
                     raise exception.IloError(msg)
 
             except sushy.exceptions.SushyError as e:
@@ -164,7 +174,7 @@ class HPESystem(system.System):
                 raise exception.IloError(msg)
 
             uefi_boot_settings = {
-                'Boot': {'UefiTargetBootSourceOverride': iscsi_device}
+                'Boot': {'UefiTargetBootSourceOverride': boot_target}
             }
             self._conn.patch(self.path, data=uefi_boot_settings)
         elif device is None:

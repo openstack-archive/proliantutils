@@ -56,6 +56,7 @@ DEVICE_COMMON_TO_REDFISH = {
     'HDD': sushy.BOOT_SOURCE_TARGET_HDD,
     'CDROM': sushy.BOOT_SOURCE_TARGET_CD,
     'ISCSI': sushy.BOOT_SOURCE_TARGET_UEFI_TARGET,
+    'UEFIHTTP': sushy.BOOT_SOURCE_TARGET_UEFI_HTTP,
     'NONE': sushy.BOOT_SOURCE_TARGET_NONE
 }
 
@@ -74,6 +75,7 @@ PERSISTENT_BOOT_MAP = {
     sushy.BOOT_SOURCE_TARGET_HDD: 'HDD',
     sushy.BOOT_SOURCE_TARGET_CD: 'CDROM',
     sushy.BOOT_SOURCE_TARGET_UEFI_TARGET: 'NETWORK',
+    sushy.BOOT_SOURCE_TARGET_UEFI_HTTP: 'UEFIHTTP',
     sushy.BOOT_SOURCE_TARGET_NONE: 'NONE'
 }
 
@@ -1229,3 +1231,55 @@ class RedfishOperations(operations.IloOperations):
             raise exception.IloError(msg)
         status = "failed" if len(settings_result) > 1 else "success"
         return {"status": status, "results": settings_result}
+
+    def get_http_boot_url(self):
+        """Sets current BIOS settings to the provided data.
+
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        :return: Returns the setting 'UrlBootFile' if set previously.
+        """
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        url = None
+        try:
+            settings = sushy_system.bios_settings.json
+            url = settings.get('UrlBootFile')
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('The attribute "UrlBootFile" not found.'
+                          ' Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
+        return url
+
+    def set_http_boot_url(self, url, is_dhcp_enabled=True):
+        """Sets HTTP boot URL to boot from it.
+
+        :param: url: HTTP URL of the image to be booted on the iLO.
+        :param: is_dhcp_enabled: True if no static IP is set on the node and
+                preferred to use DHCP service running in the network.
+                If False, the MAC is expected to be configured with static IP.
+        :raises: IloError, on an error from iLO.
+        :raises: IloCommandNotSupportedError, if the command is not supported
+                 on the server.
+        """
+        if not url:
+            raise exception.IloError("Could not set http url with"
+                                     " empty URL")
+        data = {
+            'PreBootNetwork': 'Auto',
+            'UrlBootFile': url,
+            'Dhcpv4': 'Enabled' if is_dhcp_enabled else 'Disabled'
+        }
+
+        sushy_system = self._get_sushy_system(PROLIANT_SYSTEM_ID)
+        try:
+            settings_required = sushy_system.bios_settings.pending_settings
+            settings_required.update_bios_data_by_post(data)
+        except sushy.exceptions.SushyError as e:
+            msg = (self._('Could not set settings on the iLO.'
+                          ' Error %(error)s') %
+                   {'error': str(e)})
+            LOG.debug(msg)
+            raise exception.IloError(msg)
