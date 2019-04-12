@@ -157,17 +157,19 @@ class IloIpmiTestCase(unittest.TestCase):
         self.assertEqual(ipmi_mock.call_count, 9)
         self.assertEqual(expected_out, actual_out)
 
-    @mock.patch.object(subprocess, 'check_output')
-    def test__exec_ipmitool(self, check_mock):
-        check_mock.return_value = constants.NIC_FRU_OUT
+    @mock.patch.object(subprocess, 'Popen')
+    def test__exec_ipmitool(self, popen_mock):
+        pro_obj = mock.MagicMock()
+        popen_mock.return_value = pro_obj
+        pro_obj.communicate.return_value = constants.NIC_FRU_OUT_TUPLE
         expected_output = constants.NIC_FRU_OUT
         cmd = "fru print 0x64"
         actual_out = ipmi._exec_ipmitool(self.info, cmd)
         self.assertEqual(expected_output, actual_out)
 
-    @mock.patch.object(subprocess, 'check_output')
-    def test__exec_ipmitool_none(self, check_mock):
-        check_mock.side_effect = Exception
+    @mock.patch.object(subprocess, 'Popen')
+    def test__exec_ipmitool_none(self, popen_mock):
+        popen_mock.side_effect = Exception
         cmd = "fru print 0x2"
         actual_out = ipmi._exec_ipmitool(self.info, cmd)
         self.assertIsNone(actual_out)

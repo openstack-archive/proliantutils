@@ -47,7 +47,9 @@ def _exec_ipmitool(driver_info, command):
 
     out = None
     try:
-        out = subprocess.check_output(ipmi_cmd, shell=True)
+        process = subprocess.Popen(ipmi_cmd,
+                                   stdout=subprocess.PIPE, shell=True)
+        out = process.communicate()[0]
     except Exception:
         pass
     return out

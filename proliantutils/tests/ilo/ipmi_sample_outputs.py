@@ -16,6 +16,20 @@
 
 """Test Utils for iLO test modules."""
 
+NIC_FRU_OUT_TUPLE = ((
+    "Board Mfg Date        : Mon Apr 28 23:16:00 2014\n"
+    "Board Mfg             : HP\n"
+    "Board Product         : HP Ethernet 1Gb 4-port 331FLR Adapter\n"
+    "Board Serial          : CN84170RX5\n"
+    "Board Part Number     : 634025-001\n"
+    "Board Extra           : d23041\n"
+    "Board Extra           : d5629133b001\n"
+    "Product Manufacturer  : HP\n"
+    "Product Name          : HP Ethernet 1Gb 4-port 331FLR Adapter\n"
+    "Product Part Number   : 629135-B21\n"
+    "Product Version       : 00\n"
+    "Product Serial        : CN84170RX5"), None)
+
 NIC_FRU_OUT = (
     "Board Mfg Date        : Mon Apr 28 23:16:00 2014\n"
     "Board Mfg             : HP\n"
