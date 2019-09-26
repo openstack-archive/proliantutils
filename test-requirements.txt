@@ -1,7 +1,0 @@
-mock
-hacking!=0.13.0,<0.14,>=0.12.0 # Apache-2.0
-coverage>=3.6 # Apache-2.0
-testrepository>=0.0.18
-testtools>=1.4.0 # MIT
-os-testr>=0.4.1 # Apache-2.0
-ddt
